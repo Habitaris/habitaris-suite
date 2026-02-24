@@ -144,12 +144,14 @@ export default function FormularioPublico() {
     const campos = def.campos || [];
     const cliente = def.cliente || null;
     const formKey = "hab_used_"+(def.id||"")+"_"+(cliente?cliente.email||cliente.nombre:"");
+
+    /* FIX: Only prefill fields that match exact mapKey, not by tipo or label */
     if (cliente) {
       const prefill = {};
       campos.forEach(c => {
-        if (cliente.email && (c.mapKey==="email" || c.tipo==="email")) prefill[c.id] = cliente.email;
-        if (cliente.nombre && (c.mapKey==="nombre" || (c.tipo==="text"&&c.label.toLowerCase().includes("nombre")))) prefill[c.id] = cliente.nombre;
-        if (cliente.tel && (c.mapKey==="telefono" || c.tipo==="tel")) prefill[c.id] = cliente.tel;
+        if (cliente.email && c.mapKey==="email") prefill[c.id] = cliente.email;
+        if (cliente.nombre && c.mapKey==="nombre") prefill[c.id] = cliente.nombre;
+        if (cliente.tel && c.mapKey==="telefono") prefill[c.id] = cliente.tel;
       });
       setVals(prev => ({...prefill, ...prev}));
     }
@@ -252,11 +254,12 @@ export default function FormularioPublico() {
     return String(depVal||"") === expected;
   };
 
+  /* FIX: Only lock fields that match exact mapKey — not by tipo or label */
   const isLocked = (c) => {
     if (!cliente) return false;
-    if (cliente.email && (c.mapKey==="email" || c.tipo==="email")) return true;
-    if (cliente.nombre && (c.mapKey==="nombre" || (c.tipo==="text"&&c.label.toLowerCase().includes("nombre")))) return true;
-    if (cliente.tel && (c.mapKey==="telefono" || c.tipo==="tel")) return true;
+    if (cliente.email && c.mapKey==="email") return true;
+    if (cliente.nombre && c.mapKey==="nombre") return true;
+    if (cliente.tel && c.mapKey==="telefono") return true;
     return false;
   };
 
@@ -382,6 +385,9 @@ export default function FormularioPublico() {
         });
         // Register submit event
         await SB.registerSubmit(def.id, def.nombre, linkCfg.linkId, cliente?.nombre, cliente?.email);
+        // Record time spent (reliable — beforeunload often fails for async)
+        const duration = Math.round((Date.now() - openTimeRef.current) / 1000);
+        if (duration > 0) await SB.registerClose(def.id, linkCfg.linkId, duration).catch(()=>{});
         // Increment link usage
         if (linkCfg.linkId) await SB.incrementLinkUse(linkCfg.linkId);
       } catch(e) { console.warn("Supabase save error:", e); }
@@ -394,15 +400,55 @@ export default function FormularioPublico() {
       localStorage.setItem(usedKey, String(used + 1));
     }
 
-    const tel = (cfg.telRespuesta||"573505661545").replace(/[^0-9]/g,"");
-    const clientLine = cliente ? "👤 Cliente: "+(cliente.nombre||"")+" ("+(cliente.email||"")+")\n" : "";
-    const lines = campos.filter(c=>c.tipo!=="seccion"&&c.tipo!=="info"&&vals[c.id]).map(c => {
-      const v = Array.isArray(vals[c.id]) ? vals[c.id].join(", ") : vals[c.id];
-      return "• "+c.label+": "+v;
-    });
-    const msg = "📋 RESPUESTA: "+(def.nombre||"Formulario")+"\n\n"+clientLine+lines.join("\n")+"\n\nFecha: "+response.fecha;
+    /* FIX: No auto-open WhatsApp — just mark as submitted */
     setSubmitted(true); localStorage.setItem(formKey, "1");
-    setTimeout(() => window.open("https://wa.me/"+tel+"?text="+encodeURIComponent(msg), "_blank"), 600);
+
+    // Send email notification to comercial@habitaris.co with full report
+    try {
+      // Build HTML content grouped by sections
+      let html = "";
+      let currentSection = "";
+      campos.forEach(c => {
+        if (c.tipo === "seccion") {
+          currentSection = c.label;
+          html += `<div style="margin-top:16px;padding:10px 14px;background:#F0EEE9;border-radius:6px;border-left:3px solid #C9A84C;">
+            <p style="margin:0;font-size:12px;font-weight:bold;color:#111;">${c.label}</p>
+            ${c.desc ? `<p style="margin:2px 0 0;font-size:10px;color:#888;">${c.desc}</p>` : ""}
+          </div>`;
+          return;
+        }
+        if (c.tipo === "info") return;
+        const val = vals[c.id];
+        if (val === undefined || val === "" || (Array.isArray(val) && val.length === 0)) return;
+        const display = Array.isArray(val) ? val.join(", ") : val;
+        html += `<div style="padding:8px 14px;border-bottom:1px solid #f0f0f0;">
+          <p style="margin:0;font-size:10px;color:#888;font-weight:600;">${c.label}</p>
+          <p style="margin:3px 0 0;font-size:13px;color:#111;">${display}</p>
+        </div>`;
+      });
+
+      const clientName = cliente?.nombre || response.clienteNombre || response.nombre || "Sin nombre";
+      const clientEmail = cliente?.email || response.clienteEmail || response.email || "";
+      const clientTel = cliente?.tel || response.clienteTel || response.telefono || "";
+
+      await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          service_id: "service_6x3478l",
+          template_id: "template_6lla2i8",
+          user_id: "64nk2FHknwpLqc1p4",
+          template_params: {
+            form_name: def.nombre || "Formulario",
+            client_name: clientName,
+            client_email: clientEmail,
+            client_tel: clientTel,
+            fecha: response.fecha + " · " + new Date().toLocaleTimeString("es-CO", { hour:"2-digit", minute:"2-digit" }),
+            contenido: html,
+          }
+        })
+      });
+    } catch(e) { console.warn("Email notification error:", e); }
   };
 
   if (submitted) return (
