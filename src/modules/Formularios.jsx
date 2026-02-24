@@ -1216,7 +1216,7 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
         <table style={{borderCollapse:"collapse",width:"100%"}}>
           <thead>
             <tr style={{background:"#EDEBE7"}}>
-              {["Fecha","Formulario","Cliente","Email","Estado","Acciones"].map(h=>
+              {["Fecha / Hora","Formulario","Cliente","Email","Estado","Acciones"].map(h=>
                 <th key={h} style={ths}>{h}</th>
               )}
             </tr>
@@ -1226,9 +1226,10 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
               <tr><td colSpan={6} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin respuestas{filtroEstado!=="todos"?" con este filtro":""}</td></tr>
             ) : filtered.sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"")).map(r => {
               const proc = isProcesado(r);
+              const fechaDisplay = r.created_at ? new Date(r.created_at).toLocaleString("es-CO",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) : r.fecha || "—";
               return (
               <tr key={r.id} style={{cursor:"pointer",background:proc?"":"#FDFBFF"}} onClick={()=>setSelResp(selResp?.id===r.id?null:r)}>
-                <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>{r.fecha}</td>
+                <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9,whiteSpace:"nowrap"}}>{fechaDisplay}</td>
                 <td style={{...tds,fontWeight:600,fontSize:10}}>{r.formularioNombre||forms.find(f=>f.id===r.formularioId)?.nombre||"—"}</td>
                 <td style={{...tds,fontWeight:600,fontSize:10}}>{r.clienteNombre||"—"}</td>
                 <td style={{...tds,fontSize:9,color:T.blue}}>{r.clienteEmail||"—"}</td>
@@ -1401,12 +1402,30 @@ function TabEstadisticas({ forms }) {
   const convRate = opens.length > 0 ? Math.round((submits.length / opens.length) * 100) : 0;
 
   const fmtTime = (s) => s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s/60)}m ${s%60}s` : `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m`;
+  const fmtDate = (d) => d ? new Date(d).toLocaleString("es-CO",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) : "—";
+
+  // Group events by form+client combo
+  const grouped = {};
+  ev.forEach(e => {
+    const key = (e.form_id||"")+"_"+(e.client_email||e.client_name||"anon");
+    if (!grouped[key]) grouped[key] = { form_id:e.form_id, form_name:e.form_name||e.form_id, client_name:e.client_name||"", client_email:e.client_email||"", opens:0, submits:0, lastDate:null, duration:0, durationCount:0 };
+    if (e.event_type==="open") grouped[key].opens++;
+    if (e.event_type==="submit") grouped[key].submits++;
+    if (e.event_type==="close" && e.duration_seconds>0) { grouped[key].duration+=e.duration_seconds; grouped[key].durationCount++; }
+    const d = e.created_at ? new Date(e.created_at) : null;
+    if (d && (!grouped[key].lastDate || d > grouped[key].lastDate)) grouped[key].lastDate = d;
+  });
+  let rows = Object.values(grouped);
+  // Filter by selected form
+  if (selectedForm !== "all") rows = rows.filter(r => r.form_id === selectedForm);
+  // Sort by most recent
+  rows.sort((a,b) => (b.lastDate||0) - (a.lastDate||0));
 
   // Group by form
   const formIds = [...new Set(ev.map(e=>e.form_id).concat(resp.map(r=>r.form_id)))];
 
-  // Recent events
-  const recentEvents = ev.slice(0, 30);
+  const ths = {padding:"8px 10px",textAlign:"left",fontWeight:700,fontSize:8,textTransform:"uppercase",color:T.inkMid,borderBottom:`1px solid ${T.border}`};
+  const tds = {padding:"8px 10px",fontSize:11,borderBottom:`1px solid ${T.border}`,verticalAlign:"middle"};
 
   return (
     <div>
@@ -1455,73 +1474,60 @@ function TabEstadisticas({ forms }) {
               </div>
             ))}
           </div>
-
-          {/* Per-link breakdown */}
-          {formStats.linkStats && formStats.linkStats.length > 0 && (
-            <div>
-              <div style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",marginBottom:6}}>📎 Por enlace enviado</div>
-              <div style={{overflowX:"auto"}}>
-                <table style={{width:"100%",borderCollapse:"collapse",fontSize:10}}>
-                  <thead>
-                    <tr style={{background:T.bg}}>
-                      {["Cliente","Fecha","Aperturas","Envíos","Usos/Máx","Caduca","Estado"].map(h=>
-                        <th key={h} style={{padding:"8px 10px",textAlign:"left",fontWeight:700,fontSize:8,textTransform:"uppercase",color:T.inkMid,borderBottom:`1px solid ${T.border}`}}>{h}</th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {formStats.linkStats.map(l => {
-                      const isExpired = l.expires_at && new Date(l.expires_at) < new Date();
-                      const isMaxed = l.max_uses > 0 && l.current_uses >= l.max_uses;
-                      const status = !l.active ? "Desactivado" : isExpired ? "Expirado" : isMaxed ? "Completado" : "Activo";
-                      const statusColor = status==="Activo" ? T.green : status==="Completado" ? T.blue : T.red;
-                      return (
-                        <tr key={l.id} style={{borderBottom:`1px solid ${T.border}`}}>
-                          <td style={{padding:"8px 10px",fontWeight:600}}>{l.client_name||l.client_email||"—"}</td>
-                          <td style={{padding:"8px 10px",color:T.inkMid}}>{l.created_at ? new Date(l.created_at).toLocaleDateString("es-CO") : "—"}</td>
-                          <td style={{padding:"8px 10px",fontFamily:"'DM Mono',monospace",fontWeight:700,color:"#1E4F8C"}}>{l.opens}</td>
-                          <td style={{padding:"8px 10px",fontFamily:"'DM Mono',monospace",fontWeight:700,color:"#1E6B42"}}>{l.submits}</td>
-                          <td style={{padding:"8px 10px"}}>{l.current_uses}/{l.max_uses||"∞"}</td>
-                          <td style={{padding:"8px 10px",color:T.inkMid}}>{l.expires_at ? new Date(l.expires_at).toLocaleDateString("es-CO") : "—"}</td>
-                          <td style={{padding:"8px 10px"}}>
-                            <span style={{fontSize:9,padding:"2px 8px",borderRadius:10,fontWeight:700,color:statusColor,background:statusColor+"15"}}>{status}</span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
         </Card>
       )}
 
-      {/* Activity timeline */}
-      <Card style={{padding:"16px"}}>
-        <h3 style={{margin:"0 0 12px",fontSize:14,fontWeight:700}}>🕐 Actividad reciente</h3>
-        {recentEvents.length === 0 ? (
-          <div style={{fontSize:11,color:T.inkMid,textAlign:"center",padding:20}}>No hay actividad registrada aún. Cuando un cliente abra o envíe un formulario, aparecerá aquí.</div>
+      {/* Activity table — grouped by form+client */}
+      <Card style={{padding:0,overflow:"hidden"}}>
+        <div style={{padding:"14px 16px",borderBottom:`1px solid ${T.border}`}}>
+          <h3 style={{margin:0,fontSize:14,fontWeight:700}}>📋 Formularios recibidos</h3>
+        </div>
+        {rows.length === 0 ? (
+          <div style={{fontSize:11,color:T.inkMid,textAlign:"center",padding:28}}>No hay actividad registrada aún.</div>
         ) : (
-          <div style={{maxHeight:400,overflow:"auto"}}>
-            {recentEvents.map((e,i) => {
-              const icons = { open:"👁️", submit:"✅", close:"🚪" };
-              const labels = { open:"Abrió formulario", submit:"Envió formulario", close:`Cerró (${fmtTime(e.duration_seconds||0)})` };
-              return (
-                <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start",padding:"8px 0",borderBottom:i<recentEvents.length-1?`1px solid ${T.border}`:"none"}}>
-                  <div style={{fontSize:16,flexShrink:0}}>{icons[e.event_type]||"📝"}</div>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:11,fontWeight:600}}>{labels[e.event_type]||e.event_type}</div>
-                    <div style={{fontSize:9,color:T.inkMid}}>
-                      {e.form_name||e.form_id} {e.client_name ? `· ${e.client_name}` : ""} {e.client_email ? `(${e.client_email})` : ""}
-                    </div>
-                  </div>
-                  <div style={{fontSize:9,color:T.inkLight,flexShrink:0}}>
-                    {e.created_at ? new Date(e.created_at).toLocaleString("es-CO",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) : ""}
-                  </div>
-                </div>
-              );
-            })}
+          <div style={{overflowX:"auto"}}>
+            <table style={{width:"100%",borderCollapse:"collapse"}}>
+              <thead>
+                <tr style={{background:T.bg}}>
+                  {["Estado","Fecha / Hora","Formulario","Cliente","Aperturas","Envíos","Tiempo","Conversión"].map(h=>
+                    <th key={h} style={ths}>{h}</th>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r,i) => {
+                  const hasSubmit = r.submits > 0;
+                  const conv = r.opens > 0 ? Math.round((r.submits / r.opens) * 100) : 0;
+                  const avgTime = r.durationCount > 0 ? Math.round(r.duration / r.durationCount) : 0;
+                  return (
+                    <tr key={i} style={{background:i%2===0?"#fff":"#FAFAF8"}}>
+                      <td style={tds}>
+                        <span style={{fontSize:9,padding:"3px 10px",borderRadius:10,fontWeight:700,
+                          color:hasSubmit?T.green:T.amber,
+                          background:hasSubmit?T.greenBg:T.amberBg}}>
+                          {hasSubmit?"✅ Recibido":"⏳ Pendiente"}
+                        </span>
+                      </td>
+                      <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:10,color:T.inkMid,whiteSpace:"nowrap"}}>
+                        {r.lastDate ? fmtDate(r.lastDate) : "—"}
+                      </td>
+                      <td style={{...tds,fontWeight:600}}>{r.form_name}</td>
+                      <td style={tds}>
+                        <div style={{fontWeight:600,fontSize:11}}>{r.client_name||"—"}</div>
+                        {r.client_email && <div style={{fontSize:9,color:T.blue}}>{r.client_email}</div>}
+                      </td>
+                      <td style={{...tds,textAlign:"center",fontFamily:"'DM Mono',monospace",fontWeight:700,color:"#1E4F8C"}}>{r.opens}</td>
+                      <td style={{...tds,textAlign:"center",fontFamily:"'DM Mono',monospace",fontWeight:700,color:"#1E6B42"}}>{r.submits}</td>
+                      <td style={{...tds,textAlign:"center",fontSize:10,color:T.inkMid}}>{avgTime > 0 ? fmtTime(avgTime) : "—"}</td>
+                      <td style={{...tds,textAlign:"center"}}>
+                        <span style={{fontFamily:"'DM Mono',monospace",fontWeight:700,fontSize:10,
+                          color:conv>=50?T.green:conv>0?T.amber:T.inkLight}}>{conv}%</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </Card>
