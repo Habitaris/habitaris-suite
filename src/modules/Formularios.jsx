@@ -136,8 +136,29 @@ const MODULOS_ASOC = [
 ];
 
 /* ── Templates ── */
+const CIUDADES_CO = {
+  "Amazonas":["Leticia","Otra"],"Antioquia":["Medellín","Bello","Envigado","Itagüí","Rionegro","Sabaneta","Apartadó","Otra"],
+  "Arauca":["Arauca","Saravena","Otra"],"Atlántico":["Barranquilla","Soledad","Malambo","Otra"],
+  "Bogotá D.C.":["Bogotá"],"Bolívar":["Cartagena","Magangué","Turbaco","Otra"],
+  "Boyacá":["Tunja","Duitama","Sogamoso","Otra"],"Caldas":["Manizales","Villamaría","La Dorada","Otra"],
+  "Caquetá":["Florencia","Otra"],"Casanare":["Yopal","Aguazul","Otra"],
+  "Cauca":["Popayán","Santander de Quilichao","Otra"],"Cesar":["Valledupar","Aguachica","Otra"],
+  "Chocó":["Quibdó","Otra"],"Córdoba":["Montería","Cereté","Lorica","Otra"],
+  "Cundinamarca":["Soacha","Chía","Zipaquirá","Facatativá","Girardot","Fusagasugá","Mosquera","Madrid","Cajicá","Otra"],
+  "Guainía":["Inírida","Otra"],"Guaviare":["San José del Guaviare","Otra"],
+  "Huila":["Neiva","Pitalito","Garzón","Otra"],"La Guajira":["Riohacha","Maicao","Otra"],
+  "Magdalena":["Santa Marta","Ciénaga","Otra"],"Meta":["Villavicencio","Acacías","Granada","Otra"],
+  "Nariño":["Pasto","Ipiales","Tumaco","Otra"],"Norte de Santander":["Cúcuta","Ocaña","Pamplona","Otra"],
+  "Putumayo":["Mocoa","Puerto Asís","Otra"],"Quindío":["Armenia","Calarcá","Otra"],
+  "Risaralda":["Pereira","Dosquebradas","Santa Rosa de Cabal","Otra"],
+  "San Andrés y Providencia":["San Andrés","Providencia","Otra"],
+  "Santander":["Bucaramanga","Floridablanca","Girón","Piedecuesta","Barrancabermeja","Otra"],
+  "Sucre":["Sincelejo","Corozal","Otra"],"Tolima":["Ibagué","Espinal","Melgar","Otra"],
+  "Valle del Cauca":["Cali","Palmira","Buenaventura","Tuluá","Buga","Jamundí","Yumbo","Otra"],
+  "Vaupés":["Mitú","Otra"],"Vichada":["Puerto Carreño","Otra"]
+};
 const PLANTILLAS = [
-  { id:"briefing_inicial", version:5, nombre:"Briefing Inicial Habitaris", modulo:"crm", desc:"Formulario completo de briefing para nuevos proyectos",
+  { id:"briefing_inicial", version:6, nombre:"Briefing Inicial Habitaris", modulo:"crm", desc:"Formulario completo de briefing para nuevos proyectos",
     campos:[
       /* ── Aviso de Privacidad (gate) ── */
       {id:"f_privacidad",tipo:"info",label:"Aviso de Privacidad: En Habitaris SAS (NIT 901.922.136-8, domicilio Bogotá D.C., email: comercial.co, tel: +57 350 5661545), tratamos tus datos personales para procesar tu solicitud de briefing, enviar cotizaciones y gestionar proyectos. Cumplimos con la Ley 1581/2012 y Régimen de Protección de Datos. Derechos (acceso, rectificación, supresión, revocación): vía comercial.co.",desc:"",required:false,opciones:[],logica:null},
@@ -146,7 +167,11 @@ const PLANTILLAS = [
       /* ── Datos del cliente ── */
       {id:"s1",tipo:"seccion",label:"Datos del cliente",desc:"Información personal y de contacto",required:false,opciones:[],logica:{fieldId:"f_acepta_priv",value:"Sí"}},
       {id:"f_nombre",tipo:"text",label:"Nombre y apellidos",placeholder:"Escribe tu nombre completo",required:true,opciones:[],logica:null,mapKey:"nombre"},
-      {id:"f_tipo_doc",tipo:"select",label:"Tipo de documento",placeholder:"",required:true,opciones:["Cédula de ciudadanía (CC)","Cédula de extranjería (CE)","NIT","DNI","NIE","CIF","Pasaporte","Otro"],logica:null,mapKey:"tipoDocumento"},
+      /* Documento por país */
+      {id:"f_tipo_doc_co",tipo:"select",label:"Tipo de documento",placeholder:"",required:true,opciones:["Cédula de ciudadanía (CC)","Cédula de extranjería (CE)","NIT","Pasaporte"],logica:{fieldId:"f_pais",value:"Colombia"},mapKey:"tipoDocumento"},
+      {id:"f_tipo_doc_es",tipo:"select",label:"Tipo de documento",placeholder:"",required:true,opciones:["DNI","NIE","CIF","Pasaporte"],logica:{fieldId:"f_pais",value:"España"},mapKey:"tipoDocumento"},
+      {id:"f_tipo_doc_mx",tipo:"select",label:"Tipo de documento",placeholder:"",required:true,opciones:["CURP","RFC","INE","Pasaporte"],logica:{fieldId:"f_pais",value:"México"},mapKey:"tipoDocumento"},
+      {id:"f_tipo_doc_otro",tipo:"select",label:"Tipo de documento",placeholder:"",required:true,opciones:["Documento de identidad","Pasaporte","Otro"],logica:{fieldId:"f_pais",notValues:["Colombia","España","México"]},mapKey:"tipoDocumento"},
       {id:"f_num_doc",tipo:"text",label:"Número de documento",placeholder:"Ej: 1.234.567.890",required:true,opciones:[],logica:null,mapKey:"numDocumento"},
       {id:"f_email",tipo:"email",label:"Correo electrónico",placeholder:"name@example.com",required:true,opciones:[],logica:null,mapKey:"email"},
       {id:"f_pais",tipo:"select",label:"País del proyecto",placeholder:"",required:true,opciones:["Colombia","España","México","Chile","Perú","Ecuador","Argentina","Panamá","Estados Unidos","Otro"],logica:null,mapKey:"pais"},
@@ -155,15 +180,13 @@ const PLANTILLAS = [
 
       /* ── Ubicación del proyecto ── */
       {id:"s3",tipo:"seccion",label:"Ubicación del proyecto",desc:"¿Dónde está el inmueble?",required:false,opciones:[],logica:null},
-      /* Departamentos Colombia */
       {id:"f_depto_co",tipo:"select",label:"Departamento",placeholder:"",required:true,opciones:["Amazonas","Antioquia","Arauca","Atlántico","Bogotá D.C.","Bolívar","Boyacá","Caldas","Caquetá","Casanare","Cauca","Cesar","Chocó","Córdoba","Cundinamarca","Guainía","Guaviare","Huila","La Guajira","Magdalena","Meta","Nariño","Norte de Santander","Putumayo","Quindío","Risaralda","San Andrés y Providencia","Santander","Sucre","Tolima","Valle del Cauca","Vaupés","Vichada"],logica:{fieldId:"f_pais",value:"Colombia"},mapKey:"departamento"},
-      /* Comunidades autónomas España */
       {id:"f_depto_es",tipo:"select",label:"Comunidad autónoma",placeholder:"",required:true,opciones:["Andalucía","Aragón","Asturias","Baleares","Canarias","Cantabria","Castilla-La Mancha","Castilla y León","Cataluña","Ceuta","Comunidad Valenciana","Extremadura","Galicia","La Rioja","Madrid","Melilla","Murcia","Navarra","País Vasco"],logica:{fieldId:"f_pais",value:"España"},mapKey:"departamento"},
-      /* Estados México */
       {id:"f_depto_mx",tipo:"select",label:"Estado",placeholder:"",required:true,opciones:["Aguascalientes","Baja California","Baja California Sur","Campeche","Chiapas","Chihuahua","Ciudad de México","Coahuila","Colima","Durango","Estado de México","Guanajuato","Guerrero","Hidalgo","Jalisco","Michoacán","Morelos","Nayarit","Nuevo León","Oaxaca","Puebla","Querétaro","Quintana Roo","San Luis Potosí","Sinaloa","Sonora","Tabasco","Tamaulipas","Tlaxcala","Veracruz","Yucatán","Zacatecas"],logica:{fieldId:"f_pais",value:"México"},mapKey:"departamento"},
-      /* Región para otros países */
-      {id:"f_depto_otro",tipo:"text",label:"Región / Estado / Provincia",placeholder:"Escribe tu región",required:true,opciones:[],logica:{fieldId:"f_pais",value:"Otro"},mapKey:"departamento"},
-      {id:"f_ciudad",tipo:"text",label:"Ciudad o población",placeholder:"Escribe la ciudad",required:true,opciones:[],logica:null,mapKey:"ciudad"},
+      {id:"f_depto_otro",tipo:"text",label:"Región / Estado / Provincia",placeholder:"Escribe tu región",required:true,opciones:[],logica:{fieldId:"f_pais",notValues:["Colombia","España","México"]},mapKey:"departamento"},
+      /* Ciudad por país */
+      {id:"f_ciudad_co",tipo:"select",label:"Ciudad o población",placeholder:"",required:true,opciones:[],logica:{fieldId:"f_pais",value:"Colombia"},mapKey:"ciudad",dynamicOpciones:{dependsOn:"f_depto_co",map:CIUDADES_CO}},
+      {id:"f_ciudad_otro",tipo:"text",label:"Ciudad o población",placeholder:"Escribe la ciudad",required:true,opciones:[],logica:{fieldId:"f_pais",notValue:"Colombia"},mapKey:"ciudad"},
       {id:"f_direccion",tipo:"text",label:"Dirección del proyecto",placeholder:"Ej: Calle 100 #15-20 / Av. de la Constitución 5",required:true,opciones:[],logica:null,mapKey:"direccion"},
       {id:"f_tipo_vivienda",tipo:"select",label:"Tipo de inmueble",placeholder:"",required:true,opciones:["Apartamento","Casa","Local comercial","Oficina","Finca / Rural","Otro"],logica:null,mapKey:"tipoVivienda"},
       {id:"f_num_apto",tipo:"text",label:"Número de apartamento / piso",placeholder:"Ej: Apto 501, Piso 3",required:true,opciones:[],logica:{fieldId:"f_tipo_vivienda",value:"Apartamento"},mapKey:"numApto"},
@@ -194,7 +217,10 @@ const PLANTILLAS = [
 
       /* ── Presupuesto y financiación ── */
       {id:"s6",tipo:"seccion",label:"Presupuesto y financiación",desc:"Información económica del proyecto",required:false,opciones:[],logica:null},
-      {id:"f_presupuesto",tipo:"select",label:"Presupuesto estimado disponible para el proyecto",placeholder:"",required:true,opciones:["Menos de $10.000.000 / €10.000","$10.000.000 - $30.000.000 / €10.000 - €30.000","$30.000.000 - $60.000.000 / €30.000 - €60.000","$60.000.000 - $100.000.000 / €60.000 - €100.000","Más de $100.000.000 / €100.000+"],logica:null,mapKey:"presupuesto",scoring:{enabled:true,weight:5,rules:{"Menos de $10.000.000 / €10.000":"red","$10.000.000 - $30.000.000 / €10.000 - €30.000":"neutral","$30.000.000 - $60.000.000 / €30.000 - €60.000":"green","$60.000.000 - $100.000.000 / €60.000 - €100.000":"green","Más de $100.000.000 / €100.000+":"green"}}},
+      /* Presupuesto por país */
+      {id:"f_presupuesto_co",tipo:"select",label:"Presupuesto estimado (COP)",placeholder:"",required:true,opciones:["Menos de $10.000.000","$10.000.000 - $30.000.000","$30.000.000 - $60.000.000","$60.000.000 - $100.000.000","Más de $100.000.000"],logica:{fieldId:"f_pais",value:"Colombia"},mapKey:"presupuesto",scoring:{enabled:true,weight:5,rules:{"Menos de $10.000.000":"red","$10.000.000 - $30.000.000":"neutral","$30.000.000 - $60.000.000":"green","$60.000.000 - $100.000.000":"green","Más de $100.000.000":"green"}}},
+      {id:"f_presupuesto_es",tipo:"select",label:"Presupuesto estimado (EUR)",placeholder:"",required:true,opciones:["Menos de €10.000","€10.000 - €30.000","€30.000 - €60.000","€60.000 - €100.000","Más de €100.000"],logica:{fieldId:"f_pais",value:"España"},mapKey:"presupuesto",scoring:{enabled:true,weight:5,rules:{"Menos de €10.000":"red","€10.000 - €30.000":"neutral","€30.000 - €60.000":"green","€60.000 - €100.000":"green","Más de €100.000":"green"}}},
+      {id:"f_presupuesto_otro",tipo:"select",label:"Presupuesto estimado (USD)",placeholder:"",required:true,opciones:["Menos de $5.000","$5.000 - $15.000","$15.000 - $30.000","$30.000 - $50.000","Más de $50.000"],logica:{fieldId:"f_pais",notValues:["Colombia","España"]},mapKey:"presupuesto",scoring:{enabled:true,weight:5,rules:{"Menos de $5.000":"red","$5.000 - $15.000":"neutral","$15.000 - $30.000":"green","$30.000 - $50.000":"green","Más de $50.000":"green"}}},
       {id:"f_honorarios",tipo:"select",label:"¿Tu presupuesto incluye los honorarios de diseño?",placeholder:"",required:true,opciones:["Sí, incluye diseño y ejecución","Solo ejecución/materiales, el diseño aparte","No, espero que el diseño esté incluido sin costo","No estoy seguro"],logica:null,mapKey:"honorariosDiseño",scoring:{enabled:true,weight:5,rules:{"Sí, incluye diseño y ejecución":"green","Solo ejecución/materiales, el diseño aparte":"green","No, espero que el diseño esté incluido sin costo":"red","No estoy seguro":"neutral"}}},
       {id:"f_financiar",tipo:"select",label:"¿Cómo planeas financiar el proyecto?",placeholder:"",required:true,opciones:["Con recursos propios","Crédito bancario o leasing habitacional","Con apoyo de un tercero","Aún no lo tengo definido"],logica:null,mapKey:"financiacion",scoring:{enabled:true,weight:3,rules:{"Con recursos propios":"green","Crédito bancario o leasing habitacional":"neutral","Con apoyo de un tercero":"neutral","Aún no lo tengo definido":"red"}}},
       {id:"f_invertido",tipo:"select",label:"¿Has invertido antes en diseño profesional?",placeholder:"",required:true,opciones:["Sí","No, pero estoy dispuesto","No, nunca lo haría"],logica:null,mapKey:"inversionPrevia",scoring:{enabled:true,weight:3,rules:{"Sí":"green","No, pero estoy dispuesto":"neutral","No, nunca lo haría":"red"}}},
@@ -213,11 +239,14 @@ const PLANTILLAS = [
       {id:"f_mismos_datos",tipo:"yesno",label:"¿Los datos de facturación son los mismos del cliente?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"mismosDatosFactura"},
       {id:"f_fact_info_si",tipo:"info",label:"✅ Se usarán los datos ingresados en la sección 'Datos del cliente' para la facturación. Podrás revisarlos antes de confirmar.",desc:"",required:false,opciones:[],logica:{fieldId:"f_mismos_datos",value:"Sí"}},
       {id:"f_razon_social",tipo:"text",label:"Nombre o razón social para facturación",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"razonSocial"},
-      {id:"f_tipo_doc_fact",tipo:"select",label:"Tipo de documento (facturación)",placeholder:"",required:true,opciones:["Cédula de ciudadanía (CC)","Cédula de extranjería (CE)","NIT","DNI","NIE","CIF","Pasaporte","Otro"],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"tipoDocFactura"},
+      {id:"f_tipo_doc_fact_co",tipo:"select",label:"Tipo de documento (facturación)",placeholder:"",required:true,opciones:["Cédula de ciudadanía (CC)","Cédula de extranjería (CE)","NIT","Pasaporte"],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"tipoDocFactura"},
       {id:"f_num_doc_fact",tipo:"text",label:"Número de documento (facturación)",placeholder:"",required:true,opciones:[],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"numDocFactura"},
       {id:"f_email_fact",tipo:"email",label:"Email para envío de factura",placeholder:"name@example.com",required:true,opciones:[],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"emailFactura"},
       {id:"f_dir_fact",tipo:"text",label:"Dirección de facturación",placeholder:"",required:true,opciones:[],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"dirFacturacion"},
-      {id:"f_forma_pago",tipo:"select",label:"Forma de pago preferida",placeholder:"",required:true,opciones:["Enlace PSE","Tarjeta de Crédito/débito","Transferencia bancaria","Bizum","PayPal"],logica:null,mapKey:"formaPago"},
+      /* Forma de pago por país */
+      {id:"f_forma_pago_co",tipo:"select",label:"Forma de pago preferida",placeholder:"",required:true,opciones:["Enlace PSE","Tarjeta de Crédito/Débito","Transferencia bancaria","Nequi / Daviplata"],logica:{fieldId:"f_pais",value:"Colombia"},mapKey:"formaPago"},
+      {id:"f_forma_pago_es",tipo:"select",label:"Forma de pago preferida",placeholder:"",required:true,opciones:["Bizum","Tarjeta de Crédito/Débito","Transferencia bancaria","PayPal"],logica:{fieldId:"f_pais",value:"España"},mapKey:"formaPago"},
+      {id:"f_forma_pago_otro",tipo:"select",label:"Forma de pago preferida",placeholder:"",required:true,opciones:["Tarjeta de Crédito/Débito","Transferencia bancaria","PayPal"],logica:{fieldId:"f_pais",notValues:["Colombia","España"]},mapKey:"formaPago"},
       {id:"f_retenciones",tipo:"yesno",label:"¿Aplican retenciones especiales?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"retenciones"},
       {id:"f_det_ret",tipo:"textarea",label:"Detalle de retenciones",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:{fieldId:"f_retenciones",value:"Sí"},mapKey:"detalleRetenciones"},
 
@@ -402,11 +431,15 @@ campos.forEach(c=>{
 function isLocked(c){if(!cliente)return false;
   if(cliente.email&&(c.mapKey==="email"||c.tipo==="email"))return true;
   if(cliente.nombre&&(c.mapKey==="nombre"||(c.tipo==="text"&&c.label.toLowerCase().includes("nombre"))))return true;
-  if(cliente.tel&&(c.mapKey==="telefono"||c.tipo==="tel"))return true;
+  if(cliente.tel&&cliente.tel.trim()&&(c.mapKey==="telefono"||c.tipo==="tel"||c.tipo==="tel_combo"))return true;
   if(c.mapKey==="pais")return true;
   return false;}
-function isVisible(c){if(!c.logica||!c.logica.fieldId||!c.logica.value)return true;
-  const dv=vals[c.logica.fieldId];const ex=c.logica.value;
+function isVisible(c){if(!c.logica||!c.logica.fieldId)return true;
+  if(!c.logica.value&&!c.logica.notValues&&!c.logica.notValue)return true;
+  const dv=vals[c.logica.fieldId];
+  if(c.logica.notValues){return !c.logica.notValues.includes(String(dv||""));}
+  if(c.logica.notValue){return String(dv||"")!==c.logica.notValue;}
+  const ex=c.logica.value;
   if(Array.isArray(dv))return dv.includes(ex);return String(dv||"")===ex;}
 function render(){
   const app=document.getElementById("app");
@@ -432,7 +465,10 @@ function render(){
     h+=\`<div class="fld">\`;
     if(locked){
       h+=\`<label class="lbl">\${c.label} <span class="lock">🔒 prellenado</span></label>\`;
-      if(c.tipo==="select"){h+=\`<select class="inp" disabled><option>\${v}</option></select>\`;}
+      if(c.tipo==="tel_combo"){
+        const codVal=vals["_cod_"+c.id]||"+57";
+        h+=\`<div style="display:flex;gap:0"><div class="inp" style="width:90px;flex-shrink:0;border-radius:6px 0 0 6px;border-right:none;font-weight:700;font-size:13px;color:#1E4F8C;background:#E6EFF9;display:flex;align-items:center;justify-content:center;border-color:rgba(30,79,140,.27)">\${codVal}</div><input class="inp" value="\${v}" disabled style="flex:1;border-radius:0 6px 6px 0"/></div>\`;
+      }else if(c.tipo==="select"){h+=\`<select class="inp" disabled><option>\${v}</option></select>\`;}
       else{h+=\`<input class="inp" value="\${v}" disabled/>\`;}
     }else if(c.tipo==="tel_combo"){
       const paisVal=c.paisRef?vals[c.paisRef]:paisProy;
@@ -450,9 +486,11 @@ function render(){
       h+=\`<label class="lbl">\${c.label}\${req}</label>\`;
       h+=\`<textarea class="inp" rows="3" placeholder="\${c.placeholder||""}" onchange="vals['\${c.id}']=this.value;render()">\${v}</textarea>\`;
     }else if(c.tipo==="select"||c.tipo==="rango"){
+      let opts=c.opciones||[];
+      if(c.dynamicOpciones){const dv=vals[c.dynamicOpciones.dependsOn]||"";opts=(c.dynamicOpciones.map&&c.dynamicOpciones.map[dv])||c.dynamicOpciones.fallback||[];}
       h+=\`<label class="lbl">\${c.label}\${req}</label>\`;
       h+=\`<select class="inp" onchange="vals['\${c.id}']=this.value;render()"><option value="">Seleccionar...</option>\`;
-      (c.opciones||[]).forEach(o=>{h+=\`<option value="\${o}" \${v===o?"selected":""}>\${o}</option>\`;});
+      opts.forEach(o=>{h+=\`<option value="\${o}" \${v===o?"selected":""}>\${o}</option>\`;});
       h+=\`</select>\`;
     }else if(c.tipo==="radio"){
       h+=\`<label class="lbl">\${c.label}\${req}</label><div class="radio-g">\`;
@@ -1493,27 +1531,62 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
                         </div>
                       );
                     })()}
-                    {/* Client + fields */}
-                    <div style={{display:"flex",gap:12}}>
-                      {(r.clienteNombre||r.clienteEmail) && (
-                        <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:T.blueBg,borderRadius:6,border:`1px solid ${T.blue}22`,minWidth:200}}>
-                          <div style={{width:28,height:28,borderRadius:"50%",background:T.blue,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700}}>{(r.clienteNombre||r.clienteEmail||"?")[0].toUpperCase()}</div>
-                          <div>
-                            {r.clienteNombre && <div style={{fontSize:11,fontWeight:700,color:T.blue}}>{r.clienteNombre}</div>}
-                            {r.clienteEmail && <div style={{fontSize:8,color:T.blue}}>{r.clienteEmail}</div>}
-                            {r.clienteTel && <div style={{fontSize:8,color:T.inkMid}}>📞 {r.clienteTel}</div>}
+                    {/* Client + fields organized */}
+                    {(()=>{
+                      const get = (key) => r[key] !== undefined ? (Array.isArray(r[key]) ? r[key].join(", ") : String(r[key])) : null;
+                      const pill = (label, val) => val ? <div style={{padding:"4px 8px",background:"#fff",borderRadius:4,border:`1px solid ${T.border}`}}>
+                        <div style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>{label}</div>
+                        <div style={{fontSize:10,fontWeight:600,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{val}</div>
+                      </div> : null;
+                      const secHead = (icon, title) => <div style={{gridColumn:"1/-1",fontSize:9,fontWeight:700,color:T.inkMid,marginTop:6,paddingBottom:2,borderBottom:`1px solid ${T.border}`}}>{icon} {title}</div>;
+                      return (<div>
+                        {/* Client card */}
+                        {(r.clienteNombre||r.clienteEmail) && (
+                          <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",background:T.blueBg,borderRadius:6,border:`1px solid ${T.blue}22`,marginBottom:10}}>
+                            <div style={{width:32,height:32,borderRadius:"50%",background:T.blue,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700}}>{(r.clienteNombre||r.clienteEmail||"?")[0].toUpperCase()}</div>
+                            <div style={{flex:1}}>
+                              {r.clienteNombre && <div style={{fontSize:12,fontWeight:700,color:T.blue}}>{r.clienteNombre}</div>}
+                              <div style={{display:"flex",gap:12,fontSize:9,color:T.inkMid,marginTop:2}}>
+                                {r.clienteEmail && <span>✉️ {r.clienteEmail}</span>}
+                                {r.clienteTel && <span>📞 {r.clienteTel}</span>}
+                                {get("tipoDocumento") && <span>🪪 {get("tipoDocumento")} {get("numDocumento")||""}</span>}
+                              </div>
+                            </div>
+                            {get("propietario") && <div style={{padding:"3px 10px",borderRadius:12,fontSize:8,fontWeight:700,background:get("propietario")==="Soy el propietario"?T.greenBg:T.amberBg,color:get("propietario")==="Soy el propietario"?T.green:T.amber}}>{get("propietario")}</div>}
                           </div>
+                        )}
+                        {/* Fields grid */}
+                        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
+                          {secHead("📍","Ubicación")}
+                          {pill("País",get("pais"))}
+                          {pill("Departamento/Región",get("departamento"))}
+                          {pill("Ciudad",get("ciudad"))}
+                          {pill("Dirección",get("direccion"))}
+                          {pill("Inmueble",get("tipoVivienda"))}
+                          {pill("Área m²",get("area"))}
+
+                          {secHead("🎨","Proyecto y Diseño")}
+                          {pill("Servicios",get("servicios"))}
+                          {pill("Tipo proyecto",get("tipoProyecto"))}
+                          {pill("Estilo",get("estilo"))}
+                          {pill("Espacios",get("espacios"))}
+                          {pill("Expectativas",get("expectativas"))}
+                          {pill("Prioridades",get("prioridades"))}
+
+                          {secHead("💰","Presupuesto")}
+                          {pill("Presupuesto",get("presupuesto"))}
+                          {pill("Honorarios diseño",get("honorariosDiseño"))}
+                          {pill("Financiación",get("financiacion"))}
+                          {pill("Anticipo 30-50%",get("anticipo"))}
+                          {pill("Forma de pago",get("formaPago"))}
+                          {pill("Flexibilidad",get("flexibilidad"))}
+
+                          {secHead("📅","Plazos")}
+                          {pill("Plazo",get("plazo"))}
+                          {pill("Fecha inicio",get("fechaInicio"))}
                         </div>
-                      )}
-                      <div style={{flex:1,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
-                        {Object.entries(r).filter(([k])=>!["id","fecha","formularioId","formularioNombre","clienteNombre","clienteEmail","clienteTel","created_at","_sbId","procesado"].includes(k)).slice(0,12).map(([k,v]) => (
-                          <div key={k} style={{padding:"4px 8px",background:"#fff",borderRadius:4,border:`1px solid ${T.border}`}}>
-                            <div style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>{k}</div>
-                            <div style={{fontSize:10,fontWeight:600,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{Array.isArray(v)?v.join(", "):String(v)}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                      </div>);
+                    })()}
                   </div>
                 </td></tr>
               )}
@@ -1552,6 +1625,7 @@ function TabPlantillas({ forms, setForms, onEdit }) {
           nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
         }
         if (nc.paisRef && idMap[nc.paisRef]) nc.paisRef = idMap[nc.paisRef];
+        if (nc.dynamicOpciones && nc.dynamicOpciones.dependsOn && idMap[nc.dynamicOpciones.dependsOn]) nc.dynamicOpciones = {...nc.dynamicOpciones, dependsOn: idMap[nc.dynamicOpciones.dependsOn]};
         return nc;
       });
       const f = { id:uid(), nombre:p.nombre, modulo:p.modulo||"general", campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, createdAt:today(), updatedAt:today(), activo:true, sourceTemplate:p.id };
@@ -1803,6 +1877,7 @@ export default function Formularios() {
             nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
           }
           if (nc.paisRef && idMap[nc.paisRef]) nc.paisRef = idMap[nc.paisRef];
+        if (nc.dynamicOpciones && nc.dynamicOpciones.dependsOn && idMap[nc.dynamicOpciones.dependsOn]) nc.dynamicOpciones = {...nc.dynamicOpciones, dependsOn: idMap[nc.dynamicOpciones.dependsOn]};
           return nc;
         });
         updated.push({ id:uid(), nombre:p.nombre, modulo:p.modulo||"general", campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, createdAt:today(), updatedAt:today(), activo:true, sourceTemplate:p.id, templateVersion:p.version||1 });
@@ -1817,6 +1892,7 @@ export default function Formularios() {
             nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
           }
           if (nc.paisRef && idMap[nc.paisRef]) nc.paisRef = idMap[nc.paisRef];
+        if (nc.dynamicOpciones && nc.dynamicOpciones.dependsOn && idMap[nc.dynamicOpciones.dependsOn]) nc.dynamicOpciones = {...nc.dynamicOpciones, dependsOn: idMap[nc.dynamicOpciones.dependsOn]};
           return nc;
         });
         updated = updated.map(f => f.id === existing.id ? {...f, campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, updatedAt:today(), templateVersion:p.version, sourceTemplate:p.id} : f);
