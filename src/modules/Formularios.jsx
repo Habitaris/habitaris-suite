@@ -13,7 +13,6 @@ const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?fami
 const T = { bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E4E1DB",accent:"#EDEBE7",green:"#1E6B42",greenBg:"#E8F4EE",red:"#AE2C2C",redBg:"#FAE8E8",amber:"#7A5218",amberBg:"#FAF0E0",blue:"#1E4F8C",blueBg:"#E6EFF9",purple:"#5B3A8C",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
 const uid = () => Math.random().toString(36).slice(2,10);
 const today = () => new Date().toISOString().split("T")[0];
-const F = { fontFamily:"'Outfit',sans-serif" };
 
 /* ── EmailJS — reads from centralized config ── */
 const sendEmailJS = async (params) => {
@@ -719,8 +718,8 @@ render();
 
       {/* Share modal — generates downloadable HTML form */}
       {showShare && (
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setShowShare(false)}>
-          <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:8,padding:28,width:460,boxShadow:"0 12px 40px rgba(0,0,0,0.2)"}}>
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:40,overflowY:"auto"}} onClick={()=>setShowShare(false)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:8,padding:28,width:460,maxHeight:"85vh",overflowY:"auto",boxShadow:"0 12px 40px rgba(0,0,0,0.2)",marginBottom:40}}>
             <h3 style={{margin:0,fontSize:16,fontWeight:700,marginBottom:4}}>📤 Enviar formulario a cliente</h3>
             <p style={{margin:"0 0 16px",fontSize:10,color:T.inkMid}}>{nombre || "Sin nombre"} · Se genera un archivo HTML que el cliente abre en su navegador</p>
 
@@ -877,7 +876,7 @@ function ListaForms({ forms, setForms, onEdit, onNew }) {
 /* ═══════════════════════════════════════════════════════════════
    RESPUESTAS
    ═══════════════════════════════════════════════════════════════ */
-function TabRespuestas({ forms, respuestas }) {
+function TabRespuestas({ forms, respuestas, onReload, loading }) {
   const [selFormId, setSelFormId] = useState("");
   const [selResp, setSelResp] = useState(null);
   const [procesados, setProcesados] = useState(() => {
@@ -885,19 +884,21 @@ function TabRespuestas({ forms, respuestas }) {
   });
   const [filtroEstado, setFiltroEstado] = useState("todos"); // todos | pendiente | procesado
 
-  const markProcesado = (id) => {
+  const markProcesado = (id, sbId) => {
     const next = [...procesados, id];
     setProcesados(next);
     localStorage.setItem("hab:form:procesados", JSON.stringify(next));
+    if (sbId && SB.isConfigured()) SB.markProcessed(sbId).catch(()=>{});
   };
 
-  const markPendiente = (id) => {
+  const markPendiente = (id, sbId) => {
     const next = procesados.filter(x=>x!==id);
     setProcesados(next);
     localStorage.setItem("hab:form:procesados", JSON.stringify(next));
+    if (sbId && SB.isConfigured()) SB.markUnprocessed(sbId).catch(()=>{});
   };
 
-  const isProcesado = (r) => procesados.includes(r.id);
+  const isProcesado = (r) => r.processed || procesados.includes(r.id);
 
   /* Procesar: crear cliente + borrador oferta en CRM */
   const procesarRespuesta = (r) => {
@@ -982,7 +983,7 @@ function TabRespuestas({ forms, respuestas }) {
     localStorage.setItem("habitaris_crm", JSON.stringify(crmData));
 
     // 3. Mark as processed
-    markProcesado(r.id);
+    markProcesado(r.id, r._sbId);
 
     alert(`✅ Procesado:\n\n👤 Cliente: ${existingClient ? "ya existía" : "creado"} — ${r.clienteNombre||r.clienteEmail}\n📋 Oferta borrador creada en CRM\n\nVe a CRM → Ofertas para continuar.`);
   };
@@ -1185,7 +1186,14 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
       )}
 
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <h2 style={{margin:0,fontSize:18,fontWeight:700}}>Respuestas — {respuestas.length}</h2>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <h2 style={{margin:0,fontSize:18,fontWeight:700}}>Respuestas — {respuestas.length}</h2>
+          {onReload && <button onClick={onReload} disabled={loading}
+            style={{padding:"4px 10px",fontSize:9,fontWeight:600,cursor:loading?"wait":"pointer",fontFamily:"'Outfit',sans-serif",
+              border:`1px solid ${T.border}`,borderRadius:4,background:"#fff",color:T.inkMid,opacity:loading?.5:1}}>
+            🔄 {loading?"Cargando...":"Recargar"}
+          </button>}
+        </div>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <div style={{display:"flex",gap:0}}>
             {[{v:"todos",l:"Todos"},{v:"pendiente",l:"⏳ Pendientes"},{v:"procesado",l:"✅ Procesados"}].map((o,i)=>(
@@ -1238,7 +1246,7 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
                       title="Crear cliente + oferta en CRM">⚡ Procesar</button>
                   )}
                   {proc && (
-                    <button onClick={e=>{e.stopPropagation();markPendiente(r.id)}}
+                    <button onClick={e=>{e.stopPropagation();markPendiente(r.id, r._sbId)}}
                       style={{padding:"3px 8px",fontSize:8,fontWeight:600,background:"#fff",color:T.inkMid,border:`1px solid ${T.border}`,borderRadius:3,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}
                       title="Marcar como pendiente">↩</button>
                   )}
@@ -1298,6 +1306,12 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
 function TabPlantillas({ forms, setForms, onEdit }) {
   const usePlantilla = (p) => {
     try {
+      // Check if a form from this template already exists
+      const existing = forms.find(f => f.sourceTemplate === p.id);
+      if (existing) {
+        onEdit(existing.id);
+        return;
+      }
       // Create ID mapping old→new and remap logica references
       const idMap = {};
       p.campos.forEach(c => { idMap[c.id] = uid(); });
@@ -1308,7 +1322,7 @@ function TabPlantillas({ forms, setForms, onEdit }) {
         }
         return nc;
       });
-      const f = { id:uid(), nombre:p.nombre, modulo:p.modulo||"general", campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, createdAt:today(), updatedAt:today(), activo:true };
+      const f = { id:uid(), nombre:p.nombre, modulo:p.modulo||"general", campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, createdAt:today(), updatedAt:today(), activo:true, sourceTemplate:p.id };
       setForms([...forms, f]);
       onEdit(f.id);
     } catch(e) { console.error("Error al usar plantilla:", e); alert("Error al crear formulario desde plantilla"); }
@@ -1320,6 +1334,7 @@ function TabPlantillas({ forms, setForms, onEdit }) {
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280,1fr))",gap:12}}>
         {PLANTILLAS.map(p => {
           const mod = MODULOS_ASOC.find(m=>m.id===p.modulo);
+          const alreadyUsed = forms.find(f => f.sourceTemplate === p.id);
           return (
             <Card key={p.id} style={{padding:0,overflow:"hidden"}}>
               <div style={{padding:"14px 16px"}}>
@@ -1332,8 +1347,8 @@ function TabPlantillas({ forms, setForms, onEdit }) {
               </div>
               <div style={{borderTop:`1px solid ${T.border}`,padding:0}}>
                 <button onClick={()=>usePlantilla(p)}
-                  style={{width:"100%",padding:"8px 0",border:"none",background:"transparent",cursor:"pointer",fontSize:10,fontWeight:700,color:T.green,fontFamily:"'Outfit',sans-serif"}}>
-                  ✨ Usar esta plantilla
+                  style={{width:"100%",padding:"8px 0",border:"none",background:"transparent",cursor:"pointer",fontSize:10,fontWeight:700,color:alreadyUsed?T.blue:T.green,fontFamily:"'Outfit',sans-serif"}}>
+                  {alreadyUsed ? "✏️ Editar formulario existente" : "✨ Usar esta plantilla"}
                 </button>
               </div>
             </Card>
@@ -1531,17 +1546,51 @@ export default function Formularios() {
   const envios = data.envios || [];
   const addEnvio = (e) => save("envios", [...envios, e]);
 
-  // Load responses from shared storage
-  const respuestas = useMemo(() => {
+  // Load responses from Supabase + localStorage fallback
+  const [respuestas, setRespuestas] = useState([]);
+  const [respLoading, setRespLoading] = useState(false);
+  const loadResponses = async () => {
+    setRespLoading(true);
     const arr = [];
+    const seen = new Set();
+    // 1. Try Supabase first
+    if (SB.isConfigured()) {
+      try {
+        const sbResp = await SB.getAllResponses();
+        if (sbResp && sbResp.length > 0) {
+          sbResp.forEach(r => {
+            const respData = r.data || {};
+            const merged = {
+              ...respData,
+              _sbId: r.id,
+              id: respData.id || r.id,
+              formularioId: r.form_id || respData.formularioId,
+              formularioNombre: r.form_name || respData.formularioNombre,
+              clienteNombre: r.client_name || respData.clienteNombre,
+              clienteEmail: r.client_email || respData.clienteEmail,
+              clienteTel: r.client_tel || respData.clienteTel,
+              fecha: respData.fecha || (r.created_at ? r.created_at.split("T")[0] : ""),
+              processed: r.processed || false,
+            };
+            if (!seen.has(merged.id)) { seen.add(merged.id); arr.push(merged); }
+          });
+        }
+      } catch(e) { console.warn("Error loading Supabase responses:", e); }
+    }
+    // 2. Also check localStorage (backward compatible)
     for (let i=0; i<localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key?.startsWith("shared:hab:briefing:")) {
-        try { arr.push(JSON.parse(localStorage.getItem(key))); } catch {}
+        try {
+          const r = JSON.parse(localStorage.getItem(key));
+          if (r && r.id && !seen.has(r.id)) { seen.add(r.id); arr.push(r); }
+        } catch {}
       }
     }
-    return arr;
-  }, [data]);
+    setRespuestas(arr);
+    setRespLoading(false);
+  };
+  useEffect(() => { loadResponses(); }, []);
 
   const [tab, setTab] = useState("dashboard");
   const [editId, setEditId] = useState(null);
@@ -1660,7 +1709,7 @@ export default function Formularios() {
             </Card>
           </div>
         )}
-        {tab === "respuestas"   && <TabRespuestas forms={forms} respuestas={respuestas}/>}
+        {tab === "respuestas"   && <TabRespuestas forms={forms} respuestas={respuestas} onReload={loadResponses} loading={respLoading}/>}
         {tab === "estadisticas" && <TabEstadisticas forms={forms}/>}
         {tab === "plantillas"   && <TabPlantillas forms={forms} setForms={setForms} onEdit={goConstructor}/>}
       </div>
