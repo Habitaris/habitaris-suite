@@ -179,9 +179,12 @@ function ModuleBar({ mod, onBack, lang, setLang }) {
 }
 
 export default function App() {
-  const [active, setActive] = useState(null)
+  const [active, setActive] = useState(() => sessionStorage.getItem("hab:active_module") || null)
   const [lang, setLang]     = useState("es")
   const mod = MODULES.find(m => m.id === active)
+
+  const selectModule = (id) => { sessionStorage.setItem("hab:active_module", id); setActive(id); }
+  const goHome = () => { sessionStorage.removeItem("hab:active_module"); setActive(null); }
 
   // Portal route: /portal (data comes in URL hash)
   const path = window.location.pathname
@@ -194,13 +197,13 @@ export default function App() {
   }
 
   if (!active || !mod?.component) {
-    return <Home onSelect={setActive} lang={lang} setLang={setLang} />
+    return <Home onSelect={selectModule} lang={lang} setLang={setLang} />
   }
 
   const MC = mod.component
   return (
     <div style={{ minHeight:"100vh", background:"#F0EEE9", paddingTop:48 }}>
-      <ModuleBar mod={mod} onBack={() => setActive(null)} lang={lang} setLang={setLang} />
+      <ModuleBar mod={mod} onBack={goHome} lang={lang} setLang={setLang} />
       <Suspense fallback={<Spinner />}>
         <MC lang={lang} />
       </Suspense>
