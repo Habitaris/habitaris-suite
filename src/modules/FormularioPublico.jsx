@@ -155,7 +155,10 @@ export default function FormularioPublico() {
       });
       setVals(prev => ({...prefill, ...prev}));
     }
-    if (localStorage.getItem(formKey)) setSubmitted(true);
+
+    // Check if link was manually blocked
+    const linkCfg = def.linkConfig || {};
+    if (linkCfg.blocked) { setBlocked("blocked"); return; }
 
     // Check link-level limits
     const linkCfg = def.linkConfig || {};
@@ -215,6 +218,7 @@ export default function FormularioPublico() {
       expired: { icon:"⏰", title:"Formulario expirado", desc:"La fecha de caducidad de este formulario ha pasado. Contacta a quien te lo envió." },
       maxuses: { icon:"🔒", title:"Límite de envíos alcanzado", desc:"Este formulario ya fue completado el número máximo de veces permitido." },
       inactive: { icon:"⛔", title:"Enlace desactivado", desc:"Este enlace ha sido desactivado. Contacta a quien te lo envió." },
+      blocked: { icon:"🚫", title:"Formulario bloqueado", desc:"Este formulario ha sido bloqueado por el remitente. Si crees que es un error, contacta a quien te lo envió." },
     };
     const m = msgs[blocked] || msgs.expired;
     const brandFont2 = (def?.marca?.tipografia) || "Outfit";
@@ -401,7 +405,7 @@ export default function FormularioPublico() {
     }
 
     /* FIX: No auto-open WhatsApp — just mark as submitted */
-    setSubmitted(true); localStorage.setItem(formKey, "1");
+    setSubmitted(true);
 
     // Send email notification to comercial@habitaris.co with full report
     try {
