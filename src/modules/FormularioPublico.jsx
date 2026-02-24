@@ -143,7 +143,6 @@ export default function FormularioPublico() {
     if (!def) return;
     const campos = def.campos || [];
     const cliente = def.cliente || null;
-    const formKey = "hab_used_"+(def.id||"")+"_"+(cliente?cliente.email||cliente.nombre:"");
 
     /* FIX: Only prefill fields that match exact mapKey, not by tipo or label */
     if (cliente) {
@@ -161,7 +160,6 @@ export default function FormularioPublico() {
     if (linkCfg.blocked) { setBlocked("blocked"); return; }
 
     // Check link-level limits
-    const linkCfg = def.linkConfig || {};
     if (linkCfg.fechaCaducidad) {
       const expiry = new Date(linkCfg.fechaCaducidad);
       if (expiry < new Date()) { setBlocked("expired"); return; }
@@ -246,7 +244,6 @@ export default function FormularioPublico() {
   const BF = { fontFamily:`'${brandFont}',sans-serif` };
   const vista = cfg.vista || "pasos";
   const btnText = cfg.botonTexto || "Enviar formulario";
-  const formKey = "hab_used_"+(def.id||"")+"_"+(cliente?cliente.email||cliente.nombre:"");
 
   const setVal = (id, v) => { setVals(prev => ({ ...prev, [id]: v })); setError(""); };
 
