@@ -447,7 +447,7 @@ render();
       formNombre: nombre || "(sin nombre)",
       cliente: client,
       fecha: today(),
-      hora: new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"}),
+      hora: new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}),
       linkId,
       maxUsos: linkMaxUsos||0,
       expiry: linkExpiry||"",
@@ -1227,12 +1227,12 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
             ) : filtered.sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"")).map(r => {
               const proc = isProcesado(r);
               const dt = r.created_at ? new Date(r.created_at) : null;
-              const fechaStr = dt ? dt.toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"}) : r.fecha || "—";
-              const horaStr = dt ? dt.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"}) : "—";
+              const fechaStr = dt ? dt.toISOString().split("T")[0] : r.fecha || "—";
+              const horaStr = dt ? dt.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}) : "";
               return (
               <tr key={r.id} style={{cursor:"pointer",background:proc?"":"#FDFBFF"}} onClick={()=>setSelResp(selResp?.id===r.id?null:r)}>
-                <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9,whiteSpace:"nowrap"}}>{fechaStr}</td>
-                <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9,color:T.inkMid}}>{horaStr}</td>
+                <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>{fechaStr}</td>
+                <td style={{...tds,fontSize:9}}>{horaStr}</td>
                 <td style={{...tds,fontWeight:600,fontSize:10}}>{r.formularioNombre||forms.find(f=>f.id===r.formularioId)?.nombre||"—"}</td>
                 <td style={{...tds,fontWeight:600,fontSize:10}}>{r.clienteNombre||"—"}</td>
                 <td style={{...tds,fontSize:9,color:T.blue}}>{r.clienteEmail||"—"}</td>
@@ -1409,7 +1409,7 @@ function TabEstadisticas({ forms }) {
   const convRate = opens.length > 0 ? Math.round((submits.length / opens.length) * 100) : 0;
 
   const fmtTime = (s) => s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s/60)}m ${s%60}s` : `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m`;
-  const fmtDate = (d) => d ? new Date(d).toLocaleString("es-CO",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) : "—";
+  const fmtDate = (d) => d ? new Date(d).toLocaleString("es-CO",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",hour12:false}) : "—";
 
   // Group events by form+client combo
   const grouped = {};
@@ -1506,8 +1506,8 @@ function TabEstadisticas({ forms }) {
                   const hasSubmit = r.submits > 0;
                   const conv = r.opens > 0 ? Math.round((r.submits / r.opens) * 100) : 0;
                   const avgTime = r.durationCount > 0 ? Math.round(r.duration / r.durationCount) : 0;
-                  const fechaStr = r.lastDate ? r.lastDate.toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"}) : "—";
-                  const horaStr = r.lastDate ? r.lastDate.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"}) : "—";
+                  const fechaStr = r.lastDate ? r.lastDate.toISOString().split("T")[0] : "—";
+                  const horaStr = r.lastDate ? r.lastDate.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}) : "";
                   return (
                     <tr key={i} style={{background:i%2===0?"#fff":"#FAFAF8"}}>
                       <td style={tds}>
@@ -1517,10 +1517,10 @@ function TabEstadisticas({ forms }) {
                           {hasSubmit?"✅ Recibido":"⏳ Pendiente"}
                         </span>
                       </td>
-                      <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:10,color:T.inkMid,whiteSpace:"nowrap"}}>
+                      <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>
                         {fechaStr}
                       </td>
-                      <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:10,color:T.inkMid}}>
+                      <td style={{...tds,fontSize:9}}>
                         {horaStr}
                       </td>
                       <td style={{...tds,fontWeight:600}}>{r.form_name}</td>
