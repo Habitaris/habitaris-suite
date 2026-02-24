@@ -504,7 +504,7 @@ render();
 
   const generateLink = () => {
     if (!shareClient.email && !shareClient.nombre) return;
-    const client = {nombre:shareClient.nombre, email:shareClient.email, tel:shareClient.tel};
+    const client = {nombre:shareClient.nombre, email:shareClient.email, tel:((shareClient.codTel||"+57").replace(/[^0-9+]/g,"")+" "+shareClient.tel).trim()};
     // Generate standalone HTML file (for download/WhatsApp)
     const html = generateFormHTML(client, sharePais);
     const blob = new Blob([html], {type:"text/html"});
@@ -565,7 +565,7 @@ render();
       .replace(/\{\{nombre\}\}/g, clientName)
       .replace(/\{\{formulario\}\}/g, nombre || "Formulario")
       .replace(/\{\{empresa\}\}/g, cfg.empresa.nombre) + linkText;
-    const tel = shareClient.tel ? shareClient.tel.replace(/[^0-9]/g,"") : "";
+    const tel = shareClient.tel ? ((shareClient.codTel||"+57").replace(/[^0-9]/g,"") + shareClient.tel.replace(/[^0-9]/g,"")) : "";
     window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`, "_blank");
   };
   const shareEmail = async () => {
@@ -587,7 +587,7 @@ render();
       alert("Error al enviar. Revisa Configuración → Correo / EmailJS.");
     }
   };
-  const openShare = () => { setShareClient({nombre:"",email:"",tel:""}); setShareGenerated(""); setShareFileName(""); setSharePublicUrl(""); setSharePais("Colombia"); setShowShare(true); };
+  const openShare = () => { setShareClient({nombre:"",email:"",tel:"",codTel:""}); setShareGenerated(""); setShareFileName(""); setSharePublicUrl(""); setSharePais("Colombia"); setShowShare(true); };
 
   const sel = selIdx!==null ? campos[selIdx] : null;
 
@@ -874,9 +874,16 @@ render();
                 </div>
               </div>
               <div>
-                <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>WhatsApp (con código país)</label>
-                <input value={shareClient.tel} onChange={e=>{ setShareClient({...shareClient,tel:e.target.value}); setShareGenerated(""); }}
-                  placeholder="573001234567" style={{...inp,width:"100%",fontSize:11}}/>
+                <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>WhatsApp</label>
+                <div style={{display:"flex",gap:0}}>
+                  <select value={shareClient.codTel||({Colombia:"+57",España:"+34",México:"+52",Chile:"+56",Perú:"+51",Ecuador:"+593",Argentina:"+54",Panamá:"+507","Estados Unidos":"+1"}[sharePais]||"+57")}
+                    onChange={e=>{ setShareClient({...shareClient,codTel:e.target.value}); setShareGenerated(""); }}
+                    style={{...inp,width:80,flexShrink:0,borderRadius:"6px 0 0 6px",borderRight:"none",fontWeight:700,fontSize:11,color:"#1E4F8C",background:"#F5F4F1"}}>
+                    {["+57","+34","+52","+56","+51","+593","+54","+507","+1","+44"].map(c=><option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <input value={shareClient.tel} onChange={e=>{ setShareClient({...shareClient,tel:e.target.value}); setShareGenerated(""); }}
+                    placeholder="3001234567" style={{...inp,flex:1,fontSize:11,borderRadius:"0 6px 6px 0"}}/>
+                </div>
               </div>
             </div>
 
@@ -941,7 +948,7 @@ render();
               </button>
               <button onClick={shareWhatsApp} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:`1px solid ${T.border}`,borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"'Outfit',sans-serif",textAlign:"left"}}>
                 <div style={{width:32,height:32,borderRadius:6,background:"#E8F8E8",display:"flex",alignItems:"center",justifyContent:"center"}}><MessageCircle size={14} color="#25D366"/></div>
-                <div><div style={{fontSize:11,fontWeight:700}}>Abrir WhatsApp</div><div style={{fontSize:8,color:T.inkMid}}>{shareClient.tel?`Mensaje al ${shareClient.tel}`:"Adjunta el archivo descargado"}</div></div>
+                <div><div style={{fontSize:11,fontWeight:700}}>Abrir WhatsApp</div><div style={{fontSize:8,color:T.inkMid}}>{shareClient.tel?`Mensaje al ${shareClient.codTel||"+57"} ${shareClient.tel}`:"Adjunta el archivo descargado"}</div></div>
               </button>
               <button onClick={shareEmail} disabled={emailSending} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:`1px solid ${emailSent?T.green:T.border}`,borderRadius:6,background:emailSent?T.greenBg:"#fff",cursor:emailSending?"wait":"pointer",fontFamily:"'Outfit',sans-serif",textAlign:"left",opacity:emailSending?.6:1}}>
                 <div style={{width:32,height:32,borderRadius:6,background:emailSent?T.greenBg:T.amberBg,display:"flex",alignItems:"center",justifyContent:"center"}}><Mail size={14} color={emailSent?T.green:T.amber}/></div>
