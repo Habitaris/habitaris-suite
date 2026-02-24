@@ -560,15 +560,15 @@ render();
       setSharePublicUrl(`${appUrl}/form#${encoded}`);
       // Register link in Supabase
       if (false) {
-        //SB.createLink({
-          form_id: existing?.id || "form",
-          form_name: nombre,
-          link_id: linkId,
-          client_name: shareClient.nombre || null,
-          client_email: shareClient.email || null,
-          max_uses: linkMaxUsos || 0,
-          expires_at: linkExpiry ? new Date(linkExpiry).toISOString() : null,
-        }).catch(()=>{});
+//        //SB.createLink({
+//          form_id: existing?.id || "form",
+//          form_name: nombre,
+//          link_id: linkId,
+//          client_name: shareClient.nombre || null,
+//          client_email: shareClient.email || null,
+//          max_uses: linkMaxUsos || 0,
+//          expires_at: linkExpiry ? new Date(linkExpiry).toISOString() : null,
+//        }).catch(()=>{});
       }
     }
     // Track envio
