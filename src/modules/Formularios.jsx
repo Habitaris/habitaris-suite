@@ -1296,19 +1296,21 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
    ═══════════════════════════════════════════════════════════════ */
 function TabPlantillas({ forms, setForms, onEdit }) {
   const usePlantilla = (p) => {
-    // Create ID mapping old→new and remap logica references
-    const idMap = {};
-    p.campos.forEach(c => { idMap[c.id] = uid(); });
-    const newCampos = p.campos.map(c => {
-      const nc = {...c, id: idMap[c.id]};
-      if (nc.logica && nc.logica.fieldId && idMap[nc.logica.fieldId]) {
-        nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
-      }
-      return nc;
-    });
-    const f = { id:uid(), nombre:p.nombre, modulo:p.modulo, campos:newCampos, config:{...p.config}, createdAt:today(), updatedAt:today(), activo:true };
-    setForms([...forms, f]);
-    onEdit(f.id);
+    try {
+      // Create ID mapping old→new and remap logica references
+      const idMap = {};
+      p.campos.forEach(c => { idMap[c.id] = uid(); });
+      const newCampos = p.campos.map(c => {
+        const nc = {...c, id: idMap[c.id]};
+        if (nc.logica && nc.logica.fieldId && idMap[nc.logica.fieldId]) {
+          nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
+        }
+        return nc;
+      });
+      const f = { id:uid(), nombre:p.nombre, modulo:p.modulo||"general", campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, createdAt:today(), updatedAt:today(), activo:true };
+      setForms([...forms, f]);
+      onEdit(f.id);
+    } catch(e) { console.error("Error al usar plantilla:", e); alert("Error al crear formulario desde plantilla"); }
   };
 
   return (
@@ -1517,25 +1519,9 @@ export default function Formularios() {
   const [data, setData] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY)) || {};
-      // Auto-create briefing form if no forms exist
-      if (!saved.forms || saved.forms.length === 0) {
-        const p = PLANTILLAS[0]; // Briefing Inicial
-        const today = new Date().toISOString().split("T")[0];
-        const defaultForm = {
-          id: p.id,
-          nombre: p.nombre,
-          modulo: p.modulo,
-          campos: p.campos.map(c => ({...c})),
-          config: { ...(p.config||{}), titulo: p.nombre, vista: "pasos" },
-          createdAt: today,
-          updatedAt: today,
-          activo: true,
-        };
-        saved.forms = [defaultForm];
-        localStorage.setItem(STORE_KEY, JSON.stringify(saved));
-      }
+      if (!saved.forms) saved.forms = [];
       return saved;
-    } catch { return {}; }
+    } catch { return { forms: [] }; }
   });
   const save = (k,v) => setData(prev => { const n = {...prev,[k]:typeof v==="function"?v(prev[k]):v}; localStorage.setItem(STORE_KEY,JSON.stringify(n)); return n; });
 
