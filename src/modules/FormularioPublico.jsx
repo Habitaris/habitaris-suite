@@ -303,8 +303,11 @@ export default function FormularioPublico() {
   };
 
   const isVisible = (c) => {
-    if (!c.logica || !c.logica.fieldId || !c.logica.value) return true;
+    if (!c.logica || !c.logica.fieldId) return true;
+    if (!c.logica.value && !c.logica.notValues && !c.logica.notValue) return true;
     const depVal = vals[c.logica.fieldId];
+    if (c.logica.notValues) return !c.logica.notValues.includes(String(depVal||""));
+    if (c.logica.notValue) return String(depVal||"") !== c.logica.notValue;
     const expected = c.logica.value;
     if (Array.isArray(depVal)) return depVal.includes(expected);
     return String(depVal||"") === expected;
@@ -312,10 +315,10 @@ export default function FormularioPublico() {
 
   /* FIX: Only lock fields that match exact mapKey — not by tipo or label */
   const isLocked = (c) => {
-    if (!cliente) return c.mapKey==="pais"; // country always locked
+    if (!cliente) return c.mapKey==="pais";
     if (cliente.email && c.mapKey==="email") return true;
     if (cliente.nombre && c.mapKey==="nombre") return true;
-    if (cliente.tel && c.mapKey==="telefono") return true;
+    if (cliente.tel && cliente.tel.trim() && (c.mapKey==="telefono" || c.tipo==="tel_combo")) return true;
     if (c.mapKey==="pais") return true;
     return false;
   };
@@ -576,16 +579,31 @@ export default function FormularioPublico() {
     </div>
   );
 
-  const renderLocked = (c) => (
-    <div key={c.id} style={{ marginBottom:20 }}>
+  const renderLocked = (c) => {
+    if (c.tipo === "tel_combo") {
+      const codVal = vals["_cod_"+c.id] || "+57";
+      return (<div key={c.id} style={{ marginBottom:20 }}>
+        <label style={{ ...BF, fontSize:12, fontWeight:600, color:BASE.ink, display:"block", marginBottom:6 }}>
+          {c.label} <span style={{ fontSize:9, color:cs, fontWeight:400 }}>🔒 prellenado</span>
+        </label>
+        <div style={{ display:"flex", gap:0 }}>
+          <div style={{ ...BF, width:90, flexShrink:0, padding:"12px 0", border:`1px solid ${cs}33`, borderRadius:"8px 0 0 8px", borderRight:"none",
+            fontSize:14, color:cs, background:cs+"15", fontWeight:700, textAlign:"center" }}>{codVal}</div>
+          <input type="text" value={vals[c.id]||""} disabled
+            style={{ ...BF, flex:1, padding:"12px 16px", border:`1px solid ${cs}33`, borderRadius:"0 8px 8px 0",
+              fontSize:14, color:cs, boxSizing:"border-box", background:cs+"15", fontWeight:600 }}/>
+        </div>
+      </div>);
+    }
+    return (<div key={c.id} style={{ marginBottom:20 }}>
       <label style={{ ...BF, fontSize:12, fontWeight:600, color:BASE.ink, display:"block", marginBottom:6 }}>
         {c.label} <span style={{ fontSize:9, color:cs, fontWeight:400 }}>🔒 prellenado</span>
       </label>
       <input type="text" value={vals[c.id]||""} disabled
         style={{ ...BF, width:"100%", padding:"12px 16px", border:`1px solid ${cs}33`, borderRadius:8,
           fontSize:14, color:cs, boxSizing:"border-box", background:cs+"15", fontWeight:600 }}/>
-    </div>
-  );
+    </div>);
+  };
 
   const Header = () => (
     <div style={{ background:ac, padding:"14px 24px" }}>
