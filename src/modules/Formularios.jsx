@@ -1589,6 +1589,7 @@ export default function Formularios() {
               clienteEmail: r.client_email || respData.clienteEmail,
               clienteTel: r.client_tel || respData.clienteTel,
               fecha: respData.fecha || (r.created_at ? r.created_at.split("T")[0] : ""),
+              created_at: r.created_at || null,
               processed: r.processed || false,
             };
             if (!seen.has(merged.id)) { seen.add(merged.id); arr.push(merged); }
