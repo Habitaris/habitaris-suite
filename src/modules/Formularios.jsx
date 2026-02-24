@@ -148,7 +148,7 @@ const PLANTILLAS = [
       {id:"f_nombre",tipo:"text",label:"Nombre y apellidos",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"nombre"},
       {id:"f_email",tipo:"email",label:"Correo electrónico",placeholder:"name@example.com",required:true,opciones:[],logica:null,mapKey:"email"},
       {id:"f_tel",tipo:"tel",label:"Teléfono de contacto",placeholder:"+57",required:true,opciones:[],logica:null,mapKey:"telefono"},
-      {id:"f_propietario",tipo:"select",label:"¿Eres el propietario del inmueble o estás actuando en nombre de otra persona?",placeholder:"",required:true,opciones:["Sí","No, actúo en nombre del propietario"],logica:null,mapKey:"propietario"},
+      {id:"f_propietario",tipo:"select",label:"¿Cuál es tu relación con el inmueble?",placeholder:"",required:true,opciones:["Soy el propietario","Estoy en arriendo","Actúo en nombre del propietario","Actúo en nombre de un tercero"],logica:null,mapKey:"propietario",scoring:{enabled:true,weight:2,rules:{"Soy el propietario":"green","Estoy en arriendo":"neutral","Actúo en nombre del propietario":"red","Actúo en nombre de un tercero":"red"}}},
 
       /* ── Sobre el servicio ── */
       {id:"s2",tipo:"seccion",label:"Sobre el servicio",desc:"¿Qué necesitas de Habitaris?",required:false,opciones:[],logica:null},
@@ -172,22 +172,23 @@ const PLANTILLAS = [
 
       /* ── Expectativas ── */
       {id:"s5",tipo:"seccion",label:"Expectativas del proyecto",desc:"¿Qué esperas lograr?",required:false,opciones:[],logica:null},
-      {id:"f_lograr",tipo:"chips",label:"¿Qué esperas lograr con este proyecto?",placeholder:"",required:true,opciones:["Inspiración o ideas generales","Planos base y distribución funcional","Diseño integral con renders, acabados y mobiliario","Supervisión y acompañamiento durante la ejecución"],logica:null,mapKey:"expectativas"},
-      {id:"f_importante",tipo:"chips",label:"Lo más importante para ti en el proyecto",placeholder:"",required:true,opciones:["Estética / Diseño","Funcionalidad","Presupuesto ajustado","Tiempo de entrega","Exclusividad / Personalización"],logica:null,mapKey:"prioridades"},
+      {id:"f_lograr",tipo:"chips",label:"¿Qué esperas lograr con este proyecto?",placeholder:"",required:true,opciones:["Inspiración o ideas generales","Planos base y distribución funcional","Diseño integral con renders, acabados y mobiliario","Supervisión y acompañamiento durante la ejecución"],logica:null,mapKey:"expectativas",scoring:{enabled:true,weight:3,rules:{"Inspiración o ideas generales":"red","Planos base y distribución funcional":"neutral","Diseño integral con renders, acabados y mobiliario":"green","Supervisión y acompañamiento durante la ejecución":"green"}}},
+      {id:"f_importante",tipo:"chips",label:"Lo más importante para ti en el proyecto",placeholder:"",required:true,opciones:["Estética / Diseño","Funcionalidad","Presupuesto ajustado","Tiempo de entrega","Exclusividad / Personalización"],logica:null,mapKey:"prioridades",scoring:{enabled:true,weight:2,rules:{"Estética / Diseño":"green","Funcionalidad":"green","Presupuesto ajustado":"red","Tiempo de entrega":"neutral","Exclusividad / Personalización":"green"}}},
 
       /* ── Presupuesto y financiación ── */
       {id:"s6",tipo:"seccion",label:"Presupuesto y financiación",desc:"Información económica del proyecto",required:false,opciones:[],logica:null},
-      {id:"f_presupuesto",tipo:"text",label:"Presupuesto estimado (COP) disponible para el proyecto",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"presupuesto"},
-      {id:"f_financiar",tipo:"select",label:"¿Cómo planeas financiar el proyecto?",placeholder:"",required:true,opciones:["Con recursos propios","Crédito bancario o leasing habitacional","Con apoyo de un tercero","Aún no lo tengo definido"],logica:null,mapKey:"financiacion"},
-      {id:"f_invertido",tipo:"select",label:"¿Has invertido antes en diseño profesional?",placeholder:"",required:true,opciones:["Sí","No, pero estoy dispuesto","No, nunca lo haría"],logica:null,mapKey:"inversionPrevia"},
-      {id:"f_gratuito",tipo:"select",label:"¿Esperas que el diseño sea gratuito o solo de referencia?",placeholder:"",required:true,opciones:["Sí, solo busco ideas generales","No, estoy dispuesto a pagar por un diseño profesional"],logica:null,mapKey:"expectativaPago"},
-      {id:"f_exceder",tipo:"select",label:"¿Aceptarías una propuesta que no cumpla con tu presupuesto, si garantiza calidad y durabilidad?",placeholder:"",required:true,opciones:["Sí, puedo ajustarme","No, solo lo hago si es más barato"],logica:null,mapKey:"flexibilidad"},
-      {id:"f_anticipo",tipo:"yesno",label:"¿Dispuesto a pagar anticipo 30-50%?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"anticipo"},
+      {id:"f_presupuesto",tipo:"select",label:"Presupuesto estimado (COP) disponible para el proyecto",placeholder:"",required:true,opciones:["Menos de $10.000.000","$10.000.000 - $30.000.000","$30.000.000 - $60.000.000","$60.000.000 - $100.000.000","Más de $100.000.000"],logica:null,mapKey:"presupuesto",scoring:{enabled:true,weight:5,rules:{"Menos de $10.000.000":"red","$10.000.000 - $30.000.000":"neutral","$30.000.000 - $60.000.000":"green","$60.000.000 - $100.000.000":"green","Más de $100.000.000":"green"}}},
+      {id:"f_honorarios",tipo:"select",label:"¿Tu presupuesto incluye los honorarios de diseño?",placeholder:"",required:true,opciones:["Sí, incluye diseño y ejecución","Solo ejecución/materiales, el diseño aparte","No, espero que el diseño esté incluido sin costo","No estoy seguro"],logica:null,mapKey:"honorariosDiseño",scoring:{enabled:true,weight:5,rules:{"Sí, incluye diseño y ejecución":"green","Solo ejecución/materiales, el diseño aparte":"green","No, espero que el diseño esté incluido sin costo":"red","No estoy seguro":"neutral"}}},
+      {id:"f_financiar",tipo:"select",label:"¿Cómo planeas financiar el proyecto?",placeholder:"",required:true,opciones:["Con recursos propios","Crédito bancario o leasing habitacional","Con apoyo de un tercero","Aún no lo tengo definido"],logica:null,mapKey:"financiacion",scoring:{enabled:true,weight:3,rules:{"Con recursos propios":"green","Crédito bancario o leasing habitacional":"neutral","Con apoyo de un tercero":"neutral","Aún no lo tengo definido":"red"}}},
+      {id:"f_invertido",tipo:"select",label:"¿Has invertido antes en diseño profesional?",placeholder:"",required:true,opciones:["Sí","No, pero estoy dispuesto","No, nunca lo haría"],logica:null,mapKey:"inversionPrevia",scoring:{enabled:true,weight:3,rules:{"Sí":"green","No, pero estoy dispuesto":"neutral","No, nunca lo haría":"red"}}},
+      {id:"f_gratuito",tipo:"select",label:"¿Esperas que el diseño sea gratuito o solo de referencia?",placeholder:"",required:true,opciones:["Sí, solo busco ideas generales","No, estoy dispuesto a pagar por un diseño profesional"],logica:null,mapKey:"expectativaPago",scoring:{enabled:true,weight:4,rules:{"Sí, solo busco ideas generales":"red","No, estoy dispuesto a pagar por un diseño profesional":"green"}}},
+      {id:"f_exceder",tipo:"select",label:"¿Aceptarías una propuesta que no cumpla con tu presupuesto, si garantiza calidad y durabilidad?",placeholder:"",required:true,opciones:["Sí, puedo ajustarme","No, solo lo hago si es más barato"],logica:null,mapKey:"flexibilidad",scoring:{enabled:true,weight:4,rules:{"Sí, puedo ajustarme":"green","No, solo lo hago si es más barato":"red"}}},
+      {id:"f_anticipo",tipo:"yesno",label:"¿Dispuesto a pagar anticipo 30-50%?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"anticipo",scoring:{enabled:true,weight:5,rules:{"Sí":"green","No":"red"}}},
       {id:"f_contratistas",tipo:"select",label:"¿Quieres que te recomendemos contratistas de confianza para la obra?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"contratistas"},
 
       /* ── Plazos ── */
       {id:"s7",tipo:"seccion",label:"Plazos",desc:"Tiempos del proyecto",required:false,opciones:[],logica:null},
-      {id:"f_plazo",tipo:"select",label:"Plazo esperado para finalización",placeholder:"",required:true,opciones:["1 - 3 meses","3 - 6 meses","> 6 Meses"],logica:null,mapKey:"plazo"},
+      {id:"f_plazo",tipo:"select",label:"Plazo esperado para finalización",placeholder:"",required:true,opciones:["1 - 3 meses","3 - 6 meses","> 6 Meses"],logica:null,mapKey:"plazo",scoring:{enabled:true,weight:2,rules:{"1 - 3 meses":"red","3 - 6 meses":"neutral","> 6 Meses":"green"}}},
       {id:"f_inicio",tipo:"date",label:"Fecha tentativa de inicio",placeholder:"",required:true,opciones:[],logica:null,mapKey:"fechaInicio"},
 
       /* ── Facturación ── */
@@ -1742,6 +1743,27 @@ export default function Formularios() {
 
   const forms = data.forms || [];
   const setForms = (v) => save("forms", typeof v==="function"?v(forms):v);
+
+  // Auto-seed: create forms from PLANTILLAS if not already present
+  useEffect(() => {
+    const current = data.forms || [];
+    const missing = PLANTILLAS.filter(p => !current.find(f => f.sourceTemplate === p.id || f.nombre === p.nombre));
+    if (missing.length > 0) {
+      const newForms = missing.map(p => {
+        const idMap = {};
+        p.campos.forEach(c => { idMap[c.id] = uid(); });
+        const newCampos = p.campos.map(c => {
+          const nc = {...c, id: idMap[c.id]};
+          if (nc.logica && nc.logica.fieldId && idMap[nc.logica.fieldId]) {
+            nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
+          }
+          return nc;
+        });
+        return { id:uid(), nombre:p.nombre, modulo:p.modulo||"general", campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, createdAt:today(), updatedAt:today(), activo:true, sourceTemplate:p.id };
+      });
+      save("forms", [...current, ...newForms]);
+    }
+  }, []); // eslint-disable-line
   const envios = data.envios || [];
   const addEnvio = (e) => save("envios", [...envios, e]);
 
