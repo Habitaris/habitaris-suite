@@ -13,6 +13,7 @@ const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?fami
 const T = { bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E4E1DB",accent:"#EDEBE7",green:"#1E6B42",greenBg:"#E8F4EE",red:"#AE2C2C",redBg:"#FAE8E8",amber:"#7A5218",amberBg:"#FAF0E0",blue:"#1E4F8C",blueBg:"#E6EFF9",purple:"#5B3A8C",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
 const uid = () => Math.random().toString(36).slice(2,10);
 const today = () => new Date().toISOString().split("T")[0];
+const F = { fontFamily:"'Outfit',sans-serif" };
 
 /* ── EmailJS — reads from centralized config ── */
 const sendEmailJS = async (params) => {
