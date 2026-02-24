@@ -1806,12 +1806,13 @@ export default function Formularios() {
   };
   useEffect(() => { loadResponses(); }, []);
 
-  const [tab, setTab] = useState("dashboard");
+  const [tab, setTab] = useState(() => localStorage.getItem("hab:form:tab") || "dashboard");
+  const changeTab = (t) => { setTab(t); localStorage.setItem("hab:form:tab", t); };
   const [editId, setEditId] = useState(null);
 
-  const goConstructor = (id) => { setEditId(id||null); setTab("constructor"); };
-  const goNew = () => { setEditId(null); setTab("constructor"); };
-  const onSaved = (form) => { setEditId(form.id); setTab("mis_forms"); };
+  const goConstructor = (id) => { setEditId(id||null); changeTab("constructor"); };
+  const goNew = () => { setEditId(null); changeTab("constructor"); };
+  const onSaved = (form) => { setEditId(form.id); changeTab("mis_forms"); };
 
   return (
     <>
@@ -1826,7 +1827,7 @@ export default function Formularios() {
 
         <div style={{display:"flex",gap:0,marginBottom:20}}>
           {TABS.map((t,i) => (
-            <button key={t.id} onClick={()=>{setTab(t.id);if(t.id!=="constructor")setEditId(null);}}
+            <button key={t.id} onClick={()=>{changeTab(t.id);if(t.id!=="constructor")setEditId(null);}}
               style={{padding:"10px 18px",fontSize:11,fontWeight:600,cursor:"pointer",
                 border:`1px solid ${T.border}`,borderLeft:i>0?"none":undefined,
                 fontFamily:"'Outfit',sans-serif",whiteSpace:"nowrap",
@@ -1852,7 +1853,7 @@ export default function Formularios() {
                   ["⏳ Sin asignar",sinProc,sinProc>0?"#5B3A8C":"#1E6B42"]
                 ];
               })().map(([l,v,c])=>(
-                <Card key={l} style={{padding:"14px 16px",cursor:l.includes("Sin asignar")&&v>0?"pointer":undefined}} onClick={l.includes("Sin asignar")&&v>0?()=>setTab("respuestas"):undefined}><div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div><div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:c}}>{v}</div></Card>
+                <Card key={l} style={{padding:"14px 16px",cursor:l.includes("Sin asignar")&&v>0?"pointer":undefined}} onClick={l.includes("Sin asignar")&&v>0?()=>changeTab("respuestas"):undefined}><div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div><div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:c}}>{v}</div></Card>
               ))}
             </div>
             {/* Quick actions */}
@@ -1861,7 +1862,7 @@ export default function Formularios() {
               const sinProc = respuestas.filter(r => !proc.includes(r.id)).length;
               if (sinProc === 0) return null;
               return (
-                <Card style={{padding:"12px 16px",marginBottom:16,background:"#F3EEFF",border:"1px solid #5B3A8C33",cursor:"pointer"}} onClick={()=>setTab("respuestas")}>
+                <Card style={{padding:"12px 16px",marginBottom:16,background:"#F3EEFF",border:"1px solid #5B3A8C33",cursor:"pointer"}} onClick={()=>changeTab("respuestas")}>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
                     <div style={{width:32,height:32,borderRadius:"50%",background:"#5B3A8C",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700}}>{sinProc}</div>
                     <div>
@@ -1878,12 +1879,12 @@ export default function Formularios() {
                 <div style={{fontSize:12,fontWeight:700}}>Crear formulario</div>
                 <div style={{fontSize:9,color:T.inkMid,marginTop:2}}>Desde cero con el constructor</div>
               </Card>
-              <Card style={{padding:"18px 16px",cursor:"pointer",textAlign:"center"}} onClick={()=>setTab("plantillas")}>
+              <Card style={{padding:"18px 16px",cursor:"pointer",textAlign:"center"}} onClick={()=>changeTab("plantillas")}>
                 <div style={{fontSize:24,marginBottom:6}}>📎</div>
                 <div style={{fontSize:12,fontWeight:700}}>Usar plantilla</div>
                 <div style={{fontSize:9,color:T.inkMid,marginTop:2}}>Briefing, SST, encuestas...</div>
               </Card>
-              <Card style={{padding:"18px 16px",cursor:"pointer",textAlign:"center"}} onClick={()=>setTab("respuestas")}>
+              <Card style={{padding:"18px 16px",cursor:"pointer",textAlign:"center"}} onClick={()=>changeTab("respuestas")}>
                 <div style={{fontSize:24,marginBottom:6}}>📥</div>
                 <div style={{fontSize:12,fontWeight:700}}>Ver respuestas</div>
                 <div style={{fontSize:9,color:T.inkMid,marginTop:2}}>{respuestas.length} respuestas recibidas</div>
@@ -1899,22 +1900,50 @@ export default function Formularios() {
             <Card style={{padding:0,overflow:"hidden"}}>
               <table style={{borderCollapse:"collapse",width:"100%"}}>
                 <thead><tr style={{background:"#EDEBE7"}}>
-                  {["Fecha","Hora","Formulario","Cliente","Email","Teléfono","Estado"].map(h=><th key={h} style={ths}>{h}</th>)}
+                  {["Fecha","Hora","Formulario","Cliente","Email","Teléfono","Estado","Acciones"].map(h=><th key={h} style={ths}>{h}</th>)}
                 </tr></thead>
                 <tbody>
                   {envios.length===0 ? (
-                    <tr><td colSpan={7} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>No has enviado formularios aún</td></tr>
+                    <tr><td colSpan={8} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>No has enviado formularios aún</td></tr>
                   ) : [...envios].reverse().map(e => {
                     const hasResp = respuestas.some(r=>r.clienteEmail===e.cliente?.email && r.formularioId===e.formId);
+                    const isBlocked = e.blocked;
                     return (
-                      <tr key={e.id}>
+                      <tr key={e.id} style={{background:isBlocked?"#FDF5F5":""}}>
                         <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>{e.fecha}</td>
                         <td style={{...tds,fontSize:9}}>{e.hora}</td>
                         <td style={{...tds,fontWeight:600}}>{e.formNombre}</td>
                         <td style={{...tds,fontWeight:600}}>{e.cliente?.nombre||"—"}</td>
                         <td style={{...tds,fontSize:9,color:T.blue}}>{e.cliente?.email||"—"}</td>
                         <td style={{...tds,fontSize:9}}>{e.cliente?.tel||"—"}</td>
-                        <td style={tds}>{hasResp ? <Badge color={T.green}>✅ Respondido</Badge> : <Badge color={T.amber}>⏳ Pendiente</Badge>}</td>
+                        <td style={tds}>
+                          {isBlocked
+                            ? <Badge color={T.red}>🚫 Bloqueado</Badge>
+                            : hasResp ? <Badge color={T.green}>✅ Respondido</Badge> : <Badge color={T.amber}>⏳ Pendiente</Badge>
+                          }
+                        </td>
+                        <td style={{...tds,whiteSpace:"nowrap"}}>
+                          {isBlocked ? (
+                            <button onClick={()=>{
+                              const updated = envios.map(x => x.id===e.id ? {...x, blocked:false} : x);
+                              save("envios", updated);
+                              if (e.linkId && SB.isConfigured()) {
+                                SB.toggleLink && SB.toggleLink(e.linkId, true).catch(()=>{});
+                              }
+                            }} style={{padding:"3px 10px",fontSize:8,fontWeight:700,background:T.green,color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}
+                              title="Desbloquear enlace">🔓 Desbloquear</button>
+                          ) : (
+                            <button onClick={()=>{
+                              if (!confirm("¿Bloquear este enlace? El cliente verá un mensaje de formulario bloqueado.")) return;
+                              const updated = envios.map(x => x.id===e.id ? {...x, blocked:true} : x);
+                              save("envios", updated);
+                              if (e.linkId && SB.isConfigured()) {
+                                SB.toggleLink && SB.toggleLink(e.linkId, false).catch(()=>{});
+                              }
+                            }} style={{padding:"3px 10px",fontSize:8,fontWeight:700,background:T.red,color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}
+                              title="Bloquear enlace">🚫 Bloquear</button>
+                          )}
+                        </td>
                       </tr>
                     );
                   })}
