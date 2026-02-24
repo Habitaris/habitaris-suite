@@ -220,7 +220,7 @@ export default function App() {
   if (path.startsWith("/form")) return <FormularioPublico />
 
   // Auth gate — only if auth is configured
-  if (isAuthConfigured() && !authed) {
+  if (!authed) {
     return <LoginScreen onSuccess={() => setAuthed(true)} />
   }
 
