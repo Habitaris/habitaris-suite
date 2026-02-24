@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Trash2, Check, X, Search, Edit3, Copy, Send, Eye, ChevronDown, ChevronUp, GripVertical, ToggleLeft, ToggleRight, Share2, Mail, MessageCircle, Link2, FileText, Star, TrendingUp, Layers, Settings, AlertTriangle } from "lucide-react";
 import { encodeFormDef } from "./FormularioPublico.jsx";
 import { getConfig, resolveTemplate } from "./Configuracion.jsx";
+import * as Bio from "./biometric.js";
 import * as SB from "./supabase.js";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -13,6 +14,59 @@ const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?fami
 const T = { bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E4E1DB",accent:"#EDEBE7",green:"#1E6B42",greenBg:"#E8F4EE",red:"#AE2C2C",redBg:"#FAE8E8",amber:"#7A5218",amberBg:"#FAF0E0",blue:"#1E4F8C",blueBg:"#E6EFF9",purple:"#5B3A8C",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
 const uid = () => Math.random().toString(36).slice(2,10);
 const today = () => new Date().toISOString().split("T")[0];
+const F = { fontFamily:"'Outfit',sans-serif" };
+
+/* ── Scoring calculator ── */
+function calculateScore(resp, form) {
+  if (!form?.campos) return null;
+  const campos = form.campos.filter(c => c.scoring?.enabled);
+  if (campos.length === 0) return null;
+
+  let totalPoints = 0;
+  let maxPoints = 0;
+  let greens = 0, reds = 0, yellows = 0;
+  const details = [];
+
+  campos.forEach(c => {
+    const w = c.scoring.weight || 1;
+    const key = c.mapKey || c.id;
+    let val = resp[key];
+    if (val === undefined) return;
+    maxPoints += w;
+
+    const rules = c.scoring.rules || {};
+    let flag = "neutral";
+
+    if (Array.isArray(val)) {
+      // chips: check each selected value, use worst flag
+      const flags = val.map(v => rules[v] || "neutral");
+      if (flags.includes("red")) flag = "red";
+      else if (flags.every(f => f === "green")) flag = "green";
+      else flag = "neutral";
+    } else {
+      flag = rules[String(val)] || "neutral";
+    }
+
+    let points = 0;
+    if (flag === "green") { points = w; greens++; }
+    else if (flag === "neutral") { points = w * 0.5; yellows++; }
+    else { points = 0; reds++; }
+
+    totalPoints += points;
+    details.push({ label: c.label, value: Array.isArray(val) ? val.join(", ") : String(val), flag, points, maxPoints: w });
+  });
+
+  const score = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) / 10 : 0;
+  const level = score >= 7 ? "green" : score >= 4 ? "yellow" : "red";
+  const levelLabel = level === "green" ? "🟢 Cliente potencial" : level === "yellow" ? "🟡 Revisar" : "🔴 No califica";
+  const conclusion = level === "green"
+    ? "Perfil alineado con los servicios. Recomendación: contactar en las próximas 24h."
+    : level === "yellow"
+    ? "Algunos puntos requieren validación. Recomendación: agendar llamada exploratoria."
+    : "Expectativas no alineadas con los servicios. Recomendación: responder cortésmente y archivar.";
+
+  return { score, level, levelLabel, conclusion, greens, reds, yellows, totalPoints, maxPoints, details };
+}
 
 /* ── EmailJS — reads from centralized config ── */
 const sendEmailJS = async (params) => {
@@ -83,67 +137,117 @@ const MODULOS_ASOC = [
 ];
 
 /* ── Templates ── */
+const CIUDADES_CO = {
+  "Amazonas":["Leticia","Otra"],"Antioquia":["Medellín","Bello","Envigado","Itagüí","Rionegro","Sabaneta","Apartadó","Otra"],
+  "Arauca":["Arauca","Saravena","Otra"],"Atlántico":["Barranquilla","Soledad","Malambo","Otra"],
+  "Bogotá D.C.":["Bogotá"],"Bolívar":["Cartagena","Magangué","Turbaco","Otra"],
+  "Boyacá":["Tunja","Duitama","Sogamoso","Otra"],"Caldas":["Manizales","Villamaría","La Dorada","Otra"],
+  "Caquetá":["Florencia","Otra"],"Casanare":["Yopal","Aguazul","Otra"],
+  "Cauca":["Popayán","Santander de Quilichao","Otra"],"Cesar":["Valledupar","Aguachica","Otra"],
+  "Chocó":["Quibdó","Otra"],"Córdoba":["Montería","Cereté","Lorica","Otra"],
+  "Cundinamarca":["Soacha","Chía","Zipaquirá","Facatativá","Girardot","Fusagasugá","Mosquera","Madrid","Cajicá","Otra"],
+  "Guainía":["Inírida","Otra"],"Guaviare":["San José del Guaviare","Otra"],
+  "Huila":["Neiva","Pitalito","Garzón","Otra"],"La Guajira":["Riohacha","Maicao","Otra"],
+  "Magdalena":["Santa Marta","Ciénaga","Otra"],"Meta":["Villavicencio","Acacías","Granada","Otra"],
+  "Nariño":["Pasto","Ipiales","Tumaco","Otra"],"Norte de Santander":["Cúcuta","Ocaña","Pamplona","Otra"],
+  "Putumayo":["Mocoa","Puerto Asís","Otra"],"Quindío":["Armenia","Calarcá","Otra"],
+  "Risaralda":["Pereira","Dosquebradas","Santa Rosa de Cabal","Otra"],
+  "San Andrés y Providencia":["San Andrés","Providencia","Otra"],
+  "Santander":["Bucaramanga","Floridablanca","Girón","Piedecuesta","Barrancabermeja","Otra"],
+  "Sucre":["Sincelejo","Corozal","Otra"],"Tolima":["Ibagué","Espinal","Melgar","Otra"],
+  "Valle del Cauca":["Cali","Palmira","Buenaventura","Tuluá","Buga","Jamundí","Yumbo","Otra"],
+  "Vaupés":["Mitú","Otra"],"Vichada":["Puerto Carreño","Otra"]
+};
 const PLANTILLAS = [
-  { id:"briefing_inicial", nombre:"Briefing Inicial Habitaris", modulo:"crm", desc:"Formulario completo de briefing para nuevos proyectos — réplica Formly",
+  { id:"briefing_inicial", version:6, nombre:"Briefing Inicial Habitaris", modulo:"crm", desc:"Formulario completo de briefing para nuevos proyectos",
     campos:[
-      /* ── Aviso de Privacidad (PRIMERO — gate) ── */
+      /* ── Aviso de Privacidad (gate) ── */
       {id:"f_privacidad",tipo:"info",label:"Aviso de Privacidad: En Habitaris SAS (NIT 901.922.136-8, domicilio Bogotá D.C., email: comercial.co, tel: +57 350 5661545), tratamos tus datos personales para procesar tu solicitud de briefing, enviar cotizaciones y gestionar proyectos. Cumplimos con la Ley 1581/2012 y Régimen de Protección de Datos. Derechos (acceso, rectificación, supresión, revocación): vía comercial.co.",desc:"",required:false,opciones:[],logica:null},
       {id:"f_acepta_priv",tipo:"yesno",label:"¿Aceptas el aviso de privacidad?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"aceptaPrivacidad"},
 
       /* ── Datos del cliente ── */
       {id:"s1",tipo:"seccion",label:"Datos del cliente",desc:"Información personal y de contacto",required:false,opciones:[],logica:{fieldId:"f_acepta_priv",value:"Sí"}},
-      {id:"f_nombre",tipo:"text",label:"Nombre y apellidos",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"nombre"},
+      {id:"f_nombre",tipo:"text",label:"Nombre y apellidos",placeholder:"Escribe tu nombre completo",required:true,opciones:[],logica:null,mapKey:"nombre"},
+      /* Documento por país */
+      {id:"f_tipo_doc_co",tipo:"select",label:"Tipo de documento",placeholder:"",required:true,opciones:["Cédula de ciudadanía (CC)","Cédula de extranjería (CE)","NIT","Pasaporte"],logica:{fieldId:"f_pais",value:"Colombia"},mapKey:"tipoDocumento"},
+      {id:"f_tipo_doc_es",tipo:"select",label:"Tipo de documento",placeholder:"",required:true,opciones:["DNI","NIE","CIF","Pasaporte"],logica:{fieldId:"f_pais",value:"España"},mapKey:"tipoDocumento"},
+      {id:"f_tipo_doc_mx",tipo:"select",label:"Tipo de documento",placeholder:"",required:true,opciones:["CURP","RFC","INE","Pasaporte"],logica:{fieldId:"f_pais",value:"México"},mapKey:"tipoDocumento"},
+      {id:"f_tipo_doc_otro",tipo:"select",label:"Tipo de documento",placeholder:"",required:true,opciones:["Documento de identidad","Pasaporte","Otro"],logica:{fieldId:"f_pais",notValues:["Colombia","España","México"]},mapKey:"tipoDocumento"},
+      {id:"f_num_doc",tipo:"text",label:"Número de documento",placeholder:"Ej: 1.234.567.890",required:true,opciones:[],logica:null,mapKey:"numDocumento"},
       {id:"f_email",tipo:"email",label:"Correo electrónico",placeholder:"name@example.com",required:true,opciones:[],logica:null,mapKey:"email"},
-      {id:"f_tel",tipo:"tel",label:"Teléfono de contacto",placeholder:"+57",required:true,opciones:[],logica:null,mapKey:"telefono"},
-      {id:"f_propietario",tipo:"select",label:"¿Eres el propietario del inmueble o estás actuando en nombre de otra persona?",placeholder:"",required:true,opciones:["Sí","No, actúo en nombre del propietario"],logica:null,mapKey:"propietario"},
+      {id:"f_pais",tipo:"select",label:"País del proyecto",placeholder:"",required:true,opciones:["Colombia","España","México","Chile","Perú","Ecuador","Argentina","Panamá","Estados Unidos","Otro"],logica:null,mapKey:"pais"},
+      {id:"f_tel",tipo:"tel_combo",label:"Teléfono de contacto",placeholder:"Ej: 3505661545",required:true,opciones:["+57","+34","+52","+56","+51","+593","+54","+507","+1","+44"],logica:null,mapKey:"telefono",codMapKey:"codigoTel",paisRef:"f_pais"},
+      {id:"f_propietario",tipo:"select",label:"¿Cuál es tu relación con el inmueble?",placeholder:"",required:true,opciones:["Soy el propietario","Estoy en arriendo","Actúo en nombre del propietario","Actúo en nombre de un tercero"],logica:null,mapKey:"propietario",scoring:{enabled:true,weight:2,rules:{"Soy el propietario":"green","Estoy en arriendo":"neutral","Actúo en nombre del propietario":"red","Actúo en nombre de un tercero":"red"}}},
+
+      /* ── Ubicación del proyecto ── */
+      {id:"s3",tipo:"seccion",label:"Ubicación del proyecto",desc:"¿Dónde está el inmueble?",required:false,opciones:[],logica:null},
+      {id:"f_depto_co",tipo:"select",label:"Departamento",placeholder:"",required:true,opciones:["Amazonas","Antioquia","Arauca","Atlántico","Bogotá D.C.","Bolívar","Boyacá","Caldas","Caquetá","Casanare","Cauca","Cesar","Chocó","Córdoba","Cundinamarca","Guainía","Guaviare","Huila","La Guajira","Magdalena","Meta","Nariño","Norte de Santander","Putumayo","Quindío","Risaralda","San Andrés y Providencia","Santander","Sucre","Tolima","Valle del Cauca","Vaupés","Vichada"],logica:{fieldId:"f_pais",value:"Colombia"},mapKey:"departamento"},
+      {id:"f_depto_es",tipo:"select",label:"Comunidad autónoma",placeholder:"",required:true,opciones:["Andalucía","Aragón","Asturias","Baleares","Canarias","Cantabria","Castilla-La Mancha","Castilla y León","Cataluña","Ceuta","Comunidad Valenciana","Extremadura","Galicia","La Rioja","Madrid","Melilla","Murcia","Navarra","País Vasco"],logica:{fieldId:"f_pais",value:"España"},mapKey:"departamento"},
+      {id:"f_depto_mx",tipo:"select",label:"Estado",placeholder:"",required:true,opciones:["Aguascalientes","Baja California","Baja California Sur","Campeche","Chiapas","Chihuahua","Ciudad de México","Coahuila","Colima","Durango","Estado de México","Guanajuato","Guerrero","Hidalgo","Jalisco","Michoacán","Morelos","Nayarit","Nuevo León","Oaxaca","Puebla","Querétaro","Quintana Roo","San Luis Potosí","Sinaloa","Sonora","Tabasco","Tamaulipas","Tlaxcala","Veracruz","Yucatán","Zacatecas"],logica:{fieldId:"f_pais",value:"México"},mapKey:"departamento"},
+      {id:"f_depto_otro",tipo:"text",label:"Región / Estado / Provincia",placeholder:"Escribe tu región",required:true,opciones:[],logica:{fieldId:"f_pais",notValues:["Colombia","España","México"]},mapKey:"departamento"},
+      /* Ciudad por país */
+      {id:"f_ciudad_co",tipo:"select",label:"Ciudad o población",placeholder:"",required:true,opciones:[],logica:{fieldId:"f_pais",value:"Colombia"},mapKey:"ciudad",dynamicOpciones:{dependsOn:"f_depto_co",map:CIUDADES_CO}},
+      {id:"f_ciudad_otro",tipo:"text",label:"Ciudad o población",placeholder:"Escribe la ciudad",required:true,opciones:[],logica:{fieldId:"f_pais",notValue:"Colombia"},mapKey:"ciudad"},
+      {id:"f_direccion",tipo:"text",label:"Dirección del proyecto",placeholder:"Ej: Calle 100 #15-20 / Av. de la Constitución 5",required:true,opciones:[],logica:null,mapKey:"direccion"},
+      {id:"f_tipo_vivienda",tipo:"select",label:"Tipo de inmueble",placeholder:"",required:true,opciones:["Apartamento","Casa","Local comercial","Oficina","Finca / Rural","Otro"],logica:null,mapKey:"tipoVivienda"},
+      {id:"f_num_apto",tipo:"text",label:"Número de apartamento / piso",placeholder:"Ej: Apto 501, Piso 3",required:true,opciones:[],logica:{fieldId:"f_tipo_vivienda",value:"Apartamento"},mapKey:"numApto"},
+      {id:"f_edificio",tipo:"text",label:"Nombre del edificio, conjunto o urbanización",placeholder:"Ej: Edificio Torres del Parque",required:false,opciones:[],logica:null,mapKey:"edificio"},
+      {id:"f_cod_postal",tipo:"text",label:"Código postal",placeholder:"Ej: 110111",required:false,opciones:[],logica:null,mapKey:"codigoPostal"},
+
+      /* ── Datos del inmueble ── */
+      {id:"s3b",tipo:"seccion",label:"Datos del inmueble",desc:"Características del espacio",required:false,opciones:[],logica:null},
+      {id:"f_area",tipo:"text",label:"Área aproximada en m²",placeholder:"Ej: 85",required:true,opciones:[],logica:null,mapKey:"area"},
+      {id:"f_habitaciones",tipo:"text",label:"Número de habitaciones/áreas a intervenir",placeholder:"Ej: 3",required:true,opciones:[],logica:null,mapKey:"habitaciones"},
+      {id:"f_espacios",tipo:"chips",label:"¿Qué espacios incluye el proyecto?",placeholder:"",required:true,opciones:["Sala","Comedor","Cocina","Habitaciones","Baños","Terraza / Balcón","Estudio / Oficina","Local comercial","Jardín / Patio","Fachada"],logica:null,mapKey:"espacios"},
 
       /* ── Sobre el servicio ── */
-      {id:"s2",tipo:"seccion",label:"Sobre el servicio",desc:"¿Qué necesitas de Habitaris?",required:false,opciones:[],logica:null},
+      {id:"s2",tipo:"seccion",label:"Sobre el servicio",desc:"¿Qué necesitas?",required:false,opciones:[],logica:null},
       {id:"f_servicio",tipo:"chips",label:"¿Qué servicio te interesa?",placeholder:"",required:true,opciones:["Diseño arquitectónico / Obra nueva","Diseño arquitectónico / Reforma","Interiorismo / Diseño de interiores","Biointeriorismo","Supervisión de obra (Presencial)","Supervisión de obra (Online)","Asesoría de Compras"],logica:null,mapKey:"servicios"},
       {id:"f_tipo_proy",tipo:"select",label:"¿El proyecto es residencial, comercial o rural?",placeholder:"",required:true,opciones:["Residencial","Comercial","Rural"],logica:null,mapKey:"tipoProyecto"},
 
-      /* ── Ubicación y espacio ── */
-      {id:"s3",tipo:"seccion",label:"Ubicación y espacio",desc:"Detalles del inmueble",required:false,opciones:[],logica:null},
-      {id:"f_ciudad",tipo:"text",label:"Ciudad o población",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"ciudad"},
-      {id:"f_direccion",tipo:"textarea",label:"Dirección del proyecto",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"direccion"},
-      {id:"f_edificio",tipo:"text",label:"Nombre del edificio o conjunto",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"edificio"},
-      {id:"f_area",tipo:"text",label:"Área aproximada en m²",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"area"},
-      {id:"f_habitaciones",tipo:"text",label:"Número de habitaciones/áreas a intervenir",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"habitaciones"},
-      {id:"f_espacios",tipo:"chips",label:"¿Qué espacios incluye el proyecto?",placeholder:"",required:true,opciones:["Sala","Comedor","Cocina","Habitaciones","Baños","Terraza / Balcón","Estudio / Oficina","Local comercial"],logica:null,mapKey:"espacios"},
-
       /* ── Estilo y diseño ── */
       {id:"s4",tipo:"seccion",label:"Estilo y diseño",desc:"Tus preferencias estéticas",required:false,opciones:[],logica:null},
-      {id:"f_estilo",tipo:"chips",label:"Estilo Preferido",placeholder:"",required:true,opciones:["Bio-natural/Orgánico","Bohemio","Clásico","Escandinavo","Industrial","Minimalista","Moderno","Otro"],logica:null,mapKey:"estilo"},
-      {id:"f_colores",tipo:"textarea",label:"Colores, materiales y elementos clave",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"colores"},
-      {id:"f_links_ref",tipo:"textarea",label:"Pega aquí los links de tus ideas o referentes",placeholder:"Escribe tu respuesta aquí...",required:false,opciones:[],logica:null,mapKey:"linksReferentes"},
+      {id:"f_estilo",tipo:"chips",label:"Estilo preferido",placeholder:"",required:true,opciones:["Bio-natural / Orgánico","Bohemio","Clásico","Escandinavo","Industrial","Minimalista","Moderno","Rústico","Otro"],logica:null,mapKey:"estilo"},
+      {id:"f_colores",tipo:"textarea",label:"Colores, materiales y elementos clave",placeholder:"Describe los colores y materiales que te gustan...",required:true,opciones:[],logica:null,mapKey:"colores"},
+      {id:"f_links_ref",tipo:"textarea",label:"Pega aquí los links de tus ideas o referentes (Pinterest, Instagram, etc.)",placeholder:"https://...",required:false,opciones:[],logica:null,mapKey:"linksReferentes"},
 
       /* ── Expectativas ── */
       {id:"s5",tipo:"seccion",label:"Expectativas del proyecto",desc:"¿Qué esperas lograr?",required:false,opciones:[],logica:null},
-      {id:"f_lograr",tipo:"chips",label:"¿Qué esperas lograr con este proyecto?",placeholder:"",required:true,opciones:["Inspiración o ideas generales","Planos base y distribución funcional","Diseño integral con renders, acabados y mobiliario","Supervisión y acompañamiento durante la ejecución"],logica:null,mapKey:"expectativas"},
-      {id:"f_importante",tipo:"chips",label:"Lo más importante para ti en el proyecto",placeholder:"",required:true,opciones:["Estética / Diseño","Funcionalidad","Presupuesto ajustado","Tiempo de entrega","Exclusividad / Personalización"],logica:null,mapKey:"prioridades"},
+      {id:"f_lograr",tipo:"chips",label:"¿Qué esperas lograr con este proyecto?",placeholder:"",required:true,opciones:["Inspiración o ideas generales","Planos base y distribución funcional","Diseño integral con renders, acabados y mobiliario","Supervisión y acompañamiento durante la ejecución"],logica:null,mapKey:"expectativas",scoring:{enabled:true,weight:3,rules:{"Inspiración o ideas generales":"red","Planos base y distribución funcional":"neutral","Diseño integral con renders, acabados y mobiliario":"green","Supervisión y acompañamiento durante la ejecución":"green"}}},
+      {id:"f_importante",tipo:"chips",label:"Lo más importante para ti en el proyecto",placeholder:"",required:true,opciones:["Estética / Diseño","Funcionalidad","Presupuesto ajustado","Tiempo de entrega","Exclusividad / Personalización"],logica:null,mapKey:"prioridades",scoring:{enabled:true,weight:2,rules:{"Estética / Diseño":"green","Funcionalidad":"green","Presupuesto ajustado":"red","Tiempo de entrega":"neutral","Exclusividad / Personalización":"green"}}},
 
       /* ── Presupuesto y financiación ── */
       {id:"s6",tipo:"seccion",label:"Presupuesto y financiación",desc:"Información económica del proyecto",required:false,opciones:[],logica:null},
-      {id:"f_presupuesto",tipo:"text",label:"Presupuesto estimado (COP) disponible para el proyecto",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"presupuesto"},
-      {id:"f_financiar",tipo:"select",label:"¿Cómo planeas financiar el proyecto?",placeholder:"",required:true,opciones:["Con recursos propios","Crédito bancario o leasing habitacional","Con apoyo de un tercero","Aún no lo tengo definido"],logica:null,mapKey:"financiacion"},
-      {id:"f_invertido",tipo:"select",label:"¿Has invertido antes en diseño profesional?",placeholder:"",required:true,opciones:["Sí","No, pero estoy dispuesto","No, nunca lo haría"],logica:null,mapKey:"inversionPrevia"},
-      {id:"f_gratuito",tipo:"select",label:"¿Esperas que el diseño sea gratuito o solo de referencia?",placeholder:"",required:true,opciones:["Sí, solo busco ideas generales","No, estoy dispuesto a pagar por un diseño profesional"],logica:null,mapKey:"expectativaPago"},
-      {id:"f_exceder",tipo:"select",label:"¿Aceptarías una propuesta que no cumpla con tu presupuesto, si garantiza calidad y durabilidad?",placeholder:"",required:true,opciones:["Sí, puedo ajustarme","No, solo lo hago si es más barato"],logica:null,mapKey:"flexibilidad"},
-      {id:"f_anticipo",tipo:"yesno",label:"¿Dispuesto a pagar anticipo 30-50%?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"anticipo"},
+      /* Presupuesto por país */
+      {id:"f_presupuesto_co",tipo:"select",label:"Presupuesto estimado (COP)",placeholder:"",required:true,opciones:["Menos de $10.000.000","$10.000.000 - $30.000.000","$30.000.000 - $60.000.000","$60.000.000 - $100.000.000","Más de $100.000.000"],logica:{fieldId:"f_pais",value:"Colombia"},mapKey:"presupuesto",scoring:{enabled:true,weight:5,rules:{"Menos de $10.000.000":"red","$10.000.000 - $30.000.000":"neutral","$30.000.000 - $60.000.000":"green","$60.000.000 - $100.000.000":"green","Más de $100.000.000":"green"}}},
+      {id:"f_presupuesto_es",tipo:"select",label:"Presupuesto estimado (EUR)",placeholder:"",required:true,opciones:["Menos de €10.000","€10.000 - €30.000","€30.000 - €60.000","€60.000 - €100.000","Más de €100.000"],logica:{fieldId:"f_pais",value:"España"},mapKey:"presupuesto",scoring:{enabled:true,weight:5,rules:{"Menos de €10.000":"red","€10.000 - €30.000":"neutral","€30.000 - €60.000":"green","€60.000 - €100.000":"green","Más de €100.000":"green"}}},
+      {id:"f_presupuesto_otro",tipo:"select",label:"Presupuesto estimado (USD)",placeholder:"",required:true,opciones:["Menos de $5.000","$5.000 - $15.000","$15.000 - $30.000","$30.000 - $50.000","Más de $50.000"],logica:{fieldId:"f_pais",notValues:["Colombia","España"]},mapKey:"presupuesto",scoring:{enabled:true,weight:5,rules:{"Menos de $5.000":"red","$5.000 - $15.000":"neutral","$15.000 - $30.000":"green","$30.000 - $50.000":"green","Más de $50.000":"green"}}},
+      {id:"f_honorarios",tipo:"select",label:"¿Tu presupuesto incluye los honorarios de diseño?",placeholder:"",required:true,opciones:["Sí, incluye diseño y ejecución","Solo ejecución/materiales, el diseño aparte","No, espero que el diseño esté incluido sin costo","No estoy seguro"],logica:null,mapKey:"honorariosDiseño",scoring:{enabled:true,weight:5,rules:{"Sí, incluye diseño y ejecución":"green","Solo ejecución/materiales, el diseño aparte":"green","No, espero que el diseño esté incluido sin costo":"red","No estoy seguro":"neutral"}}},
+      {id:"f_financiar",tipo:"select",label:"¿Cómo planeas financiar el proyecto?",placeholder:"",required:true,opciones:["Con recursos propios","Crédito bancario o leasing habitacional","Con apoyo de un tercero","Aún no lo tengo definido"],logica:null,mapKey:"financiacion",scoring:{enabled:true,weight:3,rules:{"Con recursos propios":"green","Crédito bancario o leasing habitacional":"neutral","Con apoyo de un tercero":"neutral","Aún no lo tengo definido":"red"}}},
+      {id:"f_invertido",tipo:"select",label:"¿Has invertido antes en diseño profesional?",placeholder:"",required:true,opciones:["Sí","No, pero estoy dispuesto","No, nunca lo haría"],logica:null,mapKey:"inversionPrevia",scoring:{enabled:true,weight:3,rules:{"Sí":"green","No, pero estoy dispuesto":"neutral","No, nunca lo haría":"red"}}},
+      {id:"f_gratuito",tipo:"select",label:"¿Esperas que el diseño sea gratuito o solo de referencia?",placeholder:"",required:true,opciones:["Sí, solo busco ideas generales","No, estoy dispuesto a pagar por un diseño profesional"],logica:null,mapKey:"expectativaPago",scoring:{enabled:true,weight:4,rules:{"Sí, solo busco ideas generales":"red","No, estoy dispuesto a pagar por un diseño profesional":"green"}}},
+      {id:"f_exceder",tipo:"select",label:"¿Aceptarías una propuesta que supere tu presupuesto, si garantiza calidad y durabilidad?",placeholder:"",required:true,opciones:["Sí, puedo ajustarme","No, solo lo hago si es más barato"],logica:null,mapKey:"flexibilidad",scoring:{enabled:true,weight:4,rules:{"Sí, puedo ajustarme":"green","No, solo lo hago si es más barato":"red"}}},
+      {id:"f_anticipo",tipo:"yesno",label:"¿Dispuesto a pagar anticipo 30-50%?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"anticipo",scoring:{enabled:true,weight:5,rules:{"Sí":"green","No":"red"}}},
       {id:"f_contratistas",tipo:"select",label:"¿Quieres que te recomendemos contratistas de confianza para la obra?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"contratistas"},
 
       /* ── Plazos ── */
       {id:"s7",tipo:"seccion",label:"Plazos",desc:"Tiempos del proyecto",required:false,opciones:[],logica:null},
-      {id:"f_plazo",tipo:"select",label:"Plazo esperado para finalización",placeholder:"",required:true,opciones:["1 - 3 meses","3 - 6 meses","> 6 Meses"],logica:null,mapKey:"plazo"},
+      {id:"f_plazo",tipo:"select",label:"Plazo esperado para finalización",placeholder:"",required:true,opciones:["1 - 3 meses","3 - 6 meses","> 6 Meses"],logica:null,mapKey:"plazo",scoring:{enabled:true,weight:2,rules:{"1 - 3 meses":"red","3 - 6 meses":"neutral","> 6 Meses":"green"}}},
       {id:"f_inicio",tipo:"date",label:"Fecha tentativa de inicio",placeholder:"",required:true,opciones:[],logica:null,mapKey:"fechaInicio"},
 
       /* ── Facturación ── */
       {id:"s8",tipo:"seccion",label:"Información de facturación",desc:"Datos para facturación electrónica",required:false,opciones:[],logica:null},
-      {id:"f_razon_social",tipo:"text",label:"Nombre o razón social para facturación",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"razonSocial"},
-      {id:"f_doc",tipo:"text",label:"Tipo y número de documento",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"documento"},
-      {id:"f_email_fact",tipo:"email",label:"Email para envío de factura",placeholder:"name@example.com",required:true,opciones:[],logica:null,mapKey:"emailFactura"},
-      {id:"f_dir_fact",tipo:"text",label:"Dirección de facturación",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"dirFacturacion"},
-      {id:"f_forma_pago",tipo:"select",label:"Forma de pago preferida",placeholder:"",required:true,opciones:["Enlace PSE","Tarjeta de Crédito/débito"],logica:null,mapKey:"formaPago"},
+      {id:"f_mismos_datos",tipo:"yesno",label:"¿Los datos de facturación son los mismos del cliente?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"mismosDatosFactura"},
+      {id:"f_fact_info_si",tipo:"info",label:"✅ Se usarán los datos ingresados en la sección 'Datos del cliente' para la facturación. Podrás revisarlos antes de confirmar.",desc:"",required:false,opciones:[],logica:{fieldId:"f_mismos_datos",value:"Sí"}},
+      {id:"f_razon_social",tipo:"text",label:"Nombre o razón social para facturación",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"razonSocial"},
+      {id:"f_tipo_doc_fact_co",tipo:"select",label:"Tipo de documento (facturación)",placeholder:"",required:true,opciones:["Cédula de ciudadanía (CC)","Cédula de extranjería (CE)","NIT","Pasaporte"],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"tipoDocFactura"},
+      {id:"f_num_doc_fact",tipo:"text",label:"Número de documento (facturación)",placeholder:"",required:true,opciones:[],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"numDocFactura"},
+      {id:"f_email_fact",tipo:"email",label:"Email para envío de factura",placeholder:"name@example.com",required:true,opciones:[],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"emailFactura"},
+      {id:"f_dir_fact",tipo:"text",label:"Dirección de facturación",placeholder:"",required:true,opciones:[],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"dirFacturacion"},
+      /* Forma de pago por país */
+      {id:"f_forma_pago_co",tipo:"select",label:"Forma de pago preferida",placeholder:"",required:true,opciones:["Enlace PSE","Tarjeta de Crédito/Débito","Transferencia bancaria","Nequi / Daviplata"],logica:{fieldId:"f_pais",value:"Colombia"},mapKey:"formaPago"},
+      {id:"f_forma_pago_es",tipo:"select",label:"Forma de pago preferida",placeholder:"",required:true,opciones:["Bizum","Tarjeta de Crédito/Débito","Transferencia bancaria","PayPal"],logica:{fieldId:"f_pais",value:"España"},mapKey:"formaPago"},
+      {id:"f_forma_pago_otro",tipo:"select",label:"Forma de pago preferida",placeholder:"",required:true,opciones:["Tarjeta de Crédito/Débito","Transferencia bancaria","PayPal"],logica:{fieldId:"f_pais",notValues:["Colombia","España"]},mapKey:"formaPago"},
       {id:"f_retenciones",tipo:"yesno",label:"¿Aplican retenciones especiales?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"retenciones"},
       {id:"f_det_ret",tipo:"textarea",label:"Detalle de retenciones",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:{fieldId:"f_retenciones",value:"Sí"},mapKey:"detalleRetenciones"},
 
@@ -215,6 +319,7 @@ function Constructor({ forms, setForms, editId, setEditId, onSaved, envios, addE
   const [preview, setPreview] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [shareClient, setShareClient] = useState({nombre:"",email:"",tel:""});
+  const [sharePais, setSharePais] = useState("Colombia");
   const [shareGenerated, setShareGenerated] = useState("");
   const [shareFileName, setShareFileName] = useState("");
   const [linkMaxUsos, setLinkMaxUsos] = useState(0);
@@ -257,9 +362,9 @@ function Constructor({ forms, setForms, editId, setEditId, onSaved, envios, addE
   };
 
   /* Generate standalone HTML form file */
-  const generateFormHTML = (client) => {
+  const generateFormHTML = (client, paisProyecto) => {
     const cfg = getConfig();
-    const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre}, cliente:client||null };
+    const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre,paisProyecto:paisProyecto||"Colombia"}, cliente:client||null };
     const defJSON = JSON.stringify(def);
     const telWA = (config.telRespuesta||cfg.whatsapp.numero||"").replace(/[^0-9]/g,"");
     const empresaNombre = cfg.empresa.nombre.toUpperCase();
@@ -318,12 +423,24 @@ if(cliente){campos.forEach(c=>{
   if(cliente.nombre&&(c.mapKey==="nombre"||(c.tipo==="text"&&c.label.toLowerCase().includes("nombre"))))vals[c.id]=cliente.nombre;
   if(cliente.tel&&(c.mapKey==="telefono"||c.tipo==="tel"))vals[c.id]=cliente.tel;
 });}
+// Prefill country from config
+const paisProy=cfg.paisProyecto||"Colombia";
+const paisCodeMap={"Colombia":"+57","España":"+34","México":"+52","Chile":"+56","Perú":"+51","Ecuador":"+593","Argentina":"+54","Panamá":"+507","Estados Unidos":"+1","Otro":"+"};
+campos.forEach(c=>{
+  if(c.mapKey==="pais")vals[c.id]=paisProy;
+});
 function isLocked(c){if(!cliente)return false;
   if(cliente.email&&(c.mapKey==="email"||c.tipo==="email"))return true;
   if(cliente.nombre&&(c.mapKey==="nombre"||(c.tipo==="text"&&c.label.toLowerCase().includes("nombre"))))return true;
-  if(cliente.tel&&(c.mapKey==="telefono"||c.tipo==="tel"))return true;return false;}
-function isVisible(c){if(!c.logica||!c.logica.fieldId||!c.logica.value)return true;
-  const dv=vals[c.logica.fieldId];const ex=c.logica.value;
+  if(cliente.tel&&cliente.tel.trim()&&(c.mapKey==="telefono"||c.tipo==="tel"||c.tipo==="tel_combo"))return true;
+  if(c.mapKey==="pais")return true;
+  return false;}
+function isVisible(c){if(!c.logica||!c.logica.fieldId)return true;
+  if(!c.logica.value&&!c.logica.notValues&&!c.logica.notValue)return true;
+  const dv=vals[c.logica.fieldId];
+  if(c.logica.notValues){return !c.logica.notValues.includes(String(dv||""));}
+  if(c.logica.notValue){return String(dv||"")!==c.logica.notValue;}
+  const ex=c.logica.value;
   if(Array.isArray(dv))return dv.includes(ex);return String(dv||"")===ex;}
 function render(){
   const app=document.getElementById("app");
@@ -349,7 +466,20 @@ function render(){
     h+=\`<div class="fld">\`;
     if(locked){
       h+=\`<label class="lbl">\${c.label} <span class="lock">🔒 prellenado</span></label>\`;
-      h+=\`<input class="inp" value="\${v}" disabled/>\`;
+      if(c.tipo==="tel_combo"){
+        const codVal=vals["_cod_"+c.id]||"+57";
+        h+=\`<div style="display:flex;gap:0"><div class="inp" style="width:90px;flex-shrink:0;border-radius:6px 0 0 6px;border-right:none;font-weight:700;font-size:13px;color:#1E4F8C;background:#E6EFF9;display:flex;align-items:center;justify-content:center;border-color:rgba(30,79,140,.27)">\${codVal}</div><input class="inp" value="\${v}" disabled style="flex:1;border-radius:0 6px 6px 0"/></div>\`;
+      }else if(c.tipo==="select"){h+=\`<select class="inp" disabled><option>\${v}</option></select>\`;}
+      else{h+=\`<input class="inp" value="\${v}" disabled/>\`;}
+    }else if(c.tipo==="tel_combo"){
+      const paisVal=c.paisRef?vals[c.paisRef]:paisProy;
+      const defCode=paisCodeMap[paisVal]||"+57";
+      if(!vals["_cod_"+c.id])vals["_cod_"+c.id]=defCode;
+      const codVal=vals["_cod_"+c.id];
+      h+=\`<label class="lbl">\${c.label}\${req}</label>\`;
+      h+=\`<div style="display:flex;gap:0"><select class="inp" style="width:90px;flex-shrink:0;border-radius:6px 0 0 6px;border-right:none;font-weight:700;font-size:13px;color:#1E4F8C;background:#F5F4F1" onchange="vals['_cod_'+'\${c.id}']=this.value;render()">\`;
+      (c.opciones||[]).forEach(o=>{h+=\`<option value="\${o}" \${codVal===o?"selected":""}>\${o}</option>\`;});
+      h+=\`</select><input class="inp" type="tel" value="\${v}" placeholder="\${c.placeholder||""}" style="flex:1;border-radius:0 6px 6px 0" onchange="vals['\${c.id}']=this.value;render()"/></div>\`;
     }else if(["text","email","tel","number","date"].includes(c.tipo)){
       h+=\`<label class="lbl">\${c.label}\${req}</label>\`;
       h+=\`<input class="inp" type="\${c.tipo}" value="\${v}" placeholder="\${c.placeholder||""}" onchange="vals['\${c.id}']=this.value;render()"/>\`;
@@ -357,9 +487,11 @@ function render(){
       h+=\`<label class="lbl">\${c.label}\${req}</label>\`;
       h+=\`<textarea class="inp" rows="3" placeholder="\${c.placeholder||""}" onchange="vals['\${c.id}']=this.value;render()">\${v}</textarea>\`;
     }else if(c.tipo==="select"||c.tipo==="rango"){
+      let opts=c.opciones||[];
+      if(c.dynamicOpciones){const dv=vals[c.dynamicOpciones.dependsOn]||"";opts=(c.dynamicOpciones.map&&c.dynamicOpciones.map[dv])||c.dynamicOpciones.fallback||[];}
       h+=\`<label class="lbl">\${c.label}\${req}</label>\`;
       h+=\`<select class="inp" onchange="vals['\${c.id}']=this.value;render()"><option value="">Seleccionar...</option>\`;
-      (c.opciones||[]).forEach(o=>{h+=\`<option value="\${o}" \${v===o?"selected":""}>\${o}</option>\`;});
+      opts.forEach(o=>{h+=\`<option value="\${o}" \${v===o?"selected":""}>\${o}</option>\`;});
       h+=\`</select>\`;
     }else if(c.tipo==="radio"){
       h+=\`<label class="lbl">\${c.label}\${req}</label><div class="radio-g">\`;
@@ -394,7 +526,9 @@ function doSubmit(){
     }
   }
   const lines=campos.filter(c=>c.tipo!=="seccion"&&c.tipo!=="info"&&vals[c.id]).map(c=>{
-    const v=Array.isArray(vals[c.id])?vals[c.id].join(", "):vals[c.id];return"• "+c.label+": "+v;});
+    let v=Array.isArray(vals[c.id])?vals[c.id].join(", "):vals[c.id];
+    if(c.tipo==="tel_combo"){const code=vals["_cod_"+c.id]||"";v=code+" "+v;}
+    return"• "+c.label+": "+v;});
   const cl=cliente?"👤 Cliente: "+(cliente.nombre||"")+" ("+(cliente.email||"")+")\\n":"";
   const msg="📋 RESPUESTA: "+(DEF.nombre||"Formulario")+"\\n\\n"+cl+lines.join("\\n")+"\\n\\nFecha: "+new Date().toISOString().split("T")[0];
   const tel="${telWA}";
@@ -409,9 +543,9 @@ render();
 
   const generateLink = () => {
     if (!shareClient.email && !shareClient.nombre) return;
-    const client = {nombre:shareClient.nombre, email:shareClient.email, tel:shareClient.tel};
+    const client = {nombre:shareClient.nombre, email:shareClient.email, tel:((shareClient.codTel||"+57").replace(/[^0-9+]/g,"")+" "+shareClient.tel).trim()};
     // Generate standalone HTML file (for download/WhatsApp)
-    const html = generateFormHTML(client);
+    const html = generateFormHTML(client, sharePais);
     const blob = new Blob([html], {type:"text/html"});
     const url = URL.createObjectURL(blob);
     setShareGenerated(url);
@@ -423,7 +557,7 @@ render();
     const appUrl = (cfg.app?.url || "").replace(/\/$/,"");
     if (appUrl) {
       const linkConfig = { linkId, maxUsos: linkMaxUsos||0, fechaCaducidad: linkExpiry||"" };
-      const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre}, cliente:client||null, linkConfig, modulo, marca:{ logo:cfg.apariencia?.logo||"", colorPrimario:cfg.apariencia?.colorPrimario||"#111", colorSecundario:cfg.apariencia?.colorSecundario||"#1E4F8C", colorAcento:cfg.apariencia?.colorAcento||"#C9A84C", tipografia:cfg.apariencia?.tipografia||"Outfit", slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"", empresa:cfg.empresa?.nombre||"Habitaris", razonSocial:cfg.empresa?.razonSocial||"", domicilio:cfg.empresa?.domicilio||"" } };
+      const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre,paisProyecto:sharePais}, cliente:client||null, linkConfig, modulo, marca:{ logo:cfg.apariencia?.logo||"", colorPrimario:cfg.apariencia?.colorPrimario||"#111", colorSecundario:cfg.apariencia?.colorSecundario||"#1E4F8C", colorAcento:cfg.apariencia?.colorAcento||"#C9A84C", tipografia:cfg.apariencia?.tipografia||"Outfit", slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"", empresa:cfg.empresa?.nombre||"Habitaris", razonSocial:cfg.empresa?.razonSocial||"", domicilio:cfg.empresa?.domicilio||"" } };
       const encoded = encodeFormDef(def);
       setSharePublicUrl(`${appUrl}/form#${encoded}`);
       // Register link in Supabase
@@ -446,7 +580,7 @@ render();
       formNombre: nombre || "(sin nombre)",
       cliente: client,
       fecha: today(),
-      hora: new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"}),
+      hora: new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}),
       linkId,
       maxUsos: linkMaxUsos||0,
       expiry: linkExpiry||"",
@@ -470,7 +604,7 @@ render();
       .replace(/\{\{nombre\}\}/g, clientName)
       .replace(/\{\{formulario\}\}/g, nombre || "Formulario")
       .replace(/\{\{empresa\}\}/g, cfg.empresa.nombre) + linkText;
-    const tel = shareClient.tel ? shareClient.tel.replace(/[^0-9]/g,"") : "";
+    const tel = shareClient.tel ? ((shareClient.codTel||"+57").replace(/[^0-9]/g,"") + shareClient.tel.replace(/[^0-9]/g,"")) : "";
     window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`, "_blank");
   };
   const shareEmail = async () => {
@@ -492,7 +626,7 @@ render();
       alert("Error al enviar. Revisa Configuración → Correo / EmailJS.");
     }
   };
-  const openShare = () => { setShareClient({nombre:"",email:"",tel:""}); setShareGenerated(""); setShareFileName(""); setSharePublicUrl(""); setShowShare(true); };
+  const openShare = () => { setShareClient({nombre:"",email:"",tel:"",codTel:""}); setShareGenerated(""); setShareFileName(""); setSharePublicUrl(""); setSharePais("Colombia"); setShowShare(true); };
 
   const sel = selIdx!==null ? campos[selIdx] : null;
 
@@ -631,7 +765,7 @@ render();
                   </div>
                   <span style={{fontSize:14}}>{b?.icon||"📝"}</span>
                   <div style={{flex:1}}>
-                    <div style={{fontSize:11,fontWeight:600}}>{c.label}{c.required&&<span style={{color:T.red,fontSize:9,marginLeft:4}}>obligatorio</span>}</div>
+                    <div style={{fontSize:11,fontWeight:600}}>{c.label}{c.required&&<span style={{color:T.red,fontSize:9,marginLeft:4}}>obligatorio</span>}{c.scoring?.enabled&&<span style={{fontSize:9,marginLeft:4}}>🚩</span>}</div>
                     <div style={{fontSize:8,color:T.inkLight}}>{b?.lbl} {c.logica?`· Condicional: si "${campos.find(x=>x.id===c.logica?.fieldId)?.label||"?"}" = "${c.logica?.value||"?"}"`  :""}</div>
                   </div>
                   <button onClick={e=>{e.stopPropagation();updCampo(i,"required",!c.required)}} title={c.required?"Obligatorio":"Opcional"}
@@ -711,6 +845,46 @@ render();
                 <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Clave de mapeo (integración)</label>
                 <input value={sel.mapKey||""} onChange={e=>updCampo(selIdx,"mapKey",e.target.value)} placeholder="ej: nombre, email" style={{...inp,width:"100%",fontSize:9}}/>
               </div>
+              {/* Scoring rules — for fields with options */}
+              {["select","radio","chips","yesno","rango"].includes(sel.tipo) && (
+                <div style={{borderTop:`1px solid ${T.border}`,paddingTop:8,marginTop:8}}>
+                  <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer",fontSize:10,fontWeight:700,marginBottom:6}}>
+                    <input type="checkbox" checked={!!sel.scoring?.enabled} onChange={e=>{
+                      const sc = sel.scoring ? {...sel.scoring, enabled:e.target.checked} : {enabled:e.target.checked, weight:1, rules:{}};
+                      updCampo(selIdx,"scoring",sc);
+                    }} style={{accentColor:"#C9A84C"}}/>
+                    🚩 Regla de scoring
+                  </label>
+                  {sel.scoring?.enabled && (
+                    <div>
+                      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+                        <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Peso</label>
+                        <select value={sel.scoring?.weight||1} onChange={e=>updCampo(selIdx,"scoring",{...sel.scoring,weight:parseInt(e.target.value)})}
+                          style={{...inp,width:60,fontSize:9}}>
+                          {[1,2,3,4,5].map(n=><option key={n} value={n}>{n} pts</option>)}
+                        </select>
+                      </div>
+                      <div style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase",marginBottom:4}}>Clasificar opciones</div>
+                      {(sel.opciones||["Sí","No"]).map(opt => {
+                        const flag = sel.scoring?.rules?.[opt] || "neutral";
+                        return (
+                          <div key={opt} style={{display:"flex",alignItems:"center",gap:4,marginBottom:3}}>
+                            <div style={{flex:1,fontSize:9,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{opt}</div>
+                            {[{v:"green",l:"🟢"},{v:"neutral",l:"🟡"},{v:"red",l:"🔴"}].map(f=>(
+                              <button key={f.v} type="button" onClick={()=>{
+                                const rules = {...(sel.scoring?.rules||{}), [opt]:f.v};
+                                updCampo(selIdx,"scoring",{...sel.scoring,rules});
+                              }} style={{width:22,height:22,border:flag===f.v?"2px solid #111":"1px solid #ddd",borderRadius:4,
+                                background:flag===f.v?"#F5F4F1":"#fff",cursor:"pointer",fontSize:12,padding:0,
+                                display:"flex",alignItems:"center",justifyContent:"center"}}>{f.l}</button>
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </Card>
           )}
         </div>
@@ -718,8 +892,8 @@ render();
 
       {/* Share modal — generates downloadable HTML form */}
       {showShare && (
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setShowShare(false)}>
-          <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:8,padding:28,width:460,boxShadow:"0 12px 40px rgba(0,0,0,0.2)"}}>
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:40,overflowY:"auto"}} onClick={()=>setShowShare(false)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:8,padding:28,width:460,maxHeight:"85vh",overflowY:"auto",boxShadow:"0 12px 40px rgba(0,0,0,0.2)",marginBottom:40}}>
             <h3 style={{margin:0,fontSize:16,fontWeight:700,marginBottom:4}}>📤 Enviar formulario a cliente</h3>
             <p style={{margin:"0 0 16px",fontSize:10,color:T.inkMid}}>{nombre || "Sin nombre"} · Se genera un archivo HTML que el cliente abre en su navegador</p>
 
@@ -739,13 +913,31 @@ render();
                 </div>
               </div>
               <div>
-                <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>WhatsApp (con código país)</label>
-                <input value={shareClient.tel} onChange={e=>{ setShareClient({...shareClient,tel:e.target.value}); setShareGenerated(""); }}
-                  placeholder="573001234567" style={{...inp,width:"100%",fontSize:11}}/>
+                <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>WhatsApp</label>
+                <div style={{display:"flex",gap:0}}>
+                  <select value={shareClient.codTel||({Colombia:"+57",España:"+34",México:"+52",Chile:"+56",Perú:"+51",Ecuador:"+593",Argentina:"+54",Panamá:"+507","Estados Unidos":"+1"}[sharePais]||"+57")}
+                    onChange={e=>{ setShareClient({...shareClient,codTel:e.target.value}); setShareGenerated(""); }}
+                    style={{...inp,width:80,flexShrink:0,borderRadius:"6px 0 0 6px",borderRight:"none",fontWeight:700,fontSize:11,color:"#1E4F8C",background:"#F5F4F1"}}>
+                    {["+57","+34","+52","+56","+51","+593","+54","+507","+1","+44"].map(c=><option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <input value={shareClient.tel} onChange={e=>{ setShareClient({...shareClient,tel:e.target.value}); setShareGenerated(""); }}
+                    placeholder="3001234567" style={{...inp,flex:1,fontSize:11,borderRadius:"0 6px 6px 0"}}/>
+                </div>
               </div>
             </div>
 
             {/* Link config: limits & expiry */}
+            <div style={{background:"#F5F0FF",borderRadius:6,padding:"12px 14px",marginBottom:14,border:"1px solid #5B3A8C22"}}>
+              <div style={{fontSize:8,fontWeight:700,color:"#5B3A8C",textTransform:"uppercase",marginBottom:8}}>🌍 País del proyecto</div>
+              <select value={sharePais} onChange={e=>{setSharePais(e.target.value);setShareGenerated("");}}
+                style={{...inp,width:"100%",fontSize:11,marginBottom:8}}>
+                {["Colombia","España","México","Chile","Perú","Ecuador","Argentina","Panamá","Estados Unidos","Otro"].map(p=><option key={p} value={p}>{p}</option>)}
+              </select>
+              <div style={{fontSize:8,color:"#5B3A8C",lineHeight:1.4}}>
+                📌 Define la divisa, departamentos/comunidades, tipo de documento y código telefónico del formulario
+              </div>
+            </div>
+
             <div style={{background:"#F5F0FF",borderRadius:6,padding:"12px 14px",marginBottom:14,border:"1px solid #5B3A8C22"}}>
               <div style={{fontSize:8,fontWeight:700,color:"#5B3A8C",textTransform:"uppercase",marginBottom:8}}>🔒 Control del enlace</div>
               <div style={{display:"flex",gap:8}}>
@@ -795,7 +987,7 @@ render();
               </button>
               <button onClick={shareWhatsApp} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:`1px solid ${T.border}`,borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"'Outfit',sans-serif",textAlign:"left"}}>
                 <div style={{width:32,height:32,borderRadius:6,background:"#E8F8E8",display:"flex",alignItems:"center",justifyContent:"center"}}><MessageCircle size={14} color="#25D366"/></div>
-                <div><div style={{fontSize:11,fontWeight:700}}>Abrir WhatsApp</div><div style={{fontSize:8,color:T.inkMid}}>{shareClient.tel?`Mensaje al ${shareClient.tel}`:"Adjunta el archivo descargado"}</div></div>
+                <div><div style={{fontSize:11,fontWeight:700}}>Abrir WhatsApp</div><div style={{fontSize:8,color:T.inkMid}}>{shareClient.tel?`Mensaje al ${shareClient.codTel||"+57"} ${shareClient.tel}`:"Adjunta el archivo descargado"}</div></div>
               </button>
               <button onClick={shareEmail} disabled={emailSending} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:`1px solid ${emailSent?T.green:T.border}`,borderRadius:6,background:emailSent?T.greenBg:"#fff",cursor:emailSending?"wait":"pointer",fontFamily:"'Outfit',sans-serif",textAlign:"left",opacity:emailSending?.6:1}}>
                 <div style={{width:32,height:32,borderRadius:6,background:emailSent?T.greenBg:T.amberBg,display:"flex",alignItems:"center",justifyContent:"center"}}><Mail size={14} color={emailSent?T.green:T.amber}/></div>
@@ -876,27 +1068,63 @@ function ListaForms({ forms, setForms, onEdit, onNew }) {
 /* ═══════════════════════════════════════════════════════════════
    RESPUESTAS
    ═══════════════════════════════════════════════════════════════ */
-function TabRespuestas({ forms, respuestas }) {
+function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClearAll }) {
   const [selFormId, setSelFormId] = useState("");
   const [selResp, setSelResp] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [showDelPass, setShowDelPass] = useState(false);
+  const [delPassInput, setDelPassInput] = useState("");
+  const [delAction, setDelAction] = useState(null);
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [bioRegistered, setBioRegistered] = useState(Bio.isRegistered());
   const [procesados, setProcesados] = useState(() => {
     try { return JSON.parse(localStorage.getItem("hab:form:procesados")||"[]"); } catch { return []; }
   });
-  const [filtroEstado, setFiltroEstado] = useState("todos"); // todos | pendiente | procesado
+  const [filtroEstado, setFiltroEstado] = useState("todos");
 
-  const markProcesado = (id) => {
+  useEffect(() => { Bio.isAvailable().then(setBioAvailable); }, []);
+
+  const toggleSel = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
+  const toggleAll = (ids) => setSelectedIds(prev => prev.size===ids.length ? new Set() : new Set(ids));
+
+  const delPass = localStorage.getItem("hab:form:deletePass") || "";
+  const needsAuth = delPass || bioRegistered;
+  const confirmDelete = async (action) => {
+    if (!needsAuth) { executeDelete(action); return; }
+    if (bioRegistered) {
+      const ok = await Bio.authenticate();
+      if (ok) { executeDelete(action); return; }
+      if (delPass) { setDelAction(action); setDelPassInput(""); setShowDelPass(true); return; }
+      return;
+    }
+    if (delPass) { setDelAction(action); setDelPassInput(""); setShowDelPass(true); }
+  };
+  const executeDelete = (action) => {
+    if (action.type === "single" && onDelete) { onDelete(action.target); }
+    else if (action.type === "selected" && onDelete) { selectedIds.forEach(id => { const r = respuestas.find(x=>x.id===id); if(r) onDelete(r); }); setSelectedIds(new Set()); }
+    else if (action.type === "all" && onClearAll) { onClearAll(); setSelectedIds(new Set()); }
+    setShowDelPass(false); setDelAction(null);
+  };
+  const checkPassAndDelete = () => {
+    if (delPassInput === delPass) { executeDelete(delAction); }
+    else { alert("Contraseña incorrecta"); }
+  };
+
+  const markProcesado = (id, sbId) => {
     const next = [...procesados, id];
     setProcesados(next);
     localStorage.setItem("hab:form:procesados", JSON.stringify(next));
+    if (sbId && SB.isConfigured()) SB.markProcessed(sbId).catch(()=>{});
   };
 
-  const markPendiente = (id) => {
+  const markPendiente = (id, sbId) => {
     const next = procesados.filter(x=>x!==id);
     setProcesados(next);
     localStorage.setItem("hab:form:procesados", JSON.stringify(next));
+    if (sbId && SB.isConfigured()) SB.markUnprocessed(sbId).catch(()=>{});
   };
 
-  const isProcesado = (r) => procesados.includes(r.id);
+  const isProcesado = (r) => r.processed || procesados.includes(r.id);
 
   /* Procesar: crear cliente + borrador oferta en CRM */
   const procesarRespuesta = (r) => {
@@ -981,7 +1209,7 @@ function TabRespuestas({ forms, respuestas }) {
     localStorage.setItem("habitaris_crm", JSON.stringify(crmData));
 
     // 3. Mark as processed
-    markProcesado(r.id);
+    markProcesado(r.id, r._sbId);
 
     alert(`✅ Procesado:\n\n👤 Cliente: ${existingClient ? "ya existía" : "creado"} — ${r.clienteNombre||r.clienteEmail}\n📋 Oferta borrador creada en CRM\n\nVe a CRM → Ofertas para continuar.`);
   };
@@ -1127,6 +1355,35 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
     </div>
   </div>` : ""}
 
+  <!-- Scoring -->
+  ${(function(){
+    var sc = calculateScore(resp, form);
+    if (!sc) return "";
+    var colors = {green:{bg:"#E8F4EE",border:"#1E6B42",text:"#1E6B42"},yellow:{bg:"#FAF0E0",border:"#7A5218",text:"#7A5218"},red:{bg:"#FAE8E8",border:"#AE2C2C",text:"#AE2C2C"}};
+    var col = colors[sc.level];
+    var rows = sc.details.map(function(d){
+      var fc = d.flag==="green"?"#1E6B42":d.flag==="red"?"#AE2C2C":"#7A5218";
+      var icon = d.flag==="green"?"🟢":d.flag==="red"?"🔴":"🟡";
+      return '<tr style="border-bottom:1px solid #F0EEEA"><td style="padding:6px 12px;font-weight:600">'+d.label+'</td><td style="padding:6px 12px">'+d.value+'</td><td style="padding:6px 12px;text-align:center;font-weight:700;color:'+fc+';font-family:DM Mono,monospace">'+d.points+'/'+d.maxPoints+'</td><td style="padding:6px 12px;text-align:center">'+icon+'</td></tr>';
+    }).join("");
+    return '<div style="margin:20px 36px;border:1px solid '+col.border+'44;border-radius:8px;overflow:hidden">'
+      +'<div style="display:flex;align-items:center;gap:16px;padding:16px 20px;background:'+col.bg+'">'
+      +'<div style="font-size:28px;font-weight:800;font-family:DM Mono,monospace;color:'+col.text+'">'+sc.score.toFixed(1)+'<span style="font-size:12px">/10</span></div>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:700;color:'+col.text+'">'+sc.levelLabel+'</div>'
+      +'<div style="font-size:9px;color:'+col.text+';opacity:.8;margin-top:2px">'+sc.conclusion+'</div></div>'
+      +'<div style="display:flex;gap:10px">'
+      +'<div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#1E6B42">'+sc.greens+'</div><div style="font-size:8px;color:#888">🟢</div></div>'
+      +'<div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#7A5218">'+sc.yellows+'</div><div style="font-size:8px;color:#888">🟡</div></div>'
+      +'<div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#AE2C2C">'+sc.reds+'</div><div style="font-size:8px;color:#888">🔴</div></div>'
+      +'</div></div>'
+      +'<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#F5F4F1">'
+      +'<th style="padding:6px 12px;text-align:left;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB">Criterio</th>'
+      +'<th style="padding:6px 12px;text-align:left;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB">Respuesta</th>'
+      +'<th style="padding:6px 12px;text-align:center;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB">Puntos</th>'
+      +'<th style="padding:6px 12px;text-align:center;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB"></th>'
+      +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+  })()}
+
   <!-- Sections -->
   ${sections.map((sec,si) => `
   <div class="section">
@@ -1184,7 +1441,45 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
       )}
 
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <h2 style={{margin:0,fontSize:18,fontWeight:700}}>Respuestas — {respuestas.length}</h2>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <h2 style={{margin:0,fontSize:18,fontWeight:700}}>Respuestas — {respuestas.length}</h2>
+          {onReload && <button onClick={onReload} disabled={loading}
+            style={{padding:"4px 10px",fontSize:9,fontWeight:600,cursor:loading?"wait":"pointer",fontFamily:"'Outfit',sans-serif",
+              border:`1px solid ${T.border}`,borderRadius:4,background:"#fff",color:T.inkMid,opacity:loading?.5:1}}>
+            🔄 {loading?"Cargando...":"Recargar"}
+          </button>}
+          {selectedIds.size > 0 && <button onClick={()=>confirmDelete({type:"selected"})}
+            style={{padding:"4px 14px",fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
+              border:"none",borderRadius:4,background:T.red,color:"#fff"}}>
+            🗑 Eliminar seleccionados ({selectedIds.size})
+          </button>}
+          {selectedIds.size===0 && onClearAll && respuestas.length > 0 && <button onClick={()=>confirmDelete({type:"all"})}
+            style={{padding:"4px 10px",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
+              border:`1px solid ${T.red}44`,borderRadius:4,background:"#fff",color:T.red}}>
+            🗑 Limpiar todo
+          </button>}
+          <div style={{display:"flex",gap:4,alignItems:"center"}}>
+            {bioAvailable && (
+              <button onClick={async ()=>{
+                if (bioRegistered) {
+                  if (confirm("¿Desactivar Touch ID / biometría?")) { Bio.remove(); setBioRegistered(false); }
+                } else {
+                  const ok = await Bio.register("Habitaris Admin");
+                  if (ok) { setBioRegistered(true); alert("✅ Touch ID activado"); }
+                  else alert("No se pudo registrar. Intenta de nuevo.");
+                }
+              }} style={{background:"none",border:`1px solid ${bioRegistered?"#1E6B42":"#ddd"}`,borderRadius:4,cursor:"pointer",fontSize:10,padding:"3px 8px",color:bioRegistered?"#1E6B42":"#888"}}
+                title={bioRegistered?"Touch ID activo — clic para desactivar":"Activar Touch ID"}>
+                {bioRegistered?"🟢 Touch ID":"👆 Activar Touch ID"}
+              </button>
+            )}
+            <button onClick={()=>{
+              const current = localStorage.getItem("hab:form:deletePass")||"";
+              const newPass = prompt("Contraseña para eliminar (dejar vacío para desactivar):", current);
+              if (newPass !== null) { if(newPass) localStorage.setItem("hab:form:deletePass",newPass); else localStorage.removeItem("hab:form:deletePass"); }
+            }} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,opacity:.4}} title={delPass?"🔒 Contraseña activa — clic para cambiar":"🔓 Sin contraseña — clic para configurar"}>{delPass?"🔒":"🔓"}</button>
+          </div>
+        </div>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <div style={{display:"flex",gap:0}}>
             {[{v:"todos",l:"Todos"},{v:"pendiente",l:"⏳ Pendientes"},{v:"procesado",l:"✅ Procesados"}].map((o,i)=>(
@@ -1206,22 +1501,41 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
         <table style={{borderCollapse:"collapse",width:"100%"}}>
           <thead>
             <tr style={{background:"#EDEBE7"}}>
-              {["Fecha","Formulario","Cliente","Email","Estado","Acciones"].map(h=>
+              <th style={{...ths,width:30}}><input type="checkbox" checked={filtered.length>0&&selectedIds.size===filtered.length} onChange={()=>toggleAll(filtered.map(r=>r.id))} style={{cursor:"pointer"}}/></th>
+              {["Fecha","Hora","Formulario","Cliente","Email","Score","Estado","Acciones"].map(h=>
                 <th key={h} style={ths}>{h}</th>
               )}
             </tr>
           </thead>
           <tbody>
             {filtered.length===0 ? (
-              <tr><td colSpan={6} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin respuestas{filtroEstado!=="todos"?" con este filtro":""}</td></tr>
+              <tr><td colSpan={9} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin respuestas{filtroEstado!=="todos"?" con este filtro":""}</td></tr>
             ) : filtered.sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"")).map(r => {
               const proc = isProcesado(r);
+              const dt = r.created_at ? new Date(r.created_at) : null;
+              const fechaStr = dt ? dt.toISOString().split("T")[0] : r.fecha || "—";
+              const horaStr = dt ? dt.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}) : "";
+              const isExpanded = selResp?.id === r.id;
               return (
-              <tr key={r.id} style={{cursor:"pointer",background:proc?"":"#FDFBFF"}} onClick={()=>setSelResp(selResp?.id===r.id?null:r)}>
-                <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>{r.fecha}</td>
+              <React.Fragment key={r.id}>
+              <tr style={{cursor:"pointer",background:selectedIds.has(r.id)?"#FDF5F5":isExpanded?"#F0EEFF":proc?"":"#FDFBFF",transition:"background .15s"}} onClick={()=>setSelResp(isExpanded?null:r)}>
+                <td style={{...tds,width:30}} onClick={e=>e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(r.id)} onChange={()=>toggleSel(r.id)} style={{cursor:"pointer"}}/></td>
+                <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>{fechaStr}</td>
+                <td style={{...tds,fontSize:9}}>{horaStr}</td>
                 <td style={{...tds,fontWeight:600,fontSize:10}}>{r.formularioNombre||forms.find(f=>f.id===r.formularioId)?.nombre||"—"}</td>
                 <td style={{...tds,fontWeight:600,fontSize:10}}>{r.clienteNombre||"—"}</td>
                 <td style={{...tds,fontSize:9,color:T.blue}}>{r.clienteEmail||"—"}</td>
+                <td style={{...tds,textAlign:"center"}}>
+                  {(()=>{
+                    const form = forms.find(f=>f.id===r.formularioId);
+                    const sc = calculateScore(r, form);
+                    if (!sc) return <span style={{fontSize:8,color:T.inkLight}}>—</span>;
+                    const col = sc.level==="green"?T.green:sc.level==="red"?T.red:T.amber;
+                    const bg = sc.level==="green"?T.greenBg:sc.level==="red"?T.redBg:T.amberBg;
+                    const icon = sc.level==="green"?"🟢":sc.level==="red"?"🔴":"🟡";
+                    return <span style={{fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:10,background:bg,color:col}}>{icon} {sc.score.toFixed(1)}</span>;
+                  })()}
+                </td>
                 <td style={tds}>
                   {proc
                     ? <span style={{fontSize:8,fontWeight:700,padding:"2px 8px",borderRadius:10,background:T.greenBg,color:T.green}}>✅ Procesado</span>
@@ -1229,7 +1543,9 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
                   }
                 </td>
                 <td style={{...tds,whiteSpace:"nowrap"}}>
-                  <button onClick={e=>{e.stopPropagation();setSelResp(r)}} style={{background:"none",border:"none",cursor:"pointer",marginRight:4}} title="Ver detalle"><Eye size={11} color={T.blue}/></button>
+                  <button onClick={e=>{e.stopPropagation();setSelResp(isExpanded?null:r)}} style={{background:"none",border:"none",cursor:"pointer",marginRight:4}} title="Ver detalle">
+                    {isExpanded ? <ChevronUp size={11} color={T.blue}/> : <ChevronDown size={11} color={T.blue}/>}
+                  </button>
                   <button onClick={e=>{e.stopPropagation();generarInforme(r)}} style={{background:"none",border:"none",cursor:"pointer",marginRight:4}} title="Generar informe"><FileText size={11} color={T.ink}/></button>
                   {!proc && (
                     <button onClick={e=>{e.stopPropagation();procesarRespuesta(r)}}
@@ -1237,55 +1553,139 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
                       title="Crear cliente + oferta en CRM">⚡ Procesar</button>
                   )}
                   {proc && (
-                    <button onClick={e=>{e.stopPropagation();markPendiente(r.id)}}
+                    <button onClick={e=>{e.stopPropagation();markPendiente(r.id, r._sbId)}}
                       style={{padding:"3px 8px",fontSize:8,fontWeight:600,background:"#fff",color:T.inkMid,border:`1px solid ${T.border}`,borderRadius:3,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}
                       title="Marcar como pendiente">↩</button>
                   )}
+                  {onDelete && <button onClick={e=>{e.stopPropagation();confirmDelete({type:"single",target:r});}}
+                    style={{background:"none",border:"none",cursor:"pointer",marginLeft:4,opacity:.5}} title="Eliminar respuesta"><Trash2 size={11} color={T.red}/></button>}
                 </td>
               </tr>
+              {isExpanded && (
+                <tr><td colSpan={9} style={{padding:0,borderBottom:`2px solid ${T.blue}33`}}>
+                  <div style={{padding:"14px 16px",background:"#F8F7FF"}}>
+                    {/* Actions bar */}
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                      <h3 style={{fontSize:12,fontWeight:700,margin:0}}>📋 Detalle — {r.clienteNombre||r.fecha}</h3>
+                      <div style={{display:"flex",gap:6}}>
+                        {!proc && <Btn v="pri" on={()=>procesarRespuesta(r)}>⚡ Procesar → CRM</Btn>}
+                        {proc && <span style={{fontSize:9,fontWeight:700,padding:"4px 12px",borderRadius:10,background:T.greenBg,color:T.green}}>✅ Procesado</span>}
+                        <Btn v="sec" on={()=>generarInforme(r)}><FileText size={10}/> Informe</Btn>
+                      </div>
+                    </div>
+                    {/* Scoring */}
+                    {(()=>{
+                      const form = forms.find(f=>f.id===r.formularioId);
+                      const sc = calculateScore(r, form);
+                      if (!sc) return null;
+                      const colors = {green:{bg:"#E8F4EE",border:"#1E6B42",text:"#1E6B42"},yellow:{bg:"#FAF0E0",border:"#7A5218",text:"#7A5218"},red:{bg:"#FAE8E8",border:"#AE2C2C",text:"#AE2C2C"}};
+                      const col = colors[sc.level];
+                      return (
+                        <div style={{marginBottom:12,border:`1px solid ${col.border}33`,borderRadius:6,overflow:"hidden"}}>
+                          <div style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:col.bg}}>
+                            <div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:col.text}}>{sc.score.toFixed(1)}<span style={{fontSize:10}}>/10</span></div>
+                            <div style={{flex:1}}><div style={{fontSize:11,fontWeight:700,color:col.text}}>{sc.levelLabel}</div><div style={{fontSize:8,color:col.text,opacity:.8}}>{sc.conclusion}</div></div>
+                            <div style={{display:"flex",gap:6}}>
+                              {[["🟢",sc.greens,T.green],["🟡",sc.yellows,T.amber],["🔴",sc.reds,T.red]].map(([ic,n,c])=><div key={ic} style={{textAlign:"center"}}><div style={{fontSize:12,fontWeight:800,color:c}}>{n}</div><div style={{fontSize:7}}>{ic}</div></div>)}
+                            </div>
+                          </div>
+                          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:4,padding:"8px 14px",background:"#fff"}}>
+                            {sc.details.map((d,i)=>{
+                              const fc=d.flag==="green"?T.green:d.flag==="red"?T.red:T.amber;
+                              const ic=d.flag==="green"?"🟢":d.flag==="red"?"🔴":"🟡";
+                              return <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"4px 8px",background:T.bg,borderRadius:4,fontSize:9}}>
+                                <span>{ic}</span><span style={{fontWeight:600,flex:1}}>{d.label}</span><span style={{color:T.inkMid}}>{d.value}</span><span style={{fontWeight:700,color:fc,fontFamily:"'DM Mono',monospace"}}>{d.points}/{d.maxPoints}</span>
+                              </div>;
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    {/* Client + fields organized */}
+                    {(()=>{
+                      const get = (key) => r[key] !== undefined ? (Array.isArray(r[key]) ? r[key].join(", ") : String(r[key])) : null;
+                      const pill = (label, val) => val ? <div style={{padding:"4px 8px",background:"#fff",borderRadius:4,border:`1px solid ${T.border}`}}>
+                        <div style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>{label}</div>
+                        <div style={{fontSize:10,fontWeight:600,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{val}</div>
+                      </div> : null;
+                      const secHead = (icon, title) => <div style={{gridColumn:"1/-1",fontSize:9,fontWeight:700,color:T.inkMid,marginTop:6,paddingBottom:2,borderBottom:`1px solid ${T.border}`}}>{icon} {title}</div>;
+                      return (<div>
+                        {/* Client card */}
+                        {(r.clienteNombre||r.clienteEmail) && (
+                          <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",background:T.blueBg,borderRadius:6,border:`1px solid ${T.blue}22`,marginBottom:10}}>
+                            <div style={{width:32,height:32,borderRadius:"50%",background:T.blue,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700}}>{(r.clienteNombre||r.clienteEmail||"?")[0].toUpperCase()}</div>
+                            <div style={{flex:1}}>
+                              {r.clienteNombre && <div style={{fontSize:12,fontWeight:700,color:T.blue}}>{r.clienteNombre}</div>}
+                              <div style={{display:"flex",gap:12,fontSize:9,color:T.inkMid,marginTop:2}}>
+                                {r.clienteEmail && <span>✉️ {r.clienteEmail}</span>}
+                                {r.clienteTel && <span>📞 {r.clienteTel}</span>}
+                                {get("tipoDocumento") && <span>🪪 {get("tipoDocumento")} {get("numDocumento")||""}</span>}
+                              </div>
+                            </div>
+                            {get("propietario") && <div style={{padding:"3px 10px",borderRadius:12,fontSize:8,fontWeight:700,background:get("propietario")==="Soy el propietario"?T.greenBg:T.amberBg,color:get("propietario")==="Soy el propietario"?T.green:T.amber}}>{get("propietario")}</div>}
+                          </div>
+                        )}
+                        {/* Fields grid */}
+                        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
+                          {secHead("📍","Ubicación")}
+                          {pill("País",get("pais"))}
+                          {pill("Departamento/Región",get("departamento"))}
+                          {pill("Ciudad",get("ciudad"))}
+                          {pill("Dirección",get("direccion"))}
+                          {pill("Inmueble",get("tipoVivienda"))}
+                          {pill("Área m²",get("area"))}
+
+                          {secHead("🎨","Proyecto y Diseño")}
+                          {pill("Servicios",get("servicios"))}
+                          {pill("Tipo proyecto",get("tipoProyecto"))}
+                          {pill("Estilo",get("estilo"))}
+                          {pill("Espacios",get("espacios"))}
+                          {pill("Expectativas",get("expectativas"))}
+                          {pill("Prioridades",get("prioridades"))}
+
+                          {secHead("💰","Presupuesto")}
+                          {pill("Presupuesto",get("presupuesto"))}
+                          {pill("Honorarios diseño",get("honorariosDiseño"))}
+                          {pill("Financiación",get("financiacion"))}
+                          {pill("Anticipo 30-50%",get("anticipo"))}
+                          {pill("Forma de pago",get("formaPago"))}
+                          {pill("Flexibilidad",get("flexibilidad"))}
+
+                          {secHead("📅","Plazos")}
+                          {pill("Plazo",get("plazo"))}
+                          {pill("Fecha inicio",get("fechaInicio"))}
+                        </div>
+                      </div>);
+                    })()}
+                  </div>
+                </td></tr>
+              )}
+              </React.Fragment>
               );
             })}
           </tbody>
         </table>
       </Card>
 
-      {selResp && (
-        <Card style={{marginTop:14}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-            <h3 style={{fontSize:13,fontWeight:700}}>📋 Detalle respuesta — {selResp.clienteNombre||selResp.fecha}</h3>
-            <div style={{display:"flex",gap:6}}>
-              {!isProcesado(selResp) && (
-                <Btn v="pri" on={()=>procesarRespuesta(selResp)}>⚡ Procesar → CRM</Btn>
-              )}
-              {isProcesado(selResp) && (
-                <span style={{fontSize:9,fontWeight:700,padding:"4px 12px",borderRadius:10,background:T.greenBg,color:T.green,display:"flex",alignItems:"center"}}>✅ Procesado</span>
-              )}
-              <Btn v="sec" on={()=>generarInforme(selResp)}><FileText size={10}/> Generar informe</Btn>
-              <button onClick={()=>setSelResp(null)} style={{background:"none",border:"none",cursor:"pointer"}}><X size={14}/></button>
+      {/* Password confirmation modal */}
+      {showDelPass && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setShowDelPass(false)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:8,padding:28,width:340,boxShadow:"0 12px 40px rgba(0,0,0,0.2)"}}>
+            <div style={{fontSize:32,textAlign:"center",marginBottom:8}}>🔒</div>
+            <h3 style={{margin:"0 0 4px",fontSize:14,fontWeight:700,textAlign:"center"}}>Confirmar eliminación</h3>
+            <p style={{margin:"0 0 16px",fontSize:10,color:T.inkMid,textAlign:"center"}}>
+              {delAction?.type==="all"?"Eliminar TODAS las respuestas":delAction?.type==="selected"?`Eliminar ${selectedIds.size} respuesta${selectedIds.size>1?"s":""}`:"Eliminar respuesta"}
+            </p>
+            <input type="password" value={delPassInput} onChange={e=>setDelPassInput(e.target.value)}
+              onKeyDown={e=>{if(e.key==="Enter")checkPassAndDelete();}}
+              placeholder="Ingresa la contraseña" autoFocus
+              style={{...inp,width:"100%",fontSize:12,marginBottom:12,textAlign:"center"}}/>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>setShowDelPass(false)} style={{flex:1,padding:"8px 0",fontSize:11,fontWeight:600,border:`1px solid ${T.border}`,borderRadius:4,background:"#fff",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Cancelar</button>
+              <button onClick={checkPassAndDelete} style={{flex:1,padding:"8px 0",fontSize:11,fontWeight:700,border:"none",borderRadius:4,background:T.red,color:"#fff",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>🗑 Eliminar</button>
             </div>
           </div>
-          {/* Client info card */}
-          {(selResp.clienteNombre||selResp.clienteEmail) && (
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,padding:"10px 14px",background:T.blueBg,borderRadius:6,border:`1px solid ${T.blue}22`}}>
-              <div style={{width:32,height:32,borderRadius:"50%",background:T.blue,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700}}>
-                {(selResp.clienteNombre||selResp.clienteEmail||"?")[0].toUpperCase()}
-              </div>
-              <div>
-                {selResp.clienteNombre && <div style={{fontSize:12,fontWeight:700,color:T.blue}}>{selResp.clienteNombre}</div>}
-                {selResp.clienteEmail && <div style={{fontSize:9,color:T.blue}}>{selResp.clienteEmail}</div>}
-                {selResp.clienteTel && <div style={{fontSize:8,color:T.inkMid}}>📞 {selResp.clienteTel}</div>}
-              </div>
-            </div>
-          )}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8}}>
-            {Object.entries(selResp).filter(([k])=>!["id","fecha","formularioId","formularioNombre","clienteNombre","clienteEmail","clienteTel"].includes(k)).map(([k,v]) => (
-              <div key={k} style={{padding:"6px 10px",background:T.accent,borderRadius:4}}>
-                <div style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>{k}</div>
-                <div style={{fontSize:11,fontWeight:600,marginTop:2}}>{Array.isArray(v)?v.join(", "):String(v)}</div>
-              </div>
-            ))}
-          </div>
-        </Card>
+        </div>
       )}
     </div>
   );
@@ -1296,19 +1696,33 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
    ═══════════════════════════════════════════════════════════════ */
 function TabPlantillas({ forms, setForms, onEdit }) {
   const usePlantilla = (p) => {
-    // Create ID mapping old→new and remap logica references
-    const idMap = {};
-    p.campos.forEach(c => { idMap[c.id] = uid(); });
-    const newCampos = p.campos.map(c => {
-      const nc = {...c, id: idMap[c.id]};
-      if (nc.logica && nc.logica.fieldId && idMap[nc.logica.fieldId]) {
-        nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
+    try {
+      // Check if a form from this template already exists (by sourceTemplate OR by name match)
+      const existing = forms.find(f => f.sourceTemplate === p.id || f.nombre === p.nombre);
+      if (existing) {
+        // Tag it with sourceTemplate if not already tagged
+        if (!existing.sourceTemplate) {
+          setForms(forms.map(f => f.id === existing.id ? {...f, sourceTemplate: p.id} : f));
+        }
+        onEdit(existing.id);
+        return;
       }
-      return nc;
-    });
-    const f = { id:uid(), nombre:p.nombre, modulo:p.modulo, campos:newCampos, config:{...p.config}, createdAt:today(), updatedAt:today(), activo:true };
-    setForms([...forms, f]);
-    onEdit(f.id);
+      // Create ID mapping old→new and remap logica references
+      const idMap = {};
+      p.campos.forEach(c => { idMap[c.id] = uid(); });
+      const newCampos = p.campos.map(c => {
+        const nc = {...c, id: idMap[c.id]};
+        if (nc.logica && nc.logica.fieldId && idMap[nc.logica.fieldId]) {
+          nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
+        }
+        if (nc.paisRef && idMap[nc.paisRef]) nc.paisRef = idMap[nc.paisRef];
+        if (nc.dynamicOpciones && nc.dynamicOpciones.dependsOn && idMap[nc.dynamicOpciones.dependsOn]) nc.dynamicOpciones = {...nc.dynamicOpciones, dependsOn: idMap[nc.dynamicOpciones.dependsOn]};
+        return nc;
+      });
+      const f = { id:uid(), nombre:p.nombre, modulo:p.modulo||"general", campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, createdAt:today(), updatedAt:today(), activo:true, sourceTemplate:p.id };
+      setForms([...forms, f]);
+      onEdit(f.id);
+    } catch(e) { console.error("Error al usar plantilla:", e); alert("Error al crear formulario desde plantilla"); }
   };
 
   return (
@@ -1317,6 +1731,7 @@ function TabPlantillas({ forms, setForms, onEdit }) {
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280,1fr))",gap:12}}>
         {PLANTILLAS.map(p => {
           const mod = MODULOS_ASOC.find(m=>m.id===p.modulo);
+          const alreadyUsed = forms.find(f => f.sourceTemplate === p.id || f.nombre === p.nombre);
           return (
             <Card key={p.id} style={{padding:0,overflow:"hidden"}}>
               <div style={{padding:"14px 16px"}}>
@@ -1329,8 +1744,8 @@ function TabPlantillas({ forms, setForms, onEdit }) {
               </div>
               <div style={{borderTop:`1px solid ${T.border}`,padding:0}}>
                 <button onClick={()=>usePlantilla(p)}
-                  style={{width:"100%",padding:"8px 0",border:"none",background:"transparent",cursor:"pointer",fontSize:10,fontWeight:700,color:T.green,fontFamily:"'Outfit',sans-serif"}}>
-                  ✨ Usar esta plantilla
+                  style={{width:"100%",padding:"8px 0",border:"none",background:"transparent",cursor:"pointer",fontSize:10,fontWeight:700,color:alreadyUsed?T.blue:T.green,fontFamily:"'Outfit',sans-serif"}}>
+                  {alreadyUsed ? "✏️ Editar formulario existente" : "✨ Usar esta plantilla"}
                 </button>
               </div>
             </Card>
@@ -1382,12 +1797,30 @@ function TabEstadisticas({ forms }) {
   const convRate = opens.length > 0 ? Math.round((submits.length / opens.length) * 100) : 0;
 
   const fmtTime = (s) => s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s/60)}m ${s%60}s` : `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m`;
+  const fmtDate = (d) => d ? new Date(d).toLocaleString("es-CO",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",hour12:false}) : "—";
+
+  // Group events by form+client combo
+  const grouped = {};
+  ev.forEach(e => {
+    const key = (e.form_id||"")+"_"+(e.client_email||e.client_name||"anon");
+    if (!grouped[key]) grouped[key] = { form_id:e.form_id, form_name:e.form_name||e.form_id, client_name:e.client_name||"", client_email:e.client_email||"", opens:0, submits:0, lastDate:null, duration:0, durationCount:0 };
+    if (e.event_type==="open") grouped[key].opens++;
+    if (e.event_type==="submit") grouped[key].submits++;
+    if (e.event_type==="close" && e.duration_seconds>0) { grouped[key].duration+=e.duration_seconds; grouped[key].durationCount++; }
+    const d = e.created_at ? new Date(e.created_at) : null;
+    if (d && (!grouped[key].lastDate || d > grouped[key].lastDate)) grouped[key].lastDate = d;
+  });
+  let rows = Object.values(grouped);
+  // Filter by selected form
+  if (selectedForm !== "all") rows = rows.filter(r => r.form_id === selectedForm);
+  // Sort by most recent
+  rows.sort((a,b) => (b.lastDate||0) - (a.lastDate||0));
 
   // Group by form
   const formIds = [...new Set(ev.map(e=>e.form_id).concat(resp.map(r=>r.form_id)))];
 
-  // Recent events
-  const recentEvents = ev.slice(0, 30);
+  const ths = {padding:"8px 10px",textAlign:"left",fontWeight:700,fontSize:8,textTransform:"uppercase",color:T.inkMid,borderBottom:`1px solid ${T.border}`};
+  const tds = {padding:"8px 10px",fontSize:11,borderBottom:`1px solid ${T.border}`,verticalAlign:"middle"};
 
   return (
     <div>
@@ -1436,73 +1869,65 @@ function TabEstadisticas({ forms }) {
               </div>
             ))}
           </div>
-
-          {/* Per-link breakdown */}
-          {formStats.linkStats && formStats.linkStats.length > 0 && (
-            <div>
-              <div style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",marginBottom:6}}>📎 Por enlace enviado</div>
-              <div style={{overflowX:"auto"}}>
-                <table style={{width:"100%",borderCollapse:"collapse",fontSize:10}}>
-                  <thead>
-                    <tr style={{background:T.bg}}>
-                      {["Cliente","Fecha","Aperturas","Envíos","Usos/Máx","Caduca","Estado"].map(h=>
-                        <th key={h} style={{padding:"8px 10px",textAlign:"left",fontWeight:700,fontSize:8,textTransform:"uppercase",color:T.inkMid,borderBottom:`1px solid ${T.border}`}}>{h}</th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {formStats.linkStats.map(l => {
-                      const isExpired = l.expires_at && new Date(l.expires_at) < new Date();
-                      const isMaxed = l.max_uses > 0 && l.current_uses >= l.max_uses;
-                      const status = !l.active ? "Desactivado" : isExpired ? "Expirado" : isMaxed ? "Completado" : "Activo";
-                      const statusColor = status==="Activo" ? T.green : status==="Completado" ? T.blue : T.red;
-                      return (
-                        <tr key={l.id} style={{borderBottom:`1px solid ${T.border}`}}>
-                          <td style={{padding:"8px 10px",fontWeight:600}}>{l.client_name||l.client_email||"—"}</td>
-                          <td style={{padding:"8px 10px",color:T.inkMid}}>{l.created_at ? new Date(l.created_at).toLocaleDateString("es-CO") : "—"}</td>
-                          <td style={{padding:"8px 10px",fontFamily:"'DM Mono',monospace",fontWeight:700,color:"#1E4F8C"}}>{l.opens}</td>
-                          <td style={{padding:"8px 10px",fontFamily:"'DM Mono',monospace",fontWeight:700,color:"#1E6B42"}}>{l.submits}</td>
-                          <td style={{padding:"8px 10px"}}>{l.current_uses}/{l.max_uses||"∞"}</td>
-                          <td style={{padding:"8px 10px",color:T.inkMid}}>{l.expires_at ? new Date(l.expires_at).toLocaleDateString("es-CO") : "—"}</td>
-                          <td style={{padding:"8px 10px"}}>
-                            <span style={{fontSize:9,padding:"2px 8px",borderRadius:10,fontWeight:700,color:statusColor,background:statusColor+"15"}}>{status}</span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
         </Card>
       )}
 
-      {/* Activity timeline */}
-      <Card style={{padding:"16px"}}>
-        <h3 style={{margin:"0 0 12px",fontSize:14,fontWeight:700}}>🕐 Actividad reciente</h3>
-        {recentEvents.length === 0 ? (
-          <div style={{fontSize:11,color:T.inkMid,textAlign:"center",padding:20}}>No hay actividad registrada aún. Cuando un cliente abra o envíe un formulario, aparecerá aquí.</div>
+      {/* Activity table — grouped by form+client */}
+      <Card style={{padding:0,overflow:"hidden"}}>
+        <div style={{padding:"14px 16px",borderBottom:`1px solid ${T.border}`}}>
+          <h3 style={{margin:0,fontSize:14,fontWeight:700}}>📋 Formularios recibidos</h3>
+        </div>
+        {rows.length === 0 ? (
+          <div style={{fontSize:11,color:T.inkMid,textAlign:"center",padding:28}}>No hay actividad registrada aún.</div>
         ) : (
-          <div style={{maxHeight:400,overflow:"auto"}}>
-            {recentEvents.map((e,i) => {
-              const icons = { open:"👁️", submit:"✅", close:"🚪" };
-              const labels = { open:"Abrió formulario", submit:"Envió formulario", close:`Cerró (${fmtTime(e.duration_seconds||0)})` };
-              return (
-                <div key={i} style={{display:"flex",gap:10,alignItems:"flex-start",padding:"8px 0",borderBottom:i<recentEvents.length-1?`1px solid ${T.border}`:"none"}}>
-                  <div style={{fontSize:16,flexShrink:0}}>{icons[e.event_type]||"📝"}</div>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:11,fontWeight:600}}>{labels[e.event_type]||e.event_type}</div>
-                    <div style={{fontSize:9,color:T.inkMid}}>
-                      {e.form_name||e.form_id} {e.client_name ? `· ${e.client_name}` : ""} {e.client_email ? `(${e.client_email})` : ""}
-                    </div>
-                  </div>
-                  <div style={{fontSize:9,color:T.inkLight,flexShrink:0}}>
-                    {e.created_at ? new Date(e.created_at).toLocaleString("es-CO",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) : ""}
-                  </div>
-                </div>
-              );
-            })}
+          <div style={{overflowX:"auto"}}>
+            <table style={{width:"100%",borderCollapse:"collapse"}}>
+              <thead>
+                <tr style={{background:T.bg}}>
+                  {["Estado","Fecha","Hora","Formulario","Cliente","Aperturas","Envíos","Tiempo","Conversión"].map(h=>
+                    <th key={h} style={ths}>{h}</th>
+                  )}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r,i) => {
+                  const hasSubmit = r.submits > 0;
+                  const conv = r.opens > 0 ? Math.round((r.submits / r.opens) * 100) : 0;
+                  const avgTime = r.durationCount > 0 ? Math.round(r.duration / r.durationCount) : 0;
+                  const fechaStr = r.lastDate ? r.lastDate.toISOString().split("T")[0] : "—";
+                  const horaStr = r.lastDate ? r.lastDate.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}) : "";
+                  return (
+                    <tr key={i} style={{background:i%2===0?"#fff":"#FAFAF8"}}>
+                      <td style={tds}>
+                        <span style={{fontSize:9,padding:"3px 10px",borderRadius:10,fontWeight:700,
+                          color:hasSubmit?T.green:T.amber,
+                          background:hasSubmit?T.greenBg:T.amberBg}}>
+                          {hasSubmit?"✅ Recibido":"⏳ Pendiente"}
+                        </span>
+                      </td>
+                      <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>
+                        {fechaStr}
+                      </td>
+                      <td style={{...tds,fontSize:9}}>
+                        {horaStr}
+                      </td>
+                      <td style={{...tds,fontWeight:600}}>{r.form_name}</td>
+                      <td style={tds}>
+                        <div style={{fontWeight:600,fontSize:11}}>{r.client_name||"—"}</div>
+                        {r.client_email && <div style={{fontSize:9,color:T.blue}}>{r.client_email}</div>}
+                      </td>
+                      <td style={{...tds,textAlign:"center",fontFamily:"'DM Mono',monospace",fontWeight:700,color:"#1E4F8C"}}>{r.opens}</td>
+                      <td style={{...tds,textAlign:"center",fontFamily:"'DM Mono',monospace",fontWeight:700,color:"#1E6B42"}}>{r.submits}</td>
+                      <td style={{...tds,textAlign:"center",fontSize:10,color:T.inkMid}}>{avgTime > 0 ? fmtTime(avgTime) : "—"}</td>
+                      <td style={{...tds,textAlign:"center"}}>
+                        <span style={{fontFamily:"'DM Mono',monospace",fontWeight:700,fontSize:10,
+                          color:conv>=50?T.green:conv>0?T.amber:T.inkLight}}>{conv}%</span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
       </Card>
@@ -1513,55 +1938,270 @@ function TabEstadisticas({ forms }) {
 /* ═══════════════════════════════════════════════════════════════
    MAIN EXPORT
    ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   ENVIADOS TAB — with checkboxes + password delete
+   ═══════════════════════════════════════════════════════════════ */
+function EnviadosTab({ envios, save, respuestas }) {
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [showDelPass, setShowDelPass] = useState(false);
+  const [delPassInput, setDelPassInput] = useState("");
+  const [delAction, setDelAction] = useState(null);
+
+  const toggleSel = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
+  const toggleAll = () => setSelectedIds(prev => prev.size===envios.length ? new Set() : new Set(envios.map(e=>e.id)));
+
+  const delPass = localStorage.getItem("hab:form:deletePass") || "";
+  const bioReg = Bio.isRegistered();
+  const needsAuth = delPass || bioReg;
+  const confirmDelete = async (action) => {
+    if (!needsAuth) { executeDelete(action); return; }
+    if (bioReg) {
+      const ok = await Bio.authenticate();
+      if (ok) { executeDelete(action); return; }
+      if (delPass) { setDelAction(action); setDelPassInput(""); setShowDelPass(true); return; }
+      return;
+    }
+    if (delPass) { setDelAction(action); setDelPassInput(""); setShowDelPass(true); }
+  };
+  const executeDelete = (action) => {
+    if (action.type === "single") { save("envios", envios.filter(x=>x.id!==action.target.id)); }
+    else if (action.type === "selected") { save("envios", envios.filter(x=>!selectedIds.has(x.id))); setSelectedIds(new Set()); }
+    else if (action.type === "all") { save("envios", []); setSelectedIds(new Set()); }
+    setShowDelPass(false); setDelAction(null);
+  };
+  const checkPassAndDelete = () => {
+    if (delPassInput === delPass) executeDelete(delAction);
+    else alert("Contraseña incorrecta");
+  };
+
+  return (
+    <div className="fade-up">
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <h2 style={{margin:0,fontSize:18,fontWeight:700}}>Formularios enviados — {envios.length}</h2>
+          {selectedIds.size > 0 && <button onClick={()=>confirmDelete({type:"selected"})}
+            style={{padding:"5px 14px",fontSize:9,fontWeight:700,background:T.red,color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+            🗑 Eliminar seleccionados ({selectedIds.size})
+          </button>}
+          {selectedIds.size===0 && envios.length > 0 && <button onClick={()=>confirmDelete({type:"all"})}
+            style={{padding:"5px 14px",fontSize:9,fontWeight:600,background:"#fff",color:T.red,border:`1px solid ${T.red}44`,borderRadius:4,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+            🗑 Limpiar todo
+          </button>}
+        </div>
+      </div>
+      <Card style={{padding:0,overflow:"hidden"}}>
+        <table style={{borderCollapse:"collapse",width:"100%"}}>
+          <thead><tr style={{background:"#EDEBE7"}}>
+            <th style={{...ths,width:30}}><input type="checkbox" checked={envios.length>0&&selectedIds.size===envios.length} onChange={toggleAll} style={{cursor:"pointer"}}/></th>
+            {["Fecha","Hora","Formulario","Cliente","Email","Teléfono","Estado","Acciones"].map(h=><th key={h} style={ths}>{h}</th>)}
+          </tr></thead>
+          <tbody>
+            {envios.length===0 ? (
+              <tr><td colSpan={9} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>No has enviado formularios aún</td></tr>
+            ) : [...envios].reverse().map(e => {
+              const hasResp = respuestas.some(r=>r.clienteEmail===e.cliente?.email && r.formularioId===e.formId);
+              const isBlocked = e.blocked;
+              return (
+                <tr key={e.id} style={{background:selectedIds.has(e.id)?"#FDF5F5":isBlocked?"#FDF5F5":""}}>
+                  <td style={{...tds,width:30}}><input type="checkbox" checked={selectedIds.has(e.id)} onChange={()=>toggleSel(e.id)} style={{cursor:"pointer"}}/></td>
+                  <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>{e.fecha}</td>
+                  <td style={{...tds,fontSize:9}}>{e.hora}</td>
+                  <td style={{...tds,fontWeight:600}}>{e.formNombre}</td>
+                  <td style={{...tds,fontWeight:600}}>{e.cliente?.nombre||"—"}</td>
+                  <td style={{...tds,fontSize:9,color:T.blue}}>{e.cliente?.email||"—"}</td>
+                  <td style={{...tds,fontSize:9}}>{e.cliente?.tel||"—"}</td>
+                  <td style={tds}>
+                    {isBlocked
+                      ? <Badge color={T.red}>🚫 Bloqueado</Badge>
+                      : hasResp ? <Badge color={T.green}>✅ Respondido</Badge> : <Badge color={T.amber}>⏳ Pendiente</Badge>
+                    }
+                  </td>
+                  <td style={{...tds,whiteSpace:"nowrap"}}>
+                    {isBlocked ? (
+                      <button onClick={()=>{
+                        save("envios", envios.map(x => x.id===e.id ? {...x, blocked:false} : x));
+                        if (e.linkId && SB.isConfigured()) SB.toggleLink && SB.toggleLink(e.linkId, true).catch(()=>{});
+                      }} style={{padding:"3px 10px",fontSize:8,fontWeight:700,background:T.green,color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>🔓 Desbloquear</button>
+                    ) : (
+                      <button onClick={()=>{
+                        if (!confirm("¿Bloquear este enlace?")) return;
+                        save("envios", envios.map(x => x.id===e.id ? {...x, blocked:true} : x));
+                        if (e.linkId && SB.isConfigured()) SB.toggleLink && SB.toggleLink(e.linkId, false).catch(()=>{});
+                      }} style={{padding:"3px 10px",fontSize:8,fontWeight:700,background:T.red,color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>🚫 Bloquear</button>
+                    )}
+                    <button onClick={()=>confirmDelete({type:"single",target:e})}
+                      style={{background:"none",border:"none",cursor:"pointer",marginLeft:4,opacity:.5}}><Trash2 size={11} color={T.red}/></button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </Card>
+
+      {showDelPass && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setShowDelPass(false)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:8,padding:28,width:340,boxShadow:"0 12px 40px rgba(0,0,0,0.2)"}}>
+            <div style={{fontSize:32,textAlign:"center",marginBottom:8}}>🔒</div>
+            <h3 style={{margin:"0 0 4px",fontSize:14,fontWeight:700,textAlign:"center"}}>Confirmar eliminación</h3>
+            <p style={{margin:"0 0 16px",fontSize:10,color:T.inkMid,textAlign:"center"}}>
+              {delAction?.type==="all"?"Eliminar TODOS los envíos":delAction?.type==="selected"?`Eliminar ${selectedIds.size} envío${selectedIds.size>1?"s":""}`:"Eliminar envío"}
+            </p>
+            <input type="password" value={delPassInput} onChange={e=>setDelPassInput(e.target.value)}
+              onKeyDown={e=>{if(e.key==="Enter")checkPassAndDelete();}}
+              placeholder="Ingresa la contraseña" autoFocus
+              style={{...inp,width:"100%",fontSize:12,marginBottom:12,textAlign:"center"}}/>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>setShowDelPass(false)} style={{flex:1,padding:"8px 0",fontSize:11,fontWeight:600,border:`1px solid ${T.border}`,borderRadius:4,background:"#fff",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>Cancelar</button>
+              <button onClick={checkPassAndDelete} style={{flex:1,padding:"8px 0",fontSize:11,fontWeight:700,border:"none",borderRadius:4,background:T.red,color:"#fff",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>🗑 Eliminar</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Formularios() {
   const [data, setData] = useState(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(STORE_KEY)) || {};
-      // Auto-create briefing form if no forms exist
-      if (!saved.forms || saved.forms.length === 0) {
-        const p = PLANTILLAS[0]; // Briefing Inicial
-        const today = new Date().toISOString().split("T")[0];
-        const defaultForm = {
-          id: p.id,
-          nombre: p.nombre,
-          modulo: p.modulo,
-          campos: p.campos.map(c => ({...c})),
-          config: { ...(p.config||{}), titulo: p.nombre, vista: "pasos" },
-          createdAt: today,
-          updatedAt: today,
-          activo: true,
-        };
-        saved.forms = [defaultForm];
-        localStorage.setItem(STORE_KEY, JSON.stringify(saved));
-      }
+      if (!saved.forms) saved.forms = [];
       return saved;
-    } catch { return {}; }
+    } catch { return { forms: [] }; }
   });
   const save = (k,v) => setData(prev => { const n = {...prev,[k]:typeof v==="function"?v(prev[k]):v}; localStorage.setItem(STORE_KEY,JSON.stringify(n)); return n; });
 
   const forms = data.forms || [];
   const setForms = (v) => save("forms", typeof v==="function"?v(forms):v);
+
+  // Auto-seed: create forms from PLANTILLAS if not already present, or update if version changed
+  useEffect(() => {
+    const current = data.forms || [];
+    let updated = [...current];
+    let changed = false;
+    PLANTILLAS.forEach(p => {
+      const existing = current.find(f => f.sourceTemplate === p.id || f.nombre === p.nombre);
+      if (!existing) {
+        // Create new form from template
+        const idMap = {};
+        p.campos.forEach(c => { idMap[c.id] = uid(); });
+        const newCampos = p.campos.map(c => {
+          const nc = {...c, id: idMap[c.id]};
+          if (nc.logica && nc.logica.fieldId && idMap[nc.logica.fieldId]) {
+            nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
+          }
+          if (nc.paisRef && idMap[nc.paisRef]) nc.paisRef = idMap[nc.paisRef];
+        if (nc.dynamicOpciones && nc.dynamicOpciones.dependsOn && idMap[nc.dynamicOpciones.dependsOn]) nc.dynamicOpciones = {...nc.dynamicOpciones, dependsOn: idMap[nc.dynamicOpciones.dependsOn]};
+          return nc;
+        });
+        updated.push({ id:uid(), nombre:p.nombre, modulo:p.modulo||"general", campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, createdAt:today(), updatedAt:today(), activo:true, sourceTemplate:p.id, templateVersion:p.version||1 });
+        changed = true;
+      } else if (p.version && (!existing.templateVersion || existing.templateVersion < p.version)) {
+        // Update existing form with new template version
+        const idMap = {};
+        p.campos.forEach(c => { idMap[c.id] = uid(); });
+        const newCampos = p.campos.map(c => {
+          const nc = {...c, id: idMap[c.id]};
+          if (nc.logica && nc.logica.fieldId && idMap[nc.logica.fieldId]) {
+            nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
+          }
+          if (nc.paisRef && idMap[nc.paisRef]) nc.paisRef = idMap[nc.paisRef];
+        if (nc.dynamicOpciones && nc.dynamicOpciones.dependsOn && idMap[nc.dynamicOpciones.dependsOn]) nc.dynamicOpciones = {...nc.dynamicOpciones, dependsOn: idMap[nc.dynamicOpciones.dependsOn]};
+          return nc;
+        });
+        updated = updated.map(f => f.id === existing.id ? {...f, campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, updatedAt:today(), templateVersion:p.version, sourceTemplate:p.id} : f);
+        changed = true;
+      }
+    });
+    if (changed) save("forms", updated);
+  }, []); // eslint-disable-line
   const envios = data.envios || [];
   const addEnvio = (e) => save("envios", [...envios, e]);
 
-  // Load responses from shared storage
-  const respuestas = useMemo(() => {
+  // Load responses from Supabase + localStorage fallback
+  const [respuestas, setRespuestas] = useState([]);
+  const [respLoading, setRespLoading] = useState(false);
+  const loadResponses = async () => {
+    setRespLoading(true);
     const arr = [];
+    const seen = new Set();
+    // 1. Try Supabase first
+    if (SB.isConfigured()) {
+      try {
+        const sbResp = await SB.getAllResponses();
+        if (sbResp && sbResp.length > 0) {
+          sbResp.forEach(r => {
+            const respData = r.data || {};
+            const merged = {
+              ...respData,
+              _sbId: r.id,
+              id: respData.id || r.id,
+              formularioId: r.form_id || respData.formularioId,
+              formularioNombre: r.form_name || respData.formularioNombre,
+              clienteNombre: r.client_name || respData.clienteNombre,
+              clienteEmail: r.client_email || respData.clienteEmail,
+              clienteTel: r.client_tel || respData.clienteTel,
+              fecha: respData.fecha || (r.created_at ? r.created_at.split("T")[0] : ""),
+              created_at: r.created_at || null,
+              processed: r.processed || false,
+            };
+            if (!seen.has(merged.id)) { seen.add(merged.id); arr.push(merged); }
+          });
+        }
+      } catch(e) { console.warn("Error loading Supabase responses:", e); }
+    }
+    // 2. Also check localStorage (backward compatible)
     for (let i=0; i<localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key?.startsWith("shared:hab:briefing:")) {
-        try { arr.push(JSON.parse(localStorage.getItem(key))); } catch {}
+        try {
+          const r = JSON.parse(localStorage.getItem(key));
+          if (r && r.id && !seen.has(r.id)) { seen.add(r.id); arr.push(r); }
+        } catch {}
       }
     }
-    return arr;
-  }, [data]);
+    setRespuestas(arr);
+    setRespLoading(false);
+  };
+  useEffect(() => { loadResponses(); }, []);
 
-  const [tab, setTab] = useState("dashboard");
+  const deleteResponse = async (r) => {
+    // Remove from Supabase
+    if (r._sbId && SB.isConfigured()) {
+      try { await SB.client.from("form_responses").delete().eq("id", r._sbId); } catch {}
+    }
+    // Remove from localStorage
+    for (let i=0; i<localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith("shared:hab:briefing:")) {
+        try { const d = JSON.parse(localStorage.getItem(key)); if (d?.id === r.id) { localStorage.removeItem(key); break; } } catch {}
+      }
+    }
+    setRespuestas(prev => prev.filter(x => x.id !== r.id));
+  };
+  const clearAllResponses = async () => {
+    // Remove all from Supabase
+    if (SB.isConfigured()) {
+      try { await SB.client.from("form_responses").delete().neq("id", ""); } catch {}
+    }
+    // Remove from localStorage
+    const keys = [];
+    for (let i=0; i<localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith("shared:hab:briefing:")) keys.push(key);
+    }
+    keys.forEach(k => localStorage.removeItem(k));
+    setRespuestas([]);
+  };
+
+  const [tab, setTab] = useState(() => localStorage.getItem("hab:form:tab") || "dashboard");
+  const changeTab = (t) => { setTab(t); localStorage.setItem("hab:form:tab", t); };
   const [editId, setEditId] = useState(null);
 
-  const goConstructor = (id) => { setEditId(id||null); setTab("constructor"); };
-  const goNew = () => { setEditId(null); setTab("constructor"); };
-  const onSaved = (form) => { setEditId(form.id); setTab("mis_forms"); };
+  const goConstructor = (id) => { setEditId(id||null); changeTab("constructor"); };
+  const goNew = () => { setEditId(null); changeTab("constructor"); };
+  const onSaved = (form) => { setEditId(form.id); changeTab("mis_forms"); };
 
   return (
     <>
@@ -1576,7 +2216,7 @@ export default function Formularios() {
 
         <div style={{display:"flex",gap:0,marginBottom:20}}>
           {TABS.map((t,i) => (
-            <button key={t.id} onClick={()=>{setTab(t.id);if(t.id!=="constructor")setEditId(null);}}
+            <button key={t.id} onClick={()=>{changeTab(t.id);if(t.id!=="constructor")setEditId(null);}}
               style={{padding:"10px 18px",fontSize:11,fontWeight:600,cursor:"pointer",
                 border:`1px solid ${T.border}`,borderLeft:i>0?"none":undefined,
                 fontFamily:"'Outfit',sans-serif",whiteSpace:"nowrap",
@@ -1602,7 +2242,7 @@ export default function Formularios() {
                   ["⏳ Sin asignar",sinProc,sinProc>0?"#5B3A8C":"#1E6B42"]
                 ];
               })().map(([l,v,c])=>(
-                <Card key={l} style={{padding:"14px 16px",cursor:l.includes("Sin asignar")&&v>0?"pointer":undefined}} onClick={l.includes("Sin asignar")&&v>0?()=>setTab("respuestas"):undefined}><div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div><div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:c}}>{v}</div></Card>
+                <Card key={l} style={{padding:"14px 16px",cursor:l.includes("Sin asignar")&&v>0?"pointer":undefined}} onClick={l.includes("Sin asignar")&&v>0?()=>changeTab("respuestas"):undefined}><div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div><div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:c}}>{v}</div></Card>
               ))}
             </div>
             {/* Quick actions */}
@@ -1611,7 +2251,7 @@ export default function Formularios() {
               const sinProc = respuestas.filter(r => !proc.includes(r.id)).length;
               if (sinProc === 0) return null;
               return (
-                <Card style={{padding:"12px 16px",marginBottom:16,background:"#F3EEFF",border:"1px solid #5B3A8C33",cursor:"pointer"}} onClick={()=>setTab("respuestas")}>
+                <Card style={{padding:"12px 16px",marginBottom:16,background:"#F3EEFF",border:"1px solid #5B3A8C33",cursor:"pointer"}} onClick={()=>changeTab("respuestas")}>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
                     <div style={{width:32,height:32,borderRadius:"50%",background:"#5B3A8C",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700}}>{sinProc}</div>
                     <div>
@@ -1628,12 +2268,12 @@ export default function Formularios() {
                 <div style={{fontSize:12,fontWeight:700}}>Crear formulario</div>
                 <div style={{fontSize:9,color:T.inkMid,marginTop:2}}>Desde cero con el constructor</div>
               </Card>
-              <Card style={{padding:"18px 16px",cursor:"pointer",textAlign:"center"}} onClick={()=>setTab("plantillas")}>
+              <Card style={{padding:"18px 16px",cursor:"pointer",textAlign:"center"}} onClick={()=>changeTab("plantillas")}>
                 <div style={{fontSize:24,marginBottom:6}}>📎</div>
                 <div style={{fontSize:12,fontWeight:700}}>Usar plantilla</div>
                 <div style={{fontSize:9,color:T.inkMid,marginTop:2}}>Briefing, SST, encuestas...</div>
               </Card>
-              <Card style={{padding:"18px 16px",cursor:"pointer",textAlign:"center"}} onClick={()=>setTab("respuestas")}>
+              <Card style={{padding:"18px 16px",cursor:"pointer",textAlign:"center"}} onClick={()=>changeTab("respuestas")}>
                 <div style={{fontSize:24,marginBottom:6}}>📥</div>
                 <div style={{fontSize:12,fontWeight:700}}>Ver respuestas</div>
                 <div style={{fontSize:9,color:T.inkMid,marginTop:2}}>{respuestas.length} respuestas recibidas</div>
@@ -1644,36 +2284,9 @@ export default function Formularios() {
         {tab === "mis_forms"   && <ListaForms forms={forms} setForms={setForms} onEdit={goConstructor} onNew={goNew}/>}
         {tab === "constructor" && <Constructor forms={forms} setForms={setForms} editId={editId} setEditId={setEditId} onSaved={onSaved} envios={envios} addEnvio={addEnvio}/>}
         {tab === "enviados"    && (
-          <div className="fade-up">
-            <h2 style={{margin:0,fontSize:18,fontWeight:700,marginBottom:14}}>Formularios enviados — {envios.length}</h2>
-            <Card style={{padding:0,overflow:"hidden"}}>
-              <table style={{borderCollapse:"collapse",width:"100%"}}>
-                <thead><tr style={{background:"#EDEBE7"}}>
-                  {["Fecha","Hora","Formulario","Cliente","Email","Teléfono","Estado"].map(h=><th key={h} style={ths}>{h}</th>)}
-                </tr></thead>
-                <tbody>
-                  {envios.length===0 ? (
-                    <tr><td colSpan={7} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>No has enviado formularios aún</td></tr>
-                  ) : [...envios].reverse().map(e => {
-                    const hasResp = respuestas.some(r=>r.clienteEmail===e.cliente?.email && r.formularioId===e.formId);
-                    return (
-                      <tr key={e.id}>
-                        <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>{e.fecha}</td>
-                        <td style={{...tds,fontSize:9}}>{e.hora}</td>
-                        <td style={{...tds,fontWeight:600}}>{e.formNombre}</td>
-                        <td style={{...tds,fontWeight:600}}>{e.cliente?.nombre||"—"}</td>
-                        <td style={{...tds,fontSize:9,color:T.blue}}>{e.cliente?.email||"—"}</td>
-                        <td style={{...tds,fontSize:9}}>{e.cliente?.tel||"—"}</td>
-                        <td style={tds}>{hasResp ? <Badge color={T.green}>✅ Respondido</Badge> : <Badge color={T.amber}>⏳ Pendiente</Badge>}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </Card>
-          </div>
+          <EnviadosTab envios={envios} save={save} respuestas={respuestas}/>
         )}
-        {tab === "respuestas"   && <TabRespuestas forms={forms} respuestas={respuestas}/>}
+        {tab === "respuestas"   && <TabRespuestas forms={forms} respuestas={respuestas} onReload={loadResponses} loading={respLoading} onDelete={deleteResponse} onClearAll={clearAllResponses}/>}
         {tab === "estadisticas" && <TabEstadisticas forms={forms}/>}
         {tab === "plantillas"   && <TabPlantillas forms={forms} setForms={setForms} onEdit={goConstructor}/>}
       </div>

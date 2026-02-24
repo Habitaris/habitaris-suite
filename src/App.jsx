@@ -8,6 +8,10 @@ import Proyectos from './modules/Proyectos.jsx'
 import Biblioteca from './modules/Biblioteca.jsx'
 import Contabilidad from './modules/Contabilidad.jsx'
 import SST from './modules/SST.jsx'
+import Formacion from './modules/Formacion.jsx'
+import IdentidadCorporativa from './modules/IdentidadCorporativa.jsx'
+import FirmaDigital from './modules/FirmaDigital.jsx'
+import Legal from './modules/Legal.jsx'
 import Calidad from './modules/Calidad.jsx'
 import Postventa from './modules/Postventa.jsx'
 import Administracion from './modules/Administracion.jsx'
@@ -18,6 +22,7 @@ import Formularios from './modules/Formularios.jsx'
 import Configuracion, { getConfig } from './modules/Configuracion.jsx'
 import PortalCliente from './modules/PortalCliente.jsx'
 import FormularioPublico from './modules/FormularioPublico.jsx'
+import LoginScreen, { isLoggedIn, login as doLogin, logout, isAuthConfigured } from './modules/Login.jsx'
 
 export const C = {
   ink:"#111111", inkMid:"#444444", inkLight:"#888888",
@@ -41,6 +46,10 @@ const MODULES = [
   { id:"biblioteca",   label:"Biblioteca",              icon:"📚", desc:"APUs normalizados, materiales, precios unitarios y textos tipo",       color:"#0D5E6E", component:Biblioteca,   ready:true  },
   { id:"contabilidad", label:"Contabilidad",            icon:"📊", desc:"Facturación, costos reales, ingresos, egresos e informes",             color:"#555555", component:Contabilidad, ready:true  },
   { id:"sst",          label:"SST",                    icon:"🦺", desc:"Seguridad y salud en el trabajo, inspecciones y riesgos",              color:"#AE2C2C", component:SST,          ready:true  },
+  { id:"formacion",    label:"Formación",               icon:"🎓", desc:"Cursos obligatorios y operativos, evaluaciones, certificados, control de vencimientos", color:"#5B3A8C", component:Formacion,    ready:true  },
+  { id:"carnets",      label:"Identidad Corporativa",   icon:"🪪", desc:"Carnets, tarjetas de visita físicas y virtuales, QR de contacto, branding del equipo", color:"#0D5E6E", component:IdentidadCorporativa,      ready:true  },
+  { id:"firmas",       label:"Firma Digital",            icon:"✍️", desc:"Firma de documentos con pad digital, trazabilidad, firmas guardadas y certificados",  color:"#5B3A8C", component:FirmaDigital, ready:true  },
+  { id:"legal",        label:"Legal",                    icon:"⚖️", desc:"Plantillas contractuales, pólizas/seguros, procesos legales, comunicaciones",        color:"#1E4F8C", component:Legal,        ready:true  },
   { id:"calidad",      label:"Calidad y Auditoría",    icon:"🔍", desc:"No conformidades, auditorías, protocolos, checklists e indicadores",   color:"#0D7377", component:Calidad,      ready:true  },
   { id:"postventa",    label:"Postventa",               icon:"🏡", desc:"Garantías, incidencias y atención al cliente post-entrega",           color:"#1E4F8C", component:Postventa,    ready:true  },
   { id:"admin",        label:"Administración",          icon:"💼", desc:"Caja chica, tarjeta corporativa, viáticos, flujo empresa, CxC/CxP",  color:"#6B5B8C", component:Administracion, ready:true  },
@@ -77,7 +86,7 @@ function LangSwitch({ lang, setLang }) {
   )
 }
 
-function Home({ onSelect, lang, setLang }) {
+function Home({ onSelect, lang, setLang, onLogout }) {
   const ready  = MODULES.filter(m => m.ready)
   const coming = MODULES.filter(m => !m.ready)
   const brand = useMemo(() => getConfig(), [])
@@ -97,7 +106,16 @@ function Home({ onSelect, lang, setLang }) {
           )}
           {ap.slogan && <span style={{ fontFamily:`'${bf}',sans-serif`, fontSize:8, letterSpacing:1.5, color:"rgba(255,255,255,.35)", textTransform:"uppercase" }}>{ap.slogan}</span>}
         </div>
-        <LangSwitch lang={lang} setLang={setLang} />
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <LangSwitch lang={lang} setLang={setLang} />
+          {onLogout && <button onClick={onLogout}
+            style={{ ...F, padding:"4px 12px", borderRadius:4, border:"1px solid rgba(255,255,255,0.15)", cursor:"pointer",
+              fontSize:10, fontWeight:600, background:"rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.55)", transition:"all .15s" }}
+            onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,0.18)"}
+            onMouseLeave={e => e.currentTarget.style.background="rgba(255,255,255,0.08)"}>
+            🔒 Salir
+          </button>}
+        </div>
       </div>
       {ap.colorAcento && <div style={{ height:3, background:`linear-gradient(90deg,${ap.colorAcento},${ap.colorAcento}88,${ap.colorAcento})` }}/>}
       <div style={{ maxWidth:920, margin:"0 auto", padding:"48px 28px 40px" }}>
@@ -143,7 +161,7 @@ function Home({ onSelect, lang, setLang }) {
   )
 }
 
-function ModuleBar({ mod, onBack, lang, setLang }) {
+function ModuleBar({ mod, onBack, lang, setLang, onLogout }) {
   const brand = useMemo(() => getConfig(), [])
   const ap = brand.apariencia || {}
   const cp = ap.colorPrimario || "#111"
@@ -172,6 +190,14 @@ function ModuleBar({ mod, onBack, lang, setLang }) {
       <span style={{ fontSize:13, color:"rgba(255,255,255,0.4)" }}>/ {mod.label}</span>
       <div style={{ flex:1 }}/>
       <LangSwitch lang={lang} setLang={setLang} />
+      {onLogout && <button onClick={onLogout}
+        style={{ marginLeft:8, padding:"4px 10px", borderRadius:4, border:"1px solid rgba(255,255,255,0.15)", cursor:"pointer",
+          fontSize:10, fontWeight:600, background:"rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.55)",
+          fontFamily:`'${bf}',sans-serif`, transition:"all .15s" }}
+        onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,0.18)"}
+        onMouseLeave={e => e.currentTarget.style.background="rgba(255,255,255,0.08)"}>
+        🔒 Salir
+      </button>}
       <div style={{ position:"absolute", bottom:0, left:0, right:0, height:2,
         background:`linear-gradient(90deg, ${mod.color}, ${mod.color}44)` }}/>
     </div>
@@ -179,28 +205,33 @@ function ModuleBar({ mod, onBack, lang, setLang }) {
 }
 
 export default function App() {
-  const [active, setActive] = useState(null)
+  const [active, setActive] = useState(() => sessionStorage.getItem("hab:active_module") || null)
   const [lang, setLang]     = useState("es")
+  const [authed, setAuthed]   = useState(isLoggedIn())
   const mod = MODULES.find(m => m.id === active)
 
-  // Portal route: /portal (data comes in URL hash)
+  const selectModule = (id) => { sessionStorage.setItem("hab:active_module", id); setActive(id); }
+  const goHome = () => { sessionStorage.removeItem("hab:active_module"); setActive(null); }
+  const doLogout = () => { logout(); setAuthed(false); }
+
+  // Public routes — no login required
   const path = window.location.pathname
-  if (path.startsWith("/portal")) {
-    return <PortalCliente />
-  }
-  // Form route: /form (form definition comes in URL hash)
-  if (path.startsWith("/form")) {
-    return <FormularioPublico />
+  if (path.startsWith("/portal")) return <PortalCliente />
+  if (path.startsWith("/form")) return <FormularioPublico />
+
+  // Auth gate — only if auth is configured
+  if (isAuthConfigured() && !authed) {
+    return <LoginScreen onSuccess={() => setAuthed(true)} />
   }
 
   if (!active || !mod?.component) {
-    return <Home onSelect={setActive} lang={lang} setLang={setLang} />
+    return <Home onSelect={selectModule} lang={lang} setLang={setLang} onLogout={isAuthConfigured() ? doLogout : null} />
   }
 
   const MC = mod.component
   return (
     <div style={{ minHeight:"100vh", background:"#F0EEE9", paddingTop:48 }}>
-      <ModuleBar mod={mod} onBack={() => setActive(null)} lang={lang} setLang={setLang} />
+      <ModuleBar mod={mod} onBack={goHome} lang={lang} setLang={setLang} onLogout={isAuthConfigured() ? doLogout : null} />
       <Suspense fallback={<Spinner />}>
         <MC lang={lang} />
       </Suspense>

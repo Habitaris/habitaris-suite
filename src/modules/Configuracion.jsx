@@ -269,6 +269,39 @@ export default function Configuracion() {
               <h2 style={{margin:0,fontSize:16,fontWeight:700}}>{sec?.label}</h2>
             </div>
 
+            {/* Apariencia extras: logo + font BEFORE color fields */}
+            {section === "apariencia" && (
+              <>
+                {/* Logo upload */}
+                <div style={{marginBottom:20,borderBottom:`1px solid ${T.border}`,paddingBottom:14}}>
+                  <div style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",marginBottom:8}}>🖼️ Logo de la empresa</div>
+                  <div style={{display:"flex",gap:16,alignItems:"flex-start"}}>
+                    {/* Current logo preview */}
+                    <div style={{width:120,height:60,border:`2px dashed ${T.border}`,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",background:"#fff",flexShrink:0}}>
+                      {config.apariencia?.logo ? (
+                        <img src={config.apariencia.logo} alt="Logo" style={{maxWidth:"100%",maxHeight:"100%",objectFit:"contain"}}/>
+                      ) : (
+                        <span style={{fontSize:9,color:T.inkLight}}>Sin logo</span>
+                      )}
+                    </div>
+                    <div style={{flex:1}}>
+                      <input type="file" accept="image/png,image/svg+xml,image/jpeg" onChange={e=>{
+                        const file = e.target.files?.[0]; if(!file) return;
+                        if (file.size > 500000) { alert("El logo debe pesar menos de 500KB"); return; }
+                        const reader = new FileReader();
+                        reader.onload = (ev) => update("apariencia","logo",ev.target.result);
+                        reader.readAsDataURL(file);
+                      }} style={{fontSize:10,marginBottom:6}}/>
+                      <div style={{fontSize:8,color:T.inkLight}}>PNG, SVG o JPG · máx 500KB · Se usa en header, formularios, PDFs y emails</div>
+                      {config.apariencia?.logo && (
+                        <button onClick={()=>update("apariencia","logo","")} style={{marginTop:4,fontSize:9,color:T.red,background:"none",border:"none",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>🗑 Eliminar logo</button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+
             <div style={{display:"flex",flexDirection:"column",gap:14}}>
               {fields.map(f => (
                 <div key={f.key}>
@@ -309,38 +342,9 @@ export default function Configuracion() {
               </div>
             )}
 
-            {/* Apariencia extras: logo + font + presets + preview */}
+            {/* Apariencia extras: font + presets + preview */}
             {section === "apariencia" && (
               <>
-                {/* Logo upload */}
-                <div style={{marginTop:20,borderTop:`1px solid ${T.border}`,paddingTop:14}}>
-                  <div style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",marginBottom:8}}>🖼️ Logo de la empresa</div>
-                  <div style={{display:"flex",gap:16,alignItems:"flex-start"}}>
-                    {/* Current logo preview */}
-                    <div style={{width:120,height:60,border:`2px dashed ${T.border}`,borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",background:"#fff",flexShrink:0}}>
-                      {config.apariencia?.logo ? (
-                        <img src={config.apariencia.logo} alt="Logo" style={{maxWidth:"100%",maxHeight:"100%",objectFit:"contain"}}/>
-                      ) : (
-                        <span style={{fontSize:9,color:T.inkLight}}>Sin logo</span>
-                      )}
-                    </div>
-                    <div style={{flex:1}}>
-                      <input type="file" accept="image/*" onChange={e => {
-                        const file = e.target.files?.[0];
-                        if (!file) return;
-                        if (file.size > 500000) { alert("El logo debe pesar menos de 500KB"); return; }
-                        const reader = new FileReader();
-                        reader.onload = (ev) => update("apariencia","logo",ev.target.result);
-                        reader.readAsDataURL(file);
-                      }} style={{...inp,fontSize:10,padding:4}}/>
-                      <div style={{fontSize:8,color:T.inkLight,marginTop:4}}>PNG o SVG transparente. Máx 500KB. Se usa en header, formularios, PDFs y emails.</div>
-                      {config.apariencia?.logo && (
-                        <button onClick={()=>update("apariencia","logo","")} style={{marginTop:6,fontSize:9,color:T.red,background:"none",border:"none",cursor:"pointer",fontFamily:"'Outfit',sans-serif",textDecoration:"underline"}}>Eliminar logo</button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
                 {/* Font selector */}
                 <div style={{marginTop:20,borderTop:`1px solid ${T.border}`,paddingTop:14}}>
                   <div style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",marginBottom:8}}>🔤 Tipografía</div>

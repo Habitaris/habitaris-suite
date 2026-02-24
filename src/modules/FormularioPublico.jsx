@@ -23,29 +23,65 @@ export function encodeFormDef(def) {
   catch { return ""; }
 }
 
-/* Field */
-function Field({ campo, value, onChange, accent }) {
-  const { tipo, label, placeholder, opciones, required } = campo;
+/* Field — supports dynamicOpciones, phoneCode, dynamicLabel */
+function Field({ campo, value, onChange, accent, allVals }) {
+  const { tipo, label, placeholder, required } = campo;
   const ac = accent || BASE.ink;
   const lbl = { ...F, fontSize:12, fontWeight:600, color:BASE.ink, display:"block", marginBottom:6 };
   const inp = { ...F, width:"100%", padding:"12px 16px", border:"1px solid "+BASE.border, borderRadius:8,
     fontSize:14, color:BASE.ink, boxSizing:"border-box", background:"#fff", outline:"none" };
 
+  // Resolve dynamic options
+  let opciones = campo.opciones || [];
+  let dynLabel = label;
+  if (campo.dynamicOpciones && allVals) {
+    const depVal = allVals[campo.dynamicOpciones.dependsOn] || "";
+    const mapped = campo.dynamicOpciones.map[depVal];
+    if (mapped) opciones = mapped;
+    else if (campo.dynamicOpciones.fallback) opciones = campo.dynamicOpciones.fallback;
+    else opciones = [];
+  }
+  if (campo.dynamicLabel && allVals) {
+    const depVal = allVals[campo.dynamicLabel.dependsOn] || "";
+    const mapped = campo.dynamicLabel.map[depVal];
+    if (mapped) dynLabel = mapped;
+  }
+
+  // Phone combo: editable code selector + number input
+  if (tipo === "tel_combo" && allVals) {
+    const paisField = campo.paisRef || "";
+    const paisVal = allVals[paisField] || "";
+    const paisCodeMap = {"Colombia":"+57","España":"+34","México":"+52","Chile":"+56","Perú":"+51","Ecuador":"+593","Argentina":"+54","Panamá":"+507","Estados Unidos":"+1","Otro":"+"};
+    const codKey = "_cod_"+campo.id;
+    const codVal = allVals[codKey] || paisCodeMap[paisVal] || "+57";
+    const codes = campo.opciones || ["+57","+34","+52","+56","+51","+593","+54","+507","+1","+44"];
+    return (<div style={{ marginBottom:20 }}>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <div style={{ display:"flex", gap:0 }}>
+        <select value={codVal} onChange={e=>onChange(value, e.target.value)}
+          style={{ ...inp, width:90, flexShrink:0, borderRadius:"8px 0 0 8px", borderRight:"none", fontWeight:700, fontSize:13, color:"#1E4F8C", background:"#F5F4F1" }}>
+          {codes.map(c=><option key={c} value={c}>{c}</option>)}
+        </select>
+        <input type="tel" value={value||""} onChange={e=>onChange(e.target.value)} placeholder={placeholder||""} style={{...inp, flex:1, borderRadius:"0 8px 8px 0"}}/>
+      </div>
+    </div>);
+  }
+
   if (["text","email","tel","number","date"].includes(tipo)) {
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{label}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
       <input type={tipo} value={value||""} onChange={e=>onChange(e.target.value)} placeholder={placeholder||""} style={inp}/>
     </div>);
   }
   if (tipo === "textarea") {
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{label}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
       <textarea value={value||""} onChange={e=>onChange(e.target.value)} rows={3} placeholder={placeholder||""} style={{ ...inp, resize:"vertical" }}/>
     </div>);
   }
   if (tipo === "select" || tipo === "rango") {
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{label}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
       <select value={value||""} onChange={e=>onChange(e.target.value)} style={inp}>
         <option value="">Seleccionar...</option>
         {(opciones||[]).map(o => <option key={o} value={o}>{o}</option>)}
@@ -55,7 +91,7 @@ function Field({ campo, value, onChange, accent }) {
   if (tipo === "chips") {
     const selected = Array.isArray(value) ? value : [];
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{label}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
       <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginTop:6 }}>
         {(opciones||[]).map(o => {
           const sel = selected.includes(o);
@@ -70,7 +106,7 @@ function Field({ campo, value, onChange, accent }) {
   }
   if (tipo === "radio") {
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{label}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
       <div style={{ display:"flex", flexDirection:"column", gap:6, marginTop:6 }}>
         {(opciones||[]).map(o => (
           <label key={o} style={{ ...F, display:"flex", alignItems:"center", gap:10, fontSize:13,
@@ -86,7 +122,7 @@ function Field({ campo, value, onChange, accent }) {
   if (tipo === "rating") {
     const stars = parseInt(value) || 0;
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{label}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
       <div style={{ display:"flex", gap:8, marginTop:6 }}>
         {[1,2,3,4,5].map(n => (
           <button key={n} type="button" onClick={() => onChange(n)}
@@ -97,7 +133,7 @@ function Field({ campo, value, onChange, accent }) {
   }
   if (tipo === "yesno") {
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{label}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
       <div style={{ display:"flex", gap:10, marginTop:6 }}>
         {["Sí","No"].map(o => (
           <button key={o} type="button" onClick={() => onChange(o)}
@@ -111,12 +147,12 @@ function Field({ campo, value, onChange, accent }) {
   }
   if (tipo === "info") {
     return (<div style={{ marginBottom:20, padding:"14px 18px", background:BASE.accentBg, borderRadius:8, border:"1px solid "+BASE.accent+"22" }}>
-      <p style={{ ...F, fontSize:12, color:BASE.accent, margin:0, lineHeight:1.6 }}>{label}</p>
+      <p style={{ ...F, fontSize:12, color:BASE.accent, margin:0, lineHeight:1.6 }}>{dynLabel}</p>
     </div>);
   }
   if (tipo === "seccion") {
     return (<div style={{ marginTop:28, marginBottom:14, paddingTop:18, borderTop:"2px solid "+ac }}>
-      <h3 style={{ ...F, fontSize:15, fontWeight:700, color:BASE.ink, margin:0 }}>{label}</h3>
+      <h3 style={{ ...F, fontSize:15, fontWeight:700, color:BASE.ink, margin:0 }}>{dynLabel}</h3>
       {campo.desc && <p style={{ ...F, fontSize:11, color:BASE.inkLight, margin:"4px 0 0" }}>{campo.desc}</p>}
     </div>);
   }
@@ -143,20 +179,30 @@ export default function FormularioPublico() {
     if (!def) return;
     const campos = def.campos || [];
     const cliente = def.cliente || null;
-    const formKey = "hab_used_"+(def.id||"")+"_"+(cliente?cliente.email||cliente.nombre:"");
+
+    /* FIX: Only prefill fields that match exact mapKey, not by tipo or label */
     if (cliente) {
       const prefill = {};
       campos.forEach(c => {
-        if (cliente.email && (c.mapKey==="email" || c.tipo==="email")) prefill[c.id] = cliente.email;
-        if (cliente.nombre && (c.mapKey==="nombre" || (c.tipo==="text"&&c.label.toLowerCase().includes("nombre")))) prefill[c.id] = cliente.nombre;
-        if (cliente.tel && (c.mapKey==="telefono" || c.tipo==="tel")) prefill[c.id] = cliente.tel;
+        if (cliente.email && c.mapKey==="email") prefill[c.id] = cliente.email;
+        if (cliente.nombre && c.mapKey==="nombre") prefill[c.id] = cliente.nombre;
+        if (cliente.tel && c.mapKey==="telefono") prefill[c.id] = cliente.tel;
       });
       setVals(prev => ({...prefill, ...prev}));
     }
-    if (localStorage.getItem(formKey)) setSubmitted(true);
+    // Prefill country from config
+    const paisProy = (def.config?.paisProyecto) || "Colombia";
+    const countryPrefill = {};
+    campos.forEach(c => {
+      if (c.mapKey==="pais") countryPrefill[c.id] = paisProy;
+    });
+    setVals(prev => ({...countryPrefill, ...prev}));
+
+    // Check if link was manually blocked
+    const linkCfg = def.linkConfig || {};
+    if (linkCfg.blocked) { setBlocked("blocked"); return; }
 
     // Check link-level limits
-    const linkCfg = def.linkConfig || {};
     if (linkCfg.fechaCaducidad) {
       const expiry = new Date(linkCfg.fechaCaducidad);
       if (expiry < new Date()) { setBlocked("expired"); return; }
@@ -213,6 +259,7 @@ export default function FormularioPublico() {
       expired: { icon:"⏰", title:"Formulario expirado", desc:"La fecha de caducidad de este formulario ha pasado. Contacta a quien te lo envió." },
       maxuses: { icon:"🔒", title:"Límite de envíos alcanzado", desc:"Este formulario ya fue completado el número máximo de veces permitido." },
       inactive: { icon:"⛔", title:"Enlace desactivado", desc:"Este enlace ha sido desactivado. Contacta a quien te lo envió." },
+      blocked: { icon:"🚫", title:"Formulario bloqueado", desc:"Este formulario ha sido bloqueado por el remitente. Si crees que es un error, contacta a quien te lo envió." },
     };
     const m = msgs[blocked] || msgs.expired;
     const brandFont2 = (def?.marca?.tipografia) || "Outfit";
@@ -240,23 +287,39 @@ export default function FormularioPublico() {
   const BF = { fontFamily:`'${brandFont}',sans-serif` };
   const vista = cfg.vista || "pasos";
   const btnText = cfg.botonTexto || "Enviar formulario";
-  const formKey = "hab_used_"+(def.id||"")+"_"+(cliente?cliente.email||cliente.nombre:"");
 
   const setVal = (id, v) => { setVals(prev => ({ ...prev, [id]: v })); setError(""); };
 
+  const renderField = (c) => {
+    if (!isVisible(c)) return null;
+    if (isLocked(c)) return renderLocked(c);
+    if (c.tipo === "tel_combo") {
+      return <Field key={c.id} campo={c} value={vals[c.id]} onChange={(v, code) => {
+        if (code !== undefined) setVal("_cod_"+c.id, code);
+        else setVal(c.id, v);
+      }} accent={ac} allVals={vals}/>;
+    }
+    return <Field key={c.id} campo={c} value={vals[c.id]} onChange={v=>setVal(c.id,v)} accent={ac} allVals={vals}/>;
+  };
+
   const isVisible = (c) => {
-    if (!c.logica || !c.logica.fieldId || !c.logica.value) return true;
+    if (!c.logica || !c.logica.fieldId) return true;
+    if (!c.logica.value && !c.logica.notValues && !c.logica.notValue) return true;
     const depVal = vals[c.logica.fieldId];
+    if (c.logica.notValues) return !c.logica.notValues.includes(String(depVal||""));
+    if (c.logica.notValue) return String(depVal||"") !== c.logica.notValue;
     const expected = c.logica.value;
     if (Array.isArray(depVal)) return depVal.includes(expected);
     return String(depVal||"") === expected;
   };
 
+  /* FIX: Only lock fields that match exact mapKey — not by tipo or label */
   const isLocked = (c) => {
-    if (!cliente) return false;
-    if (cliente.email && (c.mapKey==="email" || c.tipo==="email")) return true;
-    if (cliente.nombre && (c.mapKey==="nombre" || (c.tipo==="text"&&c.label.toLowerCase().includes("nombre")))) return true;
-    if (cliente.tel && (c.mapKey==="telefono" || c.tipo==="tel")) return true;
+    if (!cliente) return c.mapKey==="pais";
+    if (cliente.email && c.mapKey==="email") return true;
+    if (cliente.nombre && c.mapKey==="nombre") return true;
+    if (cliente.tel && cliente.tel.trim() && (c.mapKey==="telefono" || c.tipo==="tel_combo")) return true;
+    if (c.mapKey==="pais") return true;
     return false;
   };
 
@@ -351,7 +414,18 @@ export default function FormularioPublico() {
     response.formularioId = def.id;
     response.formularioNombre = def.nombre;
     if (cliente) { response.clienteNombre = cliente.nombre; response.clienteEmail = cliente.email; response.clienteTel = cliente.tel; }
-    campos.forEach(c => { if (c.tipo !== "seccion" && vals[c.id] !== undefined) response[c.mapKey || c.id] = vals[c.id]; });
+    // Compose full phone with code for tel_combo
+    const telCombo = campos.find(c => c.tipo === "tel_combo");
+    if (telCombo && vals[telCombo.id]) {
+      const fullTel = (vals["_cod_"+telCombo.id]||"") + " " + vals[telCombo.id];
+      response.clienteTel = response.clienteTel || fullTel;
+      if (telCombo.mapKey) response[telCombo.mapKey] = vals[telCombo.id];
+      if (telCombo.codMapKey) response[telCombo.codMapKey] = vals["_cod_"+telCombo.id] || "";
+    }
+    campos.forEach(c => {
+      if (c.tipo !== "seccion" && vals[c.id] !== undefined) response[c.mapKey || c.id] = vals[c.id];
+      if (c.tipo === "tel_combo" && c.codMapKey) response[c.codMapKey] = vals["_cod_"+c.id] || "";
+    });
 
     // Save to localStorage (backward compatible)
     try {
@@ -382,6 +456,9 @@ export default function FormularioPublico() {
         });
         // Register submit event
         await SB.registerSubmit(def.id, def.nombre, linkCfg.linkId, cliente?.nombre, cliente?.email);
+        // Record time spent (reliable — beforeunload often fails for async)
+        const duration = Math.round((Date.now() - openTimeRef.current) / 1000);
+        if (duration > 0) await SB.registerClose(def.id, linkCfg.linkId, duration).catch(()=>{});
         // Increment link usage
         if (linkCfg.linkId) await SB.incrementLinkUse(linkCfg.linkId);
       } catch(e) { console.warn("Supabase save error:", e); }
@@ -394,15 +471,99 @@ export default function FormularioPublico() {
       localStorage.setItem(usedKey, String(used + 1));
     }
 
-    const tel = (cfg.telRespuesta||"573505661545").replace(/[^0-9]/g,"");
-    const clientLine = cliente ? "👤 Cliente: "+(cliente.nombre||"")+" ("+(cliente.email||"")+")\n" : "";
-    const lines = campos.filter(c=>c.tipo!=="seccion"&&c.tipo!=="info"&&vals[c.id]).map(c => {
-      const v = Array.isArray(vals[c.id]) ? vals[c.id].join(", ") : vals[c.id];
-      return "• "+c.label+": "+v;
-    });
-    const msg = "📋 RESPUESTA: "+(def.nombre||"Formulario")+"\n\n"+clientLine+lines.join("\n")+"\n\nFecha: "+response.fecha;
-    setSubmitted(true); localStorage.setItem(formKey, "1");
-    setTimeout(() => window.open("https://wa.me/"+tel+"?text="+encodeURIComponent(msg), "_blank"), 600);
+    /* FIX: No auto-open WhatsApp — just mark as submitted */
+    setSubmitted(true);
+
+    // Send email notification to comercial@habitaris.co with full report
+    try {
+      // Calculate scoring
+      const scoringCampos = campos.filter(c => c.scoring?.enabled);
+      let scoreHtml = "";
+      if (scoringCampos.length > 0) {
+        let totalPts = 0, maxPts = 0, greens = 0, reds = 0, yellows = 0;
+        const scoreRows = [];
+        scoringCampos.forEach(c => {
+          const w = c.scoring.weight || 1;
+          const key = c.mapKey || c.id;
+          let val = vals[c.id];
+          if (val === undefined) return;
+          maxPts += w;
+          const rules = c.scoring.rules || {};
+          let flag = "neutral";
+          if (Array.isArray(val)) {
+            const flags = val.map(v => rules[v] || "neutral");
+            if (flags.includes("red")) flag = "red";
+            else if (flags.every(f => f === "green")) flag = "green";
+            else flag = "neutral";
+          } else { flag = rules[String(val)] || "neutral"; }
+          let pts = flag === "green" ? w : flag === "neutral" ? w * 0.5 : 0;
+          totalPts += pts;
+          if (flag === "green") greens++; else if (flag === "red") reds++; else yellows++;
+          const icon = flag === "green" ? "🟢" : flag === "red" ? "🔴" : "🟡";
+          const fc = flag === "green" ? "#1E6B42" : flag === "red" ? "#AE2C2C" : "#7A5218";
+          const display = Array.isArray(val) ? val.join(", ") : val;
+          scoreRows.push(`<tr><td style="padding:5px 10px;font-size:11px;font-weight:600;">${c.label}</td><td style="padding:5px 10px;font-size:11px;">${display}</td><td style="padding:5px 10px;text-align:center;font-weight:700;color:${fc};">${pts}/${w}</td><td style="padding:5px 10px;text-align:center;">${icon}</td></tr>`);
+        });
+        const score = maxPts > 0 ? Math.round((totalPts / maxPts) * 100) / 10 : 0;
+        const level = score >= 7 ? "green" : score >= 4 ? "yellow" : "red";
+        const colors = {green:{bg:"#E8F4EE",text:"#1E6B42"},yellow:{bg:"#FAF0E0",text:"#7A5218"},red:{bg:"#FAE8E8",text:"#AE2C2C"}};
+        const col = colors[level];
+        const lbl = level === "green" ? "🟢 Cliente potencial" : level === "yellow" ? "🟡 Revisar" : "🔴 No califica";
+        const concl = level === "green" ? "Contactar en las próximas 24h." : level === "yellow" ? "Agendar llamada exploratoria." : "Responder cortésmente y archivar.";
+        scoreHtml = `<div style="margin:16px 0;border:1px solid ${col.text}33;border-radius:8px;overflow:hidden;">
+          <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:${col.bg};">
+            <div style="font-size:24px;font-weight:800;color:${col.text};">${score.toFixed(1)}/10</div>
+            <div><div style="font-size:13px;font-weight:700;color:${col.text};">${lbl}</div><div style="font-size:9px;color:${col.text};">${concl}</div></div>
+            <div style="margin-left:auto;display:flex;gap:8px;"><span>🟢${greens}</span><span>🟡${yellows}</span><span>🔴${reds}</span></div>
+          </div>
+          <table style="width:100%;border-collapse:collapse;">${scoreRows.join("")}</table>
+        </div>`;
+      }
+
+      // Build HTML content grouped by sections
+      let html = scoreHtml;
+      let currentSection = "";
+      campos.forEach(c => {
+        if (c.tipo === "seccion") {
+          currentSection = c.label;
+          html += `<div style="margin-top:16px;padding:10px 14px;background:#F0EEE9;border-radius:6px;border-left:3px solid #C9A84C;">
+            <p style="margin:0;font-size:12px;font-weight:bold;color:#111;">${c.label}</p>
+            ${c.desc ? `<p style="margin:2px 0 0;font-size:10px;color:#888;">${c.desc}</p>` : ""}
+          </div>`;
+          return;
+        }
+        if (c.tipo === "info") return;
+        const val = vals[c.id];
+        if (val === undefined || val === "" || (Array.isArray(val) && val.length === 0)) return;
+        const display = Array.isArray(val) ? val.join(", ") : val;
+        html += `<div style="padding:8px 14px;border-bottom:1px solid #f0f0f0;">
+          <p style="margin:0;font-size:10px;color:#888;font-weight:600;">${c.label}</p>
+          <p style="margin:3px 0 0;font-size:13px;color:#111;">${display}</p>
+        </div>`;
+      });
+
+      const clientName = cliente?.nombre || response.clienteNombre || response.nombre || "Sin nombre";
+      const clientEmail = cliente?.email || response.clienteEmail || response.email || "";
+      const clientTel = cliente?.tel || response.clienteTel || response.telefono || "";
+
+      await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          service_id: "service_6x3478l",
+          template_id: "template_6lla2i8",
+          user_id: "64nk2FHknwpLqc1p4",
+          template_params: {
+            form_name: def.nombre || "Formulario",
+            client_name: clientName,
+            client_email: clientEmail,
+            client_tel: clientTel,
+            fecha: response.fecha + " · " + new Date().toLocaleTimeString("es-CO", { hour:"2-digit", minute:"2-digit", hour12:false }),
+            contenido: html,
+          }
+        })
+      });
+    } catch(e) { console.warn("Email notification error:", e); }
   };
 
   if (submitted) return (
@@ -418,16 +579,31 @@ export default function FormularioPublico() {
     </div>
   );
 
-  const renderLocked = (c) => (
-    <div key={c.id} style={{ marginBottom:20 }}>
+  const renderLocked = (c) => {
+    if (c.tipo === "tel_combo") {
+      const codVal = vals["_cod_"+c.id] || "+57";
+      return (<div key={c.id} style={{ marginBottom:20 }}>
+        <label style={{ ...BF, fontSize:12, fontWeight:600, color:BASE.ink, display:"block", marginBottom:6 }}>
+          {c.label} <span style={{ fontSize:9, color:cs, fontWeight:400 }}>🔒 prellenado</span>
+        </label>
+        <div style={{ display:"flex", gap:0 }}>
+          <div style={{ ...BF, width:90, flexShrink:0, padding:"12px 0", border:`1px solid ${cs}33`, borderRadius:"8px 0 0 8px", borderRight:"none",
+            fontSize:14, color:cs, background:cs+"15", fontWeight:700, textAlign:"center" }}>{codVal}</div>
+          <input type="text" value={vals[c.id]||""} disabled
+            style={{ ...BF, flex:1, padding:"12px 16px", border:`1px solid ${cs}33`, borderRadius:"0 8px 8px 0",
+              fontSize:14, color:cs, boxSizing:"border-box", background:cs+"15", fontWeight:600 }}/>
+        </div>
+      </div>);
+    }
+    return (<div key={c.id} style={{ marginBottom:20 }}>
       <label style={{ ...BF, fontSize:12, fontWeight:600, color:BASE.ink, display:"block", marginBottom:6 }}>
         {c.label} <span style={{ fontSize:9, color:cs, fontWeight:400 }}>🔒 prellenado</span>
       </label>
       <input type="text" value={vals[c.id]||""} disabled
         style={{ ...BF, width:"100%", padding:"12px 16px", border:`1px solid ${cs}33`, borderRadius:8,
           fontSize:14, color:cs, boxSizing:"border-box", background:cs+"15", fontWeight:600 }}/>
-    </div>
-  );
+    </div>);
+  };
 
   const Header = () => (
     <div style={{ background:ac, padding:"14px 24px" }}>
@@ -484,9 +660,7 @@ export default function FormularioPublico() {
           </div>
           <div style={{ background:BASE.surface, borderRadius:12, padding:"28px 28px 12px", border:"1px solid "+BASE.border, boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
             {campos.map(c => {
-              if (!isVisible(c)) return null;
-              if (isLocked(c)) return renderLocked(c);
-              return <Field key={c.id} campo={c} value={vals[c.id]} onChange={v=>setVal(c.id,v)} accent={ac}/>;
+              return renderField(c);
             })}
           </div>
           <ErrorMsg/>
@@ -524,10 +698,8 @@ export default function FormularioPublico() {
           </div>
           <div style={{ background:BASE.surface, borderRadius:12, padding:"28px 28px 12px", border:"1px solid "+BASE.border, boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
             {activeStep && activeStep.fields.map(c => {
-              if (!isVisible(c)) return null;
               if (c.tipo === "seccion") return null;
-              if (isLocked(c)) return renderLocked(c);
-              return <Field key={c.id} campo={c} value={vals[c.id]} onChange={v=>setVal(c.id,v)} accent={ac}/>;
+              return renderField(c);
             })}
           </div>
           <ErrorMsg/>
