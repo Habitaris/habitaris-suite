@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Plus, Trash2, Check, X, Search, Edit3, Copy, Send, Eye, ChevronDown, ChevronUp, GripVertical, ToggleLeft, ToggleRight, Share2, Mail, MessageCircle, Link2, FileText, Star, TrendingUp, Layers, Settings, AlertTriangle } from "lucide-react";
 import { encodeFormDef } from "./FormularioPublico.jsx";
 import { getConfig, resolveTemplate } from "./Configuracion.jsx";
-import * as Bio from "./biometric.js";
 import * as SB from "./supabase.js";
 
 /* ═══════════════════════════════════════════════════════════════
