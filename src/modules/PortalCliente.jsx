@@ -818,3 +818,12 @@ export default function PortalCliente() {
   // Sin token → vista admin (dentro de la suite)
   return <AdminPortalView />
 }
+
+// Función exportada para CRM
+export function encodePortalData(data) {
+  try {
+    return btoa(JSON.stringify(data)).replace(/=/g, '').substring(0, 32);
+  } catch (e) {
+    return 'portal_' + Date.now().toString(36);
+  }
+}
