@@ -405,8 +405,52 @@ export default function FormularioPublico() {
 
     // Send email notification to comercial@habitaris.co with full report
     try {
+      // Calculate scoring
+      const scoringCampos = campos.filter(c => c.scoring?.enabled);
+      let scoreHtml = "";
+      if (scoringCampos.length > 0) {
+        let totalPts = 0, maxPts = 0, greens = 0, reds = 0, yellows = 0;
+        const scoreRows = [];
+        scoringCampos.forEach(c => {
+          const w = c.scoring.weight || 1;
+          const key = c.mapKey || c.id;
+          let val = vals[c.id];
+          if (val === undefined) return;
+          maxPts += w;
+          const rules = c.scoring.rules || {};
+          let flag = "neutral";
+          if (Array.isArray(val)) {
+            const flags = val.map(v => rules[v] || "neutral");
+            if (flags.includes("red")) flag = "red";
+            else if (flags.every(f => f === "green")) flag = "green";
+            else flag = "neutral";
+          } else { flag = rules[String(val)] || "neutral"; }
+          let pts = flag === "green" ? w : flag === "neutral" ? w * 0.5 : 0;
+          totalPts += pts;
+          if (flag === "green") greens++; else if (flag === "red") reds++; else yellows++;
+          const icon = flag === "green" ? "🟢" : flag === "red" ? "🔴" : "🟡";
+          const fc = flag === "green" ? "#1E6B42" : flag === "red" ? "#AE2C2C" : "#7A5218";
+          const display = Array.isArray(val) ? val.join(", ") : val;
+          scoreRows.push(`<tr><td style="padding:5px 10px;font-size:11px;font-weight:600;">${c.label}</td><td style="padding:5px 10px;font-size:11px;">${display}</td><td style="padding:5px 10px;text-align:center;font-weight:700;color:${fc};">${pts}/${w}</td><td style="padding:5px 10px;text-align:center;">${icon}</td></tr>`);
+        });
+        const score = maxPts > 0 ? Math.round((totalPts / maxPts) * 100) / 10 : 0;
+        const level = score >= 7 ? "green" : score >= 4 ? "yellow" : "red";
+        const colors = {green:{bg:"#E8F4EE",text:"#1E6B42"},yellow:{bg:"#FAF0E0",text:"#7A5218"},red:{bg:"#FAE8E8",text:"#AE2C2C"}};
+        const col = colors[level];
+        const lbl = level === "green" ? "🟢 Cliente potencial" : level === "yellow" ? "🟡 Revisar" : "🔴 No califica";
+        const concl = level === "green" ? "Contactar en las próximas 24h." : level === "yellow" ? "Agendar llamada exploratoria." : "Responder cortésmente y archivar.";
+        scoreHtml = `<div style="margin:16px 0;border:1px solid ${col.text}33;border-radius:8px;overflow:hidden;">
+          <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:${col.bg};">
+            <div style="font-size:24px;font-weight:800;color:${col.text};">${score.toFixed(1)}/10</div>
+            <div><div style="font-size:13px;font-weight:700;color:${col.text};">${lbl}</div><div style="font-size:9px;color:${col.text};">${concl}</div></div>
+            <div style="margin-left:auto;display:flex;gap:8px;"><span>🟢${greens}</span><span>🟡${yellows}</span><span>🔴${reds}</span></div>
+          </div>
+          <table style="width:100%;border-collapse:collapse;">${scoreRows.join("")}</table>
+        </div>`;
+      }
+
       // Build HTML content grouped by sections
-      let html = "";
+      let html = scoreHtml;
       let currentSection = "";
       campos.forEach(c => {
         if (c.tipo === "seccion") {
@@ -443,7 +487,7 @@ export default function FormularioPublico() {
             client_name: clientName,
             client_email: clientEmail,
             client_tel: clientTel,
-            fecha: response.fecha + " · " + new Date().toLocaleTimeString("es-CO", { hour:"2-digit", minute:"2-digit" }),
+            fecha: response.fecha + " · " + new Date().toLocaleTimeString("es-CO", { hour:"2-digit", minute:"2-digit", hour12:false }),
             contenido: html,
           }
         })
