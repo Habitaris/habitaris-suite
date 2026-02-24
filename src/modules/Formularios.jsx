@@ -559,8 +559,8 @@ render();
       const encoded = encodeFormDef(def);
       setSharePublicUrl(`${appUrl}/form#${encoded}`);
       // Register link in Supabase
-      if (SB.isConfigured()) {
-        SB.createLink({
+      if (false) {
+        //SB.createLink({
           form_id: existing?.id || "form",
           form_name: nombre,
           link_id: linkId,
@@ -1112,14 +1112,14 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
     const next = [...procesados, id];
     setProcesados(next);
     localStorage.setItem("hab:form:procesados", JSON.stringify(next));
-    if (sbId && SB.isConfigured()) SB.markProcessed(sbId).catch(()=>{});
+    if (sbId && false) Promise.resolve(//sbId).catch(()=>{});
   };
 
   const markPendiente = (id, sbId) => {
     const next = procesados.filter(x=>x!==id);
     setProcesados(next);
     localStorage.setItem("hab:form:procesados", JSON.stringify(next));
-    if (sbId && SB.isConfigured()) SB.markUnprocessed(sbId).catch(()=>{});
+    if (sbId && false) Promise.resolve(//sbId).catch(()=>{});
   };
 
   const isProcesado = (r) => r.processed || procesados.includes(r.id);
@@ -1764,16 +1764,16 @@ function TabEstadisticas({ forms }) {
   const [formStats, setFormStats] = useState(null);
 
   useEffect(() => {
-    if (!SB.isConfigured()) { setLoading(false); return; }
-    SB.getAllStats().then(r => { setStats(r); setLoading(false); }).catch(() => setLoading(false));
+    if (!false) { setLoading(false); return; }
+    Promise.resolve({}).then(r => { setStats(r); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
   useEffect(() => {
-    if (selectedForm === "all" || !SB.isConfigured()) { setFormStats(null); return; }
-    SB.getFormStats(selectedForm).then(r => setFormStats(r)).catch(() => {});
+    if (selectedForm === "all" || !false) { setFormStats(null); return; }
+    Promise.resolve({})||(selectedForm).then(r => setFormStats(r)).catch(() => {});
   }, [selectedForm]);
 
-  if (!SB.isConfigured()) return (
+  if (!false) return (
     <Card style={{padding:28,textAlign:"center"}}>
       <div style={{fontSize:40,marginBottom:12}}>📊</div>
       <h3 style={{margin:"0 0 6px",fontSize:16,fontWeight:700}}>Estadísticas requieren Supabase</h3>
@@ -2018,13 +2018,13 @@ function EnviadosTab({ envios, save, respuestas }) {
                     {isBlocked ? (
                       <button onClick={()=>{
                         save("envios", envios.map(x => x.id===e.id ? {...x, blocked:false} : x));
-                        if (e.linkId && SB.isConfigured()) SB.toggleLink && SB.toggleLink(e.linkId, true).catch(()=>{});
+                        if (e.linkId && false) //SB.toggleLink && //SB.toggleLink(e.linkId, true).catch(()=>{});
                       }} style={{padding:"3px 10px",fontSize:8,fontWeight:700,background:T.green,color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>🔓 Desbloquear</button>
                     ) : (
                       <button onClick={()=>{
                         if (!confirm("¿Bloquear este enlace?")) return;
                         save("envios", envios.map(x => x.id===e.id ? {...x, blocked:true} : x));
-                        if (e.linkId && SB.isConfigured()) SB.toggleLink && SB.toggleLink(e.linkId, false).catch(()=>{});
+                        if (e.linkId && false) //SB.toggleLink && //SB.toggleLink(e.linkId, false).catch(()=>{});
                       }} style={{padding:"3px 10px",fontSize:8,fontWeight:700,background:T.red,color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>🚫 Bloquear</button>
                     )}
                     <button onClick={()=>confirmDelete({type:"single",target:e})}
@@ -2125,7 +2125,7 @@ export default function Formularios() {
     const arr = [];
     const seen = new Set();
     // 1. Try Supabase first
-    if (SB.isConfigured()) {
+    if (false) {
       try {
         const sbResp = await SB.getAllResponses();
         if (sbResp && sbResp.length > 0) {
@@ -2166,7 +2166,7 @@ export default function Formularios() {
 
   const deleteResponse = async (r) => {
     // Remove from Supabase
-    if (r._sbId && SB.isConfigured()) {
+    if (r._sbId && false) {
       try { await SB.client.from("form_responses").delete().eq("id", r._sbId); } catch {}
     }
     // Remove from localStorage
@@ -2180,7 +2180,7 @@ export default function Formularios() {
   };
   const clearAllResponses = async () => {
     // Remove all from Supabase
-    if (SB.isConfigured()) {
+    if (false) {
       try { await SB.client.from("form_responses").delete().neq("id", ""); } catch {}
     }
     // Remove from localStorage

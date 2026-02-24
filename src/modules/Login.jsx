@@ -21,12 +21,12 @@ function genToken(){return Array.from(crypto.getRandomValues(new Uint8Array(16))
 
 const ROLES={superadmin:{label:"Super Admin",color:T.gold},admin:{label:"Administrador",color:T.blue},gerente:{label:"Gerente",color:T.green},disenador:{label:"Diseñador",color:"#5B3A8C"},ingeniero:{label:"Ingeniero",color:"#0D5E6E"},comercial:{label:"Comercial",color:T.amber},contable:{label:"Contable",color:T.red},auxiliar:{label:"Auxiliar",color:T.inkLight}};
 
-function getSession(){try{const r=localStorage.getItem(SESSION_KEY);if(!r)return null;const s=JSON.parse(r);if(Date.now()-s.ts>24*60*60*1000){localStorage.removeItem(SESSION_KEY);return null}return s}catch{return null}}
-function setSession(u){localStorage.setItem(SESSION_KEY,JSON.stringify({id:u.id,email:u.email,nombre:u.nombre,rol:u.rol,ts:Date.now()}))}
+function getSession(){try{const r=sessionStorage.getItem(SESSION_KEY);if(!r)return null;const s=JSON.parse(r);if(Date.now()-s.ts>24*60*60*1000){sessionStorage.removeItem(SESSION_KEY);return null}return s}catch{return null}}
+function setSession(u){sessionStorage.setItem(SESSION_KEY,JSON.stringify({id:u.id,email:u.email,nombre:u.nombre,rol:u.rol,ts:Date.now()}))}
 
 export function isLoggedIn(){return !!getSession()}
 export function login(){return true}
-export function logout(){localStorage.removeItem(SESSION_KEY)}
+export function logout(){sessionStorage.removeItem(SESSION_KEY)}
 export function isAuthConfigured(){return true}
 export function getCurrentUser(){return getSession()}
 
