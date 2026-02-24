@@ -137,7 +137,7 @@ const MODULOS_ASOC = [
 
 /* ── Templates ── */
 const PLANTILLAS = [
-  { id:"briefing_inicial", version:3, nombre:"Briefing Inicial Habitaris", modulo:"crm", desc:"Formulario completo de briefing para nuevos proyectos",
+  { id:"briefing_inicial", version:5, nombre:"Briefing Inicial Habitaris", modulo:"crm", desc:"Formulario completo de briefing para nuevos proyectos",
     campos:[
       /* ── Aviso de Privacidad (gate) ── */
       {id:"f_privacidad",tipo:"info",label:"Aviso de Privacidad: En Habitaris SAS (NIT 901.922.136-8, domicilio Bogotá D.C., email: comercial.co, tel: +57 350 5661545), tratamos tus datos personales para procesar tu solicitud de briefing, enviar cotizaciones y gestionar proyectos. Cumplimos con la Ley 1581/2012 y Régimen de Protección de Datos. Derechos (acceso, rectificación, supresión, revocación): vía comercial.co.",desc:"",required:false,opciones:[],logica:null},
@@ -150,8 +150,7 @@ const PLANTILLAS = [
       {id:"f_num_doc",tipo:"text",label:"Número de documento",placeholder:"Ej: 1.234.567.890",required:true,opciones:[],logica:null,mapKey:"numDocumento"},
       {id:"f_email",tipo:"email",label:"Correo electrónico",placeholder:"name@example.com",required:true,opciones:[],logica:null,mapKey:"email"},
       {id:"f_pais",tipo:"select",label:"País del proyecto",placeholder:"",required:true,opciones:["Colombia","España","México","Chile","Perú","Ecuador","Argentina","Panamá","Estados Unidos","Otro"],logica:null,mapKey:"pais"},
-      {id:"f_cod_tel",tipo:"select",label:"Código telefónico",placeholder:"",required:true,opciones:["+57 (Colombia)","+34 (España)","+52 (México)","+56 (Chile)","+51 (Perú)","+593 (Ecuador)","+54 (Argentina)","+507 (Panamá)","+1 (Estados Unidos)","+44 (Reino Unido)"],logica:null,mapKey:"codigoTel"},
-      {id:"f_tel",tipo:"tel",label:"Teléfono de contacto (sin código país)",placeholder:"Ej: 3505661545",required:true,opciones:[],logica:null,mapKey:"telefono"},
+      {id:"f_tel",tipo:"tel_combo",label:"Teléfono de contacto",placeholder:"Ej: 3505661545",required:true,opciones:["+57","+34","+52","+56","+51","+593","+54","+507","+1","+44"],logica:null,mapKey:"telefono",codMapKey:"codigoTel",paisRef:"f_pais"},
       {id:"f_propietario",tipo:"select",label:"¿Cuál es tu relación con el inmueble?",placeholder:"",required:true,opciones:["Soy el propietario","Estoy en arriendo","Actúo en nombre del propietario","Actúo en nombre de un tercero"],logica:null,mapKey:"propietario",scoring:{enabled:true,weight:2,rules:{"Soy el propietario":"green","Estoy en arriendo":"neutral","Actúo en nombre del propietario":"red","Actúo en nombre de un tercero":"red"}}},
 
       /* ── Ubicación del proyecto ── */
@@ -396,10 +395,9 @@ if(cliente){campos.forEach(c=>{
 });}
 // Prefill country from config
 const paisProy=cfg.paisProyecto||"Colombia";
-const paisCodMap={"Colombia":"+57 (Colombia)","España":"+34 (España)","México":"+52 (México)","Chile":"+56 (Chile)","Perú":"+51 (Perú)","Ecuador":"+593 (Ecuador)","Argentina":"+54 (Argentina)","Panamá":"+507 (Panamá)","Estados Unidos":"+1 (Estados Unidos)"};
+const paisCodeMap={"Colombia":"+57","España":"+34","México":"+52","Chile":"+56","Perú":"+51","Ecuador":"+593","Argentina":"+54","Panamá":"+507","Estados Unidos":"+1","Otro":"+"};
 campos.forEach(c=>{
   if(c.mapKey==="pais")vals[c.id]=paisProy;
-  if(c.mapKey==="codigoTel"&&!vals[c.id])vals[c.id]=paisCodMap[paisProy]||"";
 });
 function isLocked(c){if(!cliente)return false;
   if(cliente.email&&(c.mapKey==="email"||c.tipo==="email"))return true;
@@ -436,6 +434,15 @@ function render(){
       h+=\`<label class="lbl">\${c.label} <span class="lock">🔒 prellenado</span></label>\`;
       if(c.tipo==="select"){h+=\`<select class="inp" disabled><option>\${v}</option></select>\`;}
       else{h+=\`<input class="inp" value="\${v}" disabled/>\`;}
+    }else if(c.tipo==="tel_combo"){
+      const paisVal=c.paisRef?vals[c.paisRef]:paisProy;
+      const defCode=paisCodeMap[paisVal]||"+57";
+      if(!vals["_cod_"+c.id])vals["_cod_"+c.id]=defCode;
+      const codVal=vals["_cod_"+c.id];
+      h+=\`<label class="lbl">\${c.label}\${req}</label>\`;
+      h+=\`<div style="display:flex;gap:0"><select class="inp" style="width:90px;flex-shrink:0;border-radius:6px 0 0 6px;border-right:none;font-weight:700;font-size:13px;color:#1E4F8C;background:#F5F4F1" onchange="vals['_cod_'+'\${c.id}']=this.value;render()">\`;
+      (c.opciones||[]).forEach(o=>{h+=\`<option value="\${o}" \${codVal===o?"selected":""}>\${o}</option>\`;});
+      h+=\`</select><input class="inp" type="tel" value="\${v}" placeholder="\${c.placeholder||""}" style="flex:1;border-radius:0 6px 6px 0" onchange="vals['\${c.id}']=this.value;render()"/></div>\`;
     }else if(["text","email","tel","number","date"].includes(c.tipo)){
       h+=\`<label class="lbl">\${c.label}\${req}</label>\`;
       h+=\`<input class="inp" type="\${c.tipo}" value="\${v}" placeholder="\${c.placeholder||""}" onchange="vals['\${c.id}']=this.value;render()"/>\`;
@@ -480,7 +487,9 @@ function doSubmit(){
     }
   }
   const lines=campos.filter(c=>c.tipo!=="seccion"&&c.tipo!=="info"&&vals[c.id]).map(c=>{
-    const v=Array.isArray(vals[c.id])?vals[c.id].join(", "):vals[c.id];return"• "+c.label+": "+v;});
+    let v=Array.isArray(vals[c.id])?vals[c.id].join(", "):vals[c.id];
+    if(c.tipo==="tel_combo"){const code=vals["_cod_"+c.id]||"";v=code+" "+v;}
+    return"• "+c.label+": "+v;});
   const cl=cliente?"👤 Cliente: "+(cliente.nombre||"")+" ("+(cliente.email||"")+")\\n":"";
   const msg="📋 RESPUESTA: "+(DEF.nombre||"Formulario")+"\\n\\n"+cl+lines.join("\\n")+"\\n\\nFecha: "+new Date().toISOString().split("T")[0];
   const tel="${telWA}";
@@ -1535,6 +1544,7 @@ function TabPlantillas({ forms, setForms, onEdit }) {
         if (nc.logica && nc.logica.fieldId && idMap[nc.logica.fieldId]) {
           nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
         }
+        if (nc.paisRef && idMap[nc.paisRef]) nc.paisRef = idMap[nc.paisRef];
         return nc;
       });
       const f = { id:uid(), nombre:p.nombre, modulo:p.modulo||"general", campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, createdAt:today(), updatedAt:today(), activo:true, sourceTemplate:p.id };
@@ -1785,6 +1795,7 @@ export default function Formularios() {
           if (nc.logica && nc.logica.fieldId && idMap[nc.logica.fieldId]) {
             nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
           }
+          if (nc.paisRef && idMap[nc.paisRef]) nc.paisRef = idMap[nc.paisRef];
           return nc;
         });
         updated.push({ id:uid(), nombre:p.nombre, modulo:p.modulo||"general", campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, createdAt:today(), updatedAt:today(), activo:true, sourceTemplate:p.id, templateVersion:p.version||1 });
@@ -1798,6 +1809,7 @@ export default function Formularios() {
           if (nc.logica && nc.logica.fieldId && idMap[nc.logica.fieldId]) {
             nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
           }
+          if (nc.paisRef && idMap[nc.paisRef]) nc.paisRef = idMap[nc.paisRef];
           return nc;
         });
         updated = updated.map(f => f.id === existing.id ? {...f, campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, updatedAt:today(), templateVersion:p.version, sourceTemplate:p.id} : f);
