@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import * as SB from "./supabase.js";
-import { PAISES, getPais } from "./geoData.js";
 
 const BASE = {
   bg:"#F5F4F1", surface:"#FFFFFF", ink:"#111", inkMid:"#555",
@@ -51,8 +50,8 @@ function Field({ campo, value, onChange, accent, allVals }) {
   // Phone with country code
   if (tipo === "tel" && campo.phoneCode && allVals) {
     const depVal = allVals[campo.phoneCode.dependsOn] || "";
-    const paisData = getPais(depVal);
-    const code = paisData?.phone || "+";
+    const phoneCodes = {"Colombia":"+57","España":"+34","México":"+52","Chile":"+56","Perú":"+51","Ecuador":"+593","Argentina":"+54","Panamá":"+507","Estados Unidos":"+1"};
+    const code = phoneCodes[depVal] || "+";
     return (<div style={{ marginBottom:20 }}>
       <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
       <div style={{ display:"flex", gap:6 }}>
