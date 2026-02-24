@@ -1112,14 +1112,14 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
     const next = [...procesados, id];
     setProcesados(next);
     localStorage.setItem("hab:form:procesados", JSON.stringify(next));
-    if (sbId && false) Promise.resolve(//sbId).catch(()=>{});
+    // SB disabled;
   };
 
   const markPendiente = (id, sbId) => {
     const next = procesados.filter(x=>x!==id);
     setProcesados(next);
     localStorage.setItem("hab:form:procesados", JSON.stringify(next));
-    if (sbId && false) Promise.resolve(//sbId).catch(()=>{});
+    // SB disabled;
   };
 
   const isProcesado = (r) => r.processed || procesados.includes(r.id);
@@ -1770,7 +1770,7 @@ function TabEstadisticas({ forms }) {
 
   useEffect(() => {
     if (selectedForm === "all" || !false) { setFormStats(null); return; }
-    Promise.resolve({})||(selectedForm).then(r => setFormStats(r)).catch(() => {});
+    Promise.resolve({}).then(r => setFormStats(r)).catch(() => {});
   }, [selectedForm]);
 
   if (!false) return (
