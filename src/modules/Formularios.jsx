@@ -1216,20 +1216,23 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
         <table style={{borderCollapse:"collapse",width:"100%"}}>
           <thead>
             <tr style={{background:"#EDEBE7"}}>
-              {["Fecha / Hora","Formulario","Cliente","Email","Estado","Acciones"].map(h=>
+              {["Fecha","Hora","Formulario","Cliente","Email","Estado","Acciones"].map(h=>
                 <th key={h} style={ths}>{h}</th>
               )}
             </tr>
           </thead>
           <tbody>
             {filtered.length===0 ? (
-              <tr><td colSpan={6} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin respuestas{filtroEstado!=="todos"?" con este filtro":""}</td></tr>
+              <tr><td colSpan={7} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin respuestas{filtroEstado!=="todos"?" con este filtro":""}</td></tr>
             ) : filtered.sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"")).map(r => {
               const proc = isProcesado(r);
-              const fechaDisplay = r.created_at ? new Date(r.created_at).toLocaleString("es-CO",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}) : r.fecha || "—";
+              const dt = r.created_at ? new Date(r.created_at) : null;
+              const fechaStr = dt ? dt.toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"}) : r.fecha || "—";
+              const horaStr = dt ? dt.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"}) : "—";
               return (
               <tr key={r.id} style={{cursor:"pointer",background:proc?"":"#FDFBFF"}} onClick={()=>setSelResp(selResp?.id===r.id?null:r)}>
-                <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9,whiteSpace:"nowrap"}}>{fechaDisplay}</td>
+                <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9,whiteSpace:"nowrap"}}>{fechaStr}</td>
+                <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9,color:T.inkMid}}>{horaStr}</td>
                 <td style={{...tds,fontWeight:600,fontSize:10}}>{r.formularioNombre||forms.find(f=>f.id===r.formularioId)?.nombre||"—"}</td>
                 <td style={{...tds,fontWeight:600,fontSize:10}}>{r.clienteNombre||"—"}</td>
                 <td style={{...tds,fontSize:9,color:T.blue}}>{r.clienteEmail||"—"}</td>
@@ -1308,9 +1311,13 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
 function TabPlantillas({ forms, setForms, onEdit }) {
   const usePlantilla = (p) => {
     try {
-      // Check if a form from this template already exists
-      const existing = forms.find(f => f.sourceTemplate === p.id);
+      // Check if a form from this template already exists (by sourceTemplate OR by name match)
+      const existing = forms.find(f => f.sourceTemplate === p.id || f.nombre === p.nombre);
       if (existing) {
+        // Tag it with sourceTemplate if not already tagged
+        if (!existing.sourceTemplate) {
+          setForms(forms.map(f => f.id === existing.id ? {...f, sourceTemplate: p.id} : f));
+        }
         onEdit(existing.id);
         return;
       }
@@ -1336,7 +1343,7 @@ function TabPlantillas({ forms, setForms, onEdit }) {
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280,1fr))",gap:12}}>
         {PLANTILLAS.map(p => {
           const mod = MODULOS_ASOC.find(m=>m.id===p.modulo);
-          const alreadyUsed = forms.find(f => f.sourceTemplate === p.id);
+          const alreadyUsed = forms.find(f => f.sourceTemplate === p.id || f.nombre === p.nombre);
           return (
             <Card key={p.id} style={{padding:0,overflow:"hidden"}}>
               <div style={{padding:"14px 16px"}}>
@@ -1489,7 +1496,7 @@ function TabEstadisticas({ forms }) {
             <table style={{width:"100%",borderCollapse:"collapse"}}>
               <thead>
                 <tr style={{background:T.bg}}>
-                  {["Estado","Fecha / Hora","Formulario","Cliente","Aperturas","Envíos","Tiempo","Conversión"].map(h=>
+                  {["Estado","Fecha","Hora","Formulario","Cliente","Aperturas","Envíos","Tiempo","Conversión"].map(h=>
                     <th key={h} style={ths}>{h}</th>
                   )}
                 </tr>
@@ -1499,6 +1506,8 @@ function TabEstadisticas({ forms }) {
                   const hasSubmit = r.submits > 0;
                   const conv = r.opens > 0 ? Math.round((r.submits / r.opens) * 100) : 0;
                   const avgTime = r.durationCount > 0 ? Math.round(r.duration / r.durationCount) : 0;
+                  const fechaStr = r.lastDate ? r.lastDate.toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"}) : "—";
+                  const horaStr = r.lastDate ? r.lastDate.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"}) : "—";
                   return (
                     <tr key={i} style={{background:i%2===0?"#fff":"#FAFAF8"}}>
                       <td style={tds}>
@@ -1509,7 +1518,10 @@ function TabEstadisticas({ forms }) {
                         </span>
                       </td>
                       <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:10,color:T.inkMid,whiteSpace:"nowrap"}}>
-                        {r.lastDate ? fmtDate(r.lastDate) : "—"}
+                        {fechaStr}
+                      </td>
+                      <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:10,color:T.inkMid}}>
+                        {horaStr}
                       </td>
                       <td style={{...tds,fontWeight:600}}>{r.form_name}</td>
                       <td style={tds}>
