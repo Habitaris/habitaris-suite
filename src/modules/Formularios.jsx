@@ -137,7 +137,7 @@ const MODULOS_ASOC = [
 
 /* ── Templates ── */
 const PLANTILLAS = [
-  { id:"briefing_inicial", version:2, nombre:"Briefing Inicial Habitaris", modulo:"crm", desc:"Formulario completo de briefing para nuevos proyectos",
+  { id:"briefing_inicial", version:3, nombre:"Briefing Inicial Habitaris", modulo:"crm", desc:"Formulario completo de briefing para nuevos proyectos",
     campos:[
       /* ── Aviso de Privacidad (gate) ── */
       {id:"f_privacidad",tipo:"info",label:"Aviso de Privacidad: En Habitaris SAS (NIT 901.922.136-8, domicilio Bogotá D.C., email: comercial.co, tel: +57 350 5661545), tratamos tus datos personales para procesar tu solicitud de briefing, enviar cotizaciones y gestionar proyectos. Cumplimos con la Ley 1581/2012 y Régimen de Protección de Datos. Derechos (acceso, rectificación, supresión, revocación): vía comercial.co.",desc:"",required:false,opciones:[],logica:null},
@@ -149,7 +149,7 @@ const PLANTILLAS = [
       {id:"f_tipo_doc",tipo:"select",label:"Tipo de documento",placeholder:"",required:true,opciones:["Cédula de ciudadanía (CC)","Cédula de extranjería (CE)","NIT","DNI","NIE","CIF","Pasaporte","Otro"],logica:null,mapKey:"tipoDocumento"},
       {id:"f_num_doc",tipo:"text",label:"Número de documento",placeholder:"Ej: 1.234.567.890",required:true,opciones:[],logica:null,mapKey:"numDocumento"},
       {id:"f_email",tipo:"email",label:"Correo electrónico",placeholder:"name@example.com",required:true,opciones:[],logica:null,mapKey:"email"},
-      {id:"f_pais",tipo:"select",label:"País de residencia",placeholder:"",required:true,opciones:["Colombia","España","México","Chile","Perú","Ecuador","Argentina","Panamá","Estados Unidos","Otro"],logica:null,mapKey:"pais"},
+      {id:"f_pais",tipo:"select",label:"País del proyecto",placeholder:"",required:true,opciones:["Colombia","España","México","Chile","Perú","Ecuador","Argentina","Panamá","Estados Unidos","Otro"],logica:null,mapKey:"pais"},
       {id:"f_cod_tel",tipo:"select",label:"Código telefónico",placeholder:"",required:true,opciones:["+57 (Colombia)","+34 (España)","+52 (México)","+56 (Chile)","+51 (Perú)","+593 (Ecuador)","+54 (Argentina)","+507 (Panamá)","+1 (Estados Unidos)","+44 (Reino Unido)"],logica:null,mapKey:"codigoTel"},
       {id:"f_tel",tipo:"tel",label:"Teléfono de contacto (sin código país)",placeholder:"Ej: 3505661545",required:true,opciones:[],logica:null,mapKey:"telefono"},
       {id:"f_propietario",tipo:"select",label:"¿Cuál es tu relación con el inmueble?",placeholder:"",required:true,opciones:["Soy el propietario","Estoy en arriendo","Actúo en nombre del propietario","Actúo en nombre de un tercero"],logica:null,mapKey:"propietario",scoring:{enabled:true,weight:2,rules:{"Soy el propietario":"green","Estoy en arriendo":"neutral","Actúo en nombre del propietario":"red","Actúo en nombre de un tercero":"red"}}},
@@ -290,6 +290,7 @@ function Constructor({ forms, setForms, editId, setEditId, onSaved, envios, addE
   const [preview, setPreview] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [shareClient, setShareClient] = useState({nombre:"",email:"",tel:""});
+  const [sharePais, setSharePais] = useState("Colombia");
   const [shareGenerated, setShareGenerated] = useState("");
   const [shareFileName, setShareFileName] = useState("");
   const [linkMaxUsos, setLinkMaxUsos] = useState(0);
@@ -332,9 +333,9 @@ function Constructor({ forms, setForms, editId, setEditId, onSaved, envios, addE
   };
 
   /* Generate standalone HTML form file */
-  const generateFormHTML = (client) => {
+  const generateFormHTML = (client, paisProyecto) => {
     const cfg = getConfig();
-    const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre}, cliente:client||null };
+    const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre,paisProyecto:paisProyecto||"Colombia"}, cliente:client||null };
     const defJSON = JSON.stringify(def);
     const telWA = (config.telRespuesta||cfg.whatsapp.numero||"").replace(/[^0-9]/g,"");
     const empresaNombre = cfg.empresa.nombre.toUpperCase();
@@ -393,10 +394,19 @@ if(cliente){campos.forEach(c=>{
   if(cliente.nombre&&(c.mapKey==="nombre"||(c.tipo==="text"&&c.label.toLowerCase().includes("nombre"))))vals[c.id]=cliente.nombre;
   if(cliente.tel&&(c.mapKey==="telefono"||c.tipo==="tel"))vals[c.id]=cliente.tel;
 });}
+// Prefill country from config
+const paisProy=cfg.paisProyecto||"Colombia";
+const paisCodMap={"Colombia":"+57 (Colombia)","España":"+34 (España)","México":"+52 (México)","Chile":"+56 (Chile)","Perú":"+51 (Perú)","Ecuador":"+593 (Ecuador)","Argentina":"+54 (Argentina)","Panamá":"+507 (Panamá)","Estados Unidos":"+1 (Estados Unidos)"};
+campos.forEach(c=>{
+  if(c.mapKey==="pais")vals[c.id]=paisProy;
+  if(c.mapKey==="codigoTel"&&!vals[c.id])vals[c.id]=paisCodMap[paisProy]||"";
+});
 function isLocked(c){if(!cliente)return false;
   if(cliente.email&&(c.mapKey==="email"||c.tipo==="email"))return true;
   if(cliente.nombre&&(c.mapKey==="nombre"||(c.tipo==="text"&&c.label.toLowerCase().includes("nombre"))))return true;
-  if(cliente.tel&&(c.mapKey==="telefono"||c.tipo==="tel"))return true;return false;}
+  if(cliente.tel&&(c.mapKey==="telefono"||c.tipo==="tel"))return true;
+  if(c.mapKey==="pais")return true;
+  return false;}
 function isVisible(c){if(!c.logica||!c.logica.fieldId||!c.logica.value)return true;
   const dv=vals[c.logica.fieldId];const ex=c.logica.value;
   if(Array.isArray(dv))return dv.includes(ex);return String(dv||"")===ex;}
@@ -424,7 +434,8 @@ function render(){
     h+=\`<div class="fld">\`;
     if(locked){
       h+=\`<label class="lbl">\${c.label} <span class="lock">🔒 prellenado</span></label>\`;
-      h+=\`<input class="inp" value="\${v}" disabled/>\`;
+      if(c.tipo==="select"){h+=\`<select class="inp" disabled><option>\${v}</option></select>\`;}
+      else{h+=\`<input class="inp" value="\${v}" disabled/>\`;}
     }else if(["text","email","tel","number","date"].includes(c.tipo)){
       h+=\`<label class="lbl">\${c.label}\${req}</label>\`;
       h+=\`<input class="inp" type="\${c.tipo}" value="\${v}" placeholder="\${c.placeholder||""}" onchange="vals['\${c.id}']=this.value;render()"/>\`;
@@ -486,7 +497,7 @@ render();
     if (!shareClient.email && !shareClient.nombre) return;
     const client = {nombre:shareClient.nombre, email:shareClient.email, tel:shareClient.tel};
     // Generate standalone HTML file (for download/WhatsApp)
-    const html = generateFormHTML(client);
+    const html = generateFormHTML(client, sharePais);
     const blob = new Blob([html], {type:"text/html"});
     const url = URL.createObjectURL(blob);
     setShareGenerated(url);
@@ -498,7 +509,7 @@ render();
     const appUrl = (cfg.app?.url || "").replace(/\/$/,"");
     if (appUrl) {
       const linkConfig = { linkId, maxUsos: linkMaxUsos||0, fechaCaducidad: linkExpiry||"" };
-      const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre}, cliente:client||null, linkConfig, modulo, marca:{ logo:cfg.apariencia?.logo||"", colorPrimario:cfg.apariencia?.colorPrimario||"#111", colorSecundario:cfg.apariencia?.colorSecundario||"#1E4F8C", colorAcento:cfg.apariencia?.colorAcento||"#C9A84C", tipografia:cfg.apariencia?.tipografia||"Outfit", slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"", empresa:cfg.empresa?.nombre||"Habitaris", razonSocial:cfg.empresa?.razonSocial||"", domicilio:cfg.empresa?.domicilio||"" } };
+      const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre,paisProyecto:sharePais}, cliente:client||null, linkConfig, modulo, marca:{ logo:cfg.apariencia?.logo||"", colorPrimario:cfg.apariencia?.colorPrimario||"#111", colorSecundario:cfg.apariencia?.colorSecundario||"#1E4F8C", colorAcento:cfg.apariencia?.colorAcento||"#C9A84C", tipografia:cfg.apariencia?.tipografia||"Outfit", slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"", empresa:cfg.empresa?.nombre||"Habitaris", razonSocial:cfg.empresa?.razonSocial||"", domicilio:cfg.empresa?.domicilio||"" } };
       const encoded = encodeFormDef(def);
       setSharePublicUrl(`${appUrl}/form#${encoded}`);
       // Register link in Supabase
@@ -567,7 +578,7 @@ render();
       alert("Error al enviar. Revisa Configuración → Correo / EmailJS.");
     }
   };
-  const openShare = () => { setShareClient({nombre:"",email:"",tel:""}); setShareGenerated(""); setShareFileName(""); setSharePublicUrl(""); setShowShare(true); };
+  const openShare = () => { setShareClient({nombre:"",email:"",tel:""}); setShareGenerated(""); setShareFileName(""); setSharePublicUrl(""); setSharePais("Colombia"); setShowShare(true); };
 
   const sel = selIdx!==null ? campos[selIdx] : null;
 
@@ -861,6 +872,17 @@ render();
             </div>
 
             {/* Link config: limits & expiry */}
+            <div style={{background:"#F5F0FF",borderRadius:6,padding:"12px 14px",marginBottom:14,border:"1px solid #5B3A8C22"}}>
+              <div style={{fontSize:8,fontWeight:700,color:"#5B3A8C",textTransform:"uppercase",marginBottom:8}}>🌍 País del proyecto</div>
+              <select value={sharePais} onChange={e=>{setSharePais(e.target.value);setShareGenerated("");}}
+                style={{...inp,width:"100%",fontSize:11,marginBottom:8}}>
+                {["Colombia","España","México","Chile","Perú","Ecuador","Argentina","Panamá","Estados Unidos","Otro"].map(p=><option key={p} value={p}>{p}</option>)}
+              </select>
+              <div style={{fontSize:8,color:"#5B3A8C",lineHeight:1.4}}>
+                📌 Define la divisa, departamentos/comunidades, tipo de documento y código telefónico del formulario
+              </div>
+            </div>
+
             <div style={{background:"#F5F0FF",borderRadius:6,padding:"12px 14px",marginBottom:14,border:"1px solid #5B3A8C22"}}>
               <div style={{fontSize:8,fontWeight:700,color:"#5B3A8C",textTransform:"uppercase",marginBottom:8}}>🔒 Control del enlace</div>
               <div style={{display:"flex",gap:8}}>
