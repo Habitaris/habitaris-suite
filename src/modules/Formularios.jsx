@@ -137,38 +137,56 @@ const MODULOS_ASOC = [
 
 /* ── Templates ── */
 const PLANTILLAS = [
-  { id:"briefing_inicial", nombre:"Briefing Inicial Habitaris", modulo:"crm", desc:"Formulario completo de briefing para nuevos proyectos — réplica Formly",
+  { id:"briefing_inicial", version:2, nombre:"Briefing Inicial Habitaris", modulo:"crm", desc:"Formulario completo de briefing para nuevos proyectos",
     campos:[
-      /* ── Aviso de Privacidad (PRIMERO — gate) ── */
+      /* ── Aviso de Privacidad (gate) ── */
       {id:"f_privacidad",tipo:"info",label:"Aviso de Privacidad: En Habitaris SAS (NIT 901.922.136-8, domicilio Bogotá D.C., email: comercial.co, tel: +57 350 5661545), tratamos tus datos personales para procesar tu solicitud de briefing, enviar cotizaciones y gestionar proyectos. Cumplimos con la Ley 1581/2012 y Régimen de Protección de Datos. Derechos (acceso, rectificación, supresión, revocación): vía comercial.co.",desc:"",required:false,opciones:[],logica:null},
       {id:"f_acepta_priv",tipo:"yesno",label:"¿Aceptas el aviso de privacidad?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"aceptaPrivacidad"},
 
       /* ── Datos del cliente ── */
       {id:"s1",tipo:"seccion",label:"Datos del cliente",desc:"Información personal y de contacto",required:false,opciones:[],logica:{fieldId:"f_acepta_priv",value:"Sí"}},
-      {id:"f_nombre",tipo:"text",label:"Nombre y apellidos",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"nombre"},
+      {id:"f_nombre",tipo:"text",label:"Nombre y apellidos",placeholder:"Escribe tu nombre completo",required:true,opciones:[],logica:null,mapKey:"nombre"},
+      {id:"f_tipo_doc",tipo:"select",label:"Tipo de documento",placeholder:"",required:true,opciones:["Cédula de ciudadanía (CC)","Cédula de extranjería (CE)","NIT","DNI","NIE","CIF","Pasaporte","Otro"],logica:null,mapKey:"tipoDocumento"},
+      {id:"f_num_doc",tipo:"text",label:"Número de documento",placeholder:"Ej: 1.234.567.890",required:true,opciones:[],logica:null,mapKey:"numDocumento"},
       {id:"f_email",tipo:"email",label:"Correo electrónico",placeholder:"name@example.com",required:true,opciones:[],logica:null,mapKey:"email"},
-      {id:"f_tel",tipo:"tel",label:"Teléfono de contacto",placeholder:"+57",required:true,opciones:[],logica:null,mapKey:"telefono"},
+      {id:"f_pais",tipo:"select",label:"País de residencia",placeholder:"",required:true,opciones:["Colombia","España","México","Chile","Perú","Ecuador","Argentina","Panamá","Estados Unidos","Otro"],logica:null,mapKey:"pais"},
+      {id:"f_cod_tel",tipo:"select",label:"Código telefónico",placeholder:"",required:true,opciones:["+57 (Colombia)","+34 (España)","+52 (México)","+56 (Chile)","+51 (Perú)","+593 (Ecuador)","+54 (Argentina)","+507 (Panamá)","+1 (Estados Unidos)","+44 (Reino Unido)"],logica:null,mapKey:"codigoTel"},
+      {id:"f_tel",tipo:"tel",label:"Teléfono de contacto (sin código país)",placeholder:"Ej: 3505661545",required:true,opciones:[],logica:null,mapKey:"telefono"},
       {id:"f_propietario",tipo:"select",label:"¿Cuál es tu relación con el inmueble?",placeholder:"",required:true,opciones:["Soy el propietario","Estoy en arriendo","Actúo en nombre del propietario","Actúo en nombre de un tercero"],logica:null,mapKey:"propietario",scoring:{enabled:true,weight:2,rules:{"Soy el propietario":"green","Estoy en arriendo":"neutral","Actúo en nombre del propietario":"red","Actúo en nombre de un tercero":"red"}}},
 
+      /* ── Ubicación del proyecto ── */
+      {id:"s3",tipo:"seccion",label:"Ubicación del proyecto",desc:"¿Dónde está el inmueble?",required:false,opciones:[],logica:null},
+      /* Departamentos Colombia */
+      {id:"f_depto_co",tipo:"select",label:"Departamento",placeholder:"",required:true,opciones:["Amazonas","Antioquia","Arauca","Atlántico","Bogotá D.C.","Bolívar","Boyacá","Caldas","Caquetá","Casanare","Cauca","Cesar","Chocó","Córdoba","Cundinamarca","Guainía","Guaviare","Huila","La Guajira","Magdalena","Meta","Nariño","Norte de Santander","Putumayo","Quindío","Risaralda","San Andrés y Providencia","Santander","Sucre","Tolima","Valle del Cauca","Vaupés","Vichada"],logica:{fieldId:"f_pais",value:"Colombia"},mapKey:"departamento"},
+      /* Comunidades autónomas España */
+      {id:"f_depto_es",tipo:"select",label:"Comunidad autónoma",placeholder:"",required:true,opciones:["Andalucía","Aragón","Asturias","Baleares","Canarias","Cantabria","Castilla-La Mancha","Castilla y León","Cataluña","Ceuta","Comunidad Valenciana","Extremadura","Galicia","La Rioja","Madrid","Melilla","Murcia","Navarra","País Vasco"],logica:{fieldId:"f_pais",value:"España"},mapKey:"departamento"},
+      /* Estados México */
+      {id:"f_depto_mx",tipo:"select",label:"Estado",placeholder:"",required:true,opciones:["Aguascalientes","Baja California","Baja California Sur","Campeche","Chiapas","Chihuahua","Ciudad de México","Coahuila","Colima","Durango","Estado de México","Guanajuato","Guerrero","Hidalgo","Jalisco","Michoacán","Morelos","Nayarit","Nuevo León","Oaxaca","Puebla","Querétaro","Quintana Roo","San Luis Potosí","Sinaloa","Sonora","Tabasco","Tamaulipas","Tlaxcala","Veracruz","Yucatán","Zacatecas"],logica:{fieldId:"f_pais",value:"México"},mapKey:"departamento"},
+      /* Región para otros países */
+      {id:"f_depto_otro",tipo:"text",label:"Región / Estado / Provincia",placeholder:"Escribe tu región",required:true,opciones:[],logica:{fieldId:"f_pais",value:"Otro"},mapKey:"departamento"},
+      {id:"f_ciudad",tipo:"text",label:"Ciudad o población",placeholder:"Escribe la ciudad",required:true,opciones:[],logica:null,mapKey:"ciudad"},
+      {id:"f_direccion",tipo:"text",label:"Dirección del proyecto",placeholder:"Ej: Calle 100 #15-20 / Av. de la Constitución 5",required:true,opciones:[],logica:null,mapKey:"direccion"},
+      {id:"f_tipo_vivienda",tipo:"select",label:"Tipo de inmueble",placeholder:"",required:true,opciones:["Apartamento","Casa","Local comercial","Oficina","Finca / Rural","Otro"],logica:null,mapKey:"tipoVivienda"},
+      {id:"f_num_apto",tipo:"text",label:"Número de apartamento / piso",placeholder:"Ej: Apto 501, Piso 3",required:true,opciones:[],logica:{fieldId:"f_tipo_vivienda",value:"Apartamento"},mapKey:"numApto"},
+      {id:"f_edificio",tipo:"text",label:"Nombre del edificio, conjunto o urbanización",placeholder:"Ej: Edificio Torres del Parque",required:false,opciones:[],logica:null,mapKey:"edificio"},
+      {id:"f_cod_postal",tipo:"text",label:"Código postal",placeholder:"Ej: 110111",required:false,opciones:[],logica:null,mapKey:"codigoPostal"},
+
+      /* ── Datos del inmueble ── */
+      {id:"s3b",tipo:"seccion",label:"Datos del inmueble",desc:"Características del espacio",required:false,opciones:[],logica:null},
+      {id:"f_area",tipo:"text",label:"Área aproximada en m²",placeholder:"Ej: 85",required:true,opciones:[],logica:null,mapKey:"area"},
+      {id:"f_habitaciones",tipo:"text",label:"Número de habitaciones/áreas a intervenir",placeholder:"Ej: 3",required:true,opciones:[],logica:null,mapKey:"habitaciones"},
+      {id:"f_espacios",tipo:"chips",label:"¿Qué espacios incluye el proyecto?",placeholder:"",required:true,opciones:["Sala","Comedor","Cocina","Habitaciones","Baños","Terraza / Balcón","Estudio / Oficina","Local comercial","Jardín / Patio","Fachada"],logica:null,mapKey:"espacios"},
+
       /* ── Sobre el servicio ── */
-      {id:"s2",tipo:"seccion",label:"Sobre el servicio",desc:"¿Qué necesitas de Habitaris?",required:false,opciones:[],logica:null},
+      {id:"s2",tipo:"seccion",label:"Sobre el servicio",desc:"¿Qué necesitas?",required:false,opciones:[],logica:null},
       {id:"f_servicio",tipo:"chips",label:"¿Qué servicio te interesa?",placeholder:"",required:true,opciones:["Diseño arquitectónico / Obra nueva","Diseño arquitectónico / Reforma","Interiorismo / Diseño de interiores","Biointeriorismo","Supervisión de obra (Presencial)","Supervisión de obra (Online)","Asesoría de Compras"],logica:null,mapKey:"servicios"},
       {id:"f_tipo_proy",tipo:"select",label:"¿El proyecto es residencial, comercial o rural?",placeholder:"",required:true,opciones:["Residencial","Comercial","Rural"],logica:null,mapKey:"tipoProyecto"},
 
-      /* ── Ubicación y espacio ── */
-      {id:"s3",tipo:"seccion",label:"Ubicación y espacio",desc:"Detalles del inmueble",required:false,opciones:[],logica:null},
-      {id:"f_ciudad",tipo:"text",label:"Ciudad o población",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"ciudad"},
-      {id:"f_direccion",tipo:"textarea",label:"Dirección del proyecto",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"direccion"},
-      {id:"f_edificio",tipo:"text",label:"Nombre del edificio o conjunto",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"edificio"},
-      {id:"f_area",tipo:"text",label:"Área aproximada en m²",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"area"},
-      {id:"f_habitaciones",tipo:"text",label:"Número de habitaciones/áreas a intervenir",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"habitaciones"},
-      {id:"f_espacios",tipo:"chips",label:"¿Qué espacios incluye el proyecto?",placeholder:"",required:true,opciones:["Sala","Comedor","Cocina","Habitaciones","Baños","Terraza / Balcón","Estudio / Oficina","Local comercial"],logica:null,mapKey:"espacios"},
-
       /* ── Estilo y diseño ── */
       {id:"s4",tipo:"seccion",label:"Estilo y diseño",desc:"Tus preferencias estéticas",required:false,opciones:[],logica:null},
-      {id:"f_estilo",tipo:"chips",label:"Estilo Preferido",placeholder:"",required:true,opciones:["Bio-natural/Orgánico","Bohemio","Clásico","Escandinavo","Industrial","Minimalista","Moderno","Otro"],logica:null,mapKey:"estilo"},
-      {id:"f_colores",tipo:"textarea",label:"Colores, materiales y elementos clave",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"colores"},
-      {id:"f_links_ref",tipo:"textarea",label:"Pega aquí los links de tus ideas o referentes",placeholder:"Escribe tu respuesta aquí...",required:false,opciones:[],logica:null,mapKey:"linksReferentes"},
+      {id:"f_estilo",tipo:"chips",label:"Estilo preferido",placeholder:"",required:true,opciones:["Bio-natural / Orgánico","Bohemio","Clásico","Escandinavo","Industrial","Minimalista","Moderno","Rústico","Otro"],logica:null,mapKey:"estilo"},
+      {id:"f_colores",tipo:"textarea",label:"Colores, materiales y elementos clave",placeholder:"Describe los colores y materiales que te gustan...",required:true,opciones:[],logica:null,mapKey:"colores"},
+      {id:"f_links_ref",tipo:"textarea",label:"Pega aquí los links de tus ideas o referentes (Pinterest, Instagram, etc.)",placeholder:"https://...",required:false,opciones:[],logica:null,mapKey:"linksReferentes"},
 
       /* ── Expectativas ── */
       {id:"s5",tipo:"seccion",label:"Expectativas del proyecto",desc:"¿Qué esperas lograr?",required:false,opciones:[],logica:null},
@@ -177,12 +195,12 @@ const PLANTILLAS = [
 
       /* ── Presupuesto y financiación ── */
       {id:"s6",tipo:"seccion",label:"Presupuesto y financiación",desc:"Información económica del proyecto",required:false,opciones:[],logica:null},
-      {id:"f_presupuesto",tipo:"select",label:"Presupuesto estimado (COP) disponible para el proyecto",placeholder:"",required:true,opciones:["Menos de $10.000.000","$10.000.000 - $30.000.000","$30.000.000 - $60.000.000","$60.000.000 - $100.000.000","Más de $100.000.000"],logica:null,mapKey:"presupuesto",scoring:{enabled:true,weight:5,rules:{"Menos de $10.000.000":"red","$10.000.000 - $30.000.000":"neutral","$30.000.000 - $60.000.000":"green","$60.000.000 - $100.000.000":"green","Más de $100.000.000":"green"}}},
+      {id:"f_presupuesto",tipo:"select",label:"Presupuesto estimado disponible para el proyecto",placeholder:"",required:true,opciones:["Menos de $10.000.000 / €10.000","$10.000.000 - $30.000.000 / €10.000 - €30.000","$30.000.000 - $60.000.000 / €30.000 - €60.000","$60.000.000 - $100.000.000 / €60.000 - €100.000","Más de $100.000.000 / €100.000+"],logica:null,mapKey:"presupuesto",scoring:{enabled:true,weight:5,rules:{"Menos de $10.000.000 / €10.000":"red","$10.000.000 - $30.000.000 / €10.000 - €30.000":"neutral","$30.000.000 - $60.000.000 / €30.000 - €60.000":"green","$60.000.000 - $100.000.000 / €60.000 - €100.000":"green","Más de $100.000.000 / €100.000+":"green"}}},
       {id:"f_honorarios",tipo:"select",label:"¿Tu presupuesto incluye los honorarios de diseño?",placeholder:"",required:true,opciones:["Sí, incluye diseño y ejecución","Solo ejecución/materiales, el diseño aparte","No, espero que el diseño esté incluido sin costo","No estoy seguro"],logica:null,mapKey:"honorariosDiseño",scoring:{enabled:true,weight:5,rules:{"Sí, incluye diseño y ejecución":"green","Solo ejecución/materiales, el diseño aparte":"green","No, espero que el diseño esté incluido sin costo":"red","No estoy seguro":"neutral"}}},
       {id:"f_financiar",tipo:"select",label:"¿Cómo planeas financiar el proyecto?",placeholder:"",required:true,opciones:["Con recursos propios","Crédito bancario o leasing habitacional","Con apoyo de un tercero","Aún no lo tengo definido"],logica:null,mapKey:"financiacion",scoring:{enabled:true,weight:3,rules:{"Con recursos propios":"green","Crédito bancario o leasing habitacional":"neutral","Con apoyo de un tercero":"neutral","Aún no lo tengo definido":"red"}}},
       {id:"f_invertido",tipo:"select",label:"¿Has invertido antes en diseño profesional?",placeholder:"",required:true,opciones:["Sí","No, pero estoy dispuesto","No, nunca lo haría"],logica:null,mapKey:"inversionPrevia",scoring:{enabled:true,weight:3,rules:{"Sí":"green","No, pero estoy dispuesto":"neutral","No, nunca lo haría":"red"}}},
       {id:"f_gratuito",tipo:"select",label:"¿Esperas que el diseño sea gratuito o solo de referencia?",placeholder:"",required:true,opciones:["Sí, solo busco ideas generales","No, estoy dispuesto a pagar por un diseño profesional"],logica:null,mapKey:"expectativaPago",scoring:{enabled:true,weight:4,rules:{"Sí, solo busco ideas generales":"red","No, estoy dispuesto a pagar por un diseño profesional":"green"}}},
-      {id:"f_exceder",tipo:"select",label:"¿Aceptarías una propuesta que no cumpla con tu presupuesto, si garantiza calidad y durabilidad?",placeholder:"",required:true,opciones:["Sí, puedo ajustarme","No, solo lo hago si es más barato"],logica:null,mapKey:"flexibilidad",scoring:{enabled:true,weight:4,rules:{"Sí, puedo ajustarme":"green","No, solo lo hago si es más barato":"red"}}},
+      {id:"f_exceder",tipo:"select",label:"¿Aceptarías una propuesta que supere tu presupuesto, si garantiza calidad y durabilidad?",placeholder:"",required:true,opciones:["Sí, puedo ajustarme","No, solo lo hago si es más barato"],logica:null,mapKey:"flexibilidad",scoring:{enabled:true,weight:4,rules:{"Sí, puedo ajustarme":"green","No, solo lo hago si es más barato":"red"}}},
       {id:"f_anticipo",tipo:"yesno",label:"¿Dispuesto a pagar anticipo 30-50%?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"anticipo",scoring:{enabled:true,weight:5,rules:{"Sí":"green","No":"red"}}},
       {id:"f_contratistas",tipo:"select",label:"¿Quieres que te recomendemos contratistas de confianza para la obra?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"contratistas"},
 
@@ -193,11 +211,14 @@ const PLANTILLAS = [
 
       /* ── Facturación ── */
       {id:"s8",tipo:"seccion",label:"Información de facturación",desc:"Datos para facturación electrónica",required:false,opciones:[],logica:null},
-      {id:"f_razon_social",tipo:"text",label:"Nombre o razón social para facturación",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"razonSocial"},
-      {id:"f_doc",tipo:"text",label:"Tipo y número de documento",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"documento"},
-      {id:"f_email_fact",tipo:"email",label:"Email para envío de factura",placeholder:"name@example.com",required:true,opciones:[],logica:null,mapKey:"emailFactura"},
-      {id:"f_dir_fact",tipo:"text",label:"Dirección de facturación",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:null,mapKey:"dirFacturacion"},
-      {id:"f_forma_pago",tipo:"select",label:"Forma de pago preferida",placeholder:"",required:true,opciones:["Enlace PSE","Tarjeta de Crédito/débito"],logica:null,mapKey:"formaPago"},
+      {id:"f_mismos_datos",tipo:"yesno",label:"¿Los datos de facturación son los mismos del cliente?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"mismosDatosFactura"},
+      {id:"f_fact_info_si",tipo:"info",label:"✅ Se usarán los datos ingresados en la sección 'Datos del cliente' para la facturación. Podrás revisarlos antes de confirmar.",desc:"",required:false,opciones:[],logica:{fieldId:"f_mismos_datos",value:"Sí"}},
+      {id:"f_razon_social",tipo:"text",label:"Nombre o razón social para facturación",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"razonSocial"},
+      {id:"f_tipo_doc_fact",tipo:"select",label:"Tipo de documento (facturación)",placeholder:"",required:true,opciones:["Cédula de ciudadanía (CC)","Cédula de extranjería (CE)","NIT","DNI","NIE","CIF","Pasaporte","Otro"],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"tipoDocFactura"},
+      {id:"f_num_doc_fact",tipo:"text",label:"Número de documento (facturación)",placeholder:"",required:true,opciones:[],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"numDocFactura"},
+      {id:"f_email_fact",tipo:"email",label:"Email para envío de factura",placeholder:"name@example.com",required:true,opciones:[],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"emailFactura"},
+      {id:"f_dir_fact",tipo:"text",label:"Dirección de facturación",placeholder:"",required:true,opciones:[],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"dirFacturacion"},
+      {id:"f_forma_pago",tipo:"select",label:"Forma de pago preferida",placeholder:"",required:true,opciones:["Enlace PSE","Tarjeta de Crédito/débito","Transferencia bancaria","Bizum","PayPal"],logica:null,mapKey:"formaPago"},
       {id:"f_retenciones",tipo:"yesno",label:"¿Aplican retenciones especiales?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"retenciones"},
       {id:"f_det_ret",tipo:"textarea",label:"Detalle de retenciones",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:{fieldId:"f_retenciones",value:"Sí"},mapKey:"detalleRetenciones"},
 
@@ -1351,8 +1372,10 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
               const dt = r.created_at ? new Date(r.created_at) : null;
               const fechaStr = dt ? dt.toISOString().split("T")[0] : r.fecha || "—";
               const horaStr = dt ? dt.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}) : "";
+              const isExpanded = selResp?.id === r.id;
               return (
-              <tr key={r.id} style={{cursor:"pointer",background:proc?"":"#FDFBFF"}} onClick={()=>setSelResp(selResp?.id===r.id?null:r)}>
+              <React.Fragment key={r.id}>
+              <tr style={{cursor:"pointer",background:isExpanded?"#F0EEFF":proc?"":"#FDFBFF",transition:"background .15s"}} onClick={()=>setSelResp(isExpanded?null:r)}>
                 <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>{fechaStr}</td>
                 <td style={{...tds,fontSize:9}}>{horaStr}</td>
                 <td style={{...tds,fontWeight:600,fontSize:10}}>{r.formularioNombre||forms.find(f=>f.id===r.formularioId)?.nombre||"—"}</td>
@@ -1376,7 +1399,9 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
                   }
                 </td>
                 <td style={{...tds,whiteSpace:"nowrap"}}>
-                  <button onClick={e=>{e.stopPropagation();setSelResp(r)}} style={{background:"none",border:"none",cursor:"pointer",marginRight:4}} title="Ver detalle"><Eye size={11} color={T.blue}/></button>
+                  <button onClick={e=>{e.stopPropagation();setSelResp(isExpanded?null:r)}} style={{background:"none",border:"none",cursor:"pointer",marginRight:4}} title="Ver detalle">
+                    {isExpanded ? <ChevronUp size={11} color={T.blue}/> : <ChevronDown size={11} color={T.blue}/>}
+                  </button>
                   <button onClick={e=>{e.stopPropagation();generarInforme(r)}} style={{background:"none",border:"none",cursor:"pointer",marginRight:4}} title="Generar informe"><FileText size={11} color={T.ink}/></button>
                   {!proc && (
                     <button onClick={e=>{e.stopPropagation();procesarRespuesta(r)}}
@@ -1390,98 +1415,76 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
                   )}
                 </td>
               </tr>
+              {isExpanded && (
+                <tr><td colSpan={8} style={{padding:0,borderBottom:`2px solid ${T.blue}33`}}>
+                  <div style={{padding:"14px 16px",background:"#F8F7FF"}}>
+                    {/* Actions bar */}
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                      <h3 style={{fontSize:12,fontWeight:700,margin:0}}>📋 Detalle — {r.clienteNombre||r.fecha}</h3>
+                      <div style={{display:"flex",gap:6}}>
+                        {!proc && <Btn v="pri" on={()=>procesarRespuesta(r)}>⚡ Procesar → CRM</Btn>}
+                        {proc && <span style={{fontSize:9,fontWeight:700,padding:"4px 12px",borderRadius:10,background:T.greenBg,color:T.green}}>✅ Procesado</span>}
+                        <Btn v="sec" on={()=>generarInforme(r)}><FileText size={10}/> Informe</Btn>
+                      </div>
+                    </div>
+                    {/* Scoring */}
+                    {(()=>{
+                      const form = forms.find(f=>f.id===r.formularioId);
+                      const sc = calculateScore(r, form);
+                      if (!sc) return null;
+                      const colors = {green:{bg:"#E8F4EE",border:"#1E6B42",text:"#1E6B42"},yellow:{bg:"#FAF0E0",border:"#7A5218",text:"#7A5218"},red:{bg:"#FAE8E8",border:"#AE2C2C",text:"#AE2C2C"}};
+                      const col = colors[sc.level];
+                      return (
+                        <div style={{marginBottom:12,border:`1px solid ${col.border}33`,borderRadius:6,overflow:"hidden"}}>
+                          <div style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:col.bg}}>
+                            <div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:col.text}}>{sc.score.toFixed(1)}<span style={{fontSize:10}}>/10</span></div>
+                            <div style={{flex:1}}><div style={{fontSize:11,fontWeight:700,color:col.text}}>{sc.levelLabel}</div><div style={{fontSize:8,color:col.text,opacity:.8}}>{sc.conclusion}</div></div>
+                            <div style={{display:"flex",gap:6}}>
+                              {[["🟢",sc.greens,T.green],["🟡",sc.yellows,T.amber],["🔴",sc.reds,T.red]].map(([ic,n,c])=><div key={ic} style={{textAlign:"center"}}><div style={{fontSize:12,fontWeight:800,color:c}}>{n}</div><div style={{fontSize:7}}>{ic}</div></div>)}
+                            </div>
+                          </div>
+                          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:4,padding:"8px 14px",background:"#fff"}}>
+                            {sc.details.map((d,i)=>{
+                              const fc=d.flag==="green"?T.green:d.flag==="red"?T.red:T.amber;
+                              const ic=d.flag==="green"?"🟢":d.flag==="red"?"🔴":"🟡";
+                              return <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"4px 8px",background:T.bg,borderRadius:4,fontSize:9}}>
+                                <span>{ic}</span><span style={{fontWeight:600,flex:1}}>{d.label}</span><span style={{color:T.inkMid}}>{d.value}</span><span style={{fontWeight:700,color:fc,fontFamily:"'DM Mono',monospace"}}>{d.points}/{d.maxPoints}</span>
+                              </div>;
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                    {/* Client + fields */}
+                    <div style={{display:"flex",gap:12}}>
+                      {(r.clienteNombre||r.clienteEmail) && (
+                        <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",background:T.blueBg,borderRadius:6,border:`1px solid ${T.blue}22`,minWidth:200}}>
+                          <div style={{width:28,height:28,borderRadius:"50%",background:T.blue,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700}}>{(r.clienteNombre||r.clienteEmail||"?")[0].toUpperCase()}</div>
+                          <div>
+                            {r.clienteNombre && <div style={{fontSize:11,fontWeight:700,color:T.blue}}>{r.clienteNombre}</div>}
+                            {r.clienteEmail && <div style={{fontSize:8,color:T.blue}}>{r.clienteEmail}</div>}
+                            {r.clienteTel && <div style={{fontSize:8,color:T.inkMid}}>📞 {r.clienteTel}</div>}
+                          </div>
+                        </div>
+                      )}
+                      <div style={{flex:1,display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
+                        {Object.entries(r).filter(([k])=>!["id","fecha","formularioId","formularioNombre","clienteNombre","clienteEmail","clienteTel","created_at","_sbId","procesado"].includes(k)).slice(0,12).map(([k,v]) => (
+                          <div key={k} style={{padding:"4px 8px",background:"#fff",borderRadius:4,border:`1px solid ${T.border}`}}>
+                            <div style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>{k}</div>
+                            <div style={{fontSize:10,fontWeight:600,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{Array.isArray(v)?v.join(", "):String(v)}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </td></tr>
+              )}
+              </React.Fragment>
               );
             })}
           </tbody>
         </table>
       </Card>
-
-      {selResp && (
-        <Card style={{marginTop:14}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-            <h3 style={{fontSize:13,fontWeight:700}}>📋 Detalle respuesta — {selResp.clienteNombre||selResp.fecha}</h3>
-            <div style={{display:"flex",gap:6}}>
-              {!isProcesado(selResp) && (
-                <Btn v="pri" on={()=>procesarRespuesta(selResp)}>⚡ Procesar → CRM</Btn>
-              )}
-              {isProcesado(selResp) && (
-                <span style={{fontSize:9,fontWeight:700,padding:"4px 12px",borderRadius:10,background:T.greenBg,color:T.green,display:"flex",alignItems:"center"}}>✅ Procesado</span>
-              )}
-              <Btn v="sec" on={()=>generarInforme(selResp)}><FileText size={10}/> Generar informe</Btn>
-              <button onClick={()=>setSelResp(null)} style={{background:"none",border:"none",cursor:"pointer"}}><X size={14}/></button>
-            </div>
-          </div>
-
-          {/* Scoring panel */}
-          {(() => {
-            const form = forms.find(f=>f.id===selResp.formularioId);
-            const sc = calculateScore(selResp, form);
-            if (!sc) return null;
-            const colors = {green:{bg:"#E8F4EE",border:"#1E6B42",text:"#1E6B42"},yellow:{bg:"#FAF0E0",border:"#7A5218",text:"#7A5218"},red:{bg:"#FAE8E8",border:"#AE2C2C",text:"#AE2C2C"}};
-            const col = colors[sc.level];
-            return (
-              <div style={{marginBottom:14,border:`1px solid ${col.border}33`,borderRadius:8,overflow:"hidden"}}>
-                <div style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:col.bg}}>
-                  <div style={{fontSize:28,fontWeight:800,fontFamily:"'DM Mono',monospace",color:col.text}}>{sc.score.toFixed(1)}<span style={{fontSize:12}}>/10</span></div>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:13,fontWeight:700,color:col.text}}>{sc.levelLabel}</div>
-                    <div style={{fontSize:9,color:col.text,opacity:.8,marginTop:2}}>{sc.conclusion}</div>
-                  </div>
-                  <div style={{display:"flex",gap:8}}>
-                    <div style={{textAlign:"center"}}><div style={{fontSize:14,fontWeight:800,color:T.green}}>{sc.greens}</div><div style={{fontSize:7,color:"#888"}}>🟢</div></div>
-                    <div style={{textAlign:"center"}}><div style={{fontSize:14,fontWeight:800,color:T.amber}}>{sc.yellows}</div><div style={{fontSize:7,color:"#888"}}>🟡</div></div>
-                    <div style={{textAlign:"center"}}><div style={{fontSize:14,fontWeight:800,color:T.red}}>{sc.reds}</div><div style={{fontSize:7,color:"#888"}}>🔴</div></div>
-                  </div>
-                </div>
-                <div style={{padding:"10px 16px",background:"#fff"}}>
-                  <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",marginBottom:6}}>Detalle de scoring</div>
-                  <table style={{width:"100%",borderCollapse:"collapse"}}>
-                    <thead><tr style={{background:T.bg}}>
-                      {["Criterio","Respuesta","Puntos",""].map(h=><th key={h} style={{padding:"4px 8px",fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase",textAlign:"left",borderBottom:`1px solid ${T.border}`}}>{h}</th>)}
-                    </tr></thead>
-                    <tbody>
-                      {sc.details.map((d,i) => {
-                        const fc = d.flag==="green"?T.green:d.flag==="red"?T.red:T.amber;
-                        const icon = d.flag==="green"?"🟢":d.flag==="red"?"🔴":"🟡";
-                        return (
-                          <tr key={i} style={{borderBottom:`1px solid ${T.border}`}}>
-                            <td style={{padding:"5px 8px",fontSize:10,fontWeight:600}}>{d.label}</td>
-                            <td style={{padding:"5px 8px",fontSize:10}}>{d.value}</td>
-                            <td style={{padding:"5px 8px",fontSize:10,fontWeight:700,color:fc,fontFamily:"'DM Mono',monospace"}}>{d.points}/{d.maxPoints}</td>
-                            <td style={{padding:"5px 8px",fontSize:12}}>{icon}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            );
-          })()}
-
-          {/* Client info card */}
-          {(selResp.clienteNombre||selResp.clienteEmail) && (
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,padding:"10px 14px",background:T.blueBg,borderRadius:6,border:`1px solid ${T.blue}22`}}>
-              <div style={{width:32,height:32,borderRadius:"50%",background:T.blue,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700}}>
-                {(selResp.clienteNombre||selResp.clienteEmail||"?")[0].toUpperCase()}
-              </div>
-              <div>
-                {selResp.clienteNombre && <div style={{fontSize:12,fontWeight:700,color:T.blue}}>{selResp.clienteNombre}</div>}
-                {selResp.clienteEmail && <div style={{fontSize:9,color:T.blue}}>{selResp.clienteEmail}</div>}
-                {selResp.clienteTel && <div style={{fontSize:8,color:T.inkMid}}>📞 {selResp.clienteTel}</div>}
-              </div>
-            </div>
-          )}
-          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:8}}>
-            {Object.entries(selResp).filter(([k])=>!["id","fecha","formularioId","formularioNombre","clienteNombre","clienteEmail","clienteTel"].includes(k)).map(([k,v]) => (
-              <div key={k} style={{padding:"6px 10px",background:T.accent,borderRadius:4}}>
-                <div style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>{k}</div>
-                <div style={{fontSize:11,fontWeight:600,marginTop:2}}>{Array.isArray(v)?v.join(", "):String(v)}</div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
     </div>
   );
 }
@@ -1744,12 +1747,15 @@ export default function Formularios() {
   const forms = data.forms || [];
   const setForms = (v) => save("forms", typeof v==="function"?v(forms):v);
 
-  // Auto-seed: create forms from PLANTILLAS if not already present
+  // Auto-seed: create forms from PLANTILLAS if not already present, or update if version changed
   useEffect(() => {
     const current = data.forms || [];
-    const missing = PLANTILLAS.filter(p => !current.find(f => f.sourceTemplate === p.id || f.nombre === p.nombre));
-    if (missing.length > 0) {
-      const newForms = missing.map(p => {
+    let updated = [...current];
+    let changed = false;
+    PLANTILLAS.forEach(p => {
+      const existing = current.find(f => f.sourceTemplate === p.id || f.nombre === p.nombre);
+      if (!existing) {
+        // Create new form from template
         const idMap = {};
         p.campos.forEach(c => { idMap[c.id] = uid(); });
         const newCampos = p.campos.map(c => {
@@ -1759,10 +1765,24 @@ export default function Formularios() {
           }
           return nc;
         });
-        return { id:uid(), nombre:p.nombre, modulo:p.modulo||"general", campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, createdAt:today(), updatedAt:today(), activo:true, sourceTemplate:p.id };
-      });
-      save("forms", [...current, ...newForms]);
-    }
+        updated.push({ id:uid(), nombre:p.nombre, modulo:p.modulo||"general", campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, createdAt:today(), updatedAt:today(), activo:true, sourceTemplate:p.id, templateVersion:p.version||1 });
+        changed = true;
+      } else if (p.version && (!existing.templateVersion || existing.templateVersion < p.version)) {
+        // Update existing form with new template version
+        const idMap = {};
+        p.campos.forEach(c => { idMap[c.id] = uid(); });
+        const newCampos = p.campos.map(c => {
+          const nc = {...c, id: idMap[c.id]};
+          if (nc.logica && nc.logica.fieldId && idMap[nc.logica.fieldId]) {
+            nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
+          }
+          return nc;
+        });
+        updated = updated.map(f => f.id === existing.id ? {...f, campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, updatedAt:today(), templateVersion:p.version, sourceTemplate:p.id} : f);
+        changed = true;
+      }
+    });
+    if (changed) save("forms", updated);
   }, []); // eslint-disable-line
   const envios = data.envios || [];
   const addEnvio = (e) => save("envios", [...envios, e]);
