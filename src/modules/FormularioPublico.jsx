@@ -47,16 +47,22 @@ function Field({ campo, value, onChange, accent, allVals }) {
     if (mapped) dynLabel = mapped;
   }
 
-  // Phone with country code
-  if (tipo === "tel" && campo.phoneCode && allVals) {
-    const depVal = allVals[campo.phoneCode.dependsOn] || "";
-    const phoneCodes = {"Colombia":"+57","España":"+34","México":"+52","Chile":"+56","Perú":"+51","Ecuador":"+593","Argentina":"+54","Panamá":"+507","Estados Unidos":"+1"};
-    const code = phoneCodes[depVal] || "+";
+  // Phone combo: editable code selector + number input
+  if (tipo === "tel_combo" && allVals) {
+    const paisField = campo.paisRef || "";
+    const paisVal = allVals[paisField] || "";
+    const paisCodeMap = {"Colombia":"+57","España":"+34","México":"+52","Chile":"+56","Perú":"+51","Ecuador":"+593","Argentina":"+54","Panamá":"+507","Estados Unidos":"+1","Otro":"+"};
+    const codKey = "_cod_"+campo.id;
+    const codVal = allVals[codKey] || paisCodeMap[paisVal] || "+57";
+    const codes = campo.opciones || ["+57","+34","+52","+56","+51","+593","+54","+507","+1","+44"];
     return (<div style={{ marginBottom:20 }}>
       <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
-      <div style={{ display:"flex", gap:6 }}>
-        <div style={{ ...inp, width:80, flexShrink:0, background:"#F5F4F1", textAlign:"center", fontWeight:700, fontSize:13, display:"flex", alignItems:"center", justifyContent:"center" }}>{code}</div>
-        <input type="tel" value={value||""} onChange={e=>onChange(e.target.value)} placeholder={placeholder||""} style={{...inp, flex:1}}/>
+      <div style={{ display:"flex", gap:0 }}>
+        <select value={codVal} onChange={e=>onChange(value, e.target.value)}
+          style={{ ...inp, width:90, flexShrink:0, borderRadius:"8px 0 0 8px", borderRight:"none", fontWeight:700, fontSize:13, color:"#1E4F8C", background:"#F5F4F1" }}>
+          {codes.map(c=><option key={c} value={c}>{c}</option>)}
+        </select>
+        <input type="tel" value={value||""} onChange={e=>onChange(e.target.value)} placeholder={placeholder||""} style={{...inp, flex:1, borderRadius:"0 8px 8px 0"}}/>
       </div>
     </div>);
   }
@@ -186,11 +192,9 @@ export default function FormularioPublico() {
     }
     // Prefill country from config
     const paisProy = (def.config?.paisProyecto) || "Colombia";
-    const paisCodMap = {"Colombia":"+57 (Colombia)","España":"+34 (España)","México":"+52 (México)","Chile":"+56 (Chile)","Perú":"+51 (Perú)","Ecuador":"+593 (Ecuador)","Argentina":"+54 (Argentina)","Panamá":"+507 (Panamá)","Estados Unidos":"+1 (Estados Unidos)"};
     const countryPrefill = {};
     campos.forEach(c => {
       if (c.mapKey==="pais") countryPrefill[c.id] = paisProy;
-      if (c.mapKey==="codigoTel") countryPrefill[c.id] = paisCodMap[paisProy] || "";
     });
     setVals(prev => ({...countryPrefill, ...prev}));
 
@@ -285,6 +289,18 @@ export default function FormularioPublico() {
   const btnText = cfg.botonTexto || "Enviar formulario";
 
   const setVal = (id, v) => { setVals(prev => ({ ...prev, [id]: v })); setError(""); };
+
+  const renderField = (c) => {
+    if (!isVisible(c)) return null;
+    if (isLocked(c)) return renderLocked(c);
+    if (c.tipo === "tel_combo") {
+      return <Field key={c.id} campo={c} value={vals[c.id]} onChange={(v, code) => {
+        if (code !== undefined) setVal("_cod_"+c.id, code);
+        else setVal(c.id, v);
+      }} accent={ac} allVals={vals}/>;
+    }
+    return <Field key={c.id} campo={c} value={vals[c.id]} onChange={v=>setVal(c.id,v)} accent={ac} allVals={vals}/>;
+  };
 
   const isVisible = (c) => {
     if (!c.logica || !c.logica.fieldId || !c.logica.value) return true;
@@ -395,7 +411,18 @@ export default function FormularioPublico() {
     response.formularioId = def.id;
     response.formularioNombre = def.nombre;
     if (cliente) { response.clienteNombre = cliente.nombre; response.clienteEmail = cliente.email; response.clienteTel = cliente.tel; }
-    campos.forEach(c => { if (c.tipo !== "seccion" && vals[c.id] !== undefined) response[c.mapKey || c.id] = vals[c.id]; });
+    // Compose full phone with code for tel_combo
+    const telCombo = campos.find(c => c.tipo === "tel_combo");
+    if (telCombo && vals[telCombo.id]) {
+      const fullTel = (vals["_cod_"+telCombo.id]||"") + " " + vals[telCombo.id];
+      response.clienteTel = response.clienteTel || fullTel;
+      if (telCombo.mapKey) response[telCombo.mapKey] = vals[telCombo.id];
+      if (telCombo.codMapKey) response[telCombo.codMapKey] = vals["_cod_"+telCombo.id] || "";
+    }
+    campos.forEach(c => {
+      if (c.tipo !== "seccion" && vals[c.id] !== undefined) response[c.mapKey || c.id] = vals[c.id];
+      if (c.tipo === "tel_combo" && c.codMapKey) response[c.codMapKey] = vals["_cod_"+c.id] || "";
+    });
 
     // Save to localStorage (backward compatible)
     try {
@@ -615,9 +642,7 @@ export default function FormularioPublico() {
           </div>
           <div style={{ background:BASE.surface, borderRadius:12, padding:"28px 28px 12px", border:"1px solid "+BASE.border, boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
             {campos.map(c => {
-              if (!isVisible(c)) return null;
-              if (isLocked(c)) return renderLocked(c);
-              return <Field key={c.id} campo={c} value={vals[c.id]} onChange={v=>setVal(c.id,v)} accent={ac} allVals={vals}/>;
+              return renderField(c);
             })}
           </div>
           <ErrorMsg/>
@@ -655,10 +680,8 @@ export default function FormularioPublico() {
           </div>
           <div style={{ background:BASE.surface, borderRadius:12, padding:"28px 28px 12px", border:"1px solid "+BASE.border, boxShadow:"0 2px 16px rgba(0,0,0,.04)" }}>
             {activeStep && activeStep.fields.map(c => {
-              if (!isVisible(c)) return null;
               if (c.tipo === "seccion") return null;
-              if (isLocked(c)) return renderLocked(c);
-              return <Field key={c.id} campo={c} value={vals[c.id]} onChange={v=>setVal(c.id,v)} accent={ac} allVals={vals}/>;
+              return renderField(c);
             })}
           </div>
           <ErrorMsg/>
