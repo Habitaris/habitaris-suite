@@ -103,11 +103,11 @@ export default function LoginScreen({onSuccess}){
   const inp={width:"100%",padding:"10px 12px 10px 34px",border:`1px solid ${T.border}`,borderRadius:8,fontSize:13,fontFamily:"'Outfit',sans-serif",background:"#FAFAF8"};
   const inpN={...inp,paddingLeft:12};
 
-  if(load&&mode==="login")return(<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,#F8F7F4,#EDEBE7)",fontFamily:"'Outfit',sans-serif"}}><style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');`}</style><div style={{color:T.inkLight,fontSize:14}}>Cargando...</div></div>);
+  if(load&&mode==="login")return(<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,#F8F7F4,#EDEBE7)",fontFamily:"'Outfit',sans-serif"}}><style>{`*{box-sizing:border-box}@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');`}</style><div style={{color:T.inkLight,fontSize:14}}>Cargando...</div></div>);
 
   return(
     <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,#F8F7F4,#EDEBE7)",fontFamily:"'Outfit',sans-serif",padding:20}}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');.li:focus{outline:none;border-color:${T.green}!important;box-shadow:0 0 0 3px ${T.green}18}`}</style>
+      <style>{`*{box-sizing:border-box}@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');.li:focus{outline:none;border-color:${T.green}!important;box-shadow:0 0 0 3px ${T.green}18}`}</style>
       <div style={{width:"100%",maxWidth:400,background:"#fff",borderRadius:16,boxShadow:"0 4px 24px rgba(0,0,0,.08)",padding:"36px 32px"}}>
         <div style={{textAlign:"center",marginBottom:28}}>
           <div style={{width:52,height:52,borderRadius:14,background:T.ink,display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:14,boxShadow:"0 4px 12px rgba(0,0,0,.15)"}}><Shield size={26} color="#fff"/></div>
