@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import * as SB from "./supabase.js";
+import { PAISES, getPais } from "./geoData.js";
 
 const BASE = {
   bg:"#F5F4F1", surface:"#FFFFFF", ink:"#111", inkMid:"#555",
@@ -23,29 +24,59 @@ export function encodeFormDef(def) {
   catch { return ""; }
 }
 
-/* Field */
-function Field({ campo, value, onChange, accent }) {
-  const { tipo, label, placeholder, opciones, required } = campo;
+/* Field — supports dynamicOpciones, phoneCode, dynamicLabel */
+function Field({ campo, value, onChange, accent, allVals }) {
+  const { tipo, label, placeholder, required } = campo;
   const ac = accent || BASE.ink;
   const lbl = { ...F, fontSize:12, fontWeight:600, color:BASE.ink, display:"block", marginBottom:6 };
   const inp = { ...F, width:"100%", padding:"12px 16px", border:"1px solid "+BASE.border, borderRadius:8,
     fontSize:14, color:BASE.ink, boxSizing:"border-box", background:"#fff", outline:"none" };
 
+  // Resolve dynamic options
+  let opciones = campo.opciones || [];
+  let dynLabel = label;
+  if (campo.dynamicOpciones && allVals) {
+    const depVal = allVals[campo.dynamicOpciones.dependsOn] || "";
+    const mapped = campo.dynamicOpciones.map[depVal];
+    if (mapped) opciones = mapped;
+    else if (campo.dynamicOpciones.fallback) opciones = campo.dynamicOpciones.fallback;
+    else opciones = [];
+  }
+  if (campo.dynamicLabel && allVals) {
+    const depVal = allVals[campo.dynamicLabel.dependsOn] || "";
+    const mapped = campo.dynamicLabel.map[depVal];
+    if (mapped) dynLabel = mapped;
+  }
+
+  // Phone with country code
+  if (tipo === "tel" && campo.phoneCode && allVals) {
+    const depVal = allVals[campo.phoneCode.dependsOn] || "";
+    const paisData = getPais(depVal);
+    const code = paisData?.phone || "+";
+    return (<div style={{ marginBottom:20 }}>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <div style={{ display:"flex", gap:6 }}>
+        <div style={{ ...inp, width:80, flexShrink:0, background:"#F5F4F1", textAlign:"center", fontWeight:700, fontSize:13, display:"flex", alignItems:"center", justifyContent:"center" }}>{code}</div>
+        <input type="tel" value={value||""} onChange={e=>onChange(e.target.value)} placeholder={placeholder||""} style={{...inp, flex:1}}/>
+      </div>
+    </div>);
+  }
+
   if (["text","email","tel","number","date"].includes(tipo)) {
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{label}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
       <input type={tipo} value={value||""} onChange={e=>onChange(e.target.value)} placeholder={placeholder||""} style={inp}/>
     </div>);
   }
   if (tipo === "textarea") {
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{label}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
       <textarea value={value||""} onChange={e=>onChange(e.target.value)} rows={3} placeholder={placeholder||""} style={{ ...inp, resize:"vertical" }}/>
     </div>);
   }
   if (tipo === "select" || tipo === "rango") {
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{label}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
       <select value={value||""} onChange={e=>onChange(e.target.value)} style={inp}>
         <option value="">Seleccionar...</option>
         {(opciones||[]).map(o => <option key={o} value={o}>{o}</option>)}
@@ -55,7 +86,7 @@ function Field({ campo, value, onChange, accent }) {
   if (tipo === "chips") {
     const selected = Array.isArray(value) ? value : [];
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{label}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
       <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginTop:6 }}>
         {(opciones||[]).map(o => {
           const sel = selected.includes(o);
@@ -70,7 +101,7 @@ function Field({ campo, value, onChange, accent }) {
   }
   if (tipo === "radio") {
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{label}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
       <div style={{ display:"flex", flexDirection:"column", gap:6, marginTop:6 }}>
         {(opciones||[]).map(o => (
           <label key={o} style={{ ...F, display:"flex", alignItems:"center", gap:10, fontSize:13,
@@ -86,7 +117,7 @@ function Field({ campo, value, onChange, accent }) {
   if (tipo === "rating") {
     const stars = parseInt(value) || 0;
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{label}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
       <div style={{ display:"flex", gap:8, marginTop:6 }}>
         {[1,2,3,4,5].map(n => (
           <button key={n} type="button" onClick={() => onChange(n)}
@@ -97,7 +128,7 @@ function Field({ campo, value, onChange, accent }) {
   }
   if (tipo === "yesno") {
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{label}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
       <div style={{ display:"flex", gap:10, marginTop:6 }}>
         {["Sí","No"].map(o => (
           <button key={o} type="button" onClick={() => onChange(o)}
@@ -111,12 +142,12 @@ function Field({ campo, value, onChange, accent }) {
   }
   if (tipo === "info") {
     return (<div style={{ marginBottom:20, padding:"14px 18px", background:BASE.accentBg, borderRadius:8, border:"1px solid "+BASE.accent+"22" }}>
-      <p style={{ ...F, fontSize:12, color:BASE.accent, margin:0, lineHeight:1.6 }}>{label}</p>
+      <p style={{ ...F, fontSize:12, color:BASE.accent, margin:0, lineHeight:1.6 }}>{dynLabel}</p>
     </div>);
   }
   if (tipo === "seccion") {
     return (<div style={{ marginTop:28, marginBottom:14, paddingTop:18, borderTop:"2px solid "+ac }}>
-      <h3 style={{ ...F, fontSize:15, fontWeight:700, color:BASE.ink, margin:0 }}>{label}</h3>
+      <h3 style={{ ...F, fontSize:15, fontWeight:700, color:BASE.ink, margin:0 }}>{dynLabel}</h3>
       {campo.desc && <p style={{ ...F, fontSize:11, color:BASE.inkLight, margin:"4px 0 0" }}>{campo.desc}</p>}
     </div>);
   }
@@ -154,6 +185,15 @@ export default function FormularioPublico() {
       });
       setVals(prev => ({...prefill, ...prev}));
     }
+    // Prefill country from config
+    const paisProy = (def.config?.paisProyecto) || "Colombia";
+    const paisCodMap = {"Colombia":"+57 (Colombia)","España":"+34 (España)","México":"+52 (México)","Chile":"+56 (Chile)","Perú":"+51 (Perú)","Ecuador":"+593 (Ecuador)","Argentina":"+54 (Argentina)","Panamá":"+507 (Panamá)","Estados Unidos":"+1 (Estados Unidos)"};
+    const countryPrefill = {};
+    campos.forEach(c => {
+      if (c.mapKey==="pais") countryPrefill[c.id] = paisProy;
+      if (c.mapKey==="codigoTel") countryPrefill[c.id] = paisCodMap[paisProy] || "";
+    });
+    setVals(prev => ({...countryPrefill, ...prev}));
 
     // Check if link was manually blocked
     const linkCfg = def.linkConfig || {};
@@ -257,10 +297,11 @@ export default function FormularioPublico() {
 
   /* FIX: Only lock fields that match exact mapKey — not by tipo or label */
   const isLocked = (c) => {
-    if (!cliente) return false;
+    if (!cliente) return c.mapKey==="pais"; // country always locked
     if (cliente.email && c.mapKey==="email") return true;
     if (cliente.nombre && c.mapKey==="nombre") return true;
     if (cliente.tel && c.mapKey==="telefono") return true;
+    if (c.mapKey==="pais") return true;
     return false;
   };
 
@@ -577,7 +618,7 @@ export default function FormularioPublico() {
             {campos.map(c => {
               if (!isVisible(c)) return null;
               if (isLocked(c)) return renderLocked(c);
-              return <Field key={c.id} campo={c} value={vals[c.id]} onChange={v=>setVal(c.id,v)} accent={ac}/>;
+              return <Field key={c.id} campo={c} value={vals[c.id]} onChange={v=>setVal(c.id,v)} accent={ac} allVals={vals}/>;
             })}
           </div>
           <ErrorMsg/>
@@ -618,7 +659,7 @@ export default function FormularioPublico() {
               if (!isVisible(c)) return null;
               if (c.tipo === "seccion") return null;
               if (isLocked(c)) return renderLocked(c);
-              return <Field key={c.id} campo={c} value={vals[c.id]} onChange={v=>setVal(c.id,v)} accent={ac}/>;
+              return <Field key={c.id} campo={c} value={vals[c.id]} onChange={v=>setVal(c.id,v)} accent={ac} allVals={vals}/>;
             })}
           </div>
           <ErrorMsg/>
