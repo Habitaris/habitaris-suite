@@ -1223,46 +1223,32 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
   </div>` : ""}
 
   <!-- Scoring -->
-  ${(() => {
-    const sc = calculateScore(resp, form);
+  ${(function(){
+    var sc = calculateScore(resp, form);
     if (!sc) return "";
-    const colors = {green:{bg:"#E8F4EE",border:"#1E6B42",text:"#1E6B42"},yellow:{bg:"#FAF0E0",border:"#7A5218",text:"#7A5218"},red:{bg:"#FAE8E8",border:"#AE2C2C",text:"#AE2C2C"}};
-    const col = colors[sc.level];
-    return `
-  <div style="margin:20px 36px;border:1px solid ${col.border}44;border-radius:8px;overflow:hidden">
-    <div style="display:flex;align-items:center;gap:16px;padding:16px 20px;background:${col.bg}">
-      <div style="font-size:28px;font-weight:800;font-family:'DM Mono',monospace;color:${col.text}">${sc.score.toFixed(1)}<span style="font-size:12px">/10</span></div>
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:700;color:${col.text}">${sc.levelLabel}</div>
-        <div style="font-size:9px;color:${col.text};opacity:.8;margin-top:2px">${sc.conclusion}</div>
-      </div>
-      <div style="display:flex;gap:10px">
-        <div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#1E6B42">${sc.greens}</div><div style="font-size:8px;color:#888">🟢</div></div>
-        <div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#7A5218">${sc.yellows}</div><div style="font-size:8px;color:#888">🟡</div></div>
-        <div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#AE2C2C">${sc.reds}</div><div style="font-size:8px;color:#888">🔴</div></div>
-      </div>
-    </div>
-    <table style="width:100%;border-collapse:collapse;font-size:10px">
-      <thead><tr style="background:#F5F4F1">
-        <th style="padding:6px 12px;text-align:left;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB">Criterio</th>
-        <th style="padding:6px 12px;text-align:left;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB">Respuesta</th>
-        <th style="padding:6px 12px;text-align:center;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB">Puntos</th>
-        <th style="padding:6px 12px;text-align:center;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB"></th>
-      </tr></thead>
-      <tbody>
-        ${sc.details.map(d => {
-          const fc = d.flag==="green"?"#1E6B42":d.flag==="red"?"#AE2C2C":"#7A5218";
-          const icon = d.flag==="green"?"🟢":d.flag==="red"?"🔴":"🟡";
-          return `<tr style="border-bottom:1px solid #F0EEEA">
-            <td style="padding:6px 12px;font-weight:600">${d.label}</td>
-            <td style="padding:6px 12px">${d.value}</td>
-            <td style="padding:6px 12px;text-align:center;font-weight:700;color:${fc};font-family:'DM Mono',monospace">${d.points}/${d.maxPoints}</td>
-            <td style="padding:6px 12px;text-align:center">${icon}</td>
-          </tr>`;
-        }).join("")}
-      </tbody>
-    </table>
-  </div>`;
+    var colors = {green:{bg:"#E8F4EE",border:"#1E6B42",text:"#1E6B42"},yellow:{bg:"#FAF0E0",border:"#7A5218",text:"#7A5218"},red:{bg:"#FAE8E8",border:"#AE2C2C",text:"#AE2C2C"}};
+    var col = colors[sc.level];
+    var rows = sc.details.map(function(d){
+      var fc = d.flag==="green"?"#1E6B42":d.flag==="red"?"#AE2C2C":"#7A5218";
+      var icon = d.flag==="green"?"🟢":d.flag==="red"?"🔴":"🟡";
+      return '<tr style="border-bottom:1px solid #F0EEEA"><td style="padding:6px 12px;font-weight:600">'+d.label+'</td><td style="padding:6px 12px">'+d.value+'</td><td style="padding:6px 12px;text-align:center;font-weight:700;color:'+fc+';font-family:DM Mono,monospace">'+d.points+'/'+d.maxPoints+'</td><td style="padding:6px 12px;text-align:center">'+icon+'</td></tr>';
+    }).join("");
+    return '<div style="margin:20px 36px;border:1px solid '+col.border+'44;border-radius:8px;overflow:hidden">'
+      +'<div style="display:flex;align-items:center;gap:16px;padding:16px 20px;background:'+col.bg+'">'
+      +'<div style="font-size:28px;font-weight:800;font-family:DM Mono,monospace;color:'+col.text+'">'+sc.score.toFixed(1)+'<span style="font-size:12px">/10</span></div>'
+      +'<div style="flex:1"><div style="font-size:14px;font-weight:700;color:'+col.text+'">'+sc.levelLabel+'</div>'
+      +'<div style="font-size:9px;color:'+col.text+';opacity:.8;margin-top:2px">'+sc.conclusion+'</div></div>'
+      +'<div style="display:flex;gap:10px">'
+      +'<div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#1E6B42">'+sc.greens+'</div><div style="font-size:8px;color:#888">🟢</div></div>'
+      +'<div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#7A5218">'+sc.yellows+'</div><div style="font-size:8px;color:#888">🟡</div></div>'
+      +'<div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#AE2C2C">'+sc.reds+'</div><div style="font-size:8px;color:#888">🔴</div></div>'
+      +'</div></div>'
+      +'<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#F5F4F1">'
+      +'<th style="padding:6px 12px;text-align:left;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB">Criterio</th>'
+      +'<th style="padding:6px 12px;text-align:left;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB">Respuesta</th>'
+      +'<th style="padding:6px 12px;text-align:center;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB">Puntos</th>'
+      +'<th style="padding:6px 12px;text-align:center;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB"></th>'
+      +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
   })()}
 
   <!-- Sections -->
