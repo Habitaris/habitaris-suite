@@ -15,6 +15,58 @@ const uid = () => Math.random().toString(36).slice(2,10);
 const today = () => new Date().toISOString().split("T")[0];
 const F = { fontFamily:"'Outfit',sans-serif" };
 
+/* ── Scoring calculator ── */
+function calculateScore(resp, form) {
+  if (!form?.campos) return null;
+  const campos = form.campos.filter(c => c.scoring?.enabled);
+  if (campos.length === 0) return null;
+
+  let totalPoints = 0;
+  let maxPoints = 0;
+  let greens = 0, reds = 0, yellows = 0;
+  const details = [];
+
+  campos.forEach(c => {
+    const w = c.scoring.weight || 1;
+    const key = c.mapKey || c.id;
+    let val = resp[key];
+    if (val === undefined) return;
+    maxPoints += w;
+
+    const rules = c.scoring.rules || {};
+    let flag = "neutral";
+
+    if (Array.isArray(val)) {
+      // chips: check each selected value, use worst flag
+      const flags = val.map(v => rules[v] || "neutral");
+      if (flags.includes("red")) flag = "red";
+      else if (flags.every(f => f === "green")) flag = "green";
+      else flag = "neutral";
+    } else {
+      flag = rules[String(val)] || "neutral";
+    }
+
+    let points = 0;
+    if (flag === "green") { points = w; greens++; }
+    else if (flag === "neutral") { points = w * 0.5; yellows++; }
+    else { points = 0; reds++; }
+
+    totalPoints += points;
+    details.push({ label: c.label, value: Array.isArray(val) ? val.join(", ") : String(val), flag, points, maxPoints: w });
+  });
+
+  const score = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) / 10 : 0;
+  const level = score >= 7 ? "green" : score >= 4 ? "yellow" : "red";
+  const levelLabel = level === "green" ? "🟢 Cliente potencial" : level === "yellow" ? "🟡 Revisar" : "🔴 No califica";
+  const conclusion = level === "green"
+    ? "Perfil alineado con los servicios. Recomendación: contactar en las próximas 24h."
+    : level === "yellow"
+    ? "Algunos puntos requieren validación. Recomendación: agendar llamada exploratoria."
+    : "Expectativas no alineadas con los servicios. Recomendación: responder cortésmente y archivar.";
+
+  return { score, level, levelLabel, conclusion, greens, reds, yellows, totalPoints, maxPoints, details };
+}
+
 /* ── EmailJS — reads from centralized config ── */
 const sendEmailJS = async (params) => {
   try {
@@ -632,7 +684,7 @@ render();
                   </div>
                   <span style={{fontSize:14}}>{b?.icon||"📝"}</span>
                   <div style={{flex:1}}>
-                    <div style={{fontSize:11,fontWeight:600}}>{c.label}{c.required&&<span style={{color:T.red,fontSize:9,marginLeft:4}}>obligatorio</span>}</div>
+                    <div style={{fontSize:11,fontWeight:600}}>{c.label}{c.required&&<span style={{color:T.red,fontSize:9,marginLeft:4}}>obligatorio</span>}{c.scoring?.enabled&&<span style={{fontSize:9,marginLeft:4}}>🚩</span>}</div>
                     <div style={{fontSize:8,color:T.inkLight}}>{b?.lbl} {c.logica?`· Condicional: si "${campos.find(x=>x.id===c.logica?.fieldId)?.label||"?"}" = "${c.logica?.value||"?"}"`  :""}</div>
                   </div>
                   <button onClick={e=>{e.stopPropagation();updCampo(i,"required",!c.required)}} title={c.required?"Obligatorio":"Opcional"}
@@ -712,6 +764,46 @@ render();
                 <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Clave de mapeo (integración)</label>
                 <input value={sel.mapKey||""} onChange={e=>updCampo(selIdx,"mapKey",e.target.value)} placeholder="ej: nombre, email" style={{...inp,width:"100%",fontSize:9}}/>
               </div>
+              {/* Scoring rules — for fields with options */}
+              {["select","radio","chips","yesno","rango"].includes(sel.tipo) && (
+                <div style={{borderTop:`1px solid ${T.border}`,paddingTop:8,marginTop:8}}>
+                  <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer",fontSize:10,fontWeight:700,marginBottom:6}}>
+                    <input type="checkbox" checked={!!sel.scoring?.enabled} onChange={e=>{
+                      const sc = sel.scoring ? {...sel.scoring, enabled:e.target.checked} : {enabled:e.target.checked, weight:1, rules:{}};
+                      updCampo(selIdx,"scoring",sc);
+                    }} style={{accentColor:"#C9A84C"}}/>
+                    🚩 Regla de scoring
+                  </label>
+                  {sel.scoring?.enabled && (
+                    <div>
+                      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+                        <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Peso</label>
+                        <select value={sel.scoring?.weight||1} onChange={e=>updCampo(selIdx,"scoring",{...sel.scoring,weight:parseInt(e.target.value)})}
+                          style={{...inp,width:60,fontSize:9}}>
+                          {[1,2,3,4,5].map(n=><option key={n} value={n}>{n} pts</option>)}
+                        </select>
+                      </div>
+                      <div style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase",marginBottom:4}}>Clasificar opciones</div>
+                      {(sel.opciones||["Sí","No"]).map(opt => {
+                        const flag = sel.scoring?.rules?.[opt] || "neutral";
+                        return (
+                          <div key={opt} style={{display:"flex",alignItems:"center",gap:4,marginBottom:3}}>
+                            <div style={{flex:1,fontSize:9,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{opt}</div>
+                            {[{v:"green",l:"🟢"},{v:"neutral",l:"🟡"},{v:"red",l:"🔴"}].map(f=>(
+                              <button key={f.v} type="button" onClick={()=>{
+                                const rules = {...(sel.scoring?.rules||{}), [opt]:f.v};
+                                updCampo(selIdx,"scoring",{...sel.scoring,rules});
+                              }} style={{width:22,height:22,border:flag===f.v?"2px solid #111":"1px solid #ddd",borderRadius:4,
+                                background:flag===f.v?"#F5F4F1":"#fff",cursor:"pointer",fontSize:12,padding:0,
+                                display:"flex",alignItems:"center",justifyContent:"center"}}>{f.l}</button>
+                            ))}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
             </Card>
           )}
         </div>
@@ -1130,6 +1222,49 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
     </div>
   </div>` : ""}
 
+  <!-- Scoring -->
+  ${(() => {
+    const sc = calculateScore(resp, form);
+    if (!sc) return "";
+    const colors = {green:{bg:"#E8F4EE",border:"#1E6B42",text:"#1E6B42"},yellow:{bg:"#FAF0E0",border:"#7A5218",text:"#7A5218"},red:{bg:"#FAE8E8",border:"#AE2C2C",text:"#AE2C2C"}};
+    const col = colors[sc.level];
+    return `
+  <div style="margin:20px 36px;border:1px solid ${col.border}44;border-radius:8px;overflow:hidden">
+    <div style="display:flex;align-items:center;gap:16px;padding:16px 20px;background:${col.bg}">
+      <div style="font-size:28px;font-weight:800;font-family:'DM Mono',monospace;color:${col.text}">${sc.score.toFixed(1)}<span style="font-size:12px">/10</span></div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:${col.text}">${sc.levelLabel}</div>
+        <div style="font-size:9px;color:${col.text};opacity:.8;margin-top:2px">${sc.conclusion}</div>
+      </div>
+      <div style="display:flex;gap:10px">
+        <div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#1E6B42">${sc.greens}</div><div style="font-size:8px;color:#888">🟢</div></div>
+        <div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#7A5218">${sc.yellows}</div><div style="font-size:8px;color:#888">🟡</div></div>
+        <div style="text-align:center"><div style="font-size:14px;font-weight:800;color:#AE2C2C">${sc.reds}</div><div style="font-size:8px;color:#888">🔴</div></div>
+      </div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:10px">
+      <thead><tr style="background:#F5F4F1">
+        <th style="padding:6px 12px;text-align:left;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB">Criterio</th>
+        <th style="padding:6px 12px;text-align:left;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB">Respuesta</th>
+        <th style="padding:6px 12px;text-align:center;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB">Puntos</th>
+        <th style="padding:6px 12px;text-align:center;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;border-bottom:1px solid #E4E1DB"></th>
+      </tr></thead>
+      <tbody>
+        ${sc.details.map(d => {
+          const fc = d.flag==="green"?"#1E6B42":d.flag==="red"?"#AE2C2C":"#7A5218";
+          const icon = d.flag==="green"?"🟢":d.flag==="red"?"🔴":"🟡";
+          return `<tr style="border-bottom:1px solid #F0EEEA">
+            <td style="padding:6px 12px;font-weight:600">${d.label}</td>
+            <td style="padding:6px 12px">${d.value}</td>
+            <td style="padding:6px 12px;text-align:center;font-weight:700;color:${fc};font-family:'DM Mono',monospace">${d.points}/${d.maxPoints}</td>
+            <td style="padding:6px 12px;text-align:center">${icon}</td>
+          </tr>`;
+        }).join("")}
+      </tbody>
+    </table>
+  </div>`;
+  })()}
+
   <!-- Sections -->
   ${sections.map((sec,si) => `
   <div class="section">
@@ -1216,14 +1351,14 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
         <table style={{borderCollapse:"collapse",width:"100%"}}>
           <thead>
             <tr style={{background:"#EDEBE7"}}>
-              {["Fecha","Hora","Formulario","Cliente","Email","Estado","Acciones"].map(h=>
+              {["Fecha","Hora","Formulario","Cliente","Email","Score","Estado","Acciones"].map(h=>
                 <th key={h} style={ths}>{h}</th>
               )}
             </tr>
           </thead>
           <tbody>
             {filtered.length===0 ? (
-              <tr><td colSpan={7} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin respuestas{filtroEstado!=="todos"?" con este filtro":""}</td></tr>
+              <tr><td colSpan={8} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin respuestas{filtroEstado!=="todos"?" con este filtro":""}</td></tr>
             ) : filtered.sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"")).map(r => {
               const proc = isProcesado(r);
               const dt = r.created_at ? new Date(r.created_at) : null;
@@ -1236,6 +1371,17 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
                 <td style={{...tds,fontWeight:600,fontSize:10}}>{r.formularioNombre||forms.find(f=>f.id===r.formularioId)?.nombre||"—"}</td>
                 <td style={{...tds,fontWeight:600,fontSize:10}}>{r.clienteNombre||"—"}</td>
                 <td style={{...tds,fontSize:9,color:T.blue}}>{r.clienteEmail||"—"}</td>
+                <td style={{...tds,textAlign:"center"}}>
+                  {(()=>{
+                    const form = forms.find(f=>f.id===r.formularioId);
+                    const sc = calculateScore(r, form);
+                    if (!sc) return <span style={{fontSize:8,color:T.inkLight}}>—</span>;
+                    const col = sc.level==="green"?T.green:sc.level==="red"?T.red:T.amber;
+                    const bg = sc.level==="green"?T.greenBg:sc.level==="red"?T.redBg:T.amberBg;
+                    const icon = sc.level==="green"?"🟢":sc.level==="red"?"🔴":"🟡";
+                    return <span style={{fontSize:9,fontWeight:700,padding:"2px 8px",borderRadius:10,background:bg,color:col}}>{icon} {sc.score.toFixed(1)}</span>;
+                  })()}
+                </td>
                 <td style={tds}>
                   {proc
                     ? <span style={{fontSize:8,fontWeight:700,padding:"2px 8px",borderRadius:10,background:T.greenBg,color:T.green}}>✅ Procesado</span>
@@ -1278,6 +1424,54 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
               <button onClick={()=>setSelResp(null)} style={{background:"none",border:"none",cursor:"pointer"}}><X size={14}/></button>
             </div>
           </div>
+
+          {/* Scoring panel */}
+          {(() => {
+            const form = forms.find(f=>f.id===selResp.formularioId);
+            const sc = calculateScore(selResp, form);
+            if (!sc) return null;
+            const colors = {green:{bg:"#E8F4EE",border:"#1E6B42",text:"#1E6B42"},yellow:{bg:"#FAF0E0",border:"#7A5218",text:"#7A5218"},red:{bg:"#FAE8E8",border:"#AE2C2C",text:"#AE2C2C"}};
+            const col = colors[sc.level];
+            return (
+              <div style={{marginBottom:14,border:`1px solid ${col.border}33`,borderRadius:8,overflow:"hidden"}}>
+                <div style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:col.bg}}>
+                  <div style={{fontSize:28,fontWeight:800,fontFamily:"'DM Mono',monospace",color:col.text}}>{sc.score.toFixed(1)}<span style={{fontSize:12}}>/10</span></div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:13,fontWeight:700,color:col.text}}>{sc.levelLabel}</div>
+                    <div style={{fontSize:9,color:col.text,opacity:.8,marginTop:2}}>{sc.conclusion}</div>
+                  </div>
+                  <div style={{display:"flex",gap:8}}>
+                    <div style={{textAlign:"center"}}><div style={{fontSize:14,fontWeight:800,color:T.green}}>{sc.greens}</div><div style={{fontSize:7,color:"#888"}}>🟢</div></div>
+                    <div style={{textAlign:"center"}}><div style={{fontSize:14,fontWeight:800,color:T.amber}}>{sc.yellows}</div><div style={{fontSize:7,color:"#888"}}>🟡</div></div>
+                    <div style={{textAlign:"center"}}><div style={{fontSize:14,fontWeight:800,color:T.red}}>{sc.reds}</div><div style={{fontSize:7,color:"#888"}}>🔴</div></div>
+                  </div>
+                </div>
+                <div style={{padding:"10px 16px",background:"#fff"}}>
+                  <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",marginBottom:6}}>Detalle de scoring</div>
+                  <table style={{width:"100%",borderCollapse:"collapse"}}>
+                    <thead><tr style={{background:T.bg}}>
+                      {["Criterio","Respuesta","Puntos",""].map(h=><th key={h} style={{padding:"4px 8px",fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase",textAlign:"left",borderBottom:`1px solid ${T.border}`}}>{h}</th>)}
+                    </tr></thead>
+                    <tbody>
+                      {sc.details.map((d,i) => {
+                        const fc = d.flag==="green"?T.green:d.flag==="red"?T.red:T.amber;
+                        const icon = d.flag==="green"?"🟢":d.flag==="red"?"🔴":"🟡";
+                        return (
+                          <tr key={i} style={{borderBottom:`1px solid ${T.border}`}}>
+                            <td style={{padding:"5px 8px",fontSize:10,fontWeight:600}}>{d.label}</td>
+                            <td style={{padding:"5px 8px",fontSize:10}}>{d.value}</td>
+                            <td style={{padding:"5px 8px",fontSize:10,fontWeight:700,color:fc,fontFamily:"'DM Mono',monospace"}}>{d.points}/{d.maxPoints}</td>
+                            <td style={{padding:"5px 8px",fontSize:12}}>{icon}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Client info card */}
           {(selResp.clienteNombre||selResp.clienteEmail) && (
             <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:12,padding:"10px 14px",background:T.blueBg,borderRadius:6,border:`1px solid ${T.blue}22`}}>
