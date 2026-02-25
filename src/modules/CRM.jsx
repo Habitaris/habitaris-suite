@@ -1668,7 +1668,21 @@ function TabClientesCRM() {
                 {["CO","ES","MX","US","Otro"].map(p=><option key={p}>{p}</option>)}
               </select>
             </div>
-            <div style={{ gridColumn:"2 / -1" }}>
+            <FI lbl="Dirección" val={form.direccion||""} on={e=>setForm(f=>({...f,direccion:e.target.value}))} />
+          </div>
+          <div style={{ marginTop:16, padding:"16px 0", borderTop:`1px solid ${C.border}` }}>
+            <p style={{ fontSize:10, fontWeight:700, color:C.inkLight, letterSpacing:1.5, textTransform:"uppercase", margin:"0 0 12px" }}>Datos de facturación</p>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12 }}>
+              <FI lbl="Razón social" val={form.razonSocial||""} on={e=>setForm(f=>({...f,razonSocial:e.target.value}))} />
+              <FI lbl="Email facturación" val={form.emailFactura||""} on={e=>setForm(f=>({...f,emailFactura:e.target.value}))} />
+              <FI lbl="Dir. facturación" val={form.dirFacturacion||""} on={e=>setForm(f=>({...f,dirFacturacion:e.target.value}))} />
+              <FI lbl="Forma de pago" val={form.formaPago||""} on={e=>setForm(f=>({...f,formaPago:e.target.value}))} />
+              <FI lbl="Retenciones" val={form.retenciones||""} on={e=>setForm(f=>({...f,retenciones:e.target.value}))} />
+              <FI lbl="Detalle retenciones" val={form.detalleRet||""} on={e=>setForm(f=>({...f,detalleRet:e.target.value}))} />
+            </div>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12, marginTop:12 }}>
+            <div style={{ gridColumn:"1 / -1" }}>
               <label style={{ display:"block", fontSize:10, fontWeight:600, color:C.inkLight, marginBottom:5, textTransform:"uppercase", letterSpacing:1 }}>Notas</label>
               <textarea value={form.notas} onChange={e=>setForm(f=>({...f,notas:e.target.value}))}
                 rows={2} style={{ ...inp(), resize:"vertical" }}/>
@@ -1707,7 +1721,7 @@ function TabClientesCRM() {
             {(c.email||c.telMovil||c.tel||c.telFijo) && (
               <div style={{ marginTop:8, fontSize:11, color:C.inkMid, display:"flex", gap:12, flexWrap:"wrap" }}>
                 {c.email && <span>✉ {c.email}</span>}
-                {(c.telMovil||c.tel) && <span>📱 {c.prefijoMovil||"+57"} {c.telMovil||c.tel}</span>}
+                {(c.telMovil||c.tel) && <span>📱 {c.prefijoMovil||"+57"} {(c.telMovil||c.tel||"").replace(/^\+57\s*/, "")}</span>}
                 {c.telFijo && <span>📞 {c.prefijoFijo||"+57"} {c.telFijo}</span>}
               </div>
             )}
