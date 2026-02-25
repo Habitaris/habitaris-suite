@@ -9642,6 +9642,19 @@ function TEnt({ d, set, r }) {
   const onNivelChange = (v) => { setNivelDetalle(v); set("ent_nivelDetalle", v); };
   const [inclCrono, setInclCrono] = useState(d.ent_inclCrono ?? false);
   const [inclOrganigrama, setInclOrganigrama] = useState(d.ent_inclOrganigrama ?? false);
+  const [inclGlosario, setInclGlosario] = useState(d.ent_inclGlosario ?? true);
+  const [glosarioOpen, setGlosarioOpen] = useState(false);
+  const glosario = d.glosarioOferta || [];
+  const setGlosario = (g) => set("glosarioOferta", g);
+  const [addTermino, setAddTermino] = useState("");
+  const [addDef, setAddDef] = useState("");
+
+  // Init glosario from predefined if empty
+  useEffect(() => {
+    if (glosario.length === 0 && typeof GLOSARIO_PREDEFINIDO !== "undefined") {
+      setGlosario(GLOSARIO_PREDEFINIDO.map(g => ({ ...g, incluir: true })));
+    }
+  }, []);
   const onToggle = (k, v, setter) => { setter(v); set("ent_"+k, v); };
 
   const borLineas = (d.borradorLineas||[]);
@@ -9810,6 +9823,7 @@ function TEnt({ d, set, r }) {
     if(d.ent_inclCondPago !== false) secs.push("Condiciones de pago");
     if(d.ent_inclGarantias !== false) secs.push("Plazo y garantías");
     secs.push("Términos y condiciones");
+    if (inclGlosario && glosario.filter(g=>g.incluir).length > 0) secs.push("Glosario de términos");
     secs.push("Firma de aceptación");
 
     html += `<div class="toc"><h2>Contenido</h2>`;
@@ -9897,6 +9911,18 @@ function TEnt({ d, set, r }) {
     html += `<div class="section-title"><span class="section-num">${secNum}.</span>Términos y condiciones</div>`;
     html += `<div class="content">${getText("terminos","Los precios incluyen materiales, mano de obra, herramienta y administración según lo descrito en el alcance.\n\nCualquier trabajo no contemplado en esta propuesta se cotizará como adicional previo a su ejecución y deberá ser aprobado por escrito.\n\nEl cronograma propuesto podrá ajustarse por causas de fuerza mayor, cambios solicitados por el cliente o condiciones no previstas del inmueble.")}</div>`;
     if(d.ent_inclCondPago !== false || d.ent_inclGarantias !== false) html += `</div>`;
+
+    // ── GLOSARIO ──
+    if (inclGlosario && glosario.filter(g=>g.incluir).length > 0) {
+      html += `<div class="page">${hdr}`;
+      secNum++;
+      html += `<div class="section-title"><span class="section-num">${secNum}.</span>Glosario de términos</div>`;
+      html += `<table><thead><tr><th>Término</th><th>Definición</th></tr></thead><tbody>`;
+      glosario.filter(g=>g.incluir).forEach(g => {
+        html += `<tr><td class="bold" style="width:25%;vertical-align:top">${g.termino}</td><td>${g.definicion}</td></tr>`;
+      });
+      html += `</tbody></table></div>`;
+    }
 
     // ── FIRMA ──
     html += `<div class="page">${hdr}`;
@@ -10028,6 +10054,69 @@ function TEnt({ d, set, r }) {
   return (
     <div className="fade">
 
+      {/* ═══════════ GLOSARIO EDITOR (no-print) ═══════════ */}
+      {inclGlosario && glosarioOpen && (
+        <Card className="no-print" style={{ marginBottom:16 }}>
+          <div style={{ padding:"14px 20px" }}>
+            <div style={{ fontSize:9, fontWeight:700, color:"#888", textTransform:"uppercase", letterSpacing:1, marginBottom:12 }}>Glosario de términos</div>
+            <table style={{ width:"100%", borderCollapse:"collapse", fontFamily:"'DM Sans',sans-serif" }}>
+              <thead>
+                <tr style={{ borderBottom:`1px solid ${C.border}` }}>
+                  <th style={{ width:30, padding:"6px 0" }}></th>
+                  <th style={{ textAlign:"left", padding:"6px 0", fontSize:8, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", color:C.inkLight }}>Término</th>
+                  <th style={{ textAlign:"left", padding:"6px 0", fontSize:8, fontWeight:700, letterSpacing:1.5, textTransform:"uppercase", color:C.inkLight }}>Definición</th>
+                  <th style={{ width:30 }}></th>
+                </tr>
+              </thead>
+              <tbody>
+                {glosario.map(g => (
+                  <tr key={g.id} style={{ borderBottom:`1px solid ${C.border}`, opacity: g.incluir ? 1 : 0.35, transition:"opacity .15s" }}>
+                    <td style={{ padding:"6px 0" }}>
+                      <input type="checkbox" checked={g.incluir} onChange={() => setGlosario(glosario.map(x => x.id === g.id ? {...x, incluir:!x.incluir} : x))}
+                        style={{ width:14, height:14, cursor:"pointer", accentColor:C.ink }} />
+                    </td>
+                    <td style={{ padding:"6px 4px", fontSize:11, fontWeight:600, color:C.ink, verticalAlign:"top", width:"25%" }}>{g.termino}</td>
+                    <td style={{ padding:"6px 4px", fontSize:11, color:C.inkMid, lineHeight:1.4 }}>{g.definicion}</td>
+                    <td>
+                      {typeof GLOSARIO_PREDEFINIDO !== "undefined" && !GLOSARIO_PREDEFINIDO.find(p => p.id === g.id) && (
+                        <button onClick={() => setGlosario(glosario.filter(x => x.id !== g.id))}
+                          style={{ background:"none", border:"none", cursor:"pointer", color:"#C44", fontSize:12 }}>×</button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ display:"flex", gap:8, marginTop:12, alignItems:"flex-end" }}>
+              <div style={{ width:"30%" }}>
+                <label style={{ display:"block", fontSize:8, fontWeight:600, color:C.inkLight, marginBottom:3, textTransform:"uppercase", letterSpacing:1 }}>Término</label>
+                <input value={addTermino} onChange={e => setAddTermino(e.target.value)} placeholder="Ej: Bioclimática"
+                  style={{ width:"100%", border:`1px solid ${C.border}`, borderRadius:3, padding:"7px 10px", fontSize:11, fontFamily:"'DM Sans',sans-serif" }} />
+              </div>
+              <div style={{ flex:1 }}>
+                <label style={{ display:"block", fontSize:8, fontWeight:600, color:C.inkLight, marginBottom:3, textTransform:"uppercase", letterSpacing:1 }}>Definición</label>
+                <input value={addDef} onChange={e => setAddDef(e.target.value)} placeholder="Definición del término..."
+                  style={{ width:"100%", border:`1px solid ${C.border}`, borderRadius:3, padding:"7px 10px", fontSize:11, fontFamily:"'DM Sans',sans-serif" }}
+                  onKeyDown={e => {
+                    if (e.key === "Enter" && addTermino.trim() && addDef.trim()) {
+                      setGlosario([...glosario, { id:"custom_"+Date.now(), termino:addTermino.trim(), definicion:addDef.trim(), incluir:true }]);
+                      setAddTermino(""); setAddDef("");
+                    }
+                  }} />
+              </div>
+              <button onClick={() => {
+                if (!addTermino.trim() || !addDef.trim()) return;
+                setGlosario([...glosario, { id:"custom_"+Date.now(), termino:addTermino.trim(), definicion:addDef.trim(), incluir:true }]);
+                setAddTermino(""); setAddDef("");
+              }} style={{
+                padding:"7px 14px", background:C.ink, color:"#fff", border:"none", borderRadius:3,
+                fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap",
+              }}>+ Añadir</button>
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* ═══════════ COVER PAGE (print only) ═══════════ */}
       <div className="p-cover">
         <div style={{ borderBottom:"2pt solid #111", paddingBottom:16, marginBottom:40, width:"100%" }}>
@@ -10152,6 +10241,20 @@ function TEnt({ d, set, r }) {
                 style={{ accentColor:"#111111" }} />
               <span style={{ fontWeight:d.ent_inclGarantias?600:400, color:d.ent_inclGarantias?"#111111":C.inkMid }}>🛡️ Garantías</span>
             </label>
+            <label style={{ display:"flex", alignItems:"center", gap:6, cursor:"pointer", fontSize:11,
+              padding:"5px 10px", borderRadius:4, background:inclGlosario?"#E8F4EE":"#F5F4F1",
+              border:`1px solid ${inclGlosario?"#111111":"transparent"}` }}>
+              <input type="checkbox" checked={inclGlosario} onChange={e => { setInclGlosario(e.target.checked); set("ent_inclGlosario", e.target.checked); }}
+                style={{ accentColor:"#111111" }} />
+              <span style={{ fontWeight:inclGlosario?600:400, color:inclGlosario?"#111111":C.inkMid }}>📖 Glosario</span>
+            </label>
+            {inclGlosario && (
+              <button onClick={() => setGlosarioOpen(!glosarioOpen)} style={{
+                padding:"5px 10px", fontSize:10, fontWeight:600, cursor:"pointer",
+                border:"1px solid #E0E0E0", borderRadius:4, background:glosarioOpen?"#111":"#fff",
+                color:glosarioOpen?"#fff":"#555", fontFamily:"'DM Sans',sans-serif",
+              }}>{glosarioOpen ? "▲ Cerrar glosario" : `▼ Editar glosario (${glosario.filter(g=>g.incluir).length})`}</button>
+            )}
           </div>
         </div>
       </Card>
@@ -10630,6 +10733,29 @@ function TEnt({ d, set, r }) {
           </div>
         </Card>
       </div>
+
+      {/* ═══════════ GLOSARIO (print) ═══════════ */}
+      {inclGlosario && glosario.filter(g=>g.incluir).length > 0 && (
+        <div className="print-only print-page-break">
+          <STitle t="Glosario de términos" />
+          <table style={{ width:"100%", borderCollapse:"collapse" }}>
+            <thead>
+              <tr style={{ borderBottom:`2px solid ${C.border}` }}>
+                <th style={{ textAlign:"left", padding:"6px 8px", fontSize:8, fontWeight:700, color:"#888", textTransform:"uppercase", width:"25%" }}>Término</th>
+                <th style={{ textAlign:"left", padding:"6px 8px", fontSize:8, fontWeight:700, color:"#888", textTransform:"uppercase" }}>Definición</th>
+              </tr>
+            </thead>
+            <tbody>
+              {glosario.filter(g=>g.incluir).map(g => (
+                <tr key={g.id} style={{ borderBottom:`1px solid ${C.border}` }}>
+                  <td style={{ padding:"6px 8px", fontSize:11, fontWeight:600, color:C.ink, verticalAlign:"top" }}>{g.termino}</td>
+                  <td style={{ padding:"6px 8px", fontSize:11, color:C.inkMid, lineHeight:1.4 }}>{g.definicion}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* ═══════════ FIRMA ═══════════ */}
       <div className="print-page-break print-section" style={{ marginBottom:16 }}>
