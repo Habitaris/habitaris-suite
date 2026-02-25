@@ -328,25 +328,27 @@ const uid  = () => Math.random().toString(36).substr(2, 9);
 const today = () => new Date().toISOString().split("T")[0];
 
 /* ─── STORAGE ────────────────────────────────────────────────── */
-async function loadData()  { try { const r = await window.storage.get("hab:v4"); return r ? JSON.parse(r.value) : []; } catch { return []; } }
-async function saveData(d) { try { await window.storage.set("hab:v4", JSON.stringify(d)); } catch (e) { console.error(e); } }
+async function loadData() { try { const r = localStorage.getItem("hab:v4"); return r ? JSON.parse(r) : []; } catch { return []; } }
+async function saveData(d) { try { localStorage.setItem("hab:v4", JSON.stringify(d)); } catch(e) { console.error(e); } }
 
 /* ─── BRIEFING STORAGE ───────────────────────────────────────── */
 async function loadBriefings() {
   try {
-    const r = await window.storage.list("hab:briefing:");
-    if (!r?.keys?.length) return [];
-    const items = await Promise.all(r.keys.map(async k => {
-      try { const v = await window.storage.get(k); return v ? JSON.parse(v.value) : null; } catch { return null; }
-    }));
-    return items.filter(Boolean).sort((a,b) => new Date(b.fecha||0) - new Date(a.fecha||0));
+    const items = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith("shared:hab:briefing:")) {
+        try { const v = JSON.parse(localStorage.getItem(k)); if (v) items.push(v); } catch {}
+      }
+    }
+    return items.sort((a,b) => new Date(b.fecha||0) - new Date(a.fecha||0));
   } catch { return []; }
 }
 async function saveBriefingEntry(data) {
-  try { await window.storage.set(`hab:briefing:${data.id}`, JSON.stringify(data)); } catch {}
+  try { localStorage.setItem("shared:hab:briefing:" + data.id, JSON.stringify(data)); } catch {}
 }
 async function deleteBriefingEntry(id) {
-  try { await window.storage.delete(`hab:briefing:${id}`); } catch {}
+  try { localStorage.removeItem("shared:hab:briefing:" + id); } catch {}
 }
 
 /* ─── BRIEFING → OFERTA (mapeador de campos) ─────────────────── */
@@ -578,17 +580,17 @@ function BriefingDetalle({ b, onClose, onCreateOffer, onCreateClient }) {
 /* ─── FORM STORAGE ────────────────────────────────────────────── */
 async function loadForms() {
   try {
-    const r = await window.storage.list("hab:forms:");
+    const keys=[]; for(let j=0;j<localStorage.length;j++){const k=localStorage.key(j);if(k&&k.startsWith("hab:forms:"))keys.push(k);} const r={keys};
     if (!r?.keys?.length) return [];
-    const all = await Promise.all(r.keys.map(k => window.storage.get(k).then(v => v ? JSON.parse(v.value) : null).catch(()=>null)));
+    const all = await Promise.all(r.keys.map(k => Promise.resolve(localStorage.getItem(k)).then(v => v ? JSON.parse(v) : null).catch(()=>null)));
     return all.filter(Boolean).sort((a,b) => (b.updatedAt||"").localeCompare(a.updatedAt||""));
   } catch { return []; }
 }
 async function saveForm(f) {
-  try { f.updatedAt = new Date().toISOString(); await window.storage.set(`hab:forms:${f.id}`, JSON.stringify(f)); } catch {}
+  try { f.updatedAt = new Date().toISOString(); localStorage.setItem(`hab:forms:${f.id}`, JSON.stringify(f)); } catch {}
 }
 async function deleteForm(id) {
-  try { await window.storage.delete(`hab:forms:${id}`); } catch {}
+  try { localStorage.removeItem(`hab:forms:${id}`); } catch {}
 }
 
 /* ─── TEMPLATES ───────────────────────────────────────────────── */
