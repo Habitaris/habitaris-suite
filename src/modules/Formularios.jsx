@@ -1112,14 +1112,14 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
   const markProcesado = (id, sbId) => {
     const next = [...procesados, id];
     setProcesados(next);
-    localStorage.setItem("hab:form:procesados", JSON.stringify(next));
+    localStorage.setItem("hab:form:procesados", JSON.stringify(next)); try { window.storage?.set?.("hab:form:procesados", JSON.stringify(next)); } catch {}
     // SB disabled;
   };
 
   const markPendiente = (id, sbId) => {
     const next = procesados.filter(x=>x!==id);
     setProcesados(next);
-    localStorage.setItem("hab:form:procesados", JSON.stringify(next));
+    localStorage.setItem("hab:form:procesados", JSON.stringify(next)); try { window.storage?.set?.("hab:form:procesados", JSON.stringify(next)); } catch {}
     // SB disabled;
   };
 
@@ -2069,10 +2069,45 @@ export default function Formularios() {
       return saved;
     } catch { return { forms: [] }; }
   });
-  const save = (k,v) => setData(prev => { const n = {...prev,[k]:typeof v==="function"?v(prev[k]):v}; localStorage.setItem(STORE_KEY,JSON.stringify(n)); return n; });
+  // Cloud sync: load from kv_store on mount, merge with local
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await window.storage?.get?.(STORE_KEY);
+        if (r?.value) {
+          const cloud = JSON.parse(r.value);
+          if (cloud?.forms?.length) {
+            setData(prev => {
+              const localIds = new Set((prev.forms||[]).map(f=>f.id));
+              const cloudOnly = (cloud.forms||[]).filter(f=>!localIds.has(f.id));
+              const merged = { ...cloud, forms: [...(prev.forms||[]), ...cloudOnly] };
+              localStorage.setItem(STORE_KEY, JSON.stringify(merged));
+              return merged;
+            });
+          }
+        }
+      } catch(e) { console.warn("Cloud load forms:", e); }
+    })();
+  }, []);
+  const save = (k,v) => setData(prev => { const n = {...prev,[k]:typeof v==="function"?v(prev[k]):v}; localStorage.setItem(STORE_KEY,JSON.stringify(n)); try { window.storage?.set?.(STORE_KEY, JSON.stringify(n)); } catch {} return n; });
 
   const forms = data.forms || [];
   const setForms = (v) => save("forms", typeof v==="function"?v(forms):v);
+
+  // Cloud sync: load procesados from kv_store
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await window.storage?.get?.("hab:form:procesados");
+        if (r?.value) {
+          const cloud = JSON.parse(r.value);
+          const local = JSON.parse(localStorage.getItem("hab:form:procesados")||"[]");
+          const merged = [...new Set([...local, ...cloud])];
+          localStorage.setItem("hab:form:procesados", JSON.stringify(merged));
+        }
+      } catch {}
+    })();
+  }, []);
 
   // Auto-seed: create forms from PLANTILLAS if not already present, or update if version changed
   useEffect(() => {
@@ -2195,7 +2230,7 @@ export default function Formularios() {
   };
 
   const [tab, setTab] = useState(() => localStorage.getItem("hab:form:tab") || "dashboard");
-  const changeTab = (t) => { setTab(t); localStorage.setItem("hab:form:tab", t); };
+  const changeTab = (t) => { setTab(t); localStorage.setItem("hab:form:tab", t); try { window.storage?.set?.("hab:form:tab", t); } catch {} };
   const [editId, setEditId] = useState(null);
 
   const goConstructor = (id) => { setEditId(id||null); changeTab("constructor"); };
