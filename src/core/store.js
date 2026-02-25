@@ -40,7 +40,7 @@ const store = {
       if (!error && data) {
         _cache = {};
         data.forEach(row => { _cache[row.key] = row.value; });
-        console.log(`[store] Loaded ${data.length} keys for tenant ${_tenantId}`);
+        data.forEach(row => console.log("[store] key:", row.key, "size:", (row.value||"").length)); console.log(`[store] Loaded ${data.length} keys for tenant ${_tenantId}`);
       }
     } catch (e) {
       console.warn("[store] Preload failed, starting with empty cache:", e.message);
