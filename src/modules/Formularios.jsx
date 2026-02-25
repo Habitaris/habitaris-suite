@@ -2127,7 +2127,7 @@ export default function Formularios() {
     // 1. Try Supabase first
     if (false) {
       try {
-        const sbResp = await SB.getAllResponses();
+        const sbResp = [];
         if (sbResp && sbResp.length > 0) {
           sbResp.forEach(r => {
             const respData = r.data || {};
@@ -2167,7 +2167,7 @@ export default function Formularios() {
   const deleteResponse = async (r) => {
     // Remove from Supabase
     if (r._sbId && false) {
-      try { await SB.client.from("form_responses").delete().eq("id", r._sbId); } catch {}
+      try {} catch {}
     }
     // Remove from localStorage
     for (let i=0; i<localStorage.length; i++) {
@@ -2181,7 +2181,7 @@ export default function Formularios() {
   const clearAllResponses = async () => {
     // Remove all from Supabase
     if (false) {
-      try { await SB.client.from("form_responses").delete().neq("id", ""); } catch {}
+      try {} catch {}
     }
     // Remove from localStorage
     const keys = [];
