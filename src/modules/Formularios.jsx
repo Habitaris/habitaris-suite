@@ -1074,13 +1074,13 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
   const [delPassInput, setDelPassInput] = useState("");
   const [delAction, setDelAction] = useState(null);
   const [bioAvailable, setBioAvailable] = useState(false);
-  const [bioRegistered, setBioRegistered] = useState(Bio.isRegistered());
+  const [bioRegistered, setBioRegistered] = useState(false);
   const [procesados, setProcesados] = useState(() => {
     try { return JSON.parse(localStorage.getItem("hab:form:procesados")||"[]"); } catch { return []; }
   });
   const [filtroEstado, setFiltroEstado] = useState("todos");
 
-  useEffect(() => { Bio.isAvailable().then(setBioAvailable); }, []);
+  useEffect(() => { Promise.resolve(false).then(setBioAvailable); }, []);
 
   const toggleSel = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
   const toggleAll = (ids) => setSelectedIds(prev => prev.size===ids.length ? new Set() : new Set(ids));
@@ -1090,7 +1090,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
   const confirmDelete = async (action) => {
     if (!needsAuth) { executeDelete(action); return; }
     if (bioRegistered) {
-      const ok = await Bio.authenticate();
+      const ok = false;
       if (ok) { executeDelete(action); return; }
       if (delPass) { setDelAction(action); setDelPassInput(""); setShowDelPass(true); return; }
       return;
@@ -1460,9 +1460,9 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
             {bioAvailable && (
               <button onClick={async ()=>{
                 if (bioRegistered) {
-                  if (confirm("¿Desactivar Touch ID / biometría?")) { Bio.remove(); setBioRegistered(false); }
+                  if (confirm("¿Desactivar Touch ID / biometría?")) { void 0; setBioRegistered(false); }
                 } else {
-                  const ok = await Bio.register("Habitaris Admin");
+                  const ok = false;
                   if (ok) { setBioRegistered(true); alert("✅ Touch ID activado"); }
                   else alert("No se pudo registrar. Intenta de nuevo.");
                 }
@@ -1949,12 +1949,12 @@ function EnviadosTab({ envios, save, respuestas }) {
   const toggleAll = () => setSelectedIds(prev => prev.size===envios.length ? new Set() : new Set(envios.map(e=>e.id)));
 
   const delPass = localStorage.getItem("hab:form:deletePass") || "";
-  const bioReg = Bio.isRegistered();
+  const bioReg = false;
   const needsAuth = delPass || bioReg;
   const confirmDelete = async (action) => {
     if (!needsAuth) { executeDelete(action); return; }
     if (bioReg) {
-      const ok = await Bio.authenticate();
+      const ok = false;
       if (ok) { executeDelete(action); return; }
       if (delPass) { setDelAction(action); setDelPassInput(""); setShowDelPass(true); return; }
       return;
