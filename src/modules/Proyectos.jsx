@@ -43,7 +43,7 @@ function useStore(key, init) {
   const save = useCallback((v) => {
     const val = typeof v === "function" ? v(data) : v;
     setData(val);
-    try { const d = JSON.parse(localStorage.getItem(lsKey))||{}; d[key]=val; localStorage.setItem(lsKey,JSON.stringify(d)); } catch {}
+    try { const d = JSON.parse(localStorage.getItem(lsKey))||{}; d[key]=val; localStorage.setItem(lsKey,JSON.stringify(d)); try { window.storage?.set?.(lsKey,JSON.stringify(d)); } catch {} } catch {}
   }, [key, data]);
   return [data, save];
 }

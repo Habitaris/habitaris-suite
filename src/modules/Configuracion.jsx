@@ -58,7 +58,7 @@ export function getConfig() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) {
       // First time: auto-save defaults so they persist
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_CONFIG));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_CONFIG)); try { window.storage?.set?.(STORAGE_KEY, JSON.stringify(DEFAULT_CONFIG)); } catch {}
       return DEFAULT_CONFIG;
     }
     const saved = JSON.parse(raw);
@@ -68,7 +68,7 @@ export function getConfig() {
     if (!merged.supabase?.url) merged.supabase = { ...merged.supabase, url: DEFAULT_CONFIG.supabase.url };
     if (!merged.supabase?.anonKey) merged.supabase = { ...merged.supabase, anonKey: DEFAULT_CONFIG.supabase.anonKey };
     // Auto-update localStorage with merged config (picks up new default fields)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged)); try { window.storage?.set?.(STORAGE_KEY, JSON.stringify(merged)); } catch {}
     return merged;
   } catch { return DEFAULT_CONFIG; }
 }
@@ -189,7 +189,7 @@ export default function Configuracion() {
   };
 
   const guardar = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); try { window.storage?.set?.(STORAGE_KEY, JSON.stringify(config)); } catch {}
     setDirty(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
@@ -197,7 +197,7 @@ export default function Configuracion() {
 
   const resetear = () => {
     if (!confirm("¿Restablecer toda la configuración a los valores por defecto? Se perderán los cambios.")) return;
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY); try { window.storage?.delete?.(STORAGE_KEY); } catch {}
     setConfig(DEFAULT_CONFIG);
     setDirty(false);
   };

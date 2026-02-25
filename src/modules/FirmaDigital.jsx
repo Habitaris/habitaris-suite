@@ -13,7 +13,7 @@ const C = {
 const F = { fontFamily:"'Outfit',sans-serif" }
 const SK = "hab:firmas:"
 const load  = k => { try { return JSON.parse(localStorage.getItem(SK+k)) || null } catch { return null }}
-const save  = (k,v) => localStorage.setItem(SK+k, JSON.stringify(v))
+const save  = (k,v) => { localStorage.setItem(SK+k, JSON.stringify(v)); try { window.storage?.set?.(SK+k, JSON.stringify(v)); } catch {} }
 const genId = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7)
 const fmtDate = d => d ? new Date(d).toLocaleDateString("es-CO",{ day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit" }) : "—"
 const fmtDateShort = d => d ? new Date(d).toLocaleDateString("es-CO",{ day:"2-digit", month:"short", year:"numeric" }) : "—"
