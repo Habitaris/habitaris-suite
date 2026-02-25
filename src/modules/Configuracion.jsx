@@ -42,7 +42,7 @@ const DEFAULT_CONFIG = {
     logo: "",
     colorPrimario: "#111111",
     colorSecundario: "#3B3B3B",
-    colorAcento: "#C9A84C",
+    colorAcento: "#111111",
     tipografia: "DM Sans",
     slogan: "Diseño · Interiorismo · Arquitectura",
   },
@@ -108,7 +108,7 @@ const T = {
   amber:"#8C6A00", amberBg:"#FFF4E0",
   red:"#B91C1C", redBg:"#FAE8E8",
   purple:"#5B3A8C",
-  gold:"#C9A84C",
+  gold:"#111111",
   shadow:"0 1px 4px rgba(0,0,0,.06)",
 };
 const F = { fontFamily:"'DM Sans',sans-serif" };
@@ -164,7 +164,7 @@ const FIELDS = {
   apariencia: [
     { key:"colorPrimario",   label:"Color primario (header, botones)",   placeholder:"#111111", color:true },
     { key:"colorSecundario", label:"Color secundario (enlaces, badges)", placeholder:"#3B3B3B", color:true },
-    { key:"colorAcento",     label:"Color acento (destacados, progreso)",placeholder:"#C9A84C", color:true },
+    { key:"colorAcento",     label:"Color acento (destacados, progreso)",placeholder:"#111111", color:true },
     { key:"slogan",          label:"Slogan / Tagline",                   placeholder:"Diseño · Interiorismo · Arquitectura" },
   ],
   supabase: [
@@ -371,7 +371,7 @@ export default function Configuracion() {
                   <div style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",marginBottom:8}}>🎨 Paletas predefinidas</div>
                   <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                     {[
-                      { name:"Elegante oscuro", p:"#111111", s:"#3B3B3B", a:"#C9A84C" },
+                      { name:"Elegante oscuro", p:"#111111", s:"#3B3B3B", a:"#111111" },
                       { name:"Profesional azul",p:"#1E3A5F", s:"#2E7D96", a:"#E8B931" },
                       { name:"Natural verde",   p:"#1B4332", s:"#52796F", a:"#D4A373" },
                       { name:"Moderno violeta", p:"#2D1B69", s:"#5B3A8C", a:"#F4A261" },
@@ -401,7 +401,7 @@ export default function Configuracion() {
                     const ap = config.apariencia || {};
                     const cp = ap.colorPrimario || "#111";
                     const cs = ap.colorSecundario || "#3B3B3B";
-                    const ca = ap.colorAcento || "#C9A84C";
+                    const ca = ap.colorAcento || "#111111";
                     const font = ap.tipografia || "DM Sans";
                     const slogan = ap.slogan || config.empresa?.eslogan || "Diseño · Interiorismo · Arquitectura";
                     const nombre = config.empresa?.nombre || "Habitaris";

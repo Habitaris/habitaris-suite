@@ -35,25 +35,25 @@ export const C = {
 
 const MODULES = [
   { id:"dashboard",    label:"Dashboard",               icon:"📊", desc:"KPIs financieros, alertas, flujo caja, vista consolidada empresa",    color:"#111111", component:Dashboard,    ready:true  },
-  { id:"formularios", label:"Formularios",              icon:"📋", desc:"Constructor, plantillas, lógica condicional, compartir WhatsApp/email", color:"#5B3A8C", component:Formularios,  ready:true  },
-  { id:"crm",          label:"CRM / Ofertas",          icon:"📋", desc:"Ofertas, clientes, proveedores, APU, borrador y presupuesto",         color:"#1E6B42", component:CRM,          ready:true  },
-  { id:"rrhh",         label:"RRHH",                   icon:"👷", desc:"Equipo, cargos, partes de trabajo, asistencia y nómina",               color:"#1E4F8C", component:RRHH,         ready:true  },
-  { id:"herramientas", label:"Herramientas Técnicas",   icon:"🔧", desc:"Cuadro de cargas, concreto, cubicación, materiales, unidades",         color:"#7A5218", component:Herramientas, ready:true  },
-  { id:"logistica",    label:"Logística",               icon:"📦", desc:"Almacén, EPPs, dotaciones, herramientas, equipos, compras y proveedores", color:"#0D5E6E", component:Logistica,    ready:true  },
-  { id:"compras",      label:"Compras",                 icon:"🛒", desc:"Órdenes de compra, recepción mercancía, evaluación proveedores",       color:"#0D5E6E", component:Compras,      ready:true  },
-  { id:"aprobaciones", label:"Aprobaciones",             icon:"✅", desc:"Flujos de aprobación, cadenas, umbrales y permisos por módulo",           color:"#D4840A", component:Aprobaciones, ready:true  },
-  { id:"proyectos",    label:"Proyectos",               icon:"📅", desc:"Gantt, avances, seguimiento de obra y control de calidad",             color:"#5B3A8C", component:Proyectos,    ready:true  },
-  { id:"biblioteca",   label:"Biblioteca",              icon:"📚", desc:"APUs normalizados, materiales, precios unitarios y textos tipo",       color:"#0D5E6E", component:Biblioteca,   ready:true  },
+  { id:"formularios", label:"Formularios",              icon:"📋", desc:"Constructor, plantillas, lógica condicional, compartir WhatsApp/email", color:"#111111", component:Formularios,  ready:true  },
+  { id:"crm",          label:"CRM / Ofertas",          icon:"📋", desc:"Ofertas, clientes, proveedores, APU, borrador y presupuesto",         color:"#111111", component:CRM,          ready:true  },
+  { id:"rrhh",         label:"RRHH",                   icon:"👷", desc:"Equipo, cargos, partes de trabajo, asistencia y nómina",               color:"#111111", component:RRHH,         ready:true  },
+  { id:"herramientas", label:"Herramientas Técnicas",   icon:"🔧", desc:"Cuadro de cargas, concreto, cubicación, materiales, unidades",         color:"#111111", component:Herramientas, ready:true  },
+  { id:"logistica",    label:"Logística",               icon:"📦", desc:"Almacén, EPPs, dotaciones, herramientas, equipos, compras y proveedores", color:"#111111", component:Logistica,    ready:true  },
+  { id:"compras",      label:"Compras",                 icon:"🛒", desc:"Órdenes de compra, recepción mercancía, evaluación proveedores",       color:"#111111", component:Compras,      ready:true  },
+  { id:"aprobaciones", label:"Aprobaciones",             icon:"✅", desc:"Flujos de aprobación, cadenas, umbrales y permisos por módulo",           color:"#111111", component:Aprobaciones, ready:true  },
+  { id:"proyectos",    label:"Proyectos",               icon:"📅", desc:"Gantt, avances, seguimiento de obra y control de calidad",             color:"#111111", component:Proyectos,    ready:true  },
+  { id:"biblioteca",   label:"Biblioteca",              icon:"📚", desc:"APUs normalizados, materiales, precios unitarios y textos tipo",       color:"#111111", component:Biblioteca,   ready:true  },
   { id:"contabilidad", label:"Contabilidad",            icon:"📊", desc:"Facturación, costos reales, ingresos, egresos e informes",             color:"#555555", component:Contabilidad, ready:true  },
-  { id:"sst",          label:"SST",                    icon:"🦺", desc:"Seguridad y salud en el trabajo, inspecciones y riesgos",              color:"#AE2C2C", component:SST,          ready:true  },
-  { id:"formacion",    label:"Formación",               icon:"🎓", desc:"Cursos obligatorios y operativos, evaluaciones, certificados, control de vencimientos", color:"#5B3A8C", component:Formacion,    ready:true  },
-  { id:"carnets",      label:"Identidad Corporativa",   icon:"🪪", desc:"Carnets, tarjetas de visita físicas y virtuales, QR de contacto, branding del equipo", color:"#0D5E6E", component:IdentidadCorporativa,      ready:true  },
-  { id:"firmas",       label:"Firma Digital",            icon:"✍️", desc:"Firma de documentos con pad digital, trazabilidad, firmas guardadas y certificados",  color:"#5B3A8C", component:FirmaDigital, ready:true  },
-  { id:"legal",        label:"Legal",                    icon:"⚖️", desc:"Plantillas contractuales, pólizas/seguros, procesos legales, comunicaciones",        color:"#1E4F8C", component:Legal,        ready:true  },
-  { id:"calidad",      label:"Calidad y Auditoría",    icon:"🔍", desc:"No conformidades, auditorías, protocolos, checklists e indicadores",   color:"#0D7377", component:Calidad,      ready:true  },
-  { id:"postventa",    label:"Postventa",               icon:"🏡", desc:"Garantías, incidencias y atención al cliente post-entrega",           color:"#1E4F8C", component:Postventa,    ready:true  },
-  { id:"admin",        label:"Administración",          icon:"💼", desc:"Caja chica, tarjeta corporativa, viáticos, flujo empresa, CxC/CxP",  color:"#6B5B8C", component:Administracion, ready:true  },
-  { id:"flotas",       label:"Control de Flotas",       icon:"🚗", desc:"Vehículos, kilómetros, combustible, documentación, mantenimiento",   color:"#2E5E4E", component:Flotas,         ready:true  },
+  { id:"sst",          label:"SST",                    icon:"🦺", desc:"Seguridad y salud en el trabajo, inspecciones y riesgos",              color:"#111111", component:SST,          ready:true  },
+  { id:"formacion",    label:"Formación",               icon:"🎓", desc:"Cursos obligatorios y operativos, evaluaciones, certificados, control de vencimientos", color:"#111111", component:Formacion,    ready:true  },
+  { id:"carnets",      label:"Identidad Corporativa",   icon:"🪪", desc:"Carnets, tarjetas de visita físicas y virtuales, QR de contacto, branding del equipo", color:"#111111", component:IdentidadCorporativa,      ready:true  },
+  { id:"firmas",       label:"Firma Digital",            icon:"✍️", desc:"Firma de documentos con pad digital, trazabilidad, firmas guardadas y certificados",  color:"#111111", component:FirmaDigital, ready:true  },
+  { id:"legal",        label:"Legal",                    icon:"⚖️", desc:"Plantillas contractuales, pólizas/seguros, procesos legales, comunicaciones",        color:"#111111", component:Legal,        ready:true  },
+  { id:"calidad",      label:"Calidad y Auditoría",    icon:"🔍", desc:"No conformidades, auditorías, protocolos, checklists e indicadores",   color:"#111111", component:Calidad,      ready:true  },
+  { id:"postventa",    label:"Postventa",               icon:"🏡", desc:"Garantías, incidencias y atención al cliente post-entrega",           color:"#111111", component:Postventa,    ready:true  },
+  { id:"admin",        label:"Administración",          icon:"💼", desc:"Caja chica, tarjeta corporativa, viáticos, flujo empresa, CxC/CxP",  color:"#111111", component:Administracion, ready:true  },
+  { id:"flotas",       label:"Control de Flotas",       icon:"🚗", desc:"Vehículos, kilómetros, combustible, documentación, mantenimiento",   color:"#111111", component:Flotas,         ready:true  },
   { id:"config",       label:"Configuración",           icon:"⚙️", desc:"Empresa, correo, WhatsApp, legal, apariencia — ajustes globales",    color:"#555555", component:Configuracion,  ready:true  },
 ]
 
@@ -62,7 +62,7 @@ const F = { fontFamily:"'DM Sans',sans-serif" }
 function Spinner() {
   return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", flexDirection:"column", gap:16 }}>
-      <div style={{ width:40, height:40, border:"3px solid #E4E1DB", borderTopColor:"#1E6B42", borderRadius:"50%", animation:"spin 0.8s linear infinite" }}/>
+      <div style={{ width:40, height:40, border:"3px solid #E4E1DB", borderTopColor:"#111111", borderRadius:"50%", animation:"spin 0.8s linear infinite" }}/>
       <style>{"@keyframes spin{to{transform:rotate(360deg)}}"}</style>
       <p style={{ ...F, fontSize:13, color:"#888" }}>Cargando módulo…</p>
     </div>
@@ -76,7 +76,7 @@ function LangSwitch({ lang, setLang }) {
         <button key={code} onClick={() => setLang(code)}
           style={{ ...F, padding:"4px 10px", borderRadius:4, border:"none", cursor:"pointer",
             fontSize:10, fontWeight:600,
-            background: lang===code ? "#1E6B42" : "rgba(255,255,255,0.12)",
+            background: lang===code ? "#111111" : "rgba(255,255,255,0.12)",
             color: lang===code ? "#fff" : "rgba(255,255,255,0.55)",
             transition:"all .15s" }}>
           {lbl}
