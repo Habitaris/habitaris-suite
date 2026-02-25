@@ -1485,16 +1485,6 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
         </div>
       </div>
 
-      <div style={{display:"flex",gap:6,marginBottom:10}}>
-        {[["pendiente","⏳ Pendientes"],["respondido","✅ Respondidos"],["bloqueado","🚫 Bloqueados"],["todos","Todos"]].map(([id,lbl])=>(
-          <button key={id} onClick={()=>{setFiltro(id);setSelectedIds(new Set());}}
-            style={{padding:"5px 12px",fontSize:10,fontWeight:filtro===id?700:500,
-              background:filtro===id?"#111":"#fff",color:filtro===id?"#fff":"#555",
-              border:filtro===id?"1px solid #111":"1px solid #E0E0E0",borderRadius:4,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
-            {lbl} ({counts[id]})
-          </button>
-        ))}
-      </div>
       <Card style={{padding:0,overflow:"hidden"}}>
         <table style={{borderCollapse:"collapse",width:"100%"}}>
           <thead>
@@ -1991,6 +1981,16 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
             🗑 Limpiar todo
           </button>}
         </div>
+      </div>
+      <div style={{display:"flex",gap:6,marginBottom:10}}>
+        {[["pendiente","⏳ Pendientes"],["respondido","✅ Respondidos"],["bloqueado","🚫 Bloqueados"],["todos","Todos"]].map(([id,lbl])=>(
+          <button key={id} onClick={()=>{setFiltro(id);setSelectedIds(new Set());}}
+            style={{padding:"5px 12px",fontSize:10,fontWeight:filtro===id?700:500,
+              background:filtro===id?"#111":"#fff",color:filtro===id?"#fff":"#555",
+              border:filtro===id?"1px solid #111":"1px solid #E0E0E0",borderRadius:4,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
+            {lbl} ({counts[id]})
+          </button>
+        ))}
       </div>
       <Card style={{padding:0,overflow:"hidden"}}>
         <table style={{borderCollapse:"collapse",width:"100%"}}>
