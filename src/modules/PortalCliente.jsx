@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import OfferApproval from "./OfferApproval.jsx";
 
 /* ─────── palette ─────── */
 const C = {
@@ -793,7 +794,14 @@ function AdminPortalView() {
    EXPORT — detecta si es público o admin
    ═══════════════════════════════════════════════════ */
 export default function PortalCliente() {
-  const brand = useMemo(() => getBrand(), [])
+  const hash = window.location.hash.slice(1);
+  if (hash && hash.length >= 20 && hash.length <= 30 && /^[A-Za-z0-9]+$/.test(hash)) {
+    return <OfferApproval token={hash} />;
+  }
+  const brand = useMemo(() => getBrand(), []);
+  const token = getPortalToken();
+
+
   const token = getPortalToken()
   const portales = load("portales") || SAMPLE_PORTALES
 

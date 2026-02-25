@@ -11,7 +11,7 @@ import {
   UserCheck, FileCheck, RotateCcw, XCircle, ExternalLink as LinkIcon
 } from "lucide-react";
 import API, { USUARIOS_INTERNOS, getAprobador, aprobaciones, portal, notificaciones } from "../api.js";
-import { encodePortalData } from "./PortalCliente.jsx";
+import { createPortal as createOfferPortal } from "./offerPortal.js";
 import { encodeFormDef } from "./FormularioPublico.jsx";
 
 /* ─── TIPOGRAFÍA (Manual de Marca: una sola sans-serif) ─────── */
@@ -9008,13 +9008,8 @@ function TEnt({ d, set, r }) {
     }
   };
 
+
   const wfEnviarCliente = async () => {
-    // Create portal record (for internal tracking)
-    const pvpData = { ...d, _pvp: r.PVP, _pvpIva: r.PVP_IVA, _iva: r.IVA };
-    const p = await portal.crear(d.id, pvpData, revision);
-    setWfPortals(prev => [...prev, p]);
-    await wfAction("enviar", { portalToken: p.token });
-    // Generate portal URL with data in hash
     const portalData = {
       ref: refOferta, titulo, cliente: clienteNombre, proyecto: d.proyecto||"",
       ubicacion: d.ubicacion||"", fecha: fechaDoc, revision,
@@ -9026,13 +9021,14 @@ function TEnt({ d, set, r }) {
       firmante: representante,
       clienteEmail: d.emailCliente||"", telHabitaris: "573183818736",
     };
-    const hash = encodePortalData(portalData);
-    const portalUrl = `${window.location.origin}/portal#${hash}`;
-    set("wf_lastPortalUrl", portalUrl);
+    const parentToken = d.wf_lastPortalToken || null;
+    const p = await createOfferPortal(d.id, portalData, revision, parentToken);
+    setWfPortals(prev => [...prev, p]);
+    await wfAction("enviar", { portalToken: p.token });
+    set("wf_lastPortalUrl", p.portalUrl);
     set("wf_lastPortalToken", p.token);
-    return { ...p, portalUrl };
+    return p;
   };
-
   const WF_ESTADOS = {
     borrador:              { label:"Borrador",               color:"#888",    icon:"📝", desc:"En elaboración" },
     pendiente_aprobacion:  { label:"Pendiente aprobación",   color:"#D4840A", icon:"⏳", desc:`Esperando aprobación de ${wfAprobador?.nombre||"—"}` },
