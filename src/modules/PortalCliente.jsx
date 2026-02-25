@@ -802,7 +802,6 @@ export default function PortalCliente() {
   const token = getPortalToken();
 
 
-  const token = getPortalToken()
   const portales = load("portales") || SAMPLE_PORTALES
 
   // Si viene con token → vista pública del cliente
