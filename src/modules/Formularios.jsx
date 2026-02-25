@@ -1485,6 +1485,16 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
         </div>
       </div>
 
+      <div style={{display:"flex",gap:6,marginBottom:10}}>
+        {[["pendiente","⏳ Pendientes"],["respondido","✅ Respondidos"],["bloqueado","🚫 Bloqueados"],["todos","Todos"]].map(([id,lbl])=>(
+          <button key={id} onClick={()=>{setFiltro(id);setSelectedIds(new Set());}}
+            style={{padding:"5px 12px",fontSize:10,fontWeight:filtro===id?700:500,
+              background:filtro===id?"#111":"#fff",color:filtro===id?"#fff":"#555",
+              border:filtro===id?"1px solid #111":"1px solid #E0E0E0",borderRadius:4,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
+            {lbl} ({counts[id]})
+          </button>
+        ))}
+      </div>
       <Card style={{padding:0,overflow:"hidden"}}>
         <table style={{borderCollapse:"collapse",width:"100%"}}>
           <thead>
@@ -1930,6 +1940,11 @@ function TabEstadisticas({ forms }) {
    ENVIADOS TAB — with checkboxes + password delete
    ═══════════════════════════════════════════════════════════════ */
 function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
+  const [filtro, setFiltro] = useState("pendiente");
+  const getStatus = (e) => e.blocked ? "bloqueado" : respuestas.some(r=>r.clienteEmail===e.cliente?.email && r.formularioId===e.formId) ? "respondido" : "pendiente";
+  const counts = { todos:envios.length, pendiente:0, respondido:0, bloqueado:0 };
+  envios.forEach(e => { counts[getStatus(e)]++; });
+  const filtered = filtro==="todos" ? envios : envios.filter(e => getStatus(e)===filtro);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [showDelPass, setShowDelPass] = useState(false);
   const [delPassInput, setDelPassInput] = useState("");
@@ -1966,7 +1981,7 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
     <div className="fade-up">
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <h2 style={{margin:0,fontSize:18,fontWeight:700}}>Formularios enviados — {envios.length}</h2>
+          <h2 style={{margin:0,fontSize:18,fontWeight:700}}>Formularios enviados — {filtered.length}</h2>
           {selectedIds.size > 0 && <button onClick={()=>confirmDelete({type:"selected"})}
             style={{padding:"5px 14px",fontSize:9,fontWeight:700,background:T.red,color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
             🗑 Eliminar seleccionados ({selectedIds.size})
@@ -1984,9 +1999,9 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
             {["Fecha","Hora","Formulario","Cliente","Email","Teléfono","Estado","Acciones"].map(h=><th key={h} style={ths}>{h}</th>)}
           </tr></thead>
           <tbody>
-            {envios.length===0 ? (
-              <tr><td colSpan={9} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>No has enviado formularios aún</td></tr>
-            ) : [...envios].reverse().map(e => {
+            {filtered.length===0 ? (
+              <tr><td colSpan={9} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>{filtro==="todos"?"No has enviado formularios aún":"Sin resultados para este filtro"}</td></tr>
+            ) : [...filtered].reverse().map(e => {
               const hasResp = respuestas.some(r=>r.clienteEmail===e.cliente?.email && r.formularioId===e.formId);
               const isBlocked = e.blocked;
               return (
