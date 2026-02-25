@@ -240,7 +240,7 @@ function calc(o) {
     pctReteFuente, pctReteICA, pctReteIVA, costosDirectos,
     apuSalarioAnual, apuPrestaciones, apuHDia, apuDiasSem, apuSemanas, apuPctProductivas,
     apuLicencias, apuEquipos, apuAccesorios, apuIndirectos,
-    apuModoHora, apuCostoHoraManual, planos,
+    apuModoHora, apuCostoHoraManual, planos = [],
   } = o;
 
   const hAnio = apuHDia * apuDiasSem * apuSemanas * apuPctProductivas;
