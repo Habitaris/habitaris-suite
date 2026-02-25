@@ -14,7 +14,7 @@ const supa = {
   async d(t,m){try{const r=await fetch(`${SUPA_URL}/rest/v1/${t}?${m}`,{method:"DELETE",headers:this.h});return r.ok}catch{return false}},
 };
 
-const T={ink:"#111",inkMid:"#444",inkLight:"#888",bg:"#F0EEE9",surface:"#FAFAF8",border:"#E4E1DB",green:"#1E6B42",greenBg:"#E8F4EE",blue:"#1E4F8C",blueBg:"#E6EFF9",amber:"#7A5218",amberBg:"#FFF4E0",red:"#AE2C2C",redBg:"#FAE8E8",gold:"#C9A84C",shadow:"0 1px 4px rgba(0,0,0,.06)"};
+const T={ink:"#111",inkMid:"#555",inkLight:"#999",bg:"#F5F5F5",surface:"#FFFFFF",border:"#E0E0E0",green:"#2D6A2E",greenBg:"#EAFAEA",blue:"#3B3B3B",blueBg:"#F0F0F0",amber:"#8C6A00",amberBg:"#FFF8E0",red:"#B91C1C",redBg:"#FAE8E8",gold:"#111",shadow:"0 1px 4px rgba(0,0,0,.06)"};
 
 async function hashPw(pw){const d=new TextEncoder().encode(pw+"_hab_2026");const h=await crypto.subtle.digest("SHA-256",d);return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,"0")).join("")}
 function genToken(){return Array.from(crypto.getRandomValues(new Uint8Array(16))).map(b=>b.toString(36)).join("").substring(0,24)}
@@ -110,7 +110,7 @@ export default function LoginScreen({onSuccess}){
       <style>{`*{box-sizing:border-box}@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');.li:focus{outline:none;border-color:${T.green}!important;box-shadow:0 0 0 3px ${T.green}18}`}</style>
       <div style={{width:"100%",maxWidth:400,background:"#fff",borderRadius:16,boxShadow:"0 4px 24px rgba(0,0,0,.08)",padding:"36px 32px"}}>
         <div style={{textAlign:"center",marginBottom:28}}>
-          <div style={{width:52,height:52,borderRadius:14,background:T.ink,display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:14,boxShadow:"0 4px 12px rgba(0,0,0,.15)"}}><Shield size={26} color="#fff"/></div>
+          <div style={{width:52,height:52,borderRadius:0,background:"transparent",display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:14}}><svg width="52" height="52" viewBox="0 0 52 52" fill="none"><rect x="6" y="8" width="36" height="36" stroke="#111" strokeWidth="1.8" fill="none"/><line x1="3" y1="6" x2="15" y2="6" stroke="#111" strokeWidth="1.5"/><line x1="3" y1="6" x2="3" y2="18" stroke="#111" strokeWidth="1.5"/><line x1="45" y1="46" x2="33" y2="46" stroke="#111" strokeWidth="1.5"/><line x1="45" y1="46" x2="45" y2="34" stroke="#111" strokeWidth="1.5"/><rect x="15" y="16" width="6.5" height="18" fill="#111"/><rect x="15" y="23" width="18" height="5.5" fill="#111"/><rect x="26.5" y="16" width="6.5" height="18" fill="#111"/></svg></div>
           <h1 style={{margin:0,fontSize:20,fontWeight:700,color:T.ink}}>{brand} <span style={{fontWeight:300,color:T.inkLight}}>Suite</span></h1>
           <p style={{margin:"4px 0 0",fontSize:11,color:T.inkLight}}>
             {mode==="setup"?"Configura tu acceso de administrador":mode==="invite"?`Bienvenid@, ${invUser?.nombre}. Configura tu contraseña`:"Acceso exclusivo para usuarios autorizados"}
