@@ -254,6 +254,7 @@ CREATE TABLE IF NOT EXISTS form_links (
   link_id TEXT UNIQUE NOT NULL,
   client_name TEXT,
   client_email TEXT,
+  client_tel TEXT,
   max_uses INTEGER DEFAULT 0,
   current_uses INTEGER DEFAULT 0,
   expires_at TIMESTAMPTZ,

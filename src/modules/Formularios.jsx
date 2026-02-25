@@ -2165,7 +2165,7 @@ export default function Formularios() {
             id: l.link_id || l.id,
             formId: l.form_id,
             formNombre: l.form_name || "\u2014",
-            cliente: { nombre: l.client_name||"", email: l.client_email||"", tel: "" },
+            cliente: { nombre: l.client_name||"", email: l.client_email||"", tel: l.client_tel||"" },
             fecha: l.created_at ? new Date(l.created_at).toLocaleDateString("es-CO") : "\u2014",
             hora: l.created_at ? new Date(l.created_at).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}) : "\u2014",
             linkId: l.link_id,
@@ -2184,7 +2184,7 @@ export default function Formularios() {
   const addEnvio = async (e) => {
     if (SB.isConfigured()) {
       try {
-        await SB.createLink({ form_id: e.formId, form_name: e.formNombre, link_id: e.linkId, client_name: e.cliente?.nombre||null, client_email: e.cliente?.email||null, max_uses: e.maxUsos||0, expires_at: e.expiry ? new Date(e.expiry).toISOString() : null });
+        await SB.createLink({ form_id: e.formId, form_name: e.formNombre, link_id: e.linkId, client_name: e.cliente?.nombre||null, client_email: e.cliente?.email||null, client_tel: e.cliente?.tel||null, max_uses: e.maxUsos||0, expires_at: e.expiry ? new Date(e.expiry).toISOString() : null });
         await loadEnvios();
       } catch(err) { console.warn("addEnvio SB error:", err); }
     } else { save("envios", [...(data.envios||[]), e]); }
