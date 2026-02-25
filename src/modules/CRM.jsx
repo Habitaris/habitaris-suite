@@ -1914,7 +1914,6 @@ const NAV = [
   { id: "dashboard",    lbl: "Dashboard",      en: "Dashboard",      I: LayoutDashboard },
   { id: "offers",       lbl: "Ofertas",         en: "Offers",         I: FileText },
   { id: "clientes",     lbl: "Clientes",        en: "Clients",        I: User },
-  { id: "formularios",  lbl: "Briefings",       en: "Briefings",      I: ClipboardList },
 ];
 
 function Sidebar({ view, sv, lang, setLang, open, toggle }) {
