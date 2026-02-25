@@ -390,7 +390,7 @@ function briefingToClient(b) {
     tipo:     b.razon_social ? "Empresa" : "Persona natural",
     nit:      b.documento || "",
     email:    b.email || "",
-    telMovil: b.telefono || "",
+    telMovil: (b.telefono || "").replace(/^\+57\s*/, ""),
     prefijoMovil: "+57",
     ciudad:   b.ciudad || "",
     pais:     "CO",
@@ -403,6 +403,12 @@ function briefingToClient(b) {
     ].filter(Boolean).join(" | "),
     emailFactura:   b.email_factura || b.email || "",
     dirFacturacion: b.dir_facturacion || "",
+    razonSocial:    b.razon_social || "",
+    retenciones:    b.retenciones || "",
+    detalleRet:     b.detalle_retenciones || "",
+    formaPago:      b.forma_pago || "",
+    anticipo:       b.anticipo || "",
+    direccion:      b.direccion_proyecto || "",
     briefingId:     b.id,
     fechaAlta:      new Date().toISOString().split("T")[0],
   };
@@ -1902,10 +1908,7 @@ const NAV = [
   { id: "dashboard",    lbl: "Dashboard",      en: "Dashboard",      I: LayoutDashboard },
   { id: "offers",       lbl: "Ofertas",         en: "Offers",         I: FileText },
   { id: "clientes",     lbl: "Clientes",        en: "Clients",        I: User },
-  { id: "proveedores",  lbl: "Proveedores",     en: "Suppliers",      I: HardHat },
-  { id: "formularios",  lbl: "Formularios",     en: "Forms",          I: ClipboardList },
-  { id: "encuestas",    lbl: "Encuestas ISO",   en: "ISO Surveys",    I: ClipboardCheck },
-  { id: "settings",     lbl: "Configuración",   en: "Settings",       I: Settings },
+  { id: "formularios",  lbl: "Briefings",       en: "Briefings",      I: ClipboardList },
 ];
 
 function Sidebar({ view, sv, lang, setLang, open, toggle }) {
@@ -4019,8 +4022,99 @@ function TabPlaceholder({ icon, title, desc }) {
   );
 }
 
+
+/* ─── BRIEFING TAB — Informe de respuestas ────────────────────── */
+function TBriefing({ d, set }) {
+  const [briefingData, setBriefingData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (d.briefingId) {
+      try {
+        const raw = store.getSync("hab:briefing:" + d.briefingId);
+        if (raw) setBriefingData(JSON.parse(raw));
+      } catch {}
+    }
+    setLoading(false);
+  }, [d.briefingId]);
+
+  const CAMPOS = BRIEFING_CAMPOS;
+  const S = { label: { fontSize:9, letterSpacing:1.5, textTransform:"uppercase", color:C.inkLight, margin:"0 0 4px", fontWeight:600 },
+              val: { fontSize:13, color:C.ink, margin:"0 0 12px", lineHeight:1.5 },
+              card: { background:"#fff", border:`1px solid ${C.border}`, borderRadius:6, padding:"20px 24px", marginBottom:16 },
+              grid: { display:"grid", gridTemplateColumns:"1fr 1fr", gap:"0 24px" } };
+
+  if (loading) return <div style={{ padding:40, textAlign:"center", color:C.inkLight }}>Cargando...</div>;
+
+  if (!d.briefingId) return (
+    <div style={{ padding:"60px 0", textAlign:"center" }}>
+      <p style={{ fontSize:14, color:C.inkLight, margin:"0 0 12px" }}>Esta oferta no tiene un briefing vinculado.</p>
+      <p style={{ fontSize:12, color:C.inkLight }}>Puedes crear una oferta desde un briefing en Briefings → Recibidos → "Crear oferta"</p>
+    </div>
+  );
+
+  if (!briefingData) return (
+    <div style={{ padding:"60px 0", textAlign:"center" }}>
+      <p style={{ fontSize:14, color:C.inkLight }}>Briefing vinculado (ID: {d.briefingId}) pero los datos no se encontraron en la base de datos.</p>
+    </div>
+  );
+
+  // Group fields by section
+  const sections = [
+    { title: "Identificación del proyecto", icon: "📋", keys: ["nombre","email","telefono","como_conociste","ciudad","edificio","direccion_proyecto","tipo_proyecto","area_m2","num_habitaciones"] },
+    { title: "Diseño y estilo", icon: "🎨", keys: ["estilo","colores_materiales","espacios","fecha_inicio","plazo"] },
+    { title: "Presupuesto y financiación", icon: "💰", keys: ["presupuesto","financiacion","lo_mas_importante","que_esperas","links_ref"] },
+    { title: "Datos de facturación", icon: "🧾", keys: ["razon_social","documento","email_factura","dir_facturacion","retenciones","detalle_retenciones","anticipo","forma_pago"] },
+  ];
+
+  return (
+    <div className="fade">
+      <div style={{ marginBottom:20 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+          <span style={{ fontSize:18 }}>📋</span>
+          <h3 style={{ fontFamily:"'DM Sans',sans-serif", fontSize:18, fontWeight:700, margin:0, color:C.ink }}>Informe de Briefing</h3>
+        </div>
+        <p style={{ fontSize:11, color:C.inkLight, margin:"4px 0 0" }}>
+          Respuestas del cliente · {briefingData.fecha || "—"} · {briefingData.nombre || "Sin nombre"}
+        </p>
+      </div>
+
+      {sections.map((sec, si) => {
+        const hasData = sec.keys.some(k => {
+          const v = briefingData[k];
+          return v && (Array.isArray(v) ? v.length > 0 : String(v).trim() !== "");
+        });
+        if (!hasData) return null;
+        return (
+          <div key={si} style={S.card}>
+            <h4 style={{ fontFamily:"'DM Sans',sans-serif", fontSize:13, fontWeight:700, margin:"0 0 16px", color:C.ink, display:"flex", alignItems:"center", gap:8 }}>
+              <span>{sec.icon}</span> {sec.title}
+            </h4>
+            <div style={S.grid}>
+              {sec.keys.map(k => {
+                const v = briefingData[k];
+                if (!v || (Array.isArray(v) && v.length === 0) || String(v).trim() === "") return null;
+                const campo = CAMPOS.find(c => c.key === k);
+                const label = campo?.lbl || k;
+                const display = Array.isArray(v) ? v.join(", ") : String(v);
+                return (
+                  <div key={k}>
+                    <p style={S.label}>{label}</p>
+                    <p style={S.val}>{display}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ─── FORM ───────────────────────────────────────────────────── */
 const TABS = [
+  { id: "briefing",   lbl: "Briefing",         en: "Briefing" },
   { id: "general",    lbl: "General",          en: "General" },
   { id: "params",     lbl: "Parámetros",       en: "Parameters" },
   { id: "borrador",   lbl: "Borrador + APU",   en: "Draft + APU" },
@@ -4103,6 +4197,7 @@ function Form({ offers, editId, prefillData, onSave, onBack, lang }) {
         ))}
       </div>
 
+      {tab === "briefing"   && <TBriefing d={d} set={set} />}
       {tab === "general"    && <TGen d={d} set={set} offers={offers} />}
       {tab === "params"     && <TPar d={d} set={set} r={r} />}
       {tab === "borrador"   && <TBorrador d={d} set={set} r={r} />}
