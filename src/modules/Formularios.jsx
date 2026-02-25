@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import * as SB from "./supabase.js";
 import { Plus, Trash2, Check, X, Search, Edit3, Copy, Send, Eye, ChevronDown, ChevronUp, GripVertical, ToggleLeft, ToggleRight, Share2, Mail, MessageCircle, Link2, FileText, Star, TrendingUp, Layers, Settings, AlertTriangle } from "lucide-react";
 import { encodeFormDef } from "./FormularioPublico.jsx";
 import { getConfig, resolveTemplate } from "./Configuracion.jsx";
@@ -559,7 +560,7 @@ render();
       const encoded = encodeFormDef(def);
       setSharePublicUrl(`${appUrl}/form#${encoded}`);
       // Register link in Supabase
-      if (false) {
+      if (SB.isConfigured()) {
 //        //SB.createLink({
 //          form_id: existing?.id || "form",
 //          form_name: nombre,
@@ -1764,7 +1765,7 @@ function TabEstadisticas({ forms }) {
   const [formStats, setFormStats] = useState(null);
 
   useEffect(() => {
-    if (false) { setLoading(false); return; }
+    if (SB.isConfigured()) { setLoading(false); return; }
     Promise.resolve({}).then(r => { setStats(r); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
@@ -2125,9 +2126,9 @@ export default function Formularios() {
     const arr = [];
     const seen = new Set();
     // 1. Try Supabase first
-    if (false) {
+    if (SB.isConfigured()) {
       try {
-        const sbResp = [];
+        const sbResp = await SB.getAllResponses();
         if (sbResp && sbResp.length > 0) {
           sbResp.forEach(r => {
             const respData = r.data || {};
@@ -2180,7 +2181,7 @@ export default function Formularios() {
   };
   const clearAllResponses = async () => {
     // Remove all from Supabase
-    if (false) {
+    if (SB.isConfigured()) {
       try {} catch {}
     }
     // Remove from localStorage

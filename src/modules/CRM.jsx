@@ -1,4 +1,30 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+
+/* ── window.storage → Supabase KV ── */
+import { createClient } from "@supabase/supabase-js";
+const _sb = createClient("https://xlzkasdskatnikuavefh.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhsemthc2Rzc2thdG5pa3VhdmVmaCIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzQwMTUyOTk3LCJleHAiOjIwNTU3Mjg5OTd9.DP5x1hNbnTSzIFRMFOG7tYbykaAJMc6BRXYC_dFNFgE");
+if (typeof window !== "undefined" && !window._sbPolyfilled) {
+  window._sbPolyfilled = true;
+  window.storage = {
+    async get(key) {
+      const { data } = await _sb.from("kv_store").select("value").eq("key", key).maybeSingle();
+      return data ? { value: JSON.stringify(data.value), key } : null;
+    },
+    async set(key, value) {
+      const parsed = typeof value === "string" ? (() => { try { return JSON.parse(value); } catch { return value; } })() : value;
+      await _sb.from("kv_store").upsert({ key, value: parsed, updated_at: new Date().toISOString() }, { onConflict: "key" });
+      return { key, value };
+    },
+    async delete(key) {
+      await _sb.from("kv_store").delete().eq("key", key);
+      return { key, deleted: true };
+    },
+    async list(prefix) {
+      const { data } = await _sb.from("kv_store").select("key").like("key", prefix + "%");
+      return { keys: (data || []).map(r => r.key) };
+    },
+  };
+}
 import {
   LayoutDashboard, FileText, Plus, Settings, ChevronRight,
   TrendingUp, CheckCircle2, Edit2, Trash2,
