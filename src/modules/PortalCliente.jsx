@@ -13,8 +13,8 @@ const C = {
 }
 const F = { fontFamily:"'DM Sans',sans-serif" }
 const SK = "hab:portal:"
-const load  = k => { try { return JSON.parse(localStorage.getItem(SK+k)) || null } catch { return null }}
-const save  = (k,v) => localStorage.setItem(SK+k, JSON.stringify(v))
+const load  = k => { try { return JSON.parse(await store.get(SK+k)) || null } catch { return null }}
+const save  = (k,v) => await store.set(SK+k, JSON.stringify(v))
 const genId = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7)
 const fmtDate = d => d ? new Date(d).toLocaleDateString("es-CO",{ day:"2-digit", month:"short", year:"numeric" }) : "—"
 function daysUntil(d) { return d ? Math.ceil((new Date(d)-new Date())/(1000*60*60*24)) : Infinity }
@@ -25,7 +25,7 @@ function Badge({ children, color, bg, style }) {
 /* ─────── BRAND ─────── */
 function getBrand() {
   try {
-    const cfg = JSON.parse(localStorage.getItem("hab:config")) || {}
+    const cfg = JSON.parse(await store.get("hab:config")) || {}
     return {
       nombre: cfg.empresa?.nombre || "Habitaris",
       logo: cfg.apariencia?.logo || null,

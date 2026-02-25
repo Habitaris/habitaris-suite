@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { store } from "../core/store.js";
+
 
 /* ─────── palette ─────── */
 const C = {
@@ -15,8 +17,8 @@ const F = { fontFamily:"'DM Sans',sans-serif" }
 
 /* ─────── STORAGE ─────── */
 const SK = "hab:formacion:"
-const load  = k => { try { return JSON.parse(localStorage.getItem(SK+k)) || null } catch { return null }}
-const save  = (k,v) => { localStorage.setItem(SK+k, JSON.stringify(v)); try { window.storage?.set?.(SK+k, JSON.stringify(v)); } catch {} }
+const load  = k => { try { return JSON.parse(await store.get(SK+k)) || null } catch { return null }}
+const save  = (k,v) => { await store.set(SK+k, JSON.stringify(v)); try { store.set(SK+k, JSON.stringify(v)); } catch {} }
 const genId = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7)
 
 /* ─────── CATÁLOGO PRE-CARGADO DE FORMACIONES ─────── */

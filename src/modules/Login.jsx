@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { store } from "../core/store.js";
+
 import { Mail, Lock, Eye, EyeOff, Shield, UserPlus, Trash2, Send, Check, X, Copy } from "lucide-react";
 
 /* Supabase config (public anon key) */
@@ -32,7 +34,7 @@ export function getCurrentUser(){return getSession()}
 
 async function sendInviteEmail(nombre,email,token){
   try{
-    const cfg=JSON.parse(localStorage.getItem("habitaris_config")||"{}");
+    const cfg=JSON.parse(await store.get("habitaris_config")||"{}");
     const sId=cfg.correo?.emailjs_serviceId||"service_6x3478l";
     const tId=cfg.correo?.emailjs_templateId||"template_lzgrxc6";
     const pKey=cfg.correo?.emailjs_publicKey||"64nk2FHknwpLqc1p4";
@@ -99,7 +101,7 @@ export default function LoginScreen({onSuccess}){
     setSession({...invUser,estado:"activo"});window.history.replaceState({},"",window.location.pathname);setLoad(false);onSuccess();
   }
 
-  const brand=(()=>{try{return JSON.parse(localStorage.getItem("habitaris_config")||"{}").empresa?.nombre||"Habitaris"}catch{return"Habitaris"}})();
+  const brand=(()=>{try{return JSON.parse(await store.get("habitaris_config")||"{}").empresa?.nombre||"Habitaris"}catch{return"Habitaris"}})();
   const inp={width:"100%",padding:"10px 12px 10px 34px",border:`1px solid ${T.border}`,borderRadius:8,fontSize:13,fontFamily:"'DM Sans',sans-serif",background:"#FFFFFF"};
   const inpN={...inp,paddingLeft:12};
 

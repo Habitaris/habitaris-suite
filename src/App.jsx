@@ -1,4 +1,7 @@
 import React, { useState, Suspense, useMemo } from 'react'
+import { store, init as storeInit } from "./core/store.js";
+import { tenant } from "./core/tenant.js";
+
 import CRM  from './modules/CRM.jsx'
 import RRHH from './modules/RRHH.jsx'
 import Herramientas from './modules/Herramientas.jsx'

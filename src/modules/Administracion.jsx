@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { store } from "../core/store.js";
+
 import { Plus, Trash2, Check, X, Search, DollarSign, CreditCard, Briefcase, TrendingUp, TrendingDown, FileText, ChevronRight, Download, AlertTriangle, Eye } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -904,9 +906,9 @@ function TabCxCxP({ data, save }) {
 export default function Administracion() {
   const STORE_KEY = "habitaris_admin";
   const [data, setData] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; }
+    try { return JSON.parse(await store.get(STORE_KEY)) || {}; } catch { return {}; }
   });
-  const save = (k,v) => setData(prev => { const n = {...prev,[k]:v}; localStorage.setItem(STORE_KEY,JSON.stringify(n)); try { window.storage?.set?.(STORE_KEY,JSON.stringify(n)); } catch {} return n; });
+  const save = (k,v) => setData(prev => { const n = {...prev,[k]:v}; await store.set(STORE_KEY,JSON.stringify(n)); try { store.set(STORE_KEY,JSON.stringify(n)); } catch {} return n; });
   const [tab, setTab] = useState("dashboard");
 
   /* Mini-dashboard KPIs */

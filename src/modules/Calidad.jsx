@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { store } from "../core/store.js";
+
 import {
   ClipboardCheck, Plus, Trash2, Check, X, Search, AlertTriangle, CheckCircle,
   Clock, Eye, FileText, ChevronRight, ChevronDown, Camera, Star, BarChart2,
@@ -40,8 +42,8 @@ const pct = (n) => Math.min(100, Math.max(0, Math.round(n||0)));
 /* ─── STORAGE HOOK ─── */
 function useStore(key, init) {
   const [data, setData] = useState(init);
-  useEffect(() => { (async () => { try { const r = await window.storage?.get?.(key); if (r?.value) setData(JSON.parse(r.value)); } catch {} })(); }, [key]);
-  const save = useCallback(async (v) => { const val = typeof v === "function" ? v(data) : v; setData(val); try { await window.storage?.set?.(key, JSON.stringify(val)); } catch {} }, [key, data]);
+  useEffect(() => { (async () => { try { const r = await store.get(key); if (r?.value) setData(JSON.parse(r)); } catch {} })(); }, [key]);
+  const save = useCallback(async (v) => { const val = typeof v === "function" ? v(data) : v; setData(val); try { await store.set(key, JSON.stringify(val)); } catch {} }, [key, data]);
   return [data, save];
 }
 

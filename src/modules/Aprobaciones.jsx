@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { store } from "../core/store.js";
+
 import {
   CheckCircle, XCircle, Clock, Send, RotateCcw, AlertTriangle,
   Check, X, ChevronDown, ChevronRight, FileText, Search, Filter,
@@ -64,8 +66,8 @@ function useStore(key, init) {
   useEffect(() => {
     (async () => {
       try {
-        const r = await window.storage?.get?.(key);
-        if (r?.value) setData(JSON.parse(r.value));
+        const r = await store.get(key);
+        if (r?.value) setData(JSON.parse(r));
       } catch {}
       setLoaded(true);
     })();
@@ -73,7 +75,7 @@ function useStore(key, init) {
   const save = useCallback(async (v) => {
     const val = typeof v === "function" ? v(data) : v;
     setData(val);
-    try { await window.storage?.set?.(key, JSON.stringify(val)); } catch {}
+    try { await store.set(key, JSON.stringify(val)); } catch {}
   }, [key, data]);
   return [data, save, loaded];
 }
@@ -167,8 +169,8 @@ export default function HabitarisAprobaciones({ pais = "CO" }) {
   useEffect(() => {
     (async () => {
       try {
-        const r = await window.storage?.get?.("hab:crm:ofertas");
-        if (r?.value) setOfertas(JSON.parse(r.value) || []);
+        const r = await store.get("hab:crm:ofertas");
+        if (r?.value) setOfertas(JSON.parse(r) || []);
       } catch {}
     })();
   }, []);

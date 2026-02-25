@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { store } from "../core/store.js";
+
 
 /* ─────── palette ─────── */
 const C = {
@@ -14,8 +16,8 @@ const F = { fontFamily:"'DM Sans',sans-serif" }
 
 /* ─────── STORAGE ─────── */
 const SK = "hab:carnets:"
-const load  = k => { try { return JSON.parse(localStorage.getItem(SK+k)) || null } catch { return null }}
-const save  = (k,v) => { localStorage.setItem(SK+k, JSON.stringify(v)); try { window.storage?.set?.(SK+k, JSON.stringify(v)); } catch {} }
+const load  = k => { try { return JSON.parse(await store.get(SK+k)) || null } catch { return null }}
+const save  = (k,v) => { await store.set(SK+k, JSON.stringify(v)); try { store.set(SK+k, JSON.stringify(v)); } catch {} }
 const genId = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7)
 
 /* ─────── QR code generator (SVG) ─────── */
@@ -54,7 +56,7 @@ function generateQRSvg(text, size=120, darkColor="#111", lightColor="transparent
 /* ─────── Brand config helper ─────── */
 function getBrand() {
   try {
-    const cfg = JSON.parse(localStorage.getItem("hab:config")) || {}
+    const cfg = JSON.parse(await store.get("hab:config")) || {}
     return {
       nombre: cfg.empresa?.nombre || "Habitaris",
       nit: cfg.empresa?.nit || "901.922.136-8",

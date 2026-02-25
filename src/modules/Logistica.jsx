@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { store } from "../core/store.js";
+
 import {
   Package, Plus, Trash2, Edit3, Check, X, Search,
   Download, Upload, ChevronDown, ChevronUp, Save,
@@ -23,8 +25,8 @@ const today = () => new Date().toISOString().split("T")[0];
 
 /* ─── STORAGE (async, same pattern as RRHH) ────── */
 const store = {
-  get: async (k) => { try { const r = await window.storage.get(k); return r ? JSON.parse(r.value) : null; } catch { return null; } },
-  set: async (k, v) => { try { await window.storage.set(k, JSON.stringify(v)); } catch {} },
+  get: async (k) => { try { const r = await store.get(k); return r ? JSON.parse(r) : null; } catch { return null; } },
+  set: async (k, v) => { try { await store.set(k, JSON.stringify(v)); } catch {} },
 };
 const NS = {
   items:       "hab:logistica:items",
@@ -207,7 +209,7 @@ export default function Logistica() {
   const [rrhhCargos, setRrhhCargos] = useState([]);
   useEffect(() => {
     (async () => {
-      try { const r = await window.storage.get("hab:rrhh:cargos"); if (r) setRrhhCargos(JSON.parse(r.value)||[]); } catch {}
+      try { const r = await store.get("hab:rrhh:cargos"); if (r) setRrhhCargos(JSON.parse(r)||[]); } catch {}
     })();
   }, []);
 

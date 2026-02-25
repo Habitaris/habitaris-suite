@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { store } from "../core/store.js";
+
 import { Shield, Plus, Trash2, Check, X, Search, AlertTriangle, CheckCircle, Clock, Eye, FileText, Users, Clipboard, Activity, HardHat, ChevronRight, Camera } from "lucide-react";
 
 const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;background:#F5F4F1}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}input,select,textarea,button{font-family:'DM Sans',sans-serif;outline:none}button{cursor:pointer}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fade-up{animation:fadeUp .22s ease both}`}</style>;
@@ -9,8 +11,8 @@ const fmtD = (d) => d ? new Date(d+"T12:00:00").toLocaleDateString("es-CO",{day:
 
 function useStore(key, init) {
   const [data, setData] = useState(init);
-  useEffect(() => { (async () => { try { const r = await window.storage?.get?.(key); if (r?.value) setData(JSON.parse(r.value)); } catch {} })(); }, [key]);
-  const save = useCallback(async (v) => { const val = typeof v === "function" ? v(data) : v; setData(val); try { await window.storage?.set?.(key, JSON.stringify(val)); } catch {} }, [key, data]);
+  useEffect(() => { (async () => { try { const r = await store.get(key); if (r?.value) setData(JSON.parse(r)); } catch {} })(); }, [key]);
+  const save = useCallback(async (v) => { const val = typeof v === "function" ? v(data) : v; setData(val); try { await store.set(key, JSON.stringify(val)); } catch {} }, [key, data]);
   return [data, save];
 }
 

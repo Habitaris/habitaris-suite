@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { store } from "../core/store.js";
+
 import * as SB from "./supabase.js";
 
 const BASE = {
@@ -209,7 +211,7 @@ export default function FormularioPublico() {
     }
     if (linkCfg.maxUsos && linkCfg.maxUsos > 0) {
       const usedKey = "hab_link_uses_"+(linkCfg.linkId||def.id||"");
-      const used = parseInt(localStorage.getItem(usedKey)||"0");
+      const used = parseInt(await store.get(usedKey)||"0");
       if (used >= linkCfg.maxUsos) { setBlocked("maxuses"); return; }
     }
 
@@ -427,18 +429,16 @@ export default function FormularioPublico() {
       if (c.tipo === "tel_combo" && c.codMapKey) response[c.codMapKey] = vals["_cod_"+c.id] || "";
     });
 
-    // Save to localStorage (backward compatible)
+    // Save to cloud store (backward compatible)
     try {
       const key = "hab:briefing:"+response.id;
-      if (window.storage) await window.storage.set(key, JSON.stringify(response), true);
-      else localStorage.setItem("shared:"+key, JSON.stringify(response));
+      await store.set(key, JSON.stringify(response));
     } catch {}
     try {
       const idxKey = "hab:form:responses"; let idx = [];
-      try { const r = window.storage ? await window.storage.get(idxKey, true) : { value: localStorage.getItem("shared:"+idxKey) }; if (r && r.value) idx = JSON.parse(r.value); } catch {}
+      try { const __r = await store.get(idxKey); if(__r) idx = JSON.parse(__r); } catch {}
       idx.push({ id:response.id, formId:def.id, fecha:response.fecha, nombre:response.nombre||response.email||"" });
-      if (window.storage) await window.storage.set(idxKey, JSON.stringify(idx), true);
-      else localStorage.setItem("shared:"+idxKey, JSON.stringify(idx));
+      await store.set(idxKey, JSON.stringify(idx));
     } catch {}
 
     // Save to Supabase
@@ -467,8 +467,8 @@ export default function FormularioPublico() {
     // Track local link usage
     if (linkCfg.maxUsos && linkCfg.maxUsos > 0) {
       const usedKey = "hab_link_uses_"+(linkCfg.linkId||def.id||"");
-      const used = parseInt(localStorage.getItem(usedKey)||"0");
-      localStorage.setItem(usedKey, String(used + 1));
+      const used = parseInt(await store.get(usedKey)||"0");
+      await store.set(usedKey, String(used + 1));
     }
 
     /* FIX: No auto-open WhatsApp — just mark as submitted */

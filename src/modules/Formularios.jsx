@@ -1,4 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
+import { store } from "../core/store.js";
+
 import * as SB from "./supabase.js";
 import { Plus, Trash2, Check, X, Search, Edit3, Copy, Send, Eye, ChevronDown, ChevronUp, GripVertical, ToggleLeft, ToggleRight, Share2, Mail, MessageCircle, Link2, FileText, Star, TrendingUp, Layers, Settings, AlertTriangle } from "lucide-react";
 import { encodeFormDef } from "./FormularioPublico.jsx";
@@ -415,7 +417,7 @@ const vals={};let submitted=false;
 const privField=campos.find(c=>c.mapKey==='aceptaPrivacidad');
 const privId=privField?privField.id:'f_acepta_priv';
 const formKey='hab_used_'+(DEF.id||'')+'_'+(cliente?cliente.email||cliente.nombre:'');
-if(localStorage.getItem(formKey)){submitted=true;}
+if(await store.get(formKey)){submitted=true;}
 // Prefill client fields
 if(cliente){campos.forEach(c=>{
   if(cliente.email&&(c.mapKey==="email"||c.tipo==="email"))vals[c.id]=cliente.email;
@@ -531,7 +533,7 @@ function doSubmit(){
   const cl=cliente?"👤 Cliente: "+(cliente.nombre||"")+" ("+(cliente.email||"")+")\\n":"";
   const msg="📋 RESPUESTA: "+(DEF.nombre||"Formulario")+"\\n\\n"+cl+lines.join("\\n")+"\\n\\nFecha: "+new Date().toISOString().split("T")[0];
   const tel="${telWA}";
-  submitted=true;localStorage.setItem(formKey,'1');render();
+  submitted=true;await store.set(formKey,'1');render();
   setTimeout(()=>{window.open("https://wa.me/"+(tel?tel:"")+"?text="+encodeURIComponent(msg),"_blank");},600);
 }
 render();
@@ -1066,7 +1068,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioRegistered, setBioRegistered] = useState(false);
   const [procesados, setProcesados] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("hab:form:procesados")||"[]"); } catch { return []; }
+    try { return JSON.parse(await store.get("hab:form:procesados")||"[]"); } catch { return []; }
   });
   const [filtroEstado, setFiltroEstado] = useState("todos");
 
@@ -1075,7 +1077,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
   const toggleSel = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
   const toggleAll = (ids) => setSelectedIds(prev => prev.size===ids.length ? new Set() : new Set(ids));
 
-  const delPass = localStorage.getItem("hab:form:deletePass") || "";
+  const delPass = await store.get("hab:form:deletePass") || "";
   const needsAuth = delPass || bioRegistered;
   const confirmDelete = async (action) => {
     if (!needsAuth) { executeDelete(action); return; }
@@ -1101,14 +1103,14 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
   const markProcesado = (id, sbId) => {
     const next = [...procesados, id];
     setProcesados(next);
-    localStorage.setItem("hab:form:procesados", JSON.stringify(next)); try { window.storage?.set?.("hab:form:procesados", JSON.stringify(next)); } catch {}
+    await store.set("hab:form:procesados", JSON.stringify(next)); try { store.set("hab:form:procesados", JSON.stringify(next)); } catch {}
     // SB disabled;
   };
 
   const markPendiente = (id, sbId) => {
     const next = procesados.filter(x=>x!==id);
     setProcesados(next);
-    localStorage.setItem("hab:form:procesados", JSON.stringify(next)); try { window.storage?.set?.("hab:form:procesados", JSON.stringify(next)); } catch {}
+    await store.set("hab:form:procesados", JSON.stringify(next)); try { store.set("hab:form:procesados", JSON.stringify(next)); } catch {}
     // SB disabled;
   };
 
@@ -1119,7 +1121,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
     try {
       // 1. Leer clientes desde cloud
       let clientes = [];
-      try { const cr = await window.storage?.get?.("hab:crm:clientes2"); if(cr) clientes = JSON.parse(cr.value)||[]; } catch {}
+      try { const cr = await store.get("hab:crm:clientes2"); if(cr) clientes = JSON.parse(cr)||[]; } catch {}
 
       // Check duplicado por email
       const existingClient = clientes.find(c => c.email && c.email === r.clienteEmail);
@@ -1149,14 +1151,14 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
         };
         clientes.push(newClient);
         clienteId = newClient.id;
-        await window.storage?.set?.("hab:crm:clientes2", JSON.stringify(clientes));
+        await store.set("hab:crm:clientes2", JSON.stringify(clientes));
       } else {
         clienteId = existingClient.id;
       }
 
       // 2. Leer ofertas desde cloud y crear borrador
       let ofertas = [];
-      try { const or2 = await window.storage?.get?.("hab:v4"); if(or2) ofertas = JSON.parse(or2.value)||[]; } catch {}
+      try { const or2 = await store.get("hab:v4"); if(or2) ofertas = JSON.parse(or2)||[]; } catch {}
 
       const newOffer = {
         id: Math.random().toString(36).slice(2,9) + Date.now().toString(36),
@@ -1194,7 +1196,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
       };
 
       ofertas.push(newOffer);
-      await window.storage?.set?.("hab:v4", JSON.stringify(ofertas));
+      await store.set("hab:v4", JSON.stringify(ofertas));
 
       // 3. Marcar como procesado
       markProcesado(r.id, r._sbId);
@@ -1466,9 +1468,9 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
               </button>
             )}
             <button onClick={()=>{
-              const current = localStorage.getItem("hab:form:deletePass")||"";
+              const current = await store.get("hab:form:deletePass")||"";
               const newPass = prompt("Contraseña para eliminar (dejar vacío para desactivar):", current);
-              if (newPass !== null) { if(newPass) localStorage.setItem("hab:form:deletePass",newPass); else localStorage.removeItem("hab:form:deletePass"); }
+              if (newPass !== null) { if(newPass) await store.set("hab:form:deletePass",newPass); else await store.delete("hab:form:deletePass"); }
             }} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,opacity:.4}} title={delPass?"🔒 Contraseña activa — clic para cambiar":"🔓 Sin contraseña — clic para configurar"}>{delPass?"🔒":"🔓"}</button>
           </div>
         </div>
@@ -1947,7 +1949,7 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
   const toggleSel = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
   const toggleAll = () => setSelectedIds(prev => prev.size===envios.length ? new Set() : new Set(envios.map(e=>e.id)));
 
-  const delPass = localStorage.getItem("hab:form:deletePass") || "";
+  const delPass = await store.get("hab:form:deletePass") || "";
   const bioReg = false;
   const needsAuth = delPass || bioReg;
   const confirmDelete = async (action) => {
@@ -2070,7 +2072,7 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
 export default function Formularios() {
   const [data, setData] = useState(() => {
     try {
-      const saved = JSON.parse(localStorage.getItem(STORE_KEY)) || {};
+      const saved = JSON.parse(await store.get(STORE_KEY)) || {};
       if (!saved.forms) saved.forms = [];
       return saved;
     } catch { return { forms: [] }; }
@@ -2079,15 +2081,15 @@ export default function Formularios() {
   useEffect(() => {
     (async () => {
       try {
-        const r = await window.storage?.get?.(STORE_KEY);
+        const r = await store.get(STORE_KEY);
         if (r?.value) {
-          const cloud = JSON.parse(r.value);
+          const cloud = JSON.parse(r);
           if (cloud?.forms?.length) {
             setData(prev => {
               const localIds = new Set((prev.forms||[]).map(f=>f.id));
               const cloudOnly = (cloud.forms||[]).filter(f=>!localIds.has(f.id));
               const merged = { ...cloud, forms: [...(prev.forms||[]), ...cloudOnly] };
-              localStorage.setItem(STORE_KEY, JSON.stringify(merged));
+              store.set(STORE_KEY, JSON.stringify(merged));
               return merged;
             });
           }
@@ -2095,7 +2097,7 @@ export default function Formularios() {
       } catch(e) { console.warn("Cloud load forms:", e); }
     })();
   }, []);
-  const save = (k,v) => setData(prev => { const n = {...prev,[k]:typeof v==="function"?v(prev[k]):v}; localStorage.setItem(STORE_KEY,JSON.stringify(n)); try { window.storage?.set?.(STORE_KEY, JSON.stringify(n)); } catch {} return n; });
+  const save = (k,v) => setData(prev => { const n = {...prev,[k]:typeof v==="function"?v(prev[k]):v}; store.set(STORE_KEY, JSON.stringify(n)); return n; });
 
   const forms = data.forms || [];
   const setForms = (v) => save("forms", typeof v==="function"?v(forms):v);
@@ -2104,12 +2106,12 @@ export default function Formularios() {
   useEffect(() => {
     (async () => {
       try {
-        const r = await window.storage?.get?.("hab:form:procesados");
+        const r = await store.get("hab:form:procesados");
         if (r?.value) {
-          const cloud = JSON.parse(r.value);
-          const local = JSON.parse(localStorage.getItem("hab:form:procesados")||"[]");
+          const cloud = JSON.parse(r);
+          const local = JSON.parse(await store.get("hab:form:procesados")||"[]");
           const merged = [...new Set([...local, ...cloud])];
-          localStorage.setItem("hab:form:procesados", JSON.stringify(merged));
+          await store.set("hab:form:procesados", JSON.stringify(merged));
         }
       } catch {}
     })();
@@ -2216,7 +2218,7 @@ export default function Formularios() {
     } catch(err) { console.warn("deleteEnvio error:", err); }
   };
 
-  // Load responses from Supabase + localStorage fallback
+  // Load responses from Supabase + cloud store fallback
   const [respuestas, setRespuestas] = useState([]);
   const [respLoading, setRespLoading] = useState(false);
   const loadResponses = async () => {
@@ -2248,14 +2250,9 @@ export default function Formularios() {
         }
       } catch(e) { console.warn("Error loading Supabase responses:", e); }
     }
-    // 2. Also check localStorage (backward compatible)
-    for (let i=0; i<localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith("shared:hab:briefing:")) {
-        try {
-          const r = JSON.parse(localStorage.getItem(key));
-          if (r && r.id && !seen.has(r.id)) { seen.add(r.id); arr.push(r); }
-        } catch {}
+    // 2. Also check cloud store (migrated from cloud store)
+    const __cloudResp = await store.list("hab:form:resp:");
+    __cloudResp.forEach(__cr => { try { const r = JSON.parse(__cr.value); if(r) all.push(r); } catch {} }); catch {}
       }
     }
     setRespuestas(arr);
@@ -2268,13 +2265,9 @@ export default function Formularios() {
     if (r._sbId && false) {
       try {} catch {}
     }
-    // Remove from localStorage
-    for (let i=0; i<localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith("shared:hab:briefing:")) {
-        try { const d = JSON.parse(localStorage.getItem(key)); if (d?.id === r.id) { localStorage.removeItem(key); break; } } catch {}
-      }
-    }
+    // Remove from cloud store
+    const __bDel = await store.list("hab:briefing:");
+    for (const __bd of __bDel) { try { const d = JSON.parse(__bd.value); if (d?.id === r.id) { await store.delete(__bd.key); break; } } catch {} }
     setRespuestas(prev => prev.filter(x => x.id !== r.id));
   };
   const clearAllResponses = async () => {
@@ -2282,18 +2275,14 @@ export default function Formularios() {
     if (SB.isConfigured()) {
       try {} catch {}
     }
-    // Remove from localStorage
-    const keys = [];
-    for (let i=0; i<localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith("shared:hab:briefing:")) keys.push(key);
-    }
-    keys.forEach(k => localStorage.removeItem(k));
+    // Remove all from cloud store
+    const __bPurge = await store.list("hab:briefing:");
+    for (const __bp of __bPurge) { await store.delete(__bp.key); }
     setRespuestas([]);
   };
 
-  const [tab, setTab] = useState(() => localStorage.getItem("hab:form:tab") || "dashboard");
-  const changeTab = (t) => { setTab(t); localStorage.setItem("hab:form:tab", t); try { window.storage?.set?.("hab:form:tab", t); } catch {} };
+  const [tab, setTab] = useState(() => null || "dashboard");
+  const changeTab = (t) => { setTab(t);  try { store.set("hab:form:tab", t); } catch {} };
   const [editId, setEditId] = useState(null);
 
   const goConstructor = (id) => { setEditId(id||null); changeTab("constructor"); };
@@ -2330,7 +2319,7 @@ export default function Formularios() {
           <div className="fade-up">
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
               {(()=>{
-                const proc = (() => { try { return JSON.parse(localStorage.getItem("hab:form:procesados")||"[]"); } catch { return []; } })();
+                const proc = (() => { try { return JSON.parse(await store.get("hab:form:procesados")||"[]"); } catch { return []; } })();
                 const sinProc = respuestas.filter(r => !proc.includes(r.id)).length;
                 return [
                   ["📋 Formularios",forms.length,"#111"],
@@ -2344,7 +2333,7 @@ export default function Formularios() {
             </div>
             {/* Quick actions */}
             {(()=>{
-              const proc = (() => { try { return JSON.parse(localStorage.getItem("hab:form:procesados")||"[]"); } catch { return []; } })();
+              const proc = (() => { try { return JSON.parse(await store.get("hab:form:procesados")||"[]"); } catch { return []; } })();
               const sinProc = respuestas.filter(r => !proc.includes(r.id)).length;
               if (sinProc === 0) return null;
               return (

@@ -11,7 +11,7 @@ const FALLBACK_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
 function getSupaConfig() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = (()=>null)(STORAGE_KEY);
     if (raw) {
       const cfg = JSON.parse(raw);
       const url = (cfg.supabase?.url || "").replace(/\/$/,"");

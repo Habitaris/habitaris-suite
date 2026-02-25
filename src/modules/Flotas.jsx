@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { store } from "../core/store.js";
+
 import { Plus, Trash2, Check, X, Search, Truck, Fuel, FileText, Wrench, AlertTriangle, Calendar, Edit3, ChevronRight } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -733,9 +735,9 @@ function TabMantenimiento({ vehs, mantos, setMantos }) {
    ═══════════════════════════════════════════════════════════════ */
 export default function Flotas() {
   const [data, setData] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; }
+    try { return JSON.parse(await store.get(STORE_KEY)) || {}; } catch { return {}; }
   });
-  const save = (k,v) => setData(prev => { const n = {...prev,[k]:typeof v==="function"?v(prev[k]):v}; localStorage.setItem(STORE_KEY,JSON.stringify(n)); try { window.storage?.set?.(STORE_KEY,JSON.stringify(n)); } catch {} return n; });
+  const save = (k,v) => setData(prev => { const n = {...prev,[k]:typeof v==="function"?v(prev[k]):v}; await store.set(STORE_KEY,JSON.stringify(n)); try { store.set(STORE_KEY,JSON.stringify(n)); } catch {} return n; });
 
   const vehs = data.vehiculos || [];
   const setVehs = (v) => save("vehiculos", typeof v==="function"?v(vehs):v);

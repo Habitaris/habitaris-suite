@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from "react";
+import { store } from "../core/store.js";
+
 import { AlertTriangle, TrendingUp, TrendingDown, DollarSign, Calendar, Truck, FileText, Users, Package, Wrench, CreditCard, Briefcase } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -25,8 +27,8 @@ const MODULOS = [
   { id:"formularios",lbl:"📋 Formularios",      color:"#5B3A8C" },
 ];
 
-/* Helper to safely read localStorage */
-const getStore = (key) => { try { return JSON.parse(localStorage.getItem(key))||{}; } catch { return {}; } };
+/* Helper to safely read cloud store */
+const getStore = async (key) => { try { const r = await store.get(key); return r ? JSON.parse(r) : {}; } catch { return {}; } };
 
 /* ── Data loaders from all modules ── */
 function useAllData() {
@@ -129,13 +131,9 @@ function useAllData() {
     const formStore = getStore("habitaris_formularios");
     const formsList = formStore.forms || [];
     const formResp = [];
-    for (let i=0; i<localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith("shared:hab:briefing:")) {
-        try { formResp.push(JSON.parse(localStorage.getItem(key))); } catch {}
-      }
-    }
-    const procesados = (() => { try { return JSON.parse(localStorage.getItem("hab:form:procesados")||"[]"); } catch { return []; } })();
+    const __dbResp = await store.list("hab:briefing:");
+    __dbResp.forEach(__r => { try { formResp.push(JSON.parse(__r.value)); } catch {} });
+    const procesados = (() => { try { return JSON.parse(await store.get("hab:form:procesados")||"[]"); } catch { return []; } })();
     const sinProcesar = formResp.filter(r => !procesados.includes(r.id));
     // Group by module
     const sinProcesarPorModulo = {};
@@ -477,7 +475,7 @@ export default function Dashboard() {
 
         {/* Footer */}
         <div style={{textAlign:"center",padding:"10px 0",fontSize:9,color:T.inkXLight}}>
-          Habitaris Suite · Dashboard actualizado en tiempo real desde localStorage
+          Habitaris Suite · Dashboard actualizado en tiempo real desde cloud store
         </div>
       </div>
     </>

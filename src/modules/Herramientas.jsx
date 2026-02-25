@@ -1,4 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
+import { store } from "../core/store.js";
+
 import { Zap, Hammer, Building2, Package, ArrowLeftRight, Plus, Trash2, Download, AlertTriangle, CheckCircle, Info, Sun, ChevronRight, ChevronDown, TrendingUp } from "lucide-react";
 
 /* ─── TOKENS ─────────────────────────────────────────────────────────── */
@@ -32,8 +34,9 @@ const Fonts = () => (
 
 /* ─── STORAGE ────────────────────────────────────────────────────────── */
 function useStore(key, init) {
-  const [v,sv] = useState(()=>{try{const r=window.storage?.getItem?.(key);return r?JSON.parse(r):init;}catch{return init;}});
-  const set = cb=>{const nx=typeof cb==="function"?cb(v):cb;sv(nx);try{window.storage?.setItem?.(key,JSON.stringify(nx));}catch{}};
+  const [v,sv] = useState(init);
+  useEffect(()=>{store.get(key).then(r=>{if(r)try{sv(JSON.parse(r));}catch{}}).catch(()=>{});},[key]);
+  const set = cb=>{const nx=typeof cb==="function"?cb(v):cb;sv(nx);try{store.set(key,JSON.stringify(nx));}catch{}};
   return [v,set];
 }
 

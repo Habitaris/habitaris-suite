@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 
+/* ─── CLOUD STORE (Supabase multi-tenant) ──────────────────── */
+import { store } from "../core/store.js";
+
+
 
 import {
   LayoutDashboard, FileText, Plus, Settings, ChevronRight,
@@ -330,27 +334,24 @@ const uid  = () => Math.random().toString(36).substr(2, 9);
 const today = () => new Date().toISOString().split("T")[0];
 
 /* ─── STORAGE ────────────────────────────────────────────────── */
-async function loadData() { try { const r = localStorage.getItem("hab:v4"); return r ? JSON.parse(r) : []; } catch { return []; } }
-async function saveData(d) { try { localStorage.setItem("hab:v4", JSON.stringify(d)); } catch(e) { console.error(e); } }
+async function loadData() { try { const r = await store.get("hab:v4"); return r ? JSON.parse(r) : []; } catch { return []; } }
+async function saveData(d) { try { await store.set("hab:v4", JSON.stringify(d)); } catch(e) { console.error(e); } }
 
 /* ─── BRIEFING STORAGE ───────────────────────────────────────── */
 async function loadBriefings() {
   try {
-    const items = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith("shared:hab:briefing:")) {
-        try { const v = JSON.parse(localStorage.getItem(k)); if (v) items.push(v); } catch {}
-      }
-    }
-    return items.sort((a,b) => new Date(b.fecha||0) - new Date(a.fecha||0));
+    const items = await store.list("hab:briefing:");
+    return items
+      .map(r => { try { return JSON.parse(r); } catch { return null; } })
+      .filter(Boolean)
+      .sort((a,b) => new Date(b.fecha||0) - new Date(a.fecha||0));
   } catch { return []; }
 }
 async function saveBriefingEntry(data) {
-  try { localStorage.setItem("shared:hab:briefing:" + data.id, JSON.stringify(data)); } catch {}
+  try { await store.set("hab:briefing:" + data.id, JSON.stringify(data)); } catch {}
 }
 async function deleteBriefingEntry(id) {
-  try { localStorage.removeItem("shared:hab:briefing:" + id); } catch {}
+  try { await store.delete("hab:briefing:" + id); } catch {}
 }
 
 /* ─── BRIEFING → OFERTA (mapeador de campos) ─────────────────── */
@@ -582,17 +583,18 @@ function BriefingDetalle({ b, onClose, onCreateOffer, onCreateClient }) {
 /* ─── FORM STORAGE ────────────────────────────────────────────── */
 async function loadForms() {
   try {
-    const keys=[]; for(let j=0;j<localStorage.length;j++){const k=localStorage.key(j);if(k&&k.startsWith("hab:forms:"))keys.push(k);} const r={keys};
-    if (!r?.keys?.length) return [];
-    const all = await Promise.all(r.keys.map(k => Promise.resolve(localStorage.getItem(k)).then(v => v ? JSON.parse(v) : null).catch(()=>null)));
-    return all.filter(Boolean).sort((a,b) => (b.updatedAt||"").localeCompare(a.updatedAt||""));
+    const items = await store.list("hab:forms:");
+    return items
+      .map(r => { try { return JSON.parse(r); } catch { return null; } })
+      .filter(Boolean)
+      .sort((a,b) => (b.updatedAt||"").localeCompare(a.updatedAt||""));
   } catch { return []; }
 }
 async function saveForm(f) {
-  try { f.updatedAt = new Date().toISOString(); localStorage.setItem(`hab:forms:${f.id}`, JSON.stringify(f)); } catch {}
+  try { f.updatedAt = new Date().toISOString(); await store.set(`hab:forms:${f.id}`, JSON.stringify(f)); } catch {}
 }
 async function deleteForm(id) {
-  try { localStorage.removeItem(`hab:forms:${id}`); } catch {}
+  try { await store.delete(`hab:forms:${id}`); } catch {}
 }
 
 /* ─── TEMPLATES ───────────────────────────────────────────────── */
@@ -1521,10 +1523,10 @@ function TabClientesCRM() {
   const [showBriefPicker, setShowBriefPicker] = useState(false);
 
   useEffect(() => {
-    (async()=>{ try { const r = await window.storage?.get?.(SKEY); if(r) setClientes(JSON.parse(r.value)||[]); } catch{} })();
+    (async()=>{ try { const r = await store.get(SKEY); if(r) setClientes(JSON.parse(r)||[]); } catch{} })();
     loadBriefings().then(bs => setBriefings(bs));
   }, []);
-  const save = (list) => { setClientes(list); try{ window.storage?.set?.(SKEY, JSON.stringify(list)); }catch{} };
+  const save = (list) => { setClientes(list); try{ store.set(SKEY, JSON.stringify(list)); }catch{} };
   const uid2 = () => Math.random().toString(36).slice(2,9);
 
   const defForm = () => ({ id:uid2(), nombre:"", tipo:"Empresa", nit:"", email:"", tel:"", ciudad:"", pais:"CO", notas:"" });
@@ -1726,9 +1728,9 @@ function TabProveedores() {
   ];
 
   useEffect(() => {
-    (async()=>{ try { const r = await window.storage?.get?.(SKEY); if(r) setProvs(JSON.parse(r.value)||[]); } catch{} })();
+    (async()=>{ try { const r = await store.get(SKEY); if(r) setProvs(JSON.parse(r)||[]); } catch{} })();
   }, []);
-  const save = (list) => { setProvs(list); try{ window.storage?.set?.(SKEY, JSON.stringify(list)); }catch{} };
+  const save = (list) => { setProvs(list); try{ store.set(SKEY, JSON.stringify(list)); }catch{} };
   const uid2 = () => Math.random().toString(36).slice(2,9);
 
   const defForm = () => ({ id:uid2(), nombre:"", categoria:"Materiales", nit:"", email:"", tel:"", contacto:"", ciudad:"", web:"", notas:"", calificacion:5, metodoPago:"Transferencia", formaPago:"Contado", prefijoFijo:"+601" });
@@ -2374,7 +2376,7 @@ const calcLineaAPU = (linea, oferta) => {
     // Load from storage biblioteca
     let bibEq = null;
     try {
-      const bib = JSON.parse(window.storage?.get?.("hab:crm:equipos")?.value || "null") || EQUIPOS_DEFAULTS;
+      const bib = JSON.parse(store.get("hab:crm:equipos")?.value || "null") || EQUIPOS_DEFAULTS;
       bibEq = bib.find(e => e.id === eu.eqId);
     } catch {}
     if (!bibEq) return s;
@@ -2425,14 +2427,14 @@ const EQUIPOS_DEFAULTS = [
 function useEquiposBiblioteca() {
   const [equipos, setEquipos] = useState(() => {
     try {
-      const s = window.storage?.get?.("hab:crm:equipos");
+      const s = store.get("hab:crm:equipos");
       const loaded = s ? JSON.parse(s.value) : null;
       return loaded?.length ? loaded : EQUIPOS_DEFAULTS;
     } catch { return EQUIPOS_DEFAULTS; }
   });
   const save = (list) => {
     setEquipos(list);
-    try { window.storage?.set?.("hab:crm:equipos", JSON.stringify(list)); } catch {}
+    try { store.set("hab:crm:equipos", JSON.stringify(list)); } catch {}
   };
   return [equipos, save];
 }
@@ -3258,7 +3260,7 @@ function TBorrador({ d, set, r }) {
       cantidad:l.cantidad, presupuesto:l.precioCD||0, avance:0, estado:"pendiente",
     }));
     try {
-      window.storage?.set("hab:proj:actividades:"+d.id, JSON.stringify(acts));
+      store.set("hab:proj:actividades:"+d.id, JSON.stringify(acts));
       alert(`✅ ${acts.length} actividades exportadas al módulo Proyectos.`);
     } catch(e) { alert("Error: "+e.message); }
   };
@@ -5160,7 +5162,7 @@ function TPla({ d, set, r }) {
     const pais2 = d.pais || "CO";
     const cats = TARIFAS_MO[pais2]?.categorias || [];
     let bibEquipos = EQUIPOS_DEFAULTS;
-    try { const r2 = window.storage?.get?.("hab:crm:equipos"); if(r2?.value) bibEquipos = JSON.parse(r2.value); } catch {}
+    try { const r2 = store.get("hab:crm:equipos"); if(r2?.value) bibEquipos = JSON.parse(r2.value); } catch {}
 
     // Containers
     const personal = {};   // catId => { label, horas, costo, actividades:[{nombre,inicio,fin,horas,cant,equipo}] }
@@ -6942,11 +6944,11 @@ function TEqu({ d, set }) {
     (async () => {
       try {
         const [cR, aR, lR, jR, liR] = await Promise.all([
-          window.storage?.get?.("hab:rrhh:cargos"),
-          window.storage?.get?.("hab:rrhh:activos"),
-          window.storage?.get?.("hab:rrhh:licencias"),
-          window.storage?.get?.("hab:rrhh:jornada"),
-          window.storage?.get?.("hab:logistica:items"),
+          store.get("hab:rrhh:cargos"),
+          store.get("hab:rrhh:activos"),
+          store.get("hab:rrhh:licencias"),
+          store.get("hab:rrhh:jornada"),
+          store.get("hab:logistica:items"),
         ]);
         if (cR) setRrhhCargos(JSON.parse(cR.value) || []);
         if (aR) setRrhhActivos(JSON.parse(aR.value) || []);
@@ -9769,12 +9771,12 @@ function TabEncuestas({ offers }) {
 
   useEffect(() => {
     (async()=>{
-      try { const r = await window.storage?.get?.(SKEY_SAT); if(r) setEncSat(JSON.parse(r.value)||[]); } catch{}
-      try { const r = await window.storage?.get?.(SKEY_PRV); if(r) setEncPrv(JSON.parse(r.value)||[]); } catch{}
+      try { const r = await store.get(SKEY_SAT); if(r) setEncSat(JSON.parse(r)||[]); } catch{}
+      try { const r = await store.get(SKEY_PRV); if(r) setEncPrv(JSON.parse(r)||[]); } catch{}
     })();
   }, []);
-  const saveSat = (list) => { setEncSat(list); try{ window.storage?.set?.(SKEY_SAT, JSON.stringify(list)); }catch{} };
-  const savePrv = (list) => { setEncPrv(list); try{ window.storage?.set?.(SKEY_PRV, JSON.stringify(list)); }catch{} };
+  const saveSat = (list) => { setEncSat(list); try{ store.set(SKEY_SAT, JSON.stringify(list)); }catch{} };
+  const savePrv = (list) => { setEncPrv(list); try{ store.set(SKEY_PRV, JSON.stringify(list)); }catch{} };
 
   const ofertasGanadas = offers.filter(o => o.estado === "Ganada");
   const uid2 = () => Math.random().toString(36).slice(2,9);
@@ -10065,7 +10067,7 @@ function Config() {
           <p style={{ fontSize: 12, color: C.inkMid, margin: "0 0 16px", lineHeight: 1.6 }}>Los datos se guardan en tu navegador. No requieren servidor ni cuenta externa.</p>
           <Btn v="danger" icon={Trash2} on={async () => {
             if (!window.confirm("¿Eliminar TODOS los datos? Irreversible.")) return;
-            await window.storage.delete("hab:v4");
+            await store.delete("hab:v4");
             window.location.reload();
           }}>Borrar todos los datos</Btn>
         </Card>
@@ -10114,8 +10116,8 @@ export default function CRMModule({ lang: langProp }) {
     const cliente = briefingToClient(b);
     // Leer clientes existentes, agregar el nuevo, guardar
     try {
-      const r = await window.storage?.get?.("hab:crm:clientes2");
-      const list = r ? JSON.parse(r.value) || [] : [];
+      const r = await store.get("hab:crm:clientes2");
+      const list = r ? JSON.parse(r) || [] : [];
       // Evitar duplicados por email
       const existe = list.find(c => c.email && c.email === cliente.email);
       if (existe) {
@@ -10124,7 +10126,7 @@ export default function CRMModule({ lang: langProp }) {
         return;
       }
       list.push(cliente);
-      await window.storage?.set?.("hab:crm:clientes2", JSON.stringify(list));
+      await store.set("hab:crm:clientes2", JSON.stringify(list));
       alert(`✅ Cliente "${cliente.nombre}" creado desde briefing`);
     } catch {
       alert("Error guardando cliente");
