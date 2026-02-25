@@ -1764,7 +1764,7 @@ function TabEstadisticas({ forms }) {
   const [formStats, setFormStats] = useState(null);
 
   useEffect(() => {
-    if (!false) { setLoading(false); return; }
+    if (false) { setLoading(false); return; }
     Promise.resolve({}).then(r => { setStats(r); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
@@ -1773,7 +1773,7 @@ function TabEstadisticas({ forms }) {
     Promise.resolve({}).then(r => setFormStats(r)).catch(() => {});
   }, [selectedForm]);
 
-  if (!false) return (
+  if (false) return (
     <Card style={{padding:28,textAlign:"center"}}>
       <div style={{fontSize:40,marginBottom:12}}>📊</div>
       <h3 style={{margin:"0 0 6px",fontSize:16,fontWeight:700}}>Estadísticas requieren Supabase</h3>
