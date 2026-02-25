@@ -102,7 +102,7 @@ function Home({ onSelect, lang, setLang, onLogout }) {
           {ap.logo ? (
             <img src={ap.logo} alt="Logo" style={{ height:28, objectFit:"contain" }}/>
           ) : (
-            <span style={{ fontFamily:`'${bf}',sans-serif`, fontSize:17, fontWeight:700, color:"#fff", letterSpacing:2, textTransform:"uppercase" }}>{brand.empresa?.nombre||"HABITARIS"}</span>
+            <span dangerouslySetInnerHTML={{__html:`<svg width="120" height="28" viewBox="0 0 120 28" fill="none"><rect x="3" y="4" width="20" height="20" stroke="white" strokeWidth="1.2" fill="none"/><line x1="1" y1="2.5" x2="8" y2="2.5" stroke="white" strokeWidth="1"/><line x1="1.5" y1="2.5" x2="1.5" y2="9.5" stroke="white" strokeWidth="1"/><line x1="25" y1="25.5" x2="18" y2="25.5" stroke="white" strokeWidth="1"/><line x1="24.5" y1="25.5" x2="24.5" y2="18.5" stroke="white" strokeWidth="1"/><rect x="8" y="8" width="3.5" height="11" fill="white"/><rect x="8" y="12" width="10" height="3" fill="white"/><rect x="14.5" y="8" width="3.5" height="11" fill="white"/><text x="30" y="19.5" fill="white" font-family="DM Sans, sans-serif" font-size="15" font-weight="400" letter-spacing="3">abitaris</text></svg>`}} />
           )}
           {ap.slogan && <span style={{ fontFamily:`'${bf}',sans-serif`, fontSize:8, letterSpacing:1.5, color:"rgba(255,255,255,.35)", textTransform:"uppercase" }}>{ap.slogan}</span>}
         </div>
@@ -185,7 +185,7 @@ function ModuleBar({ mod, onBack, lang, setLang, onLogout }) {
       {ap.logo ? (
         <img src={ap.logo} alt="Logo" style={{ height:22, objectFit:"contain" }}/>
       ) : (
-        <span style={{ fontSize:13, fontWeight:700, color:"#fff", letterSpacing:0.3, textTransform:"uppercase" }}>{brand.empresa?.nombre||"HABITARIS"}</span>
+        <span dangerouslySetInnerHTML={{__html:`<svg width="100" height="22" viewBox="0 0 100 22" fill="none"><rect x="2" y="3" width="16" height="16" stroke="white" strokeWidth="1" fill="none"/><line x1="0.5" y1="1.5" x2="6" y2="1.5" stroke="white" strokeWidth="0.8"/><line x1="1" y1="1.5" x2="1" y2="7" stroke="white" strokeWidth="0.8"/><line x1="19.5" y1="20.5" x2="14" y2="20.5" stroke="white" strokeWidth="0.8"/><line x1="19" y1="20.5" x2="19" y2="15" stroke="white" strokeWidth="0.8"/><rect x="6" y="6.5" width="3" height="9" fill="white"/><rect x="6" y="9.5" width="8" height="2.5" fill="white"/><rect x="11" y="6.5" width="3" height="9" fill="white"/><text x="24" y="15.5" fill="white" font-family="DM Sans, sans-serif" font-size="12" font-weight="400" letter-spacing="2.5">abitaris</text></svg>`}} />
       )}
       <span style={{ fontSize:13, color:"rgba(255,255,255,0.4)" }}>/ {mod.label}</span>
       <div style={{ flex:1 }}/>
