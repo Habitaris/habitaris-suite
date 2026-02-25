@@ -1222,7 +1222,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
   /* ── Generate branded PDF report ── */
   const generarInforme = (resp) => {
     const cfgG = getConfig();
-    const form = forms.find(f=>f.id===resp.formularioId);
+    const form = forms.find(f=>f.id===resp.formularioId) || forms.find(f=>f.nombre===resp.formularioNombre);
     const campos = form?.campos || [];
     const meta = ["id","fecha","formularioId","formularioNombre","clienteNombre","clienteEmail","clienteTel"];
 
@@ -1526,7 +1526,7 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
                 <td style={{...tds,fontSize:9,color:T.blue}}>{r.clienteEmail||"—"}</td>
                 <td style={{...tds,textAlign:"center"}}>
                   {(()=>{
-                    const form = forms.find(f=>f.id===r.formularioId);
+                    const form = forms.find(f=>f.id===r.formularioId) || forms.find(f=>f.nombre===r.formularioNombre);
                     const sc = calculateScore(r, form);
                     if (!sc) return <span style={{fontSize:8,color:T.inkLight}}>—</span>;
                     const col = sc.level==="green"?T.green:sc.level==="red"?T.red:T.amber;
@@ -1574,7 +1574,7 @@ body{font-family:'Outfit',sans-serif;color:#111;background:#fff}
                     </div>
                     {/* Scoring */}
                     {(()=>{
-                      const form = forms.find(f=>f.id===r.formularioId);
+                      const form = forms.find(f=>f.id===r.formularioId) || forms.find(f=>f.nombre===r.formularioNombre);
                       const sc = calculateScore(r, form);
                       if (!sc) return null;
                       const colors = {green:{bg:"#E8F4EE",border:"#1E6B42",text:"#1E6B42"},yellow:{bg:"#FAF0E0",border:"#7A5218",text:"#7A5218"},red:{bg:"#FAE8E8",border:"#AE2C2C",text:"#AE2C2C"}};
