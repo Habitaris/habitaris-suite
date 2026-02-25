@@ -209,11 +209,11 @@ function ModuleBar({ mod, onBack, lang, setLang, onLogout }) {
 
 export default function App() {
   const [storeReady, setStoreReady] = useState(false);
-  React.useEffect(() => { store.init("habitaris").then(() => setStoreReady(true)).catch(() => setStoreReady(true)); }, []);
-  if (!storeReady) return <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",fontFamily:"DM Sans,sans-serif",color:"#999"}}>Cargando...</div>;
   const [active, setActive] = useState(() => sessionStorage.getItem("hab:active_module") || null)
   const [lang, setLang]     = useState("es")
   const [authed, setAuthed]   = useState(isLoggedIn())
+  React.useEffect(() => { store.init("habitaris").then(() => setStoreReady(true)).catch(() => setStoreReady(true)); }, []);
+  if (!storeReady) return <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",fontFamily:"DM Sans,sans-serif",color:"#999"}}>Cargando...</div>;
   const mod = MODULES.find(m => m.id === active)
 
   const selectModule = (id) => { sessionStorage.setItem("hab:active_module", id); setActive(id); }
