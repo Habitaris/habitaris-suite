@@ -359,7 +359,7 @@ function briefingToOffer(b) {
   return {
     cliente:        b.nombre        || "",
     emailCliente:   b.email         || "",
-    telCliente:     b.telefono      || "",
+    telCliente:     (b.telefono || "").replace(/^\+57\s*/, ""),
     ubicacion:      [b.ciudad, b.edificio].filter(Boolean).join(" · ") || "",
     proyecto:       [b.edificio, b.nombre?.split(" ").slice(-1)[0]].filter(Boolean).join(" · ") || "",
     estado:         "Prospecto",
