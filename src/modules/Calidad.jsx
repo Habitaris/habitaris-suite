@@ -8,12 +8,12 @@ import {
 /* ─── STYLES ─── */
 const Fonts = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Outfit',sans-serif;background:#F5F4F1;-webkit-font-smoothing:antialiased}
+    body{font-family:'DM Sans',sans-serif;background:#F5F4F1;-webkit-font-smoothing:antialiased}
     ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}
-    input,select,textarea{font-family:'Outfit',sans-serif;outline:none}
-    button{font-family:'Outfit',sans-serif;cursor:pointer}
+    input,select,textarea{font-family:'DM Sans',sans-serif;outline:none}
+    button{font-family:'DM Sans',sans-serif;cursor:pointer}
     @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     .fade-up{animation:fadeUp .22s ease both}
   `}</style>
@@ -21,10 +21,10 @@ const Fonts = () => (
 
 /* ─── TOKENS ─── */
 const T = {
-  bg:"#F5F4F1", surface:"#FFFFFF", surfaceAlt:"#FAFAF8", ink:"#111", inkMid:"#555",
-  inkLight:"#909090", inkXLight:"#C8C5BE", border:"#E4E1DB", accent:"#EDEBE7",
-  green:"#1E6B42", greenBg:"#E8F4EE", red:"#AE2C2C", redBg:"#FAE8E8",
-  amber:"#7A5218", amberBg:"#FAF0E0", blue:"#1E4F8C", blueBg:"#E6EFF9",
+  bg:"#F5F4F1", surface:"#FFFFFF", surfaceAlt:"#FFFFFF", ink:"#111", inkMid:"#555",
+  inkLight:"#909090", inkXLight:"#C8C5BE", border:"#E0E0E0", accent:"#EDEBE7",
+  green:"#111111", greenBg:"#E8F4EE", red:"#B91C1C", redBg:"#FAE8E8",
+  amber:"#8C6A00", amberBg:"#FAF0E0", blue:"#3B3B3B", blueBg:"#F0F0F0",
   purple:"#5B3A8C", purpleBg:"#F0ECF6", teal:"#0D5E6E", tealBg:"#E0F4F4",
   shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)",
 };
@@ -252,7 +252,7 @@ function TabDashboard({ ncs, auditorias, indicadores, ncAbiertas, ncCerradas, au
           ) : [...ncs].sort((a,b)=>b.fecha>a.fecha?1:-1).slice(0,5).map(n => {
             const sev = SEVERIDAD_NC.find(s => s.id === n.severidad) || SEVERIDAD_NC[0];
             return (
-              <div key={n.id} style={{ padding:"8px 16px", borderBottom:"1px solid #F0EEE9", display:"flex", alignItems:"center", gap:8, fontSize:10 }}>
+              <div key={n.id} style={{ padding:"8px 16px", borderBottom:"1px solid #F5F5F5", display:"flex", alignItems:"center", gap:8, fontSize:10 }}>
                 <Badge label={sev.lbl} color={sev.color} bg={sev.bg}/>
                 <span style={{ flex:1, fontWeight:500 }}>{n.descripcion?.slice(0,50)||"Sin descripción"}</span>
                 <Badge label={n.estado} color={n.estado==="cerrada"?T.green:T.amber} bg={n.estado==="cerrada"?T.greenBg:T.amberBg}/>
@@ -271,7 +271,7 @@ function TabDashboard({ ncs, auditorias, indicadores, ncAbiertas, ncCerradas, au
             const cumple = k.unidad === "%" ? k.actual <= k.meta : k.actual >= k.meta;
             const ratio = k.meta > 0 ? Math.min((k.actual / k.meta) * 100, 100) : 0;
             return (
-              <div key={k.id} style={{ padding:"8px 16px", borderBottom:"1px solid #F0EEE9" }}>
+              <div key={k.id} style={{ padding:"8px 16px", borderBottom:"1px solid #F5F5F5" }}>
                 <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, marginBottom:3 }}>
                   <span style={{ fontWeight:600 }}>{k.nombre}</span>
                   <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:700, color:cumple?T.green:T.amber }}>

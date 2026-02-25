@@ -4,14 +4,14 @@ import OfferApproval from "./OfferApproval.jsx";
 /* ─────── palette ─────── */
 const C = {
   ink:"#111", inkMid:"#444", inkLight:"#888",
-  bg:"#F0EEE9", surface:"#FAFAF8", border:"#E4E1DB",
-  accent:"#1E6B42", accentBg:"#EEF6F2",
-  info:"#1E4F8C", infoBg:"#E6EFF9",
-  warning:"#7A5218", warningBg:"#FFF8EE",
-  danger:"#AE2C2C", dangerBg:"#FDF0F0",
+  bg:"#F5F5F5", surface:"#FFFFFF", border:"#E0E0E0",
+  accent:"#111111", accentBg:"#EBEBEB",
+  info:"#3B3B3B", infoBg:"#F0F0F0",
+  warning:"#8C6A00", warningBg:"#FFF8EE",
+  danger:"#B91C1C", dangerBg:"#FDF0F0",
   shadow:"0 1px 4px rgba(0,0,0,.06)", shadowMd:"0 4px 16px rgba(0,0,0,.10)",
 }
-const F = { fontFamily:"'Outfit',sans-serif" }
+const F = { fontFamily:"'DM Sans',sans-serif" }
 const SK = "hab:portal:"
 const load  = k => { try { return JSON.parse(localStorage.getItem(SK+k)) || null } catch { return null }}
 const save  = (k,v) => localStorage.setItem(SK+k, JSON.stringify(v))
@@ -30,13 +30,13 @@ function getBrand() {
       nombre: cfg.empresa?.nombre || "Habitaris",
       logo: cfg.apariencia?.logo || null,
       colorPrimario: cfg.apariencia?.colorPrimario || "#111111",
-      colorAcento: cfg.apariencia?.colorAcento || "#1E6B42",
-      tipografia: cfg.apariencia?.tipografia || "Outfit",
+      colorAcento: cfg.apariencia?.colorAcento || "#111111",
+      tipografia: cfg.apariencia?.tipografia || "DM Sans",
       telefono: cfg.empresa?.telefono || "+57 350 566 1545",
       email: cfg.empresa?.email || "info@habitaris.co",
       web: cfg.empresa?.web || "www.habitaris.co",
     }
-  } catch { return { nombre:"Habitaris", colorPrimario:"#111", colorAcento:"#1E6B42", tipografia:"Outfit" } }
+  } catch { return { nombre:"Habitaris", colorPrimario:"#111", colorAcento:"#111111", tipografia:"DM Sans" } }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -54,14 +54,14 @@ const SECCIONES_PORTAL = [
 ]
 
 const ESTADOS_PROYECTO = [
-  { id:"briefing",    label:"Briefing",       color:"#888",    bg:"#F0EEE9", pct:5 },
+  { id:"briefing",    label:"Briefing",       color:"#888",    bg:"#F5F5F5", pct:5 },
   { id:"diseno",      label:"Diseño",         color:"#5B3A8C", bg:"#F3EEF9", pct:20 },
-  { id:"aprobacion",  label:"Aprobación",     color:"#7A5218", bg:"#FFF8EE", pct:30 },
-  { id:"licencias",   label:"Licencias",      color:"#1E4F8C", bg:"#E6EFF9", pct:35 },
+  { id:"aprobacion",  label:"Aprobación",     color:"#8C6A00", bg:"#FFF8EE", pct:30 },
+  { id:"licencias",   label:"Licencias",      color:"#3B3B3B", bg:"#F0F0F0", pct:35 },
   { id:"obra",        label:"En obra",        color:"#D4840A", bg:"#FFF3E0", pct:60 },
   { id:"acabados",    label:"Acabados",       color:"#0D7377", bg:"#E6F5F5", pct:85 },
-  { id:"entrega",     label:"Entrega",        color:"#1E6B42", bg:"#EEF6F2", pct:95 },
-  { id:"postventa",   label:"Postventa",      color:"#1E6B42", bg:"#EEF6F2", pct:100 },
+  { id:"entrega",     label:"Entrega",        color:"#111111", bg:"#EBEBEB", pct:95 },
+  { id:"postventa",   label:"Postventa",      color:"#111111", bg:"#EBEBEB", pct:100 },
 ]
 
 /* ═══════════════════════════════════════════════════
@@ -198,7 +198,7 @@ function getPortalToken() {
    ═══════════════════════════════════════════════════ */
 function ClientePortalView({ portal, brand }) {
   const [seccion, setSeccion] = useState("resumen")
-  const bf = brand.tipografia || "Outfit"
+  const bf = brand.tipografia || "DM Sans"
   const cp = brand.colorPrimario
   const ca = brand.colorAcento
 

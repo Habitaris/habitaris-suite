@@ -3,12 +3,12 @@ import * as SB from "./supabase.js";
 
 const BASE = {
   bg:"#F5F4F1", surface:"#FFFFFF", ink:"#111", inkMid:"#555",
-  inkLight:"#909090", border:"#E4E1DB",
-  success:"#1E6B42", successBg:"#E8F4EE",
-  accent:"#1E4F8C", accentBg:"#E6EFF9",
+  inkLight:"#909090", border:"#E0E0E0",
+  success:"#111111", successBg:"#E8F4EE",
+  accent:"#3B3B3B", accentBg:"#F0F0F0",
   gold:"#C9A84C",
 };
-const F = { fontFamily:"'Outfit',sans-serif" };
+const F = { fontFamily:"'DM Sans',sans-serif" };
 
 function decode() {
   try {
@@ -56,10 +56,10 @@ function Field({ campo, value, onChange, accent, allVals }) {
     const codVal = allVals[codKey] || paisCodeMap[paisVal] || "+57";
     const codes = campo.opciones || ["+57","+34","+52","+56","+51","+593","+54","+507","+1","+44"];
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#B91C1C" }}> *</span>}</label>
       <div style={{ display:"flex", gap:0 }}>
         <select value={codVal} onChange={e=>onChange(value, e.target.value)}
-          style={{ ...inp, width:90, flexShrink:0, borderRadius:"8px 0 0 8px", borderRight:"none", fontWeight:700, fontSize:13, color:"#1E4F8C", background:"#F5F4F1" }}>
+          style={{ ...inp, width:90, flexShrink:0, borderRadius:"8px 0 0 8px", borderRight:"none", fontWeight:700, fontSize:13, color:"#3B3B3B", background:"#F5F4F1" }}>
           {codes.map(c=><option key={c} value={c}>{c}</option>)}
         </select>
         <input type="tel" value={value||""} onChange={e=>onChange(e.target.value)} placeholder={placeholder||""} style={{...inp, flex:1, borderRadius:"0 8px 8px 0"}}/>
@@ -69,19 +69,19 @@ function Field({ campo, value, onChange, accent, allVals }) {
 
   if (["text","email","tel","number","date"].includes(tipo)) {
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#B91C1C" }}> *</span>}</label>
       <input type={tipo} value={value||""} onChange={e=>onChange(e.target.value)} placeholder={placeholder||""} style={inp}/>
     </div>);
   }
   if (tipo === "textarea") {
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#B91C1C" }}> *</span>}</label>
       <textarea value={value||""} onChange={e=>onChange(e.target.value)} rows={3} placeholder={placeholder||""} style={{ ...inp, resize:"vertical" }}/>
     </div>);
   }
   if (tipo === "select" || tipo === "rango") {
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#B91C1C" }}> *</span>}</label>
       <select value={value||""} onChange={e=>onChange(e.target.value)} style={inp}>
         <option value="">Seleccionar...</option>
         {(opciones||[]).map(o => <option key={o} value={o}>{o}</option>)}
@@ -91,7 +91,7 @@ function Field({ campo, value, onChange, accent, allVals }) {
   if (tipo === "chips") {
     const selected = Array.isArray(value) ? value : [];
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#B91C1C" }}> *</span>}</label>
       <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginTop:6 }}>
         {(opciones||[]).map(o => {
           const sel = selected.includes(o);
@@ -106,7 +106,7 @@ function Field({ campo, value, onChange, accent, allVals }) {
   }
   if (tipo === "radio") {
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#B91C1C" }}> *</span>}</label>
       <div style={{ display:"flex", flexDirection:"column", gap:6, marginTop:6 }}>
         {(opciones||[]).map(o => (
           <label key={o} style={{ ...F, display:"flex", alignItems:"center", gap:10, fontSize:13,
@@ -122,7 +122,7 @@ function Field({ campo, value, onChange, accent, allVals }) {
   if (tipo === "rating") {
     const stars = parseInt(value) || 0;
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#B91C1C" }}> *</span>}</label>
       <div style={{ display:"flex", gap:8, marginTop:6 }}>
         {[1,2,3,4,5].map(n => (
           <button key={n} type="button" onClick={() => onChange(n)}
@@ -133,7 +133,7 @@ function Field({ campo, value, onChange, accent, allVals }) {
   }
   if (tipo === "yesno") {
     return (<div style={{ marginBottom:20 }}>
-      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+      <label style={lbl}>{dynLabel}{required && <span style={{ color:"#B91C1C" }}> *</span>}</label>
       <div style={{ display:"flex", gap:10, marginTop:6 }}>
         {["Sí","No"].map(o => (
           <button key={o} type="button" onClick={() => onChange(o)}
@@ -244,7 +244,7 @@ export default function FormularioPublico() {
   /* ── Loading / invalid ── */
   if (!def) return (
     <div style={{ minHeight:"100vh", background:BASE.bg, display:"flex", alignItems:"center", justifyContent:"center" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&display=swap');`}</style>
       <div style={{ background:BASE.surface, borderRadius:12, padding:40, maxWidth:400, textAlign:"center" }}>
         <div style={{ fontSize:40, marginBottom:16 }}>🔒</div>
         <h2 style={{ ...F, fontSize:18, fontWeight:700, color:BASE.ink }}>Formulario no disponible</h2>
@@ -262,7 +262,7 @@ export default function FormularioPublico() {
       blocked: { icon:"🚫", title:"Formulario bloqueado", desc:"Este formulario ha sido bloqueado por el remitente. Si crees que es un error, contacta a quien te lo envió." },
     };
     const m = msgs[blocked] || msgs.expired;
-    const brandFont2 = (def?.marca?.tipografia) || "Outfit";
+    const brandFont2 = (def?.marca?.tipografia) || "DM Sans";
     return (
       <div style={{ minHeight:"100vh", background:BASE.bg, display:"flex", alignItems:"center", justifyContent:"center" }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=${brandFont2.replace(/ /g,"+")}:wght@300;400;500;600;700;800&display=swap');`}</style>
@@ -281,9 +281,9 @@ export default function FormularioPublico() {
   const cliente = def.cliente || null;
   const marca = def.marca || {};
   const ac = cfg.colorAccent || marca.colorPrimario || "#111111";
-  const cs = marca.colorSecundario || "#1E4F8C";
+  const cs = marca.colorSecundario || "#3B3B3B";
   const ca = marca.colorAcento || "#C9A84C";
-  const brandFont = marca.tipografia || "Outfit";
+  const brandFont = marca.tipografia || "DM Sans";
   const BF = { fontFamily:`'${brandFont}',sans-serif` };
   const vista = cfg.vista || "pasos";
   const btnText = cfg.botonTexto || "Enviar formulario";
@@ -500,13 +500,13 @@ export default function FormularioPublico() {
           totalPts += pts;
           if (flag === "green") greens++; else if (flag === "red") reds++; else yellows++;
           const icon = flag === "green" ? "🟢" : flag === "red" ? "🔴" : "🟡";
-          const fc = flag === "green" ? "#1E6B42" : flag === "red" ? "#AE2C2C" : "#7A5218";
+          const fc = flag === "green" ? "#111111" : flag === "red" ? "#B91C1C" : "#8C6A00";
           const display = Array.isArray(val) ? val.join(", ") : val;
           scoreRows.push(`<tr><td style="padding:5px 10px;font-size:11px;font-weight:600;">${c.label}</td><td style="padding:5px 10px;font-size:11px;">${display}</td><td style="padding:5px 10px;text-align:center;font-weight:700;color:${fc};">${pts}/${w}</td><td style="padding:5px 10px;text-align:center;">${icon}</td></tr>`);
         });
         const score = maxPts > 0 ? Math.round((totalPts / maxPts) * 100) / 10 : 0;
         const level = score >= 7 ? "green" : score >= 4 ? "yellow" : "red";
-        const colors = {green:{bg:"#E8F4EE",text:"#1E6B42"},yellow:{bg:"#FAF0E0",text:"#7A5218"},red:{bg:"#FAE8E8",text:"#AE2C2C"}};
+        const colors = {green:{bg:"#E8F4EE",text:"#111111"},yellow:{bg:"#FAF0E0",text:"#8C6A00"},red:{bg:"#FAE8E8",text:"#B91C1C"}};
         const col = colors[level];
         const lbl = level === "green" ? "🟢 Cliente potencial" : level === "yellow" ? "🟡 Revisar" : "🔴 No califica";
         const concl = level === "green" ? "Contactar en las próximas 24h." : level === "yellow" ? "Agendar llamada exploratoria." : "Responder cortésmente y archivar.";
@@ -526,7 +526,7 @@ export default function FormularioPublico() {
       campos.forEach(c => {
         if (c.tipo === "seccion") {
           currentSection = c.label;
-          html += `<div style="margin-top:16px;padding:10px 14px;background:#F0EEE9;border-radius:6px;border-left:3px solid #C9A84C;">
+          html += `<div style="margin-top:16px;padding:10px 14px;background:#F5F5F5;border-radius:6px;border-left:3px solid #C9A84C;">
             <p style="margin:0;font-size:12px;font-weight:bold;color:#111;">${c.label}</p>
             ${c.desc ? `<p style="margin:2px 0 0;font-size:10px;color:#888;">${c.desc}</p>` : ""}
           </div>`;
@@ -643,7 +643,7 @@ export default function FormularioPublico() {
   };
 
   const ErrorMsg = () => error ? (
-    <div style={{ ...BF, fontSize:12, color:"#AE2C2C", textAlign:"center", margin:"14px 0", padding:"10px 16px", background:"#FAE8E8", borderRadius:6, border:"1px solid #AE2C2C22" }}>⚠️ {error}</div>
+    <div style={{ ...BF, fontSize:12, color:"#B91C1C", textAlign:"center", margin:"14px 0", padding:"10px 16px", background:"#FAE8E8", borderRadius:6, border:"1px solid #B91C1C22" }}>⚠️ {error}</div>
   ) : null;
 
   /* ═══ SCROLL MODE ═══ */

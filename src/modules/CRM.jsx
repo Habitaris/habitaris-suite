@@ -19,10 +19,10 @@ import { encodeFormDef } from "./FormularioPublico.jsx";
 /* ─── TIPOGRAFÍA (Manual de Marca: una sola sans-serif) ─────── */
 const FontLink = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { font-size: 14px; }
-    body { font-family: 'Outfit', sans-serif; background: #F5F4F1; color: #111; -webkit-font-smoothing: antialiased; }
+    body { font-family: 'DM Sans', sans-serif; background: #F5F4F1; color: #111; -webkit-font-smoothing: antialiased; }
     ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #C8C5BE; border-radius: 2px; }
@@ -43,7 +43,7 @@ const FontLink = () => (
       tr { page-break-inside:avoid; }
       h1,h2,h3 { page-break-after:avoid; }
       img { max-width:100%!important; }
-      input,select { border:none!important; background:transparent!important; padding:1px 0!important; font-size:10pt!important; -webkit-appearance:none!important; color:#111!important; font-family:'Outfit',sans-serif!important; }
+      input,select { border:none!important; background:transparent!important; padding:1px 0!important; font-size:10pt!important; -webkit-appearance:none!important; color:#111!important; font-family:'DM Sans',sans-serif!important; }
       textarea { display:none!important; }
       .ptr { display:block!important; white-space:pre-wrap; font-size:10pt; line-height:1.55; color:#111; }
       button { display:none!important; }
@@ -75,21 +75,21 @@ const C = {
   inkMid:     "#555555",
   inkLight:   "#999999",
   inkXLight:  "#BBBBBB",
-  border:     "#E4E1DB",
+  border:     "#E0E0E0",
   borderMid:  "#CCCAC4",
   accentBg:   "#EDEBE7",
   success:    "#2B7A52",
   successBg:  "#E6F4EC",
   warning:    "#8A6020",
   warningBg:  "#FAF2E2",
-  error:      "#AE2C2C",
+  error:      "#B91C1C",
   errorBg:    "#FAE8E8",
   info:       "#2A5F8C",
   infoBg:     "#E8F1FA",
   shadow:     "0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
   shadowMd:   "0 4px 20px rgba(0,0,0,0.10)",
-  accent:     "#1E6B42",
-  danger:     "#AE2C2C",
+  accent:     "#111111",
+  danger:     "#B91C1C",
 };
 
 /* ─── LOGO SVG (fiel al manual: H en cuadrado doble) ────────── */
@@ -418,7 +418,7 @@ const EMAIL_BODY = (nombre) =>
 /* ─── ATOMS ──────────────────────────────────────────────────── */
 const Badge = ({ e }) => {
   const c = BADGE_CFG[e] || BADGE_CFG["Borrador"];
-  return <span style={{ background: c.bg, color: c.txt, padding: "3px 10px", borderRadius: 2, fontSize: 10, fontWeight: 600, letterSpacing: 0.8, textTransform: "uppercase", display: "inline-block", whiteSpace: "nowrap", fontFamily: "'Outfit', sans-serif" }}>{e}</span>;
+  return <span style={{ background: c.bg, color: c.txt, padding: "3px 10px", borderRadius: 2, fontSize: 10, fontWeight: 600, letterSpacing: 0.8, textTransform: "uppercase", display: "inline-block", whiteSpace: "nowrap", fontFamily: "'DM Sans', sans-serif" }}>{e}</span>;
 };
 
 const Card = ({ children, style, ...p }) => (
@@ -426,7 +426,7 @@ const Card = ({ children, style, ...p }) => (
 );
 
 const Btn = ({ children, v = "pri", on, icon: I, sm, style, dis, ...p }) => {
-  const base = { display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 2, fontFamily: "'Outfit', sans-serif", fontWeight: 500, cursor: dis ? "not-allowed" : "pointer", transition: "all .15s", border: "none", fontSize: sm ? 11 : 12, padding: sm ? "5px 11px" : "9px 16px", letterSpacing: 0.4, opacity: dis ? .5 : 1, ...style };
+  const base = { display: "inline-flex", alignItems: "center", gap: 6, borderRadius: 2, fontFamily: "'DM Sans', sans-serif", fontWeight: 500, cursor: dis ? "not-allowed" : "pointer", transition: "all .15s", border: "none", fontSize: sm ? 11 : 12, padding: sm ? "5px 11px" : "9px 16px", letterSpacing: 0.4, opacity: dis ? .5 : 1, ...style };
   const vars = {
     pri:    { background: C.ink,      color: "#fff" },
     sec:    { background: C.accentBg, color: C.ink },
@@ -444,11 +444,11 @@ const FI = ({ lbl, val, on, type = "text", ph, rt, note, step, min, style }) => 
   useEffect(() => { if (!editing) setLocal(String(val ?? "")); }, [val, editing]);
   return (
     <div style={{ marginBottom: 14 }}>
-      {lbl && <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: C.inkLight, marginBottom: 5, textTransform: "uppercase", letterSpacing: 1, fontFamily: "'Outfit', sans-serif" }}>{lbl}</label>}
+      {lbl && <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: C.inkLight, marginBottom: 5, textTransform: "uppercase", letterSpacing: 1, fontFamily: "'DM Sans', sans-serif" }}>{lbl}</label>}
       <div style={{ position: "relative" }}>
         <input type={type} value={local} placeholder={ph} step={step} min={min}
           onChange={e => { setLocal(e.target.value); on(e); }}
-          style={{ width: "100%", padding: "9px 12px", paddingRight: rt ? 38 : 12, border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'Outfit', sans-serif", fontSize: 12, color: C.ink, background: C.bg, transition: "border .15s", ...style }}
+          style={{ width: "100%", padding: "9px 12px", paddingRight: rt ? 38 : 12, border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: C.ink, background: C.bg, transition: "border .15s", ...style }}
           onFocus={e => { setEditing(true); e.target.style.borderColor = C.ink; e.target.select(); }}
           onBlur={e => { setEditing(false); e.target.style.borderColor = C.border; }} />
         {rt && <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 11, color: C.inkLight }}>{rt}</span>}
@@ -461,7 +461,7 @@ const FI = ({ lbl, val, on, type = "text", ph, rt, note, step, min, style }) => 
 const FS = ({ lbl, val, on, opts, note }) => (
   <div style={{ marginBottom: 14 }}>
     {lbl && <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: C.inkLight, marginBottom: 5, textTransform: "uppercase", letterSpacing: 1 }}>{lbl}</label>}
-    <select value={val} onChange={on} style={{ width: "100%", padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'Outfit', sans-serif", fontSize: 12, color: C.ink, background: C.bg }}
+    <select value={val} onChange={on} style={{ width: "100%", padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: C.ink, background: C.bg }}
       onFocus={e => e.target.style.borderColor = C.ink}
       onBlur={e => e.target.style.borderColor = C.border}>
       {opts.map(o => <option key={o.v ?? o} value={o.v ?? o}>{o.l ?? o}</option>)}
@@ -472,7 +472,7 @@ const FS = ({ lbl, val, on, opts, note }) => (
 
 const STitle = ({ t, s }) => (
   <div style={{ marginBottom: 18 }}>
-    <h3 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 15, fontWeight: 600, color: C.ink, margin: 0, letterSpacing: 0.2, textTransform: "uppercase" }}>{t}</h3>
+    <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 15, fontWeight: 600, color: C.ink, margin: 0, letterSpacing: 0.2, textTransform: "uppercase" }}>{t}</h3>
     {s && <p style={{ fontSize: 11, color: C.inkLight, margin: "3px 0 0", fontWeight: 400 }}>{s}</p>}
   </div>
 );
@@ -482,7 +482,7 @@ const KPI = ({ lbl, val, icon: I, col, sub }) => (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
       <div>
         <p style={{ fontSize: 9, fontWeight: 600, color: C.inkLight, margin: "0 0 8px", textTransform: "uppercase", letterSpacing: 1.5 }}>{lbl}</p>
-        <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: 22, fontWeight: 700, color: col, margin: 0 }}>{val}</p>
+        <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 22, fontWeight: 700, color: col, margin: 0 }}>{val}</p>
         {sub && <p style={{ fontSize: 10, color: C.inkLight, margin: "4px 0 0" }}>{sub}</p>}
       </div>
       <div style={{ background: `${col}15`, borderRadius: 2, padding: 8 }}><I size={15} color={col} /></div>
@@ -544,12 +544,12 @@ function BriefingDetalle({ b, onClose, onCreateOffer, onCreateClient }) {
           <div style={{ display:"flex", gap:8 }}>
             {onCreateClient && <button onClick={onCreateClient} style={{
               padding:"8px 16px", background:C.infoBg, color:C.info, border:`1px solid ${C.info}33`, borderRadius:3,
-              fontFamily:"'Outfit',sans-serif", fontSize:11, fontWeight:700, cursor:"pointer",
+              fontFamily:"'DM Sans',sans-serif", fontSize:11, fontWeight:700, cursor:"pointer",
               letterSpacing:1, textTransform:"uppercase",
             }}>+ Crear cliente</button>}
             <button onClick={onCreateOffer} style={{
               padding:"8px 16px", background:C.ink, color:"#fff", border:"none", borderRadius:3,
-              fontFamily:"'Outfit',sans-serif", fontSize:11, fontWeight:700, cursor:"pointer",
+              fontFamily:"'DM Sans',sans-serif", fontSize:11, fontWeight:700, cursor:"pointer",
               letterSpacing:1, textTransform:"uppercase",
             }}>+ Crear oferta</button>
             <button onClick={onClose} style={{ padding:"8px 12px", background:"transparent", border:`1px solid ${C.border}`, borderRadius:3, cursor:"pointer", color:C.inkMid }}>
@@ -788,7 +788,7 @@ function FormBuilder() {
   };
 
   const fieldS = { width:"100%", padding:"7px 10px", border:`1px solid ${C.border}`, borderRadius:4,
-    fontFamily:"'Outfit',sans-serif", fontSize:12, background:C.surface, color:C.ink, boxSizing:"border-box" };
+    fontFamily:"'DM Sans',sans-serif", fontSize:12, background:C.surface, color:C.ink, boxSizing:"border-box" };
   const lblS = { fontSize:9, fontWeight:600, color:C.inkLight, display:"block", marginBottom:4,
     textTransform:"uppercase", letterSpacing:1 };
 
@@ -826,7 +826,7 @@ function FormBuilder() {
               style={{ background:"none", border:"none", cursor:"pointer", color:C.inkMid, padding:4 }}><ArrowLeft size={18}/></button>
             <div>
               <input value={e.nombre} onChange={ev=>setE({nombre:ev.target.value})}
-                style={{ border:"none", fontSize:18, fontWeight:700, fontFamily:"'Outfit',sans-serif", background:"transparent", width:320 }}
+                style={{ border:"none", fontSize:18, fontWeight:700, fontFamily:"'DM Sans',sans-serif", background:"transparent", width:320 }}
                 placeholder="Nombre del formulario"/>
               <p style={{ fontSize:10, color:C.inkLight, margin:0 }}>{e.campos.length} campos</p>
             </div>
@@ -869,7 +869,7 @@ function FormBuilder() {
               );
               return (
                 <div key={i} style={{ marginBottom:12 }}>
-                  <label style={{ fontSize:11, fontWeight:600, display:"block", marginBottom:4 }}>{c.label}{c.required && <span style={{ color:"#AE2C2C" }}> *</span>}</label>
+                  <label style={{ fontSize:11, fontWeight:600, display:"block", marginBottom:4 }}>{c.label}{c.required && <span style={{ color:"#B91C1C" }}> *</span>}</label>
                   {["text","email","tel","number","date"].includes(c.tipo) && <input disabled style={{ ...fieldS, opacity:.6 }} placeholder={c.placeholder||""} type={c.tipo}/>}
                   {c.tipo==="textarea" && <textarea disabled rows={2} style={{ ...fieldS, opacity:.6, resize:"none" }} placeholder={c.placeholder||""}/>}
                   {(c.tipo==="select"||c.tipo==="rango") && <select disabled style={{ ...fieldS, opacity:.6 }}><option>{(c.opciones||[])[0]||"..."}</option></select>}
@@ -957,7 +957,7 @@ function FormBuilder() {
               <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
                 {FIELD_TYPES.map(ft => (
                   <button key={ft.tipo} onClick={()=>addCampo(ft.tipo)}
-                    style={{ padding:"5px 10px", fontSize:10, fontFamily:"'Outfit',sans-serif",
+                    style={{ padding:"5px 10px", fontSize:10, fontFamily:"'DM Sans',sans-serif",
                       border:`1px solid ${C.border}`, borderRadius:4, background:C.surface,
                       cursor:"pointer", color:C.ink, display:"flex", alignItems:"center", gap:4 }}>
                     <span style={{ fontSize:11 }}>{ft.icon}</span> {ft.label}
@@ -991,7 +991,7 @@ function FormBuilder() {
             <button onClick={() => copyUrl(sharing)}
               style={{ padding:"8px 14px", border:`1px solid ${C.border}`, borderRadius:4, fontSize:11, fontWeight:600,
                 background: copied ? C.successBg : C.surface, color: copied ? C.success : C.inkMid,
-                cursor:"pointer", fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap" }}>
+                cursor:"pointer", fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap" }}>
               {copied ? "✅ Copiado" : "📋 Copiar"}
             </button>
           </div>
@@ -1020,14 +1020,14 @@ function FormBuilder() {
           <button onClick={() => shareWA(sharing)}
             style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"12px",
               background:"#25D366", border:"none", borderRadius:6, cursor:"pointer", fontSize:13, fontWeight:700, color:"#fff",
-              fontFamily:"'Outfit',sans-serif" }}>
+              fontFamily:"'DM Sans',sans-serif" }}>
             <MessageCircle size={16}/> WhatsApp
           </button>
           <button onClick={() => shareEmailFn(sharing)} disabled={!shareEmail}
             style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:8, padding:"12px",
               background: shareEmail ? C.ink : C.bg, border:"none", borderRadius:6,
               cursor: shareEmail ? "pointer" : "default", fontSize:13, fontWeight:600,
-              color: shareEmail ? "#fff" : C.inkLight, fontFamily:"'Outfit',sans-serif" }}>
+              color: shareEmail ? "#fff" : C.inkLight, fontFamily:"'DM Sans',sans-serif" }}>
             <Mail size={16}/> Email
           </button>
         </div>
@@ -1091,12 +1091,12 @@ function FormBuilder() {
                 <div style={{ display:"flex", gap:6 }}>
                   <button onClick={() => setSharing(f)}
                     style={{ padding:"6px 12px", background:"#25D366", color:"#fff", border:"none", borderRadius:4,
-                      fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                      fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
                     📤 Compartir
                   </button>
                   <button onClick={() => setEditing({...f, campos: f.campos?.map(c=>({...c}))||[]})}
                     style={{ padding:"6px 12px", background:C.surface, border:`1px solid ${C.border}`, borderRadius:4,
-                      fontSize:10, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                      fontSize:10, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
                     ✏️ Editar
                   </button>
                   <button onClick={() => doDelete(f.id)}
@@ -1187,7 +1187,7 @@ function Formularios({ sv, onCreateOfferFromBriefing, onCreateClientFromBriefing
   ];
 
   const fieldS = { width:"100%", padding:"7px 10px", border:`1px solid ${C.border}`, borderRadius:4,
-    fontFamily:"'Outfit',sans-serif", fontSize:12, background:C.surface, color:C.ink, boxSizing:"border-box" };
+    fontFamily:"'DM Sans',sans-serif", fontSize:12, background:C.surface, color:C.ink, boxSizing:"border-box" };
   const lblS = { fontSize:9, fontWeight:600, color:C.inkLight, display:"block", marginBottom:4,
     textTransform:"uppercase", letterSpacing:1 };
 
@@ -1200,10 +1200,10 @@ function Formularios({ sv, onCreateOfferFromBriefing, onCreateClientFromBriefing
           <p style={{ fontSize:12, color:C.inkLight, margin:0 }}>Envía el briefing, ingresa respuestas y crea clientes y ofertas</p>
         </div>
         <div style={{ display:"flex", gap:6 }}>
-          <button onClick={() => setShowJson(true)} style={{ padding:"7px 14px", border:`1px solid ${C.border}`, borderRadius:3, background:C.surface, color:C.inkMid, fontFamily:"'Outfit',sans-serif", fontSize:11, cursor:"pointer", display:"flex", alignItems:"center", gap:4 }}>
+          <button onClick={() => setShowJson(true)} style={{ padding:"7px 14px", border:`1px solid ${C.border}`, borderRadius:3, background:C.surface, color:C.inkMid, fontFamily:"'DM Sans',sans-serif", fontSize:11, cursor:"pointer", display:"flex", alignItems:"center", gap:4 }}>
             📥 Importar JSON
           </button>
-          <button onClick={refresh} style={{ padding:"7px 14px", border:`1px solid ${C.border}`, borderRadius:3, background:C.surface, color:C.inkMid, fontFamily:"'Outfit',sans-serif", fontSize:11, cursor:"pointer" }}>
+          <button onClick={refresh} style={{ padding:"7px 14px", border:`1px solid ${C.border}`, borderRadius:3, background:C.surface, color:C.inkMid, fontFamily:"'DM Sans',sans-serif", fontSize:11, cursor:"pointer" }}>
             ↻ Actualizar
           </button>
         </div>
@@ -1224,12 +1224,12 @@ function Formularios({ sv, onCreateOfferFromBriefing, onCreateClientFromBriefing
             <div style={{ display:"flex", gap:8, marginTop:12 }}>
               <button onClick={importJson}
                 style={{ padding:"8px 18px", background:C.ink, color:"#fff", border:"none", borderRadius:4,
-                  fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                  fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
                 Importar
               </button>
               <button onClick={() => { setShowJson(false); setJsonText(""); }}
                 style={{ padding:"8px 18px", background:"transparent", color:C.inkMid, border:`1px solid ${C.border}`,
-                  borderRadius:4, fontSize:12, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                  borderRadius:4, fontSize:12, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
                 Cancelar
               </button>
             </div>
@@ -1244,7 +1244,7 @@ function Formularios({ sv, onCreateOfferFromBriefing, onCreateClientFromBriefing
             display:"flex", alignItems:"center", gap:7, padding:"10px 18px",
             border:"none", borderBottom: tab===t.id ? `2px solid ${C.ink}` : "2px solid transparent",
             background:"transparent", color: tab===t.id ? C.ink : C.inkLight,
-            fontFamily:"'Outfit',sans-serif", fontSize:12, fontWeight: tab===t.id ? 700 : 400,
+            fontFamily:"'DM Sans',sans-serif", fontSize:12, fontWeight: tab===t.id ? 700 : 400,
             cursor:"pointer", letterSpacing:.5, marginBottom:-1,
           }}>
             <t.I size={13} />{t.lbl}
@@ -1331,7 +1331,7 @@ function Formularios({ sv, onCreateOfferFromBriefing, onCreateClientFromBriefing
                           style={{ padding:"4px 10px", fontSize:10, fontWeight:sel?700:400, borderRadius:20,
                             border: sel ? `1px solid ${C.ink}` : `1px solid ${C.border}`,
                             background: sel ? C.ink : "#fff", color: sel ? "#fff" : C.inkMid,
-                            cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>{e}</button>;
+                            cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>{e}</button>;
                       })}
                     </div>
                   </div>
@@ -1344,7 +1344,7 @@ function Formularios({ sv, onCreateOfferFromBriefing, onCreateClientFromBriefing
                           style={{ padding:"4px 10px", fontSize:10, fontWeight:sel?700:400, borderRadius:20,
                             border: sel ? `1px solid ${C.info}` : `1px solid ${C.border}`,
                             background: sel ? C.infoBg : "#fff", color: sel ? C.info : C.inkMid,
-                            cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>{e}</button>;
+                            cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>{e}</button>;
                       })}
                     </div>
                   </div>
@@ -1440,12 +1440,12 @@ function Formularios({ sv, onCreateOfferFromBriefing, onCreateClientFromBriefing
             <div style={{ display:"flex", gap:8, justifyContent:"center", marginTop:16 }}>
               <button onClick={() => setTab("ingresar")}
                 style={{ padding:"8px 18px", background:C.ink, color:"#fff", border:"none", borderRadius:6,
-                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'Outfit',sans-serif" }}>
+                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'DM Sans',sans-serif" }}>
                 <Edit2 size={12} style={{ marginRight:4 }}/> Ingresar manualmente
               </button>
               <button onClick={() => setShowJson(true)}
                 style={{ padding:"8px 18px", background:"transparent", color:C.inkMid, border:`1px solid ${C.border}`,
-                  borderRadius:6, cursor:"pointer", fontSize:12, fontFamily:"'Outfit',sans-serif" }}>
+                  borderRadius:6, cursor:"pointer", fontSize:12, fontFamily:"'DM Sans',sans-serif" }}>
                 📥 Importar JSON
               </button>
             </div>
@@ -1477,13 +1477,13 @@ function Formularios({ sv, onCreateOfferFromBriefing, onCreateClientFromBriefing
                 </div>
                 <div style={{ display:"flex", gap:6, alignItems:"center", flexShrink:0, marginLeft:16 }}>
                   <span style={{ fontSize:10, color:C.inkXLight, marginRight:4 }}>{b.fecha || ""}</span>
-                  <button onClick={() => setSelected(b)} style={{ padding:"6px 12px", background:C.accentBg, border:`1px solid ${C.border}`, borderRadius:3, fontFamily:"'Outfit',sans-serif", fontSize:10, cursor:"pointer", color:C.ink, fontWeight:600 }}>
+                  <button onClick={() => setSelected(b)} style={{ padding:"6px 12px", background:C.accentBg, border:`1px solid ${C.border}`, borderRadius:3, fontFamily:"'DM Sans',sans-serif", fontSize:10, cursor:"pointer", color:C.ink, fontWeight:600 }}>
                     Ver detalle
                   </button>
-                  <button onClick={() => { if(onCreateClientFromBriefing) onCreateClientFromBriefing(b); }} style={{ padding:"6px 12px", background:C.infoBg, border:`1px solid ${C.info}33`, borderRadius:3, fontFamily:"'Outfit',sans-serif", fontSize:10, cursor:"pointer", color:C.info, fontWeight:600 }}>
+                  <button onClick={() => { if(onCreateClientFromBriefing) onCreateClientFromBriefing(b); }} style={{ padding:"6px 12px", background:C.infoBg, border:`1px solid ${C.info}33`, borderRadius:3, fontFamily:"'DM Sans',sans-serif", fontSize:10, cursor:"pointer", color:C.info, fontWeight:600 }}>
                     + Cliente
                   </button>
-                  <button onClick={() => onCreateOfferFromBriefing(b, sv)} style={{ padding:"6px 12px", background:C.ink, border:"none", borderRadius:3, fontFamily:"'Outfit',sans-serif", fontSize:10, cursor:"pointer", color:"#fff", fontWeight:700, letterSpacing:.5 }}>
+                  <button onClick={() => onCreateOfferFromBriefing(b, sv)} style={{ padding:"6px 12px", background:C.ink, border:"none", borderRadius:3, fontFamily:"'DM Sans',sans-serif", fontSize:10, cursor:"pointer", color:"#fff", fontWeight:700, letterSpacing:.5 }}>
                     + Oferta
                   </button>
                   <button onClick={() => handleDel(b.id)} disabled={deleting===b.id} style={{ padding:"6px 8px", background:"transparent", border:`1px solid ${C.border}`, borderRadius:3, cursor:"pointer", color:C.error, opacity: deleting===b.id ? .4 : 1 }}>
@@ -1536,7 +1536,7 @@ function TabClientesCRM() {
     setShowBriefPicker(false);
   };
 
-  const inp = (extra={}) => ({ border:"1px solid #E4E1DB", borderRadius:6, padding:"7px 10px", fontSize:13, fontFamily:"'Outfit',sans-serif", width:"100%", ...extra });
+  const inp = (extra={}) => ({ border:"1px solid #E0E0E0", borderRadius:6, padding:"7px 10px", fontSize:13, fontFamily:"'DM Sans',sans-serif", width:"100%", ...extra });
 
   return (
     <div className="fade">
@@ -1569,7 +1569,7 @@ function TabClientesCRM() {
           <div style={{ background:"#fff", borderRadius:10, maxWidth:520, width:"100%",
             maxHeight:"65vh", overflow:"hidden", display:"flex", flexDirection:"column",
             boxShadow:"0 20px 60px rgba(0,0,0,.2)" }}>
-            <div style={{ padding:"14px 18px", borderBottom:"1px solid #E4E1DB",
+            <div style={{ padding:"14px 18px", borderBottom:"1px solid #E0E0E0",
               display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div>
                 <div style={{ fontWeight:700, fontSize:15 }}>Crear cliente desde briefing</div>
@@ -1583,7 +1583,7 @@ function TabClientesCRM() {
             <div style={{ overflowY:"auto", padding:14 }}>
               {briefings.map(b => (
                 <div key={b.id} onClick={() => importFromBriefing(b)}
-                  style={{ padding:"12px 14px", border:"1px solid #E4E1DB", borderRadius:8,
+                  style={{ padding:"12px 14px", border:"1px solid #E0E0E0", borderRadius:8,
                     marginBottom:8, cursor:"pointer" }}
                   onMouseEnter={e=>e.currentTarget.style.background="#F5F4F1"}
                   onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
@@ -1736,7 +1736,7 @@ function TabProveedores() {
     (catFiltro === "Todos" || p.categoria === catFiltro) &&
     (!search || p.nombre.toLowerCase().includes(search.toLowerCase()))
   );
-  const inp = (extra={}) => ({ border:"1px solid #E4E1DB", borderRadius:6, padding:"7px 10px", fontSize:13, fontFamily:"'Outfit',sans-serif", width:"100%", ...extra });
+  const inp = (extra={}) => ({ border:"1px solid #E0E0E0", borderRadius:6, padding:"7px 10px", fontSize:13, fontFamily:"'DM Sans',sans-serif", width:"100%", ...extra });
 
   return (
     <div className="fade">
@@ -1762,14 +1762,14 @@ function TabProveedores() {
             style={{ padding:"6px 12px", border:`1px solid ${catFiltro===cat?C.ink:C.border}`,
               borderRadius:20, background:catFiltro===cat?C.ink:"transparent",
               color:catFiltro===cat?"#fff":C.inkMid, cursor:"pointer", fontSize:11,
-              fontFamily:"'Outfit',sans-serif", fontWeight:catFiltro===cat?600:400 }}>
+              fontFamily:"'DM Sans',sans-serif", fontWeight:catFiltro===cat?600:400 }}>
             {cat}
           </button>
         ))}
       </div>
 
       {form && (
-        <Card style={{ padding:22, marginBottom:20, borderLeft:`3px solid #1E4F8C` }}>
+        <Card style={{ padding:22, marginBottom:20, borderLeft:`3px solid #3B3B3B` }}>
           <STitle t={provs.find(p=>p.id===form.id) ? "Editar proveedor" : "Nuevo proveedor"} s="" />
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:12 }}>
             <FI lbl="Nombre / Razón social" val={form.nombre} on={e=>setForm(f=>({...f,nombre:e.target.value}))} />
@@ -1928,7 +1928,7 @@ function Sidebar({ view, sv, lang, setLang, open, toggle }) {
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <LogoMark size={32} color="#fff" />
           <div>
-            <div style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 600, fontSize: 14, letterSpacing: 4, color: "#fff", textTransform: "uppercase" }}>HABITARIS</div>
+            <div style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 14, letterSpacing: 4, color: "#fff", textTransform: "uppercase" }}>HABITARIS</div>
             <div style={{ fontSize: 9, letterSpacing: 2, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", fontWeight: 400 }}>{lang==="en"?"CRM · Offers":"CRM · Ofertas"}</div>
           </div>
         </div>
@@ -1943,7 +1943,7 @@ function Sidebar({ view, sv, lang, setLang, open, toggle }) {
               padding: "10px 12px", borderRadius: 2, border: "none", cursor: "pointer",
               background: act ? C.sidebarAct : "transparent",
               color: act ? "#fff" : "rgba(255,255,255,0.35)",
-              fontFamily: "'Outfit', sans-serif", fontSize: 11, fontWeight: act ? 600 : 400,
+              fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: act ? 600 : 400,
               letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 1,
               transition: "all .15s",
               borderLeft: act ? "2px solid rgba(255,255,255,0.6)" : "2px solid transparent",
@@ -1958,7 +1958,7 @@ function Sidebar({ view, sv, lang, setLang, open, toggle }) {
           {[["es","🇪🇸 ES"],["en","🇬🇧 EN"]].map(([code,lbl])=>(
             <button key={code} onClick={()=>setLang(code)}
               style={{ flex:1, padding:"5px 0", fontSize:10, fontWeight:600, cursor:"pointer",
-                border:"1px solid rgba(255,255,255,0.15)", fontFamily:"'Outfit',sans-serif",
+                border:"1px solid rgba(255,255,255,0.15)", fontFamily:"'DM Sans',sans-serif",
                 borderRadius:code==="es"?"4px 0 0 4px":"0 4px 4px 0",
                 background:lang===code?"#fff":"transparent",
                 color:lang===code?"#111":"rgba(255,255,255,0.4)" }}>{lbl}</button>
@@ -1991,7 +1991,7 @@ function Dashboard({ offers, sv, sei, lang }) {
     <div className="fade">
       <div style={{ marginBottom: 28 }}>
         <p style={{ fontSize: 9, letterSpacing: 2.5, textTransform: "uppercase", color: C.inkLight, margin: "0 0 6px" }}>{lang==="en"?"General panel":"Panel general"}</p>
-        <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 28, fontWeight: 700, color: C.ink, margin: 0, letterSpacing: -0.5 }}>Dashboard</h1>
+        <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 700, color: C.ink, margin: 0, letterSpacing: -0.5 }}>Dashboard</h1>
       </div>
 
       <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
@@ -2016,7 +2016,7 @@ function Dashboard({ offers, sv, sei, lang }) {
 
       <Card style={{ padding: 0, overflow: "hidden" }}>
         <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <h3 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 13, fontWeight: 700, color: C.ink, margin: 0, textTransform: "uppercase", letterSpacing: 0.5 }}>Ofertas recientes</h3>
+          <h3 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 13, fontWeight: 700, color: C.ink, margin: 0, textTransform: "uppercase", letterSpacing: 0.5 }}>Ofertas recientes</h3>
           <Btn v="ghost" sm icon={ChevronRight} on={() => sv("offers")}>Ver todas</Btn>
         </div>
         {rec.length === 0 ? (
@@ -2028,7 +2028,7 @@ function Dashboard({ offers, sv, sei, lang }) {
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ background: "#FAFAF8" }}>
+              <tr style={{ background: "#FFFFFF" }}>
                 {["Cliente", "Proyecto", "Tipo", "PVP c/IVA", "Estado", ""].map(h => (
                   <th key={h} style={{ padding: "10px 16px", textAlign: "left", fontSize: 9, fontWeight: 600, color: C.inkLight, textTransform: "uppercase", letterSpacing: 1.2 }}>{h}</th>
                 ))}
@@ -2039,7 +2039,7 @@ function Dashboard({ offers, sv, sei, lang }) {
                 const r = calc(o);
                 return (
                   <tr key={o.id} style={{ borderTop: `1px solid ${C.border}` }}
-                    onMouseEnter={e => e.currentTarget.style.background = "#FAFAF8"}
+                    onMouseEnter={e => e.currentTarget.style.background = "#FFFFFF"}
                     onMouseLeave={e => e.currentTarget.style.background = ""}>
                     <td style={{ padding: "12px 16px", fontSize: 13, fontWeight: 500, color: C.ink }}>{o.cliente || "—"}</td>
                     <td style={{ padding: "12px 16px", fontSize: 12, color: C.inkMid }}>{o.proyecto || "—"}</td>
@@ -2074,7 +2074,7 @@ function Lista({ offers, sv, sei, onDel, onDup }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
         <div>
           <p style={{ fontSize: 9, letterSpacing: 2.5, textTransform: "uppercase", color: C.inkLight, margin: "0 0 6px" }}>Biblioteca</p>
-          <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 28, fontWeight: 700, color: C.ink, margin: 0, letterSpacing: -0.5 }}>Ofertas</h1>
+          <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 700, color: C.ink, margin: 0, letterSpacing: -0.5 }}>Ofertas</h1>
           <p style={{ color: C.inkLight, fontSize: 11, margin: "4px 0 0" }}>{offers.length} oferta(s) registrada(s)</p>
         </div>
         <Btn icon={Plus} on={() => sv("offer-new")}>Nueva oferta</Btn>
@@ -2084,11 +2084,11 @@ function Lista({ offers, sv, sei, onDel, onDup }) {
         <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
           <Search size={13} style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)", color: C.inkLight }} />
           <input value={srch} onChange={e => setSrch(e.target.value)} placeholder="Buscar cliente, proyecto..."
-            style={{ width: "100%", padding: "9px 12px 9px 32px", border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'Outfit', sans-serif", fontSize: 12, background: C.surface, color: C.ink }} />
+            style={{ width: "100%", padding: "9px 12px 9px 32px", border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'DM Sans', sans-serif", fontSize: 12, background: C.surface, color: C.ink }} />
         </div>
         {[{ val: fE, sv: setFE, opts: ["Todos", ...ESTADOS] }, { val: fT, sv: setFT, opts: ["Todos", "OBRA", "DISEÑO"] }].map(({ val, sv, opts }, i) => (
           <select key={i} value={val} onChange={e => sv(e.target.value)}
-            style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'Outfit', sans-serif", fontSize: 12, background: C.surface, color: C.ink }}>
+            style={{ padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'DM Sans', sans-serif", fontSize: 12, background: C.surface, color: C.ink }}>
             {opts.map(o => <option key={o} value={o}>{o}</option>)}
           </select>
         ))}
@@ -2100,7 +2100,7 @@ function Lista({ offers, sv, sei, onDel, onDup }) {
         ) : (
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
-              <tr style={{ background: "#FAFAF8" }}>
+              <tr style={{ background: "#FFFFFF" }}>
                 {["#", "Cliente / Proyecto", "Modalidad", "Costo dir.", "PVP c/IVA", "Margen", "Estado", "Fecha", ""].map(h => (
                   <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 9, fontWeight: 600, color: C.inkLight, textTransform: "uppercase", letterSpacing: 1, whiteSpace: "nowrap" }}>{h}</th>
                 ))}
@@ -2111,7 +2111,7 @@ function Lista({ offers, sv, sei, onDel, onDup }) {
                 const r = calc(o);
                 return (
                   <tr key={o.id} style={{ borderTop: `1px solid ${C.border}` }}
-                    onMouseEnter={e => e.currentTarget.style.background = "#FAFAF8"}
+                    onMouseEnter={e => e.currentTarget.style.background = "#FFFFFF"}
                     onMouseLeave={e => e.currentTarget.style.background = ""}>
                     <td style={{ padding: "11px 14px", fontSize: 10, color: C.inkLight, fontWeight: 600 }}>{String(i + 1).padStart(3, "0")}</td>
                     <td style={{ padding: "11px 14px" }}>
@@ -2150,8 +2150,8 @@ function Lista({ offers, sv, sei, onDel, onDup }) {
 /* ─── TIPOS DE LÍNEA (6 códigos) ──────────────────────────── */
 const TIPOS_LINEA = [
   { id:"DIS", label:"Diseño",                    color:"#5B3A8C", icon:"✏️",  modo:"diseno"    },
-  { id:"REF", label:"Reforma / construcción",    color:"#7A5218", icon:"🏗️",  modo:"ejecucion" },
-  { id:"INS", label:"Instalaciones",             color:"#1E4F8C", icon:"⚡",  modo:"ejecucion" },
+  { id:"REF", label:"Reforma / construcción",    color:"#8C6A00", icon:"🏗️",  modo:"ejecucion" },
+  { id:"INS", label:"Instalaciones",             color:"#3B3B3B", icon:"⚡",  modo:"ejecucion" },
   { id:"MOB", label:"Carpintería y mobiliario",  color:"#6B4226", icon:"🪵",  modo:"ejecucion" },
   { id:"DIR", label:"Dirección / supervisión",   color:"#0D5E6E", icon:"👁️",  modo:"diseno"    },
   { id:"SER", label:"Servicios técnicos",        color:"#555555", icon:"🔧",  modo:"diseno"    },
@@ -2160,24 +2160,24 @@ const TIPOS_LINEA = [
 // Capítulos de presupuesto de obra (diferentes a los tipos de línea)
 const TIPOS_CAPITULO = [
   { id:"CAP00", label:"00 · Preliminares e instalaciones provisionales", color:"#555555" },
-  { id:"CAP01", label:"01 · Demoliciones y desmonte",                     color:"#7A5218" },
+  { id:"CAP01", label:"01 · Demoliciones y desmonte",                     color:"#8C6A00" },
   { id:"CAP02", label:"02 · Movimiento de tierras",                       color:"#6B4226" },
   { id:"CAP03", label:"03 · Cimentaciones",                               color:"#5B3A8C" },
-  { id:"CAP04", label:"04 · Estructura",                                  color:"#1E4F8C" },
+  { id:"CAP04", label:"04 · Estructura",                                  color:"#3B3B3B" },
   { id:"CAP05", label:"05 · Mampostería y cerramientos",                  color:"#0D5E6E" },
-  { id:"CAP06", label:"06 · Cubierta e impermeabilización",               color:"#7A5218" },
-  { id:"CAP07", label:"07 · Instalaciones eléctricas",                    color:"#1E6B42" },
-  { id:"CAP08", label:"08 · Instalaciones hidrosanitarias",               color:"#1E4F8C" },
-  { id:"CAP09", label:"09 · Instalaciones de gas",                        color:"#AE2C2C" },
+  { id:"CAP06", label:"06 · Cubierta e impermeabilización",               color:"#8C6A00" },
+  { id:"CAP07", label:"07 · Instalaciones eléctricas",                    color:"#111111" },
+  { id:"CAP08", label:"08 · Instalaciones hidrosanitarias",               color:"#3B3B3B" },
+  { id:"CAP09", label:"09 · Instalaciones de gas",                        color:"#B91C1C" },
   { id:"CAP10", label:"10 · Acabados generales",                          color:"#555555" },
   { id:"CAP11", label:"11 · Pisos y enchapes",                            color:"#6B4226" },
   { id:"CAP12", label:"12 · Pintura",                                     color:"#5B3A8C" },
   { id:"CAP13", label:"13 · Carpintería metálica y vidriería",            color:"#0D5E6E" },
   { id:"CAP14", label:"14 · Carpintería de madera y mobiliario",          color:"#6B4226" },
-  { id:"CAP15", label:"15 · Obras exteriores y urbanismo",                color:"#1E6B42" },
+  { id:"CAP15", label:"15 · Obras exteriores y urbanismo",                color:"#111111" },
   { id:"CAP16", label:"16 · Equipamiento especial",                       color:"#555555" },
   { id:"CAP17", label:"17 · Diseño y dirección técnica",                  color:"#5B3A8C" },
-  { id:"CAP18", label:"18 · Admin, imprevistos y utilidad (AIU)",         color:"#1E4F8C" },
+  { id:"CAP18", label:"18 · Admin, imprevistos y utilidad (AIU)",         color:"#3B3B3B" },
 ];
 
 /* ─── ESTUDIOS/ENTREGABLES PARA DISEÑO (biblioteca) ─────────── */
@@ -2463,8 +2463,8 @@ function EquiposBibliotecaModal({ pais, onClose }) {
   };
 
   const inp = (extra={}) => ({
-    border:"1px solid #E4E1DB", borderRadius:4, padding:"4px 7px",
-    fontSize:12, fontFamily:"'Outfit',sans-serif", ...extra
+    border:"1px solid #E0E0E0", borderRadius:4, padding:"4px 7px",
+    fontSize:12, fontFamily:"'DM Sans',sans-serif", ...extra
   });
 
   return (
@@ -2473,7 +2473,7 @@ function EquiposBibliotecaModal({ pais, onClose }) {
       overflowY:"auto", padding:"20px 16px" }}>
       <div style={{ background:"#fff", borderRadius:10, width:"100%", maxWidth:680,
         boxShadow:"0 20px 60px rgba(0,0,0,.2)" }}>
-        <div style={{ padding:"14px 18px", borderBottom:"1px solid #E4E1DB",
+        <div style={{ padding:"14px 18px", borderBottom:"1px solid #E0E0E0",
           display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <div>
             <div style={{ fontSize:11, fontWeight:600, color:"#888", textTransform:"uppercase",
@@ -2482,7 +2482,7 @@ function EquiposBibliotecaModal({ pais, onClose }) {
           </div>
           <div style={{ display:"flex", gap:8 }}>
             <button onClick={() => { setForm(defForm()); setEditId(null); }}
-              style={{ padding:"6px 12px", background:"#1E6B42", color:"#fff", border:"none",
+              style={{ padding:"6px 12px", background:"#111111", color:"#fff", border:"none",
                 borderRadius:6, cursor:"pointer", fontSize:12, fontWeight:600,
                 display:"flex", alignItems:"center", gap:4 }}>
               <Plus size={12}/> Nuevo equipo
@@ -2497,9 +2497,9 @@ function EquiposBibliotecaModal({ pais, onClose }) {
         <div style={{ padding:"14px 18px" }}>
           {/* Form nuevo/editar equipo */}
           {form && (
-            <div style={{ border:"1px solid #1E6B42", borderRadius:8, padding:14, marginBottom:16,
+            <div style={{ border:"1px solid #111111", borderRadius:8, padding:14, marginBottom:16,
               background:"#F0FAF5" }}>
-              <div style={{ fontSize:12, fontWeight:700, color:"#1E6B42", marginBottom:10 }}>
+              <div style={{ fontSize:12, fontWeight:700, color:"#111111", marginBottom:10 }}>
                 {editId ? "Editando equipo" : "Nuevo equipo"}
               </div>
               <div style={{ display:"flex", gap:10, marginBottom:10 }}>
@@ -2540,13 +2540,13 @@ function EquiposBibliotecaModal({ pais, onClose }) {
                     {fmtN3(costHoraCat(c.catId, pais))} {moneda}/h
                   </span>
                   <button onClick={() => setForm(f => ({...f, cargos: f.cargos.filter((_, xi) => xi!==ci)}))}
-                    style={{ background:"none", border:"none", cursor:"pointer", color:"#AE2C2C" }}>
+                    style={{ background:"none", border:"none", cursor:"pointer", color:"#B91C1C" }}>
                     <Trash2 size={12}/>
                   </button>
                 </div>
               ))}
               <button onClick={() => setForm(f => ({...f, cargos: [...f.cargos, {id:uid2(), catId:catsMO[0]?.id||"", cantidad:1}]}))}
-                style={{ fontSize:11, color:"#1E4F8C", background:"none", border:"none", cursor:"pointer",
+                style={{ fontSize:11, color:"#3B3B3B", background:"none", border:"none", cursor:"pointer",
                   display:"flex", alignItems:"center", gap:3, marginBottom:10 }}>
                 <Plus size={11}/> Añadir cargo
               </button>
@@ -2568,7 +2568,7 @@ function EquiposBibliotecaModal({ pais, onClose }) {
                 </div>
               </div>
 
-              <div style={{ fontSize:12, color:"#1E6B42", fontWeight:600, marginBottom:10 }}>
+              <div style={{ fontSize:12, color:"#111111", fontWeight:600, marginBottom:10 }}>
                 Costo/ud estimado: {fmtN3(calcCostoEquipo(form))} {moneda}
               </div>
 
@@ -2581,13 +2581,13 @@ function EquiposBibliotecaModal({ pais, onClose }) {
                     saveEquipos([...equipos, form]);
                   }
                   setForm(null); setEditId(null);
-                }} style={{ padding:"6px 14px", background:"#1E6B42", color:"#fff", border:"none",
+                }} style={{ padding:"6px 14px", background:"#111111", color:"#fff", border:"none",
                   borderRadius:6, cursor:"pointer", fontSize:12, fontWeight:600,
                   display:"flex", alignItems:"center", gap:4 }}>
                   <Check size={12}/> Guardar
                 </button>
                 <button onClick={() => { setForm(null); setEditId(null); }}
-                  style={{ padding:"6px 14px", border:"1px solid #E4E1DB", background:"#fff",
+                  style={{ padding:"6px 14px", border:"1px solid #E0E0E0", background:"#fff",
                     borderRadius:6, cursor:"pointer", fontSize:12 }}>
                   Cancelar
                 </button>
@@ -2598,7 +2598,7 @@ function EquiposBibliotecaModal({ pais, onClose }) {
           {/* Lista equipos */}
           {equipos.map((eq, i) => (
             <div key={eq.id} style={{ display:"flex", alignItems:"center", gap:12, padding:"10px 0",
-              borderBottom:"1px solid #E4E1DB" }}>
+              borderBottom:"1px solid #E0E0E0" }}>
               <div style={{ flex:1 }}>
                 <div style={{ fontWeight:600, fontSize:13, color:"#111" }}>{eq.nombre}</div>
                 <div style={{ fontSize:11, color:"#888", marginTop:2 }}>
@@ -2610,19 +2610,19 @@ function EquiposBibliotecaModal({ pais, onClose }) {
                   {eq.licenciasCosto > 0 ? ` · +${fmtN3(eq.licenciasCosto)} lic.` : ""}
                 </div>
               </div>
-              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:13, fontWeight:600, color:"#1E6B42",
+              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:13, fontWeight:600, color:"#111111",
                 minWidth:100, textAlign:"right" }}>
                 {fmtN3(calcCostoEquipo(eq))}<br/>
                 <span style={{ fontSize:10, fontWeight:400, color:"#888" }}>{moneda}/ud · rend {eq.rendimiento}h</span>
               </div>
               <div style={{ display:"flex", gap:4 }}>
                 <button onClick={() => { setForm({...eq}); setEditId(eq.id); }}
-                  style={{ background:"none", border:"1px solid #E4E1DB", borderRadius:4,
+                  style={{ background:"none", border:"1px solid #E0E0E0", borderRadius:4,
                     cursor:"pointer", padding:"4px 8px", fontSize:11, color:"#555" }}>
                   Editar
                 </button>
                 <button onClick={() => { if(window.confirm("¿Eliminar este equipo?")) saveEquipos(equipos.filter(x=>x.id!==eq.id)); }}
-                  style={{ background:"none", border:"none", cursor:"pointer", color:"#AE2C2C" }}>
+                  style={{ background:"none", border:"none", cursor:"pointer", color:"#B91C1C" }}>
                   <Trash2 size={13}/>
                 </button>
               </div>
@@ -2685,15 +2685,15 @@ function EquiposSelector({ pais, linea, apu, setApu }) {
   return (
     <div style={{ marginBottom: 12 }}>
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between",
-        marginBottom:8, paddingBottom:4, borderBottom:"1px solid #E4E1DB" }}>
+        marginBottom:8, paddingBottom:4, borderBottom:"1px solid #E0E0E0" }}>
         <div style={{ fontSize:11, fontWeight:700, color:"#888", textTransform:"uppercase",
           letterSpacing:0.5 }}>Equipos de trabajo (MO)</div>
         <div style={{ display:"flex", gap:6 }}>
           <select defaultValue=""
             onChange={e => { if (e.target.value) { addEquipo(e.target.value); e.target.value=""; }}}
-            style={{ border:"1px solid #1E4F8C", borderRadius:5, padding:"3px 8px",
-              fontSize:12, color:"#1E4F8C", cursor:"pointer",
-              fontFamily:"'Outfit',sans-serif", background:"#E6EFF9" }}>
+            style={{ border:"1px solid #3B3B3B", borderRadius:5, padding:"3px 8px",
+              fontSize:12, color:"#3B3B3B", cursor:"pointer",
+              fontFamily:"'DM Sans',sans-serif", background:"#F0F0F0" }}>
             <option value="">+ Añadir equipo de biblioteca…</option>
             {biblioteca.map(eq => (
               <option key={eq.id} value={eq.id}>
@@ -2702,9 +2702,9 @@ function EquiposSelector({ pais, linea, apu, setApu }) {
             ))}
           </select>
           <button onClick={() => setShowBiblioteca(true)}
-            style={{ border:"1px solid #E4E1DB", borderRadius:5, padding:"3px 8px",
+            style={{ border:"1px solid #E0E0E0", borderRadius:5, padding:"3px 8px",
               fontSize:11, cursor:"pointer", background:"#fff", color:"#555",
-              fontFamily:"'Outfit',sans-serif" }}>
+              fontFamily:"'DM Sans',sans-serif" }}>
             Gestionar biblioteca
           </button>
         </div>
@@ -2724,25 +2724,25 @@ function EquiposSelector({ pais, linea, apu, setApu }) {
         const costoTotal = costoUd * (linea.cantidad || 1);
         const catsMO = TARIFAS_MO[pais]?.categorias || [];
         return (
-          <div key={eu.id} style={{ border:"1px solid #E4E1DB", borderRadius:8,
+          <div key={eu.id} style={{ border:"1px solid #E0E0E0", borderRadius:8,
             marginBottom:8, overflow:"hidden" }}>
             <div style={{ background:"#F5F4F1", padding:"7px 12px",
-              display:"flex", alignItems:"center", gap:10, borderBottom:"1px solid #E4E1DB" }}>
+              display:"flex", alignItems:"center", gap:10, borderBottom:"1px solid #E0E0E0" }}>
               <div style={{ fontWeight:600, fontSize:13, color:"#111", flex:1 }}>{eq.nombre}</div>
               <div style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"#555" }}>
                 <span>Rendimiento:</span>
                 <input type="number" min="0" step="0.001" value={rend}
                   onChange={e => updEquipo(eu.id, "rendimientoOverride", parseFloat(e.target.value)||0)}
-                  style={{ width:65, border:"1px solid #E4E1DB", borderRadius:4,
+                  style={{ width:65, border:"1px solid #E0E0E0", borderRadius:4,
                     padding:"3px 5px", fontSize:12, textAlign:"center",
-                    fontFamily:"'Outfit',sans-serif" }}/>
+                    fontFamily:"'DM Sans',sans-serif" }}/>
                 <span>h/{linea.unidad||"ud"}</span>
                 <span style={{ fontSize:10, color:"#BBB", marginLeft:2 }}>
                   (bib: {eq.rendimiento}h)
                 </span>
               </div>
               <button onClick={() => removeEquipo(eu.id)}
-                style={{ background:"none", border:"none", cursor:"pointer", color:"#AE2C2C" }}>
+                style={{ background:"none", border:"none", cursor:"pointer", color:"#B91C1C" }}>
                 <Trash2 size={13}/>
               </button>
             </div>
@@ -2758,7 +2758,7 @@ function EquiposSelector({ pais, linea, apu, setApu }) {
               })}
               {eq.equiposCosto > 0 && <span style={{ marginRight:12 }}>+{fmtN(eq.equiposCosto)} eq.</span>}
               {eq.licenciasCosto > 0 && <span>+{fmtN(eq.licenciasCosto)} lic.</span>}
-              <span style={{ float:"right", fontWeight:700, color:"#1E6B42",
+              <span style={{ float:"right", fontWeight:700, color:"#111111",
                 fontFamily:"'DM Mono',monospace" }}>
                 {fmtN(costoUd)}/ud · {fmtN(costoTotal)} total
               </span>
@@ -2768,7 +2768,7 @@ function EquiposSelector({ pais, linea, apu, setApu }) {
       })}
 
       {equiposUsados.length > 0 && (
-        <div style={{ textAlign:"right", fontSize:13, fontWeight:600, color:"#1E6B42",
+        <div style={{ textAlign:"right", fontSize:13, fontWeight:600, color:"#111111",
           fontFamily:"'DM Mono',monospace", marginBottom:8 }}>
           Total MO: {fmtN(totalMO)} {moneda}
         </div>
@@ -2825,10 +2825,10 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
 
   const thS = { padding:"5px 8px", fontSize:10, fontWeight:700, color:"#888",
     textTransform:"uppercase", letterSpacing:0.5, background:"#F5F4F1",
-    borderBottom:"1px solid #E4E1DB", textAlign:"left" };
-  const tdS = { padding:"5px 6px", borderBottom:"1px solid #E4E1DB", fontSize:13, verticalAlign:"middle" };
-  const inp = (extra={}) => ({ border:"1px solid #E4E1DB", borderRadius:4,
-    padding:"4px 6px", fontSize:12, fontFamily:"'Outfit',sans-serif", ...extra });
+    borderBottom:"1px solid #E0E0E0", textAlign:"left" };
+  const tdS = { padding:"5px 6px", borderBottom:"1px solid #E0E0E0", fontSize:13, verticalAlign:"middle" };
+  const inp = (extra={}) => ({ border:"1px solid #E0E0E0", borderRadius:4,
+    padding:"4px 6px", fontSize:12, fontFamily:"'DM Sans',sans-serif", ...extra });
 
   return (
     <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.55)", zIndex:999,
@@ -2838,7 +2838,7 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
         boxShadow:"0 20px 60px rgba(0,0,0,.2)" }}>
 
         {/* Header modal */}
-        <div style={{ padding:"14px 18px", borderBottom:"1px solid #E4E1DB",
+        <div style={{ padding:"14px 18px", borderBottom:"1px solid #E0E0E0",
           display:"flex", alignItems:"center", justifyContent:"space-between" }}>
           <div>
             <div style={{ fontSize:11, fontWeight:600, color:"#888", textTransform:"uppercase",
@@ -2858,7 +2858,7 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
           {esModoDiseno && (<>
             {/* Estudios/Planos - biblioteca */}
             <div style={{ fontSize:11, fontWeight:700, color:"#888", textTransform:"uppercase",
-              letterSpacing:0.5, marginBottom:8, paddingBottom:4, borderBottom:"1px solid #E4E1DB" }}>
+              letterSpacing:0.5, marginBottom:8, paddingBottom:4, borderBottom:"1px solid #E0E0E0" }}>
               Estudios / Entregables
             </div>
             <table style={{ width:"100%", borderCollapse:"collapse", marginBottom:8 }}>
@@ -2910,7 +2910,7 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
                     </td>
                     <td style={tdS}>
                       <button onClick={() => delArr("estudios", e.id)}
-                        style={{ background:"none", border:"none", cursor:"pointer", color:"#AE2C2C" }}>
+                        style={{ background:"none", border:"none", cursor:"pointer", color:"#B91C1C" }}>
                         <Trash2 size={12}/>
                       </button>
                     </td>
@@ -2919,7 +2919,7 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
               </tbody>
             </table>
             <button onClick={() => addItem("estudios", { estudioId:"", nombre:"", horas:0, tipo:"plano", importe:0 })}
-              style={{ fontSize:12, color:"#1E4F8C", background:"none", border:"none", cursor:"pointer",
+              style={{ fontSize:12, color:"#3B3B3B", background:"none", border:"none", cursor:"pointer",
                 display:"flex", alignItems:"center", gap:4, marginBottom:12 }}>
               <Plus size={12}/> Añadir entregable
             </button>
@@ -2929,12 +2929,12 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
               alignItems:"center", gap:6, flexWrap:"wrap" }}>
               <span style={{ fontWeight:600 }}>Costo/hora:</span>
               {oferta.apuModoHora === "MANUAL"
-                ? <span style={{ fontFamily:"'DM Mono',monospace", color:"#1E4F8C" }}>
+                ? <span style={{ fontFamily:"'DM Mono',monospace", color:"#3B3B3B" }}>
                     Manual: {fmtN2(oferta.apuCostoHoraManual||0,0)} {moneda}/h
                   </span>
-                : <span style={{ fontFamily:"'DM Mono',monospace", color:"#1E4F8C" }}>
+                : <span style={{ fontFamily:"'DM Mono',monospace", color:"#3B3B3B" }}>
                     {fmtN2(res.costoH||0,0)} {moneda}/h
-                    <span style={{ color:"#888", fontFamily:"'Outfit',sans-serif" }}>
+                    <span style={{ color:"#888", fontFamily:"'DM Sans',sans-serif" }}>
                       &nbsp;(salario {(oferta.apuSalarioAnual||0).toLocaleString("es-CO")} +
                       {((oferta.apuPrestaciones||0)*100).toFixed(0)}% SS ÷
                       {fmtN2((oferta.apuHDia||8)*(oferta.apuDiasSem||5)*(oferta.apuSemanas||52)*(oferta.apuPctProductivas||0.6),0)}h prod.)
@@ -2947,7 +2947,7 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
             </div>
             <div style={{ textAlign:"right", fontSize:13, fontWeight:600, color:"#111", marginBottom:12 }}>
               Total horas: <span style={{ fontFamily:"'DM Mono',monospace" }}>{fmtN2(res.horasTotal||0,1)} h</span>
-              &nbsp;·&nbsp;Subtotal MO diseño: <span style={{ fontFamily:"'DM Mono',monospace", color:"#1E6B42" }}>{fmtN2(res.cdDis||0,0)} {moneda}</span>
+              &nbsp;·&nbsp;Subtotal MO diseño: <span style={{ fontFamily:"'DM Mono',monospace", color:"#111111" }}>{fmtN2(res.cdDis||0,0)} {moneda}</span>
             </div>
           </>)}
 
@@ -2957,7 +2957,7 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
 
             {/* Materiales */}
             <div style={{ fontSize:11, fontWeight:700, color:"#888", textTransform:"uppercase",
-              letterSpacing:0.5, margin:"12px 0 8px", paddingBottom:4, borderBottom:"1px solid #E4E1DB" }}>
+              letterSpacing:0.5, margin:"12px 0 8px", paddingBottom:4, borderBottom:"1px solid #E0E0E0" }}>
               Materiales
             </div>
             <table style={{ width:"100%", borderCollapse:"collapse", marginBottom:6 }}>
@@ -2999,20 +2999,20 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
                     <td style={tdS}><input type="number" min="0" step="0.001" value={m.cantidad||0} onChange={e => updArr("materiales",m.id,"cantidad",parseFloat(e.target.value)||0)} style={{ ...inp(), width:70, textAlign:"center" }}/></td>
                     <td style={tdS}><input type="number" min="0" value={m.precio||0} onChange={e => updArr("materiales",m.id,"precio",parseFloat(e.target.value)||0)} style={{ ...inp(), width:100, textAlign:"right" }}/></td>
                     <td style={{ ...tdS, textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:12, fontWeight:600 }}>{fmtN2((m.cantidad||0)*(m.precio||0),0)}</td>
-                    <td style={tdS}><button onClick={() => delArr("materiales",m.id)} style={{ background:"none",border:"none",cursor:"pointer",color:"#AE2C2C" }}><Trash2 size={11}/></button></td>
+                    <td style={tdS}><button onClick={() => delArr("materiales",m.id)} style={{ background:"none",border:"none",cursor:"pointer",color:"#B91C1C" }}><Trash2 size={11}/></button></td>
                   </tr>
                 ))}
               </tbody>
             </table>
             <button onClick={() => addItem("materiales", { codigoCat:"", descripcion:"", unidad:"ud", cantidad:0, precio:0 })}
-              style={{ fontSize:12, color:"#1E4F8C", background:"none", border:"none", cursor:"pointer",
+              style={{ fontSize:12, color:"#3B3B3B", background:"none", border:"none", cursor:"pointer",
                 display:"flex", alignItems:"center", gap:4, marginBottom:4 }}>
               <Plus size={12}/> Añadir material
             </button>
 
             {/* Equipos directos */}
             <div style={{ fontSize:11, fontWeight:700, color:"#888", textTransform:"uppercase",
-              letterSpacing:0.5, margin:"12px 0 8px", paddingBottom:4, borderBottom:"1px solid #E4E1DB" }}>
+              letterSpacing:0.5, margin:"12px 0 8px", paddingBottom:4, borderBottom:"1px solid #E0E0E0" }}>
               Equipos / herramientas directos
             </div>
             <table style={{ width:"100%", borderCollapse:"collapse", marginBottom:6 }}>
@@ -3054,13 +3054,13 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
                     <td style={tdS}><input type="number" min="0" step="0.01" value={eq.cantidad||0} onChange={e => updArr("equipos",eq.id,"cantidad",parseFloat(e.target.value)||0)} style={{ ...inp(), width:70, textAlign:"center" }}/></td>
                     <td style={tdS}><input type="number" min="0" value={eq.precio||0} onChange={e => updArr("equipos",eq.id,"precio",parseFloat(e.target.value)||0)} style={{ ...inp(), width:100, textAlign:"right" }}/></td>
                     <td style={{ ...tdS, textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:12, fontWeight:600 }}>{fmtN2((eq.cantidad||0)*(eq.precio||0),0)}</td>
-                    <td style={tdS}><button onClick={() => delArr("equipos",eq.id)} style={{ background:"none",border:"none",cursor:"pointer",color:"#AE2C2C" }}><Trash2 size={11}/></button></td>
+                    <td style={tdS}><button onClick={() => delArr("equipos",eq.id)} style={{ background:"none",border:"none",cursor:"pointer",color:"#B91C1C" }}><Trash2 size={11}/></button></td>
                   </tr>
                 ))}
               </tbody>
             </table>
             <button onClick={() => addItem("equipos", { codigoCat:"", descripcion:"", unidad:"ud", cantidad:0, precio:0 })}
-              style={{ fontSize:12, color:"#1E4F8C", background:"none", border:"none", cursor:"pointer",
+              style={{ fontSize:12, color:"#3B3B3B", background:"none", border:"none", cursor:"pointer",
                 display:"flex", alignItems:"center", gap:4, marginBottom:4 }}>
               <Plus size={12}/> Añadir equipo/herramienta
             </button>
@@ -3068,7 +3068,7 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
 
           {/* ══ SUBCONTRATAS (ambos modos) ══ */}
           <div style={{ fontSize:11, fontWeight:700, color:"#888", textTransform:"uppercase",
-            letterSpacing:0.5, margin:"12px 0 8px", paddingBottom:4, borderBottom:"1px solid #E4E1DB" }}>
+            letterSpacing:0.5, margin:"12px 0 8px", paddingBottom:4, borderBottom:"1px solid #E0E0E0" }}>
             Subcontratas
           </div>
           <table style={{ width:"100%", borderCollapse:"collapse", marginBottom:6 }}>
@@ -3082,13 +3082,13 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
                 <tr key={s.id}>
                   <td style={tdS}><input value={s.descripcion||""} onChange={e => updArr("subcontratas",s.id,"descripcion",e.target.value)} style={{ ...inp(), width:"100%" }}/></td>
                   <td style={tdS}><input type="number" min="0" value={s.importe||0} onChange={e => updArr("subcontratas",s.id,"importe",parseFloat(e.target.value)||0)} style={{ ...inp(), width:120, textAlign:"right" }}/></td>
-                  <td style={tdS}><button onClick={() => delArr("subcontratas",s.id)} style={{ background:"none",border:"none",cursor:"pointer",color:"#AE2C2C" }}><Trash2 size={11}/></button></td>
+                  <td style={tdS}><button onClick={() => delArr("subcontratas",s.id)} style={{ background:"none",border:"none",cursor:"pointer",color:"#B91C1C" }}><Trash2 size={11}/></button></td>
                 </tr>
               ))}
             </tbody>
           </table>
           <button onClick={() => addItem("subcontratas", { descripcion:"", importe:0 })}
-            style={{ fontSize:12, color:"#1E4F8C", background:"none", border:"none", cursor:"pointer",
+            style={{ fontSize:12, color:"#3B3B3B", background:"none", border:"none", cursor:"pointer",
               display:"flex", alignItems:"center", gap:4, marginBottom:12 }}>
             <Plus size={12}/> Añadir subcontrata
           </button>
@@ -3096,15 +3096,15 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
           {/* ══ RESUMEN ══ */}
           <div style={{ background:"#E8F4EE", border:"1px solid #B8DEC9", borderRadius:8, padding:"12px 14px",
             marginTop:8 }}>
-            <div style={{ fontSize:11, fontWeight:700, color:"#1E6B42", marginBottom:8,
+            <div style={{ fontSize:11, fontWeight:700, color:"#111111", marginBottom:8,
               textTransform:"uppercase", letterSpacing:0.5 }}>Resumen costos directos</div>
             {esModoDiseno
               ? [["Diseño/planos", res.cdDis], ["MO directa", res.cdMO], ["Subcontratas", res.cdSub]]
                   .map(([l,v]) => (
                     <div key={l} style={{ display:"flex", justifyContent:"space-between",
                       fontSize:13, padding:"2px 0", borderBottom:"1px solid #B8DEC9" }}>
-                      <span style={{ color:"#1E6B42" }}>{l}</span>
-                      <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:600, color:"#1E6B42" }}>
+                      <span style={{ color:"#111111" }}>{l}</span>
+                      <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:600, color:"#111111" }}>
                         {fmtN2(v||0,0)} {moneda}
                       </span>
                     </div>
@@ -3113,14 +3113,14 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
                   .map(([l,v]) => (
                     <div key={l} style={{ display:"flex", justifyContent:"space-between",
                       fontSize:13, padding:"2px 0", borderBottom:"1px solid #B8DEC9" }}>
-                      <span style={{ color:"#1E6B42" }}>{l}</span>
-                      <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:600, color:"#1E6B42" }}>
+                      <span style={{ color:"#111111" }}>{l}</span>
+                      <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:600, color:"#111111" }}>
                         {fmtN2(v||0,0)} {moneda}
                       </span>
                     </div>
                   ))}
             <div style={{ display:"flex", justifyContent:"space-between", fontSize:15,
-              padding:"8px 0 0", fontWeight:700, color:"#1E6B42" }}>
+              padding:"8px 0 0", fontWeight:700, color:"#111111" }}>
               <span>CD Total</span>
               <span style={{ fontFamily:"'DM Mono',monospace" }}>{fmtN2(res.CD||0,0)} {moneda}</span>
             </div>
@@ -3128,12 +3128,12 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
         </div>
 
         {/* Footer */}
-        <div style={{ padding:"12px 18px", borderTop:"1px solid #E4E1DB",
+        <div style={{ padding:"12px 18px", borderTop:"1px solid #E0E0E0",
           display:"flex", justifyContent:"flex-end", gap:8 }}>
-          <button onClick={onClose} style={{ padding:"7px 16px", border:"1px solid #E4E1DB",
+          <button onClick={onClose} style={{ padding:"7px 16px", border:"1px solid #E0E0E0",
             borderRadius:6, background:"#fff", cursor:"pointer", fontSize:13 }}>Cancelar</button>
           <button onClick={() => onSave({ apu, precioCD: res.CD })}
-            style={{ padding:"7px 16px", border:"none", borderRadius:6, background:"#1E6B42",
+            style={{ padding:"7px 16px", border:"none", borderRadius:6, background:"#111111",
               color:"#fff", cursor:"pointer", fontSize:13, fontWeight:600,
               display:"flex", alignItems:"center", gap:5 }}>
             <Check size={14}/> Guardar APU
@@ -3293,23 +3293,23 @@ function TBorrador({ d, set, r }) {
       <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap", alignItems:"center" }}>
         <button onClick={addCapitulo}
           style={{ display:"flex", alignItems:"center", gap:5, padding:"7px 14px",
-            border:"1px solid #E4E1DB", borderRadius:6, background:"#F5F4F1",
-            cursor:"pointer", fontSize:13, fontFamily:"'Outfit',sans-serif", fontWeight:500 }}>
+            border:"1px solid #E0E0E0", borderRadius:6, background:"#F5F4F1",
+            cursor:"pointer", fontSize:13, fontFamily:"'DM Sans',sans-serif", fontWeight:500 }}>
           <Layers size={13}/> Añadir capítulo
         </button>
         <button onClick={() => addLinea(lastTipoCap())}
           style={{ display:"flex", alignItems:"center", gap:5, padding:"7px 14px",
-            border:"none", borderRadius:6, background:"#1E6B42", color:"#fff",
-            cursor:"pointer", fontSize:13, fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>
+            border:"none", borderRadius:6, background:"#111111", color:"#fff",
+            cursor:"pointer", fontSize:13, fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>
           <Plus size={13}/> Nueva partida
         </button>
         <div style={{ flex:1 }}/>
         {/* Toggle vista */}
-        <div style={{ display:"flex", border:"1px solid #E4E1DB", borderRadius:6, overflow:"hidden" }}>
+        <div style={{ display:"flex", border:"1px solid #E0E0E0", borderRadius:6, overflow:"hidden" }}>
           {[["coste","Vista interna",false],["venta","Vista cliente",true]].map(([k,lbl,isVenta])=>(
             <button key={k} onClick={()=>setVistaVenta(isVenta)}
               style={{ padding:"6px 14px", border:"none", fontSize:11, fontWeight:600,
-                cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+                cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
                 background: vistaVenta===isVenta ? "#111" : "#fff",
                 color: vistaVenta===isVenta ? "#fff" : "#555",
                 transition:"all .15s" }}>
@@ -3319,12 +3319,12 @@ function TBorrador({ d, set, r }) {
         </div>
         {/* Presupuesto view selector - only in Vista cliente */}
         {vistaVenta && (
-          <div style={{ display:"flex", border:"1px solid #E4E1DB", borderRadius:6, overflow:"hidden", marginLeft:8 }}>
+          <div style={{ display:"flex", border:"1px solid #E0E0E0", borderRadius:6, overflow:"hidden", marginLeft:8 }}>
             {[["detallado","Detallado"],["capitulos","Capítulos"],["total","Total"]].map(([k,lbl])=>(
               <button key={k} onClick={()=>setVistaPresup(k)}
                 style={{ padding:"6px 10px", border:"none", fontSize:10, fontWeight:600,
-                  cursor:"pointer", fontFamily:"'Outfit',sans-serif",
-                  background: vistaPresup===k ? "#1E4F8C" : "#fff",
+                  cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
+                  background: vistaPresup===k ? "#3B3B3B" : "#fff",
                   color: vistaPresup===k ? "#fff" : "#888",
                   transition:"all .15s" }}>
                 {lbl}
@@ -3335,15 +3335,15 @@ function TBorrador({ d, set, r }) {
         {/* APUs de Venta viewer */}
         <button onClick={() => setShowApuVentaViewer(true)}
           style={{ display:"flex", alignItems:"center", gap:5, padding:"7px 14px", marginLeft:8,
-            border:"none", borderRadius:6, background:"#1E4F8C", color:"#fff",
-            cursor:"pointer", fontSize:12, fontFamily:"'Outfit',sans-serif", fontWeight:700 }}>
+            border:"none", borderRadius:6, background:"#3B3B3B", color:"#fff",
+            cursor:"pointer", fontSize:12, fontFamily:"'DM Sans',sans-serif", fontWeight:700 }}>
           <Eye size={13}/> APUs de Venta
         </button>
         {d.estado === "Ganada" && (
           <button onClick={exportarGantt}
             style={{ display:"flex", alignItems:"center", gap:5, padding:"7px 14px",
-              border:"none", borderRadius:6, background:"#1E4F8C", color:"#fff",
-              cursor:"pointer", fontSize:13, fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>
+              border:"none", borderRadius:6, background:"#3B3B3B", color:"#fff",
+              cursor:"pointer", fontSize:13, fontFamily:"'DM Sans',sans-serif", fontWeight:600 }}>
             <ArrowRight size={13}/> Exportar al Gantt
           </button>
         )}
@@ -3362,14 +3362,14 @@ function TBorrador({ d, set, r }) {
             {[
               ["Costos directos", fmtN2(totalCD,0)+" "+moneda, "#555"],
               pais==="CO"
-                ? ["AIU "+((pctAdminAIU+pctImpAIU+pctU)*100).toFixed(0)+"%", fmtN2(aiuTotal,0)+" "+moneda, "#7A5218"]
-                : ["GG+BI "+((d.gg||0.13)*100+((d.bi||0.06)*100)).toFixed(0)+"%", fmtN2(ggTotal+biTotal,0)+" "+moneda, "#1E4F8C"],
-              ["Venta s/IVA", fmtN2(totalVentaSinIVA,0)+" "+moneda, "#1E4F8C"],
+                ? ["AIU "+((pctAdminAIU+pctImpAIU+pctU)*100).toFixed(0)+"%", fmtN2(aiuTotal,0)+" "+moneda, "#8C6A00"]
+                : ["GG+BI "+((d.gg||0.13)*100+((d.bi||0.06)*100)).toFixed(0)+"%", fmtN2(ggTotal+biTotal,0)+" "+moneda, "#3B3B3B"],
+              ["Venta s/IVA", fmtN2(totalVentaSinIVA,0)+" "+moneda, "#3B3B3B"],
               ["IVA "+((tasaIVA)*100).toFixed(0)+"%", fmtN2(ivaVenta,0)+" "+moneda, "#555"],
-              ["TOTAL c/IVA", fmtN2(totalVentaConIVA,0)+" "+moneda, "#1E6B42"],
+              ["TOTAL c/IVA", fmtN2(totalVentaConIVA,0)+" "+moneda, "#111111"],
               ["Margen", margenPct+"% · "+fmtN2(margenBruto,0), "#2B7A52"],
             ].map(([l,v,color])=>(
-              <div key={l} style={{ background:"#fff", border:"1px solid #E4E1DB",
+              <div key={l} style={{ background:"#fff", border:"1px solid #E0E0E0",
                 borderRadius:8, padding:"8px 10px", borderLeft:"3px solid "+color }}>
                 <div style={{ fontSize:9, color:"#888", marginBottom:2 }}>{l}</div>
                 <div style={{ fontSize:12, fontWeight:700, color, fontFamily:"'DM Mono',monospace" }}>{v}</div>
@@ -3380,7 +3380,7 @@ function TBorrador({ d, set, r }) {
       })()}
 
       {/* Tabla */}
-      <div style={{ border:"1px solid #E4E1DB", borderRadius:8, overflow:"hidden",
+      <div style={{ border:"1px solid #E0E0E0", borderRadius:8, overflow:"hidden",
         marginBottom:14, overflowX:"auto" }}>
         <table style={{ width:"100%", borderCollapse:"collapse", minWidth:vistaVenta?700:1100 }}>
           <thead>
@@ -3396,7 +3396,7 @@ function TBorrador({ d, set, r }) {
               ].filter(h=>h.w!==0).map(h=>(
                 <th key={h.l} style={{ padding:"7px 8px", fontSize:9, fontWeight:700,
                   color:"#888", textTransform:"uppercase", letterSpacing:0.4,
-                  borderBottom:"2px solid #E4E1DB", textAlign:"left",
+                  borderBottom:"2px solid #E0E0E0", textAlign:"left",
                   width:h.w, minWidth:typeof h.w==="number"?h.w:undefined }}>{h.l}</th>
               ))}
             </tr>
@@ -3416,8 +3416,8 @@ function TBorrador({ d, set, r }) {
                   <td colSpan={5} style={{ padding:"12px 12px", fontSize:13, fontWeight:600 }}>
                     {d.proyecto || "Proyecto"} — Precio total
                   </td>
-                  <td style={{ padding:"12px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:14, fontWeight:700, color:"#1E4F8C" }}>—</td>
-                  <td style={{ padding:"12px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:14, fontWeight:700, color:"#1E6B42" }}>
+                  <td style={{ padding:"12px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:14, fontWeight:700, color:"#3B3B3B" }}>—</td>
+                  <td style={{ padding:"12px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:14, fontWeight:700, color:"#111111" }}>
                     {fmtN2(totalVenta,0)}
                   </td>
                   <td/>
@@ -3444,10 +3444,10 @@ function TBorrador({ d, set, r }) {
               lineas.forEach(l => { if (l.esCapitulo) foundCap = true; if (!foundCap && !l.esCapitulo) orphans.push(l); });
               return (<>
                 {orphans.length > 0 && (
-                  <tr style={{ background:"#FAFAF8" }}>
+                  <tr style={{ background:"#FFFFFF" }}>
                     <td colSpan={5} style={{ padding:"10px 12px", fontSize:12, fontWeight:600, fontStyle:"italic" }}>Partidas sin capítulo</td>
-                    <td style={{ padding:"10px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:12, color:"#1E4F8C" }}>—</td>
-                    <td style={{ padding:"10px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:12, fontWeight:700, color:"#1E6B42" }}>
+                    <td style={{ padding:"10px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:12, color:"#3B3B3B" }}>—</td>
+                    <td style={{ padding:"10px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:12, fontWeight:700, color:"#111111" }}>
                       {fmtN2(orphans.reduce((s,l) => s + (l.precioCD>0 ? calcPUVentaLinea(l.precioCD,l.cantidad||1,d).totalVenta : 0),0),0)}
                     </td>
                     <td/>
@@ -3456,13 +3456,13 @@ function TBorrador({ d, set, r }) {
                 {caps.map(({cap, items}, ci) => {
                   const capTotal = items.reduce((s,l) => s + (l.precioCD>0 ? calcPUVentaLinea(l.precioCD,l.cantidad||1,d).totalVenta : 0),0);
                   return (
-                    <tr key={cap.id} style={{ background:ci%2===0?"#fff":"#FAFAF8", borderBottom:`1px solid ${C.border}` }}>
+                    <tr key={cap.id} style={{ background:ci%2===0?"#fff":"#FFFFFF", borderBottom:`1px solid ${C.border}` }}>
                       <td colSpan={5} style={{ padding:"10px 12px" }}>
                         <span style={{ fontWeight:700, fontSize:12, textTransform:"uppercase", letterSpacing:0.5 }}>{cap.nombre||"Capítulo"}</span>
                         <span style={{ marginLeft:8, fontSize:10, color:C.inkLight }}>{items.length} partida{items.length!==1?"s":""}</span>
                       </td>
-                      <td style={{ padding:"10px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:12, color:"#1E4F8C" }}>—</td>
-                      <td style={{ padding:"10px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:13, fontWeight:700, color:"#1E6B42" }}>
+                      <td style={{ padding:"10px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:12, color:"#3B3B3B" }}>—</td>
+                      <td style={{ padding:"10px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:13, fontWeight:700, color:"#111111" }}>
                         {fmtN2(capTotal,0)}
                       </td>
                       <td/>
@@ -3489,8 +3489,8 @@ function TBorrador({ d, set, r }) {
                     <td style={{ padding:"6px 8px" }}>
                       <select value={l.tipo||"CAP00"} onChange={e => updLinea(l.id,"tipo",e.target.value)}
                         style={{ border:"1px solid #CCC", borderRadius:5, padding:"3px 7px",
-                          fontSize:11, background:"#fff", cursor:"pointer", fontFamily:"'Outfit',sans-serif",
-                          color:capTInfo?.color||"#7A5218", width:"100%" }}>
+                          fontSize:11, background:"#fff", cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
+                          color:capTInfo?.color||"#8C6A00", width:"100%" }}>
                         {TIPOS_CAPITULO.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
                       </select>
                     </td>
@@ -3499,7 +3499,7 @@ function TBorrador({ d, set, r }) {
                     </td>
                     <td style={{ padding:"6px 8px", textAlign:"right" }}>
                       <button onClick={() => delLinea(l.id)}
-                        style={{ background:"none", border:"none", cursor:"pointer", color:"#AE2C2C" }}>
+                        style={{ background:"none", border:"none", cursor:"pointer", color:"#B91C1C" }}>
                         <Trash2 size={12}/>
                       </button>
                     </td>
@@ -3519,26 +3519,26 @@ function TBorrador({ d, set, r }) {
                   style={{ background: dragId===l.id ? "#D5E8F9" : (i%2===0?"#fff":"#F9F8F5"),
                     transition:"background .1s", cursor:"grab",
                     opacity: dragId===l.id ? 0.5 : 1 }}
-                  onMouseEnter={e=>{ if(!dragId) e.currentTarget.style.background="#E6EFF9"; }}
+                  onMouseEnter={e=>{ if(!dragId) e.currentTarget.style.background="#F0F0F0"; }}
                   onMouseLeave={e=>{ if(!dragId) e.currentTarget.style.background=i%2===0?"#fff":"#F9F8F5"; }}>
                   <td style={{ padding:"5px 8px" }}>
                     <input value={l.codigo||""} onChange={e=>updLinea(l.id,"codigo",e.target.value)}
-                      style={{ width:52, border:"1px solid #E4E1DB", borderRadius:4,
+                      style={{ width:52, border:"1px solid #E0E0E0", borderRadius:4,
                         padding:"3px 5px", fontSize:11, fontFamily:"'DM Mono',monospace",
                         textAlign:"center" }}/>
                   </td>
                   <td style={{ padding:"5px 8px" }}>
                     <input value={l.descripcion||""} onChange={e=>updLinea(l.id,"descripcion",e.target.value)}
                       placeholder="Descripción de la actividad..."
-                      style={{ width:"100%", border:"1px solid #E4E1DB", borderRadius:4,
+                      style={{ width:"100%", border:"1px solid #E0E0E0", borderRadius:4,
                         padding:"5px 8px", fontSize:13 }}/>
                   </td>
                   <td style={{ padding:"5px 8px" }}>
                     <select value={l.tipo||TIPOS_LINEA[0].id}
                       onChange={e => updLinea(l.id, "tipo", e.target.value)}
-                      style={{ border:"1px solid #E4E1DB", borderRadius:5, padding:"3px 6px",
+                      style={{ border:"1px solid #E0E0E0", borderRadius:5, padding:"3px 6px",
                         fontSize:11, background:"transparent", cursor:"pointer",
-                        color:tInfo?.color||"#555", fontFamily:"'Outfit',sans-serif",
+                        color:tInfo?.color||"#555", fontFamily:"'DM Sans',sans-serif",
                         maxWidth:110 }}>
                       {TIPOS_LINEA.map(t => (
                         <option key={t.id} value={t.id}>{t.icon} {t.label}</option>
@@ -3547,7 +3547,7 @@ function TBorrador({ d, set, r }) {
                   </td>
                   <td style={{ padding:"5px 8px" }}>
                     <select value={l.unidad||"m²"} onChange={e=>updLinea(l.id,"unidad",e.target.value)}
-                      style={{ border:"1px solid #E4E1DB", borderRadius:4, padding:"4px 4px",
+                      style={{ border:"1px solid #E0E0E0", borderRadius:4, padding:"4px 4px",
                         fontSize:12, width:56 }}>
                       {UNIDADES.map(u=><option key={u}>{u}</option>)}
                     </select>
@@ -3555,7 +3555,7 @@ function TBorrador({ d, set, r }) {
                   <td style={{ padding:"5px 8px" }}>
                     <input type="number" min="0" step="0.01" value={l.cantidad||0}
                       onChange={e=>updLinea(l.id,"cantidad",parseFloat(e.target.value)||0)}
-                      style={{ width:72, border:"1px solid #E4E1DB", borderRadius:4,
+                      style={{ width:72, border:"1px solid #E0E0E0", borderRadius:4,
                         padding:"4px 6px", fontSize:13, textAlign:"right",
                         fontFamily:"'DM Mono',monospace" }}/>
                   </td>
@@ -3577,7 +3577,7 @@ function TBorrador({ d, set, r }) {
                             value={l.precioCD||""}
                             placeholder="0"
                             onChange={e => updLinea(l.id, "precioCD", parseFloat(e.target.value)||0)}
-                            style={{ width:90, border:`1px solid ${l.precioCD>0?"#1E6B42":"#E4E1DB"}`,
+                            style={{ width:90, border:`1px solid ${l.precioCD>0?"#111111":"#E0E0E0"}`,
                               borderRadius:4, padding:"3px 6px", fontSize:12, textAlign:"right",
                               fontFamily:"'DM Mono',monospace", fontWeight:600,
                               background: l.precioCD>0 ? "#E6F4EC" : "#fff",
@@ -3585,14 +3585,14 @@ function TBorrador({ d, set, r }) {
                         </td>
                         </>
                       )}
-                      <td style={{ ...tdNum, color:(tieneAPU||l.precioCD>0)?"#1E4F8C":"#DDD", fontWeight:600 }}>
+                      <td style={{ ...tdNum, color:(tieneAPU||l.precioCD>0)?"#3B3B3B":"#DDD", fontWeight:600 }}>
                         {(tieneAPU||l.precioCD>0) && venta ? fmtN2(venta.puVenta,0) : "—"}
                       </td>
-                      <td style={{ ...tdNum, color:(tieneAPU||l.precioCD>0)?"#1E6B42":"#DDD", fontWeight:700 }}>
+                      <td style={{ ...tdNum, color:(tieneAPU||l.precioCD>0)?"#111111":"#DDD", fontWeight:700 }}>
                         {(tieneAPU||l.precioCD>0) && venta ? fmtN2(venta.totalVenta,0) : "—"}
                       </td>
                       {!vistaVenta && (
-                      <td style={{ ...tdNum, fontSize:10, color:incidencia>5?"#1E6B42":"#999" }}>
+                      <td style={{ ...tdNum, fontSize:10, color:incidencia>5?"#111111":"#999" }}>
                         {(tieneAPU || l.precioCD > 0) ? incidencia.toFixed(1)+"%" : "—"}
                       </td>
                       )}
@@ -3602,16 +3602,16 @@ function TBorrador({ d, set, r }) {
                   <td style={{ padding:"5px 8px", textAlign:"center" }}>
                     <div style={{ display:"flex", gap:3, justifyContent:"center" }}>
                     <button onClick={() => setApuOpen(l.id)}
-                      style={{ background:tieneAPU?"#1E6B42":"transparent",
-                        color:tieneAPU?"#fff":"#1E4F8C",
-                        border:`1px solid ${tieneAPU?"#1E6B42":"#1E4F8C"}`,
+                      style={{ background:tieneAPU?"#111111":"transparent",
+                        color:tieneAPU?"#fff":"#3B3B3B",
+                        border:`1px solid ${tieneAPU?"#111111":"#3B3B3B"}`,
                         borderRadius:5, padding:"3px 8px", fontSize:11, fontWeight:600,
                         cursor:"pointer", display:"flex", alignItems:"center", gap:3 }}>
                       <Calculator size={10}/>{tieneAPU?"APU ✓":"+ APU"}
                     </button>
                     {(Number(l.precioCD) > 0 || tieneAPU) && (
                       <button onClick={() => setApuVentaOpen(l.id)}
-                        style={{ background:"#1E4F8C", color:"#fff", border:"none",
+                        style={{ background:"#3B3B3B", color:"#fff", border:"none",
                           borderRadius:5, padding:"3px 7px", fontSize:10, fontWeight:600,
                           cursor:"pointer", display:"flex", alignItems:"center", gap:2 }}>
                         <Eye size={10}/> Venta
@@ -3624,7 +3624,7 @@ function TBorrador({ d, set, r }) {
                     <div style={{ display:"flex", gap:1 }}>
                       {vistaVenta && (Number(l.precioCD) > 0 || tieneAPU) && (
                         <button onClick={() => setApuVentaOpen(l.id)}
-                          style={{ background:"#1E4F8C", color:"#fff", border:"none",
+                          style={{ background:"#3B3B3B", color:"#fff", border:"none",
                             borderRadius:4, padding:"3px 7px", fontSize:10, fontWeight:600,
                             cursor:"pointer", display:"flex", alignItems:"center", gap:2 }}>
                           <Eye size={10}/>APU Venta
@@ -3633,7 +3633,7 @@ function TBorrador({ d, set, r }) {
                       {!vistaVenta && <>
                       <button onClick={()=>moveLinea(l.id,-1)} style={{ background:"none",border:"none",cursor:"pointer",color:"#BBB",padding:2 }}><ChevronUp size={11}/></button>
                       <button onClick={()=>moveLinea(l.id,1)} style={{ background:"none",border:"none",cursor:"pointer",color:"#BBB",padding:2 }}><ChevronDown size={11}/></button>
-                      <button onClick={()=>delLinea(l.id)} style={{ background:"none",border:"none",cursor:"pointer",color:"#AE2C2C",padding:2 }}><Trash2 size={11}/></button>
+                      <button onClick={()=>delLinea(l.id)} style={{ background:"none",border:"none",cursor:"pointer",color:"#B91C1C",padding:2 }}><Trash2 size={11}/></button>
                       </>}
                     </div>
                   </td>
@@ -3771,16 +3771,16 @@ function TBorrador({ d, set, r }) {
         const exportPrint = () => {
           const w = window.open("","_blank");
           let html = `<html><head><title>APUs de Venta - ${d.codigoOferta||""}</title>
-          <style>@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap');
-          *{margin:0;padding:0;box-sizing:border-box}body{font-family:'Outfit',sans-serif;padding:28px;color:#111;font-size:11px}
+          <style>@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap');
+          *{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;padding:28px;color:#111;font-size:11px}
           h1{font-size:18px;margin-bottom:4px}h2{font-size:13px;margin:20px 0 8px;padding:6px 0;border-bottom:2px solid #111}
           .meta{color:#888;font-size:10px;margin-bottom:16px}
           table{width:100%;border-collapse:collapse;margin-bottom:16px}
-          th{background:#F5F4F1;padding:5px 6px;font-size:8px;text-transform:uppercase;letter-spacing:0.5px;text-align:right;border-bottom:2px solid #E4E1DB}
+          th{background:#F5F4F1;padding:5px 6px;font-size:8px;text-transform:uppercase;letter-spacing:0.5px;text-align:right;border-bottom:2px solid #E0E0E0}
           th:nth-child(1),th:nth-child(2){text-align:left}
-          td{padding:5px 6px;border-bottom:1px solid #E4E1DB;font-size:10px;text-align:right}
+          td{padding:5px 6px;border-bottom:1px solid #E0E0E0;font-size:10px;text-align:right}
           td:nth-child(1),td:nth-child(2){text-align:left}
-          .mono{font-family:'DM Mono',monospace}.bold{font-weight:700}.green{color:#1E6B42}.blue{color:#1E4F8C}
+          .mono{font-family:'DM Mono',monospace}.bold{font-weight:700}.green{color:#111111}.blue{color:#3B3B3B}
           .totrow td{font-weight:700;border-top:2px solid #111;padding-top:8px}
           .param{background:#F5F4F1;padding:10px 14px;border-radius:4px;font-size:9px;color:#555;margin-bottom:16px}
           @media print{body{padding:12px}}
@@ -3837,20 +3837,20 @@ function TBorrador({ d, set, r }) {
                 <div style={{ display:"flex", gap:6, alignItems:"center" }}>
                   {/* Filter */}
                   <select value={apuVentaFilter} onChange={e=>setApuVentaFilter(e.target.value)}
-                    style={{ padding:"6px 10px", border:"1px solid #E4E1DB", borderRadius:4, fontSize:11,
-                      fontFamily:"'Outfit',sans-serif" }}>
+                    style={{ padding:"6px 10px", border:"1px solid #E0E0E0", borderRadius:4, fontSize:11,
+                      fontFamily:"'DM Sans',sans-serif" }}>
                     <option value="todos">Todos los capítulos</option>
                     {capIds.map(id => <option key={id} value={id}>{grouped[id].nombre}</option>)}
                   </select>
                   <button onClick={exportCSV}
-                    style={{ padding:"6px 14px", background:"#fff", border:"1px solid #E4E1DB", borderRadius:4,
-                      fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+                    style={{ padding:"6px 14px", background:"#fff", border:"1px solid #E0E0E0", borderRadius:4,
+                      fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
                       display:"flex", alignItems:"center", gap:4 }}>
                     <Download size={12}/> CSV
                   </button>
                   <button onClick={exportPrint}
                     style={{ padding:"6px 14px", background:"#111", color:"#fff", border:"none", borderRadius:4,
-                      fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+                      fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
                       display:"flex", alignItems:"center", gap:4 }}>
                     <FileText size={12}/> PDF / Imprimir
                   </button>
@@ -3862,14 +3862,14 @@ function TBorrador({ d, set, r }) {
               </div>
 
               {/* Params bar */}
-              <div style={{ padding:"8px 22px", background:"#F5F4F1", borderBottom:"1px solid #E4E1DB",
+              <div style={{ padding:"8px 22px", background:"#F5F4F1", borderBottom:"1px solid #E0E0E0",
                 display:"flex", gap:20, flexShrink:0, fontSize:10, color:"#555" }}>
                 <span>Margen: <strong>{(d.margen*100).toFixed(1)}%</strong></span>
                 <span>GC: <strong>{((r.g||0)*100).toFixed(2)}%</strong></span>
                 <span>GF: <strong>{((r.f||0)*100).toFixed(2)}%</strong></span>
                 <span>IVA: <strong>{((d.tarifaIVA||0.19)*100).toFixed(0)}%</strong>{isObra ? " (sobre U)" : ""}</span>
                 <span>Coef. mult: <strong>× {items.length > 0 ? calcPUVentaLinea(1,1,d).coefMult?.toFixed(4) : "—"}</strong></span>
-                <span style={{ marginLeft:"auto", fontWeight:700, color:"#1E6B42" }}>
+                <span style={{ marginLeft:"auto", fontWeight:700, color:"#111111" }}>
                   Total coste: {fmtN2(grandTotalCoste,0)} · Total venta: {fmtN2(grandTotalVenta,0)} {moneda}
                 </span>
               </div>
@@ -3890,17 +3890,17 @@ function TBorrador({ d, set, r }) {
                       <h3 style={{ fontSize:12, fontWeight:700, margin:"18px 0 8px", padding:"8px 0 6px",
                         borderBottom:"2px solid #111", display:"flex", justifyContent:"space-between" }}>
                         <span>{g.nombre}</span>
-                        <span style={{ fontFamily:"'DM Mono',monospace", color:"#1E6B42" }}>
+                        <span style={{ fontFamily:"'DM Mono',monospace", color:"#111111" }}>
                           {fmtN2(capTotalVenta + capTotalIVA, 0)} {moneda}
                         </span>
                       </h3>
                       <table style={{ width:"100%", borderCollapse:"collapse", fontSize:11 }}>
                         <thead>
-                          <tr style={{ background:"#FAFAF8" }}>
+                          <tr style={{ background:"#FFFFFF" }}>
                             {["Descripción","Und","Cant","PU Coste","CD Total","GC","GF","Margen","PVP s/IVA","PU Venta","IVA","PVP c/IVA"].map(h => (
                               <th key={h} style={{ padding:"5px 6px", fontSize:8, fontWeight:700, color:"#888",
                                 textTransform:"uppercase", letterSpacing:.4, textAlign: h==="Descripción"||h==="Und" ? "left" : "right",
-                                borderBottom:"1px solid #E4E1DB" }}>{h}</th>
+                                borderBottom:"1px solid #E0E0E0" }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
@@ -3908,8 +3908,8 @@ function TBorrador({ d, set, r }) {
                           {g.items.map(it => {
                             const total = it.v.pvp + it.ivaL;
                             return (
-                              <tr key={it.id} style={{ borderBottom:"1px solid #F0EEE9" }}
-                                onMouseEnter={e=>e.currentTarget.style.background="#FAFAF8"}
+                              <tr key={it.id} style={{ borderBottom:"1px solid #F5F5F5" }}
+                                onMouseEnter={e=>e.currentTarget.style.background="#FFFFFF"}
                                 onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
                                 <td style={{ padding:"6px", fontSize:11, maxWidth:200, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{it.descripcion||"—"}</td>
                                 <td style={{ padding:"6px", fontSize:10, color:"#888" }}>{it.und||"—"}</td>
@@ -3919,20 +3919,20 @@ function TBorrador({ d, set, r }) {
                                 <td style={{ ...numStyle, padding:"6px", color:"#888" }}>{fmtN2(it.v.gc,0)}</td>
                                 <td style={{ ...numStyle, padding:"6px", color:"#888" }}>{fmtN2(it.v.gf,0)}</td>
                                 <td style={{ ...numStyle, padding:"6px", color:"#D4A017" }}>{fmtN2(it.v.margenCOP,0)}</td>
-                                <td style={{ ...numStyle, padding:"6px", fontWeight:700, color:"#1E4F8C" }}>{fmtN2(it.v.pvp,0)}</td>
+                                <td style={{ ...numStyle, padding:"6px", fontWeight:700, color:"#3B3B3B" }}>{fmtN2(it.v.pvp,0)}</td>
                                 <td style={{ ...numStyle, padding:"6px" }}>{fmtN2(it.v.puVenta,0)}</td>
                                 <td style={{ ...numStyle, padding:"6px", color:"#888" }}>{fmtN2(it.ivaL,0)}</td>
-                                <td style={{ ...numStyle, padding:"6px", fontWeight:700, color:"#1E6B42" }}>{fmtN2(total,0)}</td>
+                                <td style={{ ...numStyle, padding:"6px", fontWeight:700, color:"#111111" }}>{fmtN2(total,0)}</td>
                               </tr>
                             );
                           })}
                           {/* Subtotal row */}
                           <tr style={{ borderTop:"2px solid #111" }}>
                             <td colSpan={8} style={{ padding:"8px 6px", fontWeight:700, fontSize:11 }}>Subtotal {g.nombre}</td>
-                            <td style={{ ...numStyle, padding:"8px 6px", fontWeight:700, color:"#1E4F8C" }}>{fmtN2(capTotalVenta,0)}</td>
+                            <td style={{ ...numStyle, padding:"8px 6px", fontWeight:700, color:"#3B3B3B" }}>{fmtN2(capTotalVenta,0)}</td>
                             <td style={{ ...numStyle, padding:"8px 6px" }}>—</td>
                             <td style={{ ...numStyle, padding:"8px 6px", color:"#888" }}>{fmtN2(capTotalIVA,0)}</td>
-                            <td style={{ ...numStyle, padding:"8px 6px", fontWeight:700, color:"#1E6B42" }}>{fmtN2(capTotalVenta+capTotalIVA,0)}</td>
+                            <td style={{ ...numStyle, padding:"8px 6px", fontWeight:700, color:"#111111" }}>{fmtN2(capTotalVenta+capTotalIVA,0)}</td>
                           </tr>
                         </tbody>
                       </table>
@@ -3946,7 +3946,7 @@ function TBorrador({ d, set, r }) {
                     display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                     <span style={{ fontSize:16, fontWeight:700 }}>TOTAL VENTA</span>
                     <div style={{ textAlign:"right" }}>
-                      <div style={{ fontFamily:"'DM Mono',monospace", fontSize:18, fontWeight:700, color:"#1E6B42" }}>
+                      <div style={{ fontFamily:"'DM Mono',monospace", fontSize:18, fontWeight:700, color:"#111111" }}>
                         {fmtN2(grandTotalVenta + items.reduce((s,it) => { const v=calcPUVentaLinea(it.precioCD||0,it.cantidad||1,d); return s+(isObra?uVal*v.pvp*(d.tarifaIVA||0.19):v.pvp*(d.tarifaIVA||0.19)); },0),0)} {moneda}
                       </div>
                       <div style={{ fontSize:10, color:"#888", marginTop:2 }}>
@@ -4074,7 +4074,7 @@ function Form({ offers, editId, prefillData, onSave, onBack, lang }) {
               {editId ? (lang==="en"?"Edit offer":"Editar oferta") : (lang==="en"?"New offer":"Nueva oferta")}
               {!editId && prefillData?.briefingId && <span style={{ marginLeft:8, background:"#E6F4EC", color:"#2B7A52", border:"1px solid #2B7A5233", borderRadius:2, padding:"1px 7px", fontSize:8, fontWeight:700, letterSpacing:.5 }}>📋 {lang==="en"?"FROM BRIEFING":"DESDE BRIEFING"}</span>}
             </p>
-            <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 22, fontWeight: 700, color: C.ink, margin: 0 }}>
+            <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 22, fontWeight: 700, color: C.ink, margin: 0 }}>
               {d.cliente || (lang==="en"?"No client":"Sin cliente")}{d.proyecto ? ` · ${d.proyecto}` : ""}
             </h1>
           </div>
@@ -4091,7 +4091,7 @@ function Form({ offers, editId, prefillData, onSave, onBack, lang }) {
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} style={{
             padding: "10px 16px", border: "none", cursor: "pointer",
-            fontFamily: "'Outfit', sans-serif", fontSize: 11, fontWeight: 600,
+            fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: 600,
             letterSpacing: 1, textTransform: "uppercase",
             background: "transparent",
             color: tab === t.id ? C.ink : C.inkLight,
@@ -4166,22 +4166,22 @@ function TGen({ d, set, offers }) {
       {d.briefingId ? (
         <div style={{ background:"#E8F4EE", border:"1px solid #B8DEC9", borderRadius:8,
           padding:"10px 16px", marginBottom:16, display:"flex", alignItems:"center", gap:8 }}>
-          <CheckCircle2 size={14} style={{ color:"#1E6B42" }}/>
-          <span style={{ fontSize:12, color:"#1E6B42", fontWeight:600 }}>Oferta creada desde briefing</span>
+          <CheckCircle2 size={14} style={{ color:"#111111" }}/>
+          <span style={{ fontSize:12, color:"#111111", fontWeight:600 }}>Oferta creada desde briefing</span>
         </div>
       ) : (
-        <div style={{ background:"#E6EFF9", border:"1px solid #B8D4F0", borderRadius:8,
+        <div style={{ background:"#F0F0F0", border:"1px solid #B8D4F0", borderRadius:8,
           padding:"12px 16px", marginBottom:16, display:"flex", alignItems:"center",
           justifyContent:"space-between", flexWrap:"wrap", gap:8 }}>
           <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-            <ClipboardList size={16} style={{ color:"#1E4F8C" }}/>
+            <ClipboardList size={16} style={{ color:"#3B3B3B" }}/>
             <div>
-              <div style={{ fontSize:12, fontWeight:700, color:"#1E4F8C" }}>
+              <div style={{ fontSize:12, fontWeight:700, color:"#3B3B3B" }}>
                 {briefings.length > 0
                   ? `${briefings.length} briefing${briefings.length>1?"s":""} disponible${briefings.length>1?"s":""}`
                   : "¿Tienes datos de un briefing?"}
               </div>
-              <div style={{ fontSize:10, color:"#1E4F8C99" }}>
+              <div style={{ fontSize:10, color:"#3B3B3B99" }}>
                 {briefings.length > 0
                   ? "Importa los datos del cliente para pre-llenar la oferta"
                   : "Ingresa un briefing en Formularios y luego impórtalo aquí"}
@@ -4191,18 +4191,18 @@ function TGen({ d, set, offers }) {
           <div style={{ display:"flex", gap:6 }}>
             {briefings.length > 0 && (
               <button onClick={() => setShowBriefingPicker(true)}
-                style={{ padding:"6px 14px", background:"#1E4F8C", color:"#fff", border:"none",
+                style={{ padding:"6px 14px", background:"#3B3B3B", color:"#fff", border:"none",
                   borderRadius:6, cursor:"pointer", fontSize:11, fontWeight:700,
-                  display:"flex", alignItems:"center", gap:5, fontFamily:"'Outfit',sans-serif" }}>
+                  display:"flex", alignItems:"center", gap:5, fontFamily:"'DM Sans',sans-serif" }}>
                 📋 Importar briefing
               </button>
             )}
             <button onClick={() => setShowQuickBriefing(true)}
-              style={{ padding:"6px 14px", background: briefings.length > 0 ? "#fff" : "#1E4F8C",
-                color: briefings.length > 0 ? "#1E4F8C" : "#fff",
-                border: briefings.length > 0 ? "1px solid #1E4F8C33" : "none",
+              style={{ padding:"6px 14px", background: briefings.length > 0 ? "#fff" : "#3B3B3B",
+                color: briefings.length > 0 ? "#3B3B3B" : "#fff",
+                border: briefings.length > 0 ? "1px solid #3B3B3B33" : "none",
                 borderRadius:6, cursor:"pointer", fontSize:11, fontWeight:600,
-                display:"flex", alignItems:"center", gap:5, fontFamily:"'Outfit',sans-serif" }}>
+                display:"flex", alignItems:"center", gap:5, fontFamily:"'DM Sans',sans-serif" }}>
               ✏️ Ingresar rápido
             </button>
           </div>
@@ -4215,7 +4215,7 @@ function TGen({ d, set, offers }) {
           <div style={{ background:"#fff", borderRadius:10, maxWidth:520, width:"100%",
             maxHeight:"65vh", overflow:"hidden", display:"flex", flexDirection:"column",
             boxShadow:"0 20px 60px rgba(0,0,0,.2)" }}>
-            <div style={{ padding:"14px 18px", borderBottom:"1px solid #E4E1DB",
+            <div style={{ padding:"14px 18px", borderBottom:"1px solid #E0E0E0",
               display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div style={{ fontWeight:700, fontSize:15 }}>Seleccionar briefing</div>
               <button onClick={() => setShowBriefingPicker(false)}
@@ -4230,7 +4230,7 @@ function TGen({ d, set, offers }) {
                   Object.entries(imported).forEach(([k,v]) => set(k,v));
                   set("briefingId", b.id);
                   setShowBriefingPicker(false);
-                }} style={{ padding:"12px 14px", border:"1px solid #E4E1DB", borderRadius:8,
+                }} style={{ padding:"12px 14px", border:"1px solid #E0E0E0", borderRadius:8,
                   marginBottom:8, cursor:"pointer" }}
                   onMouseEnter={e=>e.currentTarget.style.background="#F5F4F1"}
                   onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
@@ -4267,7 +4267,7 @@ function TGen({ d, set, offers }) {
             <div style={{ background:"#fff", borderRadius:10, maxWidth:600, width:"100%",
               maxHeight:"80vh", overflow:"hidden", display:"flex", flexDirection:"column",
               boxShadow:"0 20px 60px rgba(0,0,0,.2)" }}>
-              <div style={{ padding:"16px 20px", borderBottom:"1px solid #E4E1DB",
+              <div style={{ padding:"16px 20px", borderBottom:"1px solid #E0E0E0",
                 display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                 <div>
                   <div style={{ fontWeight:700, fontSize:15 }}>✏️ Ingreso rápido de briefing</div>
@@ -4286,25 +4286,25 @@ function TGen({ d, set, offers }) {
                         marginBottom:3, textTransform:"uppercase", letterSpacing:1 }}>{f.l}</label>
                       {f.sel ? (
                         <select data-qb={f.k} defaultValue=""
-                          style={{ width:"100%", padding:"8px 10px", border:"1px solid #E4E1DB", borderRadius:4,
-                            fontSize:12, fontFamily:"'Outfit',sans-serif" }}>
+                          style={{ width:"100%", padding:"8px 10px", border:"1px solid #E0E0E0", borderRadius:4,
+                            fontSize:12, fontFamily:"'DM Sans',sans-serif" }}>
                           <option value="">Seleccionar...</option>
                           {f.sel.map(o => <option key={o} value={o}>{o}</option>)}
                         </select>
                       ) : f.ta ? (
                         <textarea data-qb={f.k} rows={2} placeholder={f.ph}
-                          style={{ width:"100%", padding:"8px 10px", border:"1px solid #E4E1DB", borderRadius:4,
-                            fontSize:12, fontFamily:"'Outfit',sans-serif", resize:"vertical", boxSizing:"border-box" }}/>
+                          style={{ width:"100%", padding:"8px 10px", border:"1px solid #E0E0E0", borderRadius:4,
+                            fontSize:12, fontFamily:"'DM Sans',sans-serif", resize:"vertical", boxSizing:"border-box" }}/>
                       ) : (
                         <input data-qb={f.k} type={f.type||"text"} placeholder={f.ph}
-                          style={{ width:"100%", padding:"8px 10px", border:"1px solid #E4E1DB", borderRadius:4,
-                            fontSize:12, fontFamily:"'Outfit',sans-serif", boxSizing:"border-box" }}/>
+                          style={{ width:"100%", padding:"8px 10px", border:"1px solid #E0E0E0", borderRadius:4,
+                            fontSize:12, fontFamily:"'DM Sans',sans-serif", boxSizing:"border-box" }}/>
                       )}
                     </div>
                   ))}
                 </div>
               </div>
-              <div style={{ padding:"12px 20px", borderTop:"1px solid #E4E1DB", display:"flex", gap:8, justifyContent:"flex-end" }}>
+              <div style={{ padding:"12px 20px", borderTop:"1px solid #E0E0E0", display:"flex", gap:8, justifyContent:"flex-end" }}>
                 <button onClick={async () => {
                   // Collect values
                   const bData = { id: Math.random().toString(36).slice(2,9)+Date.now().toString(36), fecha:new Date().toISOString().split("T")[0] };
@@ -4323,7 +4323,7 @@ function TGen({ d, set, offers }) {
                   setShowQuickBriefing(false);
                 }}
                   style={{ padding:"8px 20px", background:"#111", color:"#fff", border:"none", borderRadius:6,
-                    cursor:"pointer", fontSize:12, fontWeight:700, fontFamily:"'Outfit',sans-serif" }}>
+                    cursor:"pointer", fontSize:12, fontWeight:700, fontFamily:"'DM Sans',sans-serif" }}>
                   Importar a esta oferta
                 </button>
                 <button onClick={async () => {
@@ -4338,8 +4338,8 @@ function TGen({ d, set, offers }) {
                   setShowQuickBriefing(false);
                   alert("✅ Briefing guardado. Puedes importarlo cuando quieras.");
                 }}
-                  style={{ padding:"8px 20px", background:"transparent", color:"#555", border:"1px solid #E4E1DB",
-                    borderRadius:6, cursor:"pointer", fontSize:12, fontFamily:"'Outfit',sans-serif" }}>
+                  style={{ padding:"8px 20px", background:"transparent", color:"#555", border:"1px solid #E0E0E0",
+                    borderRadius:6, cursor:"pointer", fontSize:12, fontFamily:"'DM Sans',sans-serif" }}>
                   Solo guardar briefing
                 </button>
               </div>
@@ -4356,7 +4356,7 @@ function TGen({ d, set, offers }) {
         <div style={{ marginBottom: 14 }}>
           <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: C.inkLight, marginBottom: 5, textTransform: "uppercase", letterSpacing: 1 }}>Tipo de actividad</label>
           <select value={d.actividadCod} onChange={e => handleActChange(e.target.value)}
-            style={{ width: "100%", padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'Outfit', sans-serif", fontSize: 12, color: C.ink, background: C.bg }}
+            style={{ width: "100%", padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: C.ink, background: C.bg }}
             onFocus={e => e.target.style.borderColor = C.ink}
             onBlur={e => e.target.style.borderColor = C.border}>
             {gruposActs.map(g => (
@@ -4376,7 +4376,7 @@ function TGen({ d, set, offers }) {
           <div style={{ marginBottom: 14 }}>
             <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: C.inkLight, marginBottom: 5, textTransform: "uppercase", letterSpacing: 1 }}>Revisión</label>
             <select value={d.revision} onChange={e => handleRevChange(+e.target.value)}
-              style={{ width: "100%", padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'Outfit', sans-serif", fontSize: 12, color: C.ink, background: C.bg }}
+              style={{ width: "100%", padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'DM Sans', sans-serif", fontSize: 12, color: C.ink, background: C.bg }}
               onFocus={e => e.target.style.borderColor = C.ink}
               onBlur={e => e.target.style.borderColor = C.border}>
               {[0,1,2,3,4,5,6,7,8,9].map(n => <option key={n} value={n}>R{String(n).padStart(2,"0")}</option>)}
@@ -4388,10 +4388,10 @@ function TGen({ d, set, offers }) {
         <div style={{ background: C.ink, borderRadius: 2, padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div>
             <p style={{ margin: "0 0 3px", fontSize: 9, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: 1.5 }}>Código de oferta</p>
-            <p style={{ margin: 0, fontFamily: "'Outfit', sans-serif", fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: 1.5 }}>{codigoActual}</p>
+            <p style={{ margin: 0, fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 700, color: "#fff", letterSpacing: 1.5 }}>{codigoActual}</p>
           </div>
           <button onClick={() => navigator.clipboard?.writeText(codigoActual)}
-            style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 2, padding: "6px 12px", color: "#fff", fontFamily: "'Outfit', sans-serif", fontSize: 10, cursor: "pointer", letterSpacing: 0.8 }}>
+            style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 2, padding: "6px 12px", color: "#fff", fontFamily: "'DM Sans', sans-serif", fontSize: 10, cursor: "pointer", letterSpacing: 0.8 }}>
             COPIAR
           </button>
         </div>
@@ -4407,7 +4407,7 @@ function TGen({ d, set, offers }) {
             {TIPOS_INMUEBLE.map(t => (
               <button key={t.val} onClick={() => set("tipoInmueble", t.val)} style={{
                 padding: "5px 12px", borderRadius: 2, border: `1px solid ${d.tipoInmueble === t.val ? C.ink : C.border}`,
-                fontFamily: "'Outfit', sans-serif", fontSize: 11, fontWeight: d.tipoInmueble === t.val ? 700 : 400,
+                fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: d.tipoInmueble === t.val ? 700 : 400,
                 background: d.tipoInmueble === t.val ? C.ink : "transparent",
                 color: d.tipoInmueble === t.val ? "#fff" : C.inkMid, cursor: "pointer", transition: "all .15s"
               }}>{t.label}</button>
@@ -4449,7 +4449,7 @@ function TGen({ d, set, offers }) {
             <label style={{ display: "block", fontSize: 10, fontWeight: 600, color: C.inkLight, marginBottom: 5, textTransform: "uppercase", letterSpacing: 1 }}>Notas internas</label>
             <textarea value={d.notas} onChange={e => set("notas", e.target.value)} rows={3}
               placeholder="Observaciones, acuerdos, follow-ups..."
-              style={{ width: "100%", padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'Outfit', sans-serif", fontSize: 12, background: C.bg, resize: "vertical", color: C.ink }} />
+              style={{ width: "100%", padding: "9px 12px", border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'DM Sans', sans-serif", fontSize: 12, background: C.bg, resize: "vertical", color: C.ink }} />
           </div>
           <div>
             <FS lbl="Relacionada con oferta" val={d.relacionadaCon || ""} on={e => set("relacionadaCon", e.target.value || null)}
@@ -4487,7 +4487,7 @@ function TGen({ d, set, offers }) {
               style={{ padding:"6px 12px", fontSize:10, fontWeight:600, cursor:"pointer",
                 border:`1px solid ${d.alcanceTipo===k?C.ink:C.border}`, borderRadius:4,
                 background:d.alcanceTipo===k?C.ink:"#fff", color:d.alcanceTipo===k?"#fff":C.inkMid,
-                fontFamily:"'Outfit',sans-serif" }}>
+                fontFamily:"'DM Sans',sans-serif" }}>
               {lbl}
             </button>
           ))}
@@ -4495,7 +4495,7 @@ function TGen({ d, set, offers }) {
         <textarea value={d.alcanceTexto||""} onChange={e=>set("alcanceTexto",e.target.value)}
           rows={10} placeholder="Describe el alcance del servicio..."
           style={{ width:"100%", border:`1px solid ${C.border}`, borderRadius:4,
-            padding:"10px 12px", fontSize:12, fontFamily:"'Outfit',sans-serif",
+            padding:"10px 12px", fontSize:12, fontFamily:"'DM Sans',sans-serif",
             resize:"vertical", lineHeight:1.6, background:C.bg, color:C.ink }}/>
         <p style={{ fontSize:10, color:C.inkLight, marginTop:6, margin:0 }}>
           Este texto aparecerá en la sección "Alcance" del documento de entrega al cliente.
@@ -4537,10 +4537,10 @@ function TPar({ d, set, r }) {
           <div style={{ display:"flex", gap:6 }}>
             {[{id:"CO",flag:"🇨🇴",label:"Colombia"},{id:"ES",flag:"🇪🇸",label:"España"}].map(p => (
               <button key={p.id} onClick={() => { set("pais", p.id); set("divisa", p.id==="CO"?"COP":"EUR"); set("tarifaIVA", p.id==="CO"?0.19:0.10); }}
-                style={{ flex:1, padding:"7px 4px", border:`2px solid ${pais===p.id?(p.id==="CO"?"#1E6B42":"#1E4F8C"):"#E4E1DB"}`, borderRadius:6,
-                  background:pais===p.id?(p.id==="CO"?"#E8F4EE":"#E6EFF9"):"transparent",
+                style={{ flex:1, padding:"7px 4px", border:`2px solid ${pais===p.id?(p.id==="CO"?"#111111":"#3B3B3B"):"#E0E0E0"}`, borderRadius:6,
+                  background:pais===p.id?(p.id==="CO"?"#E8F4EE":"#F0F0F0"):"transparent",
                   cursor:"pointer", fontSize:12, fontWeight:pais===p.id?700:400,
-                  color:pais===p.id?(p.id==="CO"?"#1E6B42":"#1E4F8C"):"#555", fontFamily:"'Outfit',sans-serif" }}>
+                  color:pais===p.id?(p.id==="CO"?"#111111":"#3B3B3B"):"#555", fontFamily:"'DM Sans',sans-serif" }}>
                 {p.flag} {p.label}
               </button>
             ))}
@@ -4557,7 +4557,7 @@ function TPar({ d, set, r }) {
               {[{id:"margen",lbl:"Margen"},{id:"aiu",lbl:"AIU"}].map(opt=>(
                 <button key={opt.id} onClick={()=>set("modoCalcObra",opt.id)}
                   style={{ flex:1, padding:"8px 12px", fontSize:12, cursor:"pointer", fontWeight:600,
-                    border:`1px solid #111`, fontFamily:"'Outfit',sans-serif",
+                    border:`1px solid #111`, fontFamily:"'DM Sans',sans-serif",
                     borderRadius:opt.id==="margen"?"6px 0 0 6px":"0 6px 6px 0",
                     background:(d.modoCalcObra||"margen")===opt.id?"#111":"#fff",
                     color:(d.modoCalcObra||"margen")===opt.id?"#fff":"#555" }}>
@@ -4633,7 +4633,7 @@ function TPar({ d, set, r }) {
               <div style={{ display:"flex", alignItems:"center", gap:6 }}>
                 <input type="number" value={((d[key]??def)*100).toFixed(0)} min={0} max={100}
                   onChange={e => set(key, +e.target.value/100)}
-                  style={{ width:60, border:`1px solid ${C.border}`, borderRadius:4, padding:"6px 8px", fontSize:13, fontFamily:"'Outfit',sans-serif", background:C.bg, textAlign:"right" }}/>
+                  style={{ width:60, border:`1px solid ${C.border}`, borderRadius:4, padding:"6px 8px", fontSize:13, fontFamily:"'DM Sans',sans-serif", background:C.bg, textAlign:"right" }}/>
                 <span style={{ fontSize:11, color:C.inkLight }}>%</span>
                 <span style={{ fontSize:11, color:C.inkLight }}>= {fmt((d[key]??def) * (r.PVP||0))}</span>
               </div>
@@ -4654,7 +4654,7 @@ function TPar({ d, set, r }) {
               style={{ padding:"5px 6px", fontSize:10, fontWeight:600, cursor:"pointer",
                 border:`1px solid ${d.medioPago===val?C.ink:C.border}`, borderRadius:4,
                 background:d.medioPago===val?C.ink:"#fff",
-                color:d.medioPago===val?"#fff":C.inkMid, fontFamily:"'Outfit',sans-serif" }}>
+                color:d.medioPago===val?"#fff":C.inkMid, fontFamily:"'DM Sans',sans-serif" }}>
               {lbl}
             </button>
           ))}
@@ -4667,7 +4667,7 @@ function TPar({ d, set, r }) {
               const sel = e.target.value; set("bancoPSE", sel);
               const tasas = {bancolombia:0.01,davivienda:0.009,nequi:0.012,bbva:0.01};
               if(tasas[sel]!==undefined) set("pctComPSE", tasas[sel]);
-            }} style={{ width:"100%", border:`1px solid ${C.border}`, borderRadius:4, padding:"5px 8px", fontSize:12, fontFamily:"'Outfit',sans-serif", background:C.bg }}>
+            }} style={{ width:"100%", border:`1px solid ${C.border}`, borderRadius:4, padding:"5px 8px", fontSize:12, fontFamily:"'DM Sans',sans-serif", background:C.bg }}>
               {[["bancolombia","Bancolombia (1.0%)"],["davivienda","Davivienda (0.9%)"],["nequi","Nequi (1.2%)"],["bbva","BBVA (1.0%)"],["custom","Otro"]].map(([v,l])=><option key={v} value={v}>{l}</option>)}
             </select>
           </div>
@@ -4679,7 +4679,7 @@ function TPar({ d, set, r }) {
               const sel = e.target.value; set("pasarelaTarjeta", sel);
               const tasas = {wompi:0.029,getnet:0.025,epayco:0.032,mercadopago:0.0349,redsys:0.005};
               if(tasas[sel]!==undefined) set("pctComTarjeta", tasas[sel]);
-            }} style={{ width:"100%", border:`1px solid ${C.border}`, borderRadius:4, padding:"5px 8px", fontSize:12, fontFamily:"'Outfit',sans-serif", background:C.bg }}>
+            }} style={{ width:"100%", border:`1px solid ${C.border}`, borderRadius:4, padding:"5px 8px", fontSize:12, fontFamily:"'DM Sans',sans-serif", background:C.bg }}>
               {(pais==="CO"
                 ? [["wompi","Wompi (2.9%)"],["getnet","Getnet (2.5%)"],["epayco","ePayco (3.2%)"],["mercadopago","M.Pago (3.49%)"],["custom","Otra"]]
                 : [["redsys","Redsys (0.5%)"],["custom","Otra"]]
@@ -4701,12 +4701,12 @@ function TPar({ d, set, r }) {
           <FI lbl="IVA sobre comisión" type="number" val={((d.ivaComision??0.19)*100).toFixed(0)} on={e=>set("ivaComision",+e.target.value/100)} rt="%" step="1" />
         )}
         <FS lbl="Aplicar 4×1000" val={d.aplicar4x1000} on={e => set("aplicar4x1000", e.target.value)} opts={["SI", "NO"]} />
-        <div style={{ background:"#FFF8E7", borderRadius:4, padding:"8px 12px", fontSize:11, color:"#7A5218", marginTop:6, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+        <div style={{ background:"#FFF8E7", borderRadius:4, padding:"8px 12px", fontSize:11, color:"#8C6A00", marginTop:6, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <span>Total GF: <strong>{pct(r.f||0)}</strong> = {fmt(r.fin||0)}</span>
           <button onClick={()=>{
             set("pctComPSE",0.012); set("pctComTarjeta",0.036); set("pctComTransf",0);
             set("pctComManual",0); set("ivaComision", pais==="CO"?0.19:0.21); set("aplicar4x1000","SI");
-          }} style={{ background:"none", border:"1px solid #C9A254", borderRadius:3, padding:"2px 8px", fontSize:9, fontWeight:600, color:"#7A5218", cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+          }} style={{ background:"none", border:"1px solid #C9A254", borderRadius:3, padding:"2px 8px", fontSize:9, fontWeight:600, color:"#8C6A00", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
             Restablecer
           </button>
         </div>
@@ -4722,7 +4722,7 @@ function TPar({ d, set, r }) {
           <select value={d.firmaRepresentante||"David Parra Galera"}
             onChange={e => set("firmaRepresentante", e.target.value)}
             style={{ width:"100%", border:`1px solid ${C.border}`, borderRadius:4, padding:"8px 10px",
-              fontSize:13, fontFamily:"'Outfit',sans-serif", background:C.bg }}>
+              fontSize:13, fontFamily:"'DM Sans',sans-serif", background:C.bg }}>
             <option value="David Parra Galera">David Parra Galera — Dir. Ejecutivo y Producción</option>
             <option value="Ana María Díaz Buitrago">Ana María Díaz Buitrago — Dir. Creativa y Diseño</option>
           </select>
@@ -4732,12 +4732,12 @@ function TPar({ d, set, r }) {
           <input value={d.elaboradoPor||""} onChange={e => set("elaboradoPor", e.target.value)}
             placeholder="Nombre de quien elaboró la oferta"
             style={{ width:"100%", border:`1px solid ${C.border}`, borderRadius:4, padding:"8px 10px",
-              fontSize:13, fontFamily:"'Outfit',sans-serif", background:C.bg, marginBottom:6 }}/>
+              fontSize:13, fontFamily:"'DM Sans',sans-serif", background:C.bg, marginBottom:6 }}/>
           <label style={{ display:"block", fontSize:10, fontWeight:600, color:"#999", marginBottom:5, textTransform:"uppercase", letterSpacing:1 }}>Cargo elaborador</label>
           <input value={d.cargoElaborador||""} onChange={e => set("cargoElaborador", e.target.value)}
             placeholder="Cargo"
             style={{ width:"100%", border:`1px solid ${C.border}`, borderRadius:4, padding:"8px 10px",
-              fontSize:13, fontFamily:"'Outfit',sans-serif", background:C.bg }}/>
+              fontSize:13, fontFamily:"'DM Sans',sans-serif", background:C.bg }}/>
         </div>
       </div>
     </Card>
@@ -4769,7 +4769,7 @@ function TPar({ d, set, r }) {
       const coefMult    = denTotal > 0 ? (modoCalc === "aiu" ? (1 + (d.aiuA||0.08)+(d.aiuI||0.03)+(d.aiuU||0.07)) / denTotal : 1 / denTotal) : 0;
 
       const rowStyle = { display:"flex", justifyContent:"space-between", alignItems:"center",
-        padding:"5px 0", borderBottom:"1px solid #E4E1DB", fontSize:12 };
+        padding:"5px 0", borderBottom:"1px solid #E0E0E0", fontSize:12 };
       const numStyle = { fontFamily:"'DM Mono',monospace", fontWeight:600, fontSize:12 };
       const subLabel = { fontSize:11, color:C.inkLight, marginLeft:12 };
 
@@ -4877,7 +4877,7 @@ function TCos({ d, set }) {
   const tM  = d.costosDirectos.filter(c => c.tipo === "M").reduce((s, c) => s + (parseFloat(c.valor) || 0), 0);
   const tMO = d.costosDirectos.filter(c => c.tipo === "MO").reduce((s, c) => s + (parseFloat(c.valor) || 0), 0);
   const tSB = d.costosDirectos.filter(c => c.tipo === "SUB").reduce((s, c) => s + (parseFloat(c.valor) || 0), 0);
-  const inp = { padding: "6px 8px", border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'Outfit', sans-serif", fontSize: 12, background: C.bg, width: "100%" };
+  const inp = { padding: "6px 8px", border: `1px solid ${C.border}`, borderRadius: 2, fontFamily: "'DM Sans', sans-serif", fontSize: 12, background: C.bg, width: "100%" };
 
   return (
     <div className="fade">
@@ -4887,7 +4887,7 @@ function TCos({ d, set }) {
           <Btn icon={Plus} sm on={add}>Agregar ítem</Btn>
         </div>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead><tr style={{ background: "#FAFAF8" }}>
+          <thead><tr style={{ background: "#FFFFFF" }}>
             {["Descripción", "Tipo", "Valor (COP)", "Notas", ""].map(h => (
               <th key={h} style={{ padding: "10px 14px", textAlign: "left", fontSize: 9, fontWeight: 600, color: C.inkLight, textTransform: "uppercase", letterSpacing: 1 }}>{h}</th>
             ))}
@@ -4904,7 +4904,7 @@ function TCos({ d, set }) {
             ))}
             {d.costosDirectos.length === 0 && <tr><td colSpan={5} style={{ padding: 28, textAlign: "center", color: C.inkLight, fontSize: 13 }}>Clic en "Agregar ítem" para empezar</td></tr>}
           </tbody>
-          <tfoot><tr style={{ borderTop: `2px solid ${C.border}`, background: "#FAFAF8" }}>
+          <tfoot><tr style={{ borderTop: `2px solid ${C.border}`, background: "#FFFFFF" }}>
             <td colSpan={2} style={{ padding: "10px 14px", fontSize: 10, fontWeight: 600, color: C.inkMid, textTransform: "uppercase", letterSpacing: 0.8 }}>Totales</td>
             <td colSpan={3}><div style={{ display: "flex", gap: 10, padding: "6px 10px" }}>
               {[["M", tM, C.info], ["MO", tMO, C.warning], ["SUB", tSB, C.success], ["TOTAL", tM + tMO + tSB, C.ink]].map(([l, v, col]) => (
@@ -4986,7 +4986,7 @@ function TPla({ d, set, r }) {
         if (!acts.find(a=>a.srcId===l.id)) {
           newActs.push({ id:uid(), srcId:l.id, nombre:l.nombre||l.descripcion||"Capítulo",
             inicio:d.fechaInicio||today(), duracion:30, avance:0, nivel:0,
-            responsable:"", color:"#1E6B42", precioCD:0, esCapitulo:true });
+            responsable:"", color:"#111111", precioCD:0, esCapitulo:true });
         } else { newActs.push(acts.find(a=>a.srcId===l.id)); }
       } else {
         const venta = l.precioCD > 0 ? calcPUVentaLinea(l.precioCD, l.cantidad||1, d) : null;
@@ -5008,7 +5008,7 @@ function TPla({ d, set, r }) {
   const addAct = () => setActs([...acts, { id:uid(), nombre:"Nueva actividad", inicio:d.fechaInicio||today(),
     duracion:7, avance:0, nivel:0, responsable:"", color:"#2A5F8C", pred:"", precioCD:0, esCapitulo:false }]);
   const addCap = () => setActs([...acts, { id:uid(), nombre:"NUEVO CAPÍTULO", inicio:d.fechaInicio||today(),
-    duracion:30, avance:0, nivel:0, responsable:"", color:"#1E6B42", precioCD:0, esCapitulo:true }]);
+    duracion:30, avance:0, nivel:0, responsable:"", color:"#111111", precioCD:0, esCapitulo:true }]);
   const delAct = (id) => setActs(acts.filter(a=>a.id!==id));
   const updAct = (id,k,v) => setActs(acts.map(a=>a.id===id?{...a,[k]:v}:a));
   const indent = (id) => setActs(acts.map(a=>a.id===id?{...a,nivel:Math.min(3,(a.nivel||0)+1)}:a));
@@ -5070,27 +5070,27 @@ function TPla({ d, set, r }) {
     const fE = d.fechaEntrega ? new Date(d.fechaEntrega).toLocaleDateString("es-CO",{year:"numeric",month:"long",day:"numeric"}) : "—";
     const durDias = acts.length > 0 ? totalDays : "—";
     let html = `<html><head><title>Cronograma - ${d.codigoOferta||""}</title>
-    <style>@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+    <style>@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
     @page{size:landscape;margin:12mm}*{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Outfit',sans-serif;color:#111;font-size:10px;padding:20px}
+    body{font-family:'DM Sans',sans-serif;color:#111;font-size:10px;padding:20px}
     .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;padding-bottom:12px;border-bottom:3px solid #111}
     .logo{font-size:16px;font-weight:800;letter-spacing:3px}
     .logo-sub{font-size:7px;letter-spacing:2px;color:#888;text-transform:uppercase}
     .project-info{text-align:right}
     .project-title{font-size:14px;font-weight:700}
     .project-meta{font-size:9px;color:#555;margin-top:2px}
-    .kpis{display:flex;gap:16px;margin-bottom:14px;padding:8px 0;border-bottom:1px solid #E4E1DB}
+    .kpis{display:flex;gap:16px;margin-bottom:14px;padding:8px 0;border-bottom:1px solid #E0E0E0}
     .kpi{font-size:9px;color:#555}.kpi strong{color:#111;font-size:11px}
     table{width:100%;border-collapse:collapse;margin-bottom:8px}
-    th{background:#F5F4F1;padding:4px 6px;font-size:7px;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;color:#888;text-align:left;border-bottom:2px solid #E4E1DB}
-    td{padding:4px 6px;border-bottom:1px solid #F0EEE9;font-size:9px}
-    .cap td{font-weight:700;background:#F5F4F1;border-bottom:2px solid #E4E1DB;font-size:10px}
-    .mono{font-family:'DM Mono',monospace}.green{color:#1E6B42}.blue{color:#1E4F8C}
+    th{background:#F5F4F1;padding:4px 6px;font-size:7px;text-transform:uppercase;letter-spacing:0.5px;font-weight:700;color:#888;text-align:left;border-bottom:2px solid #E0E0E0}
+    td{padding:4px 6px;border-bottom:1px solid #F5F5F5;font-size:9px}
+    .cap td{font-weight:700;background:#F5F4F1;border-bottom:2px solid #E0E0E0;font-size:10px}
+    .mono{font-family:'DM Mono',monospace}.green{color:#111111}.blue{color:#3B3B3B}
     .bar-row{height:18px;position:relative;margin:1px 0}
     .bar{height:14px;border-radius:3px;position:absolute;top:2px;min-width:4px}
     .avance{height:14px;border-radius:3px;position:absolute;top:2px;opacity:0.3}
-    .gantt-header{font-size:7px;color:#888;border-bottom:1px solid #E4E1DB;padding:2px 0}
-    .footer{margin-top:12px;padding-top:8px;border-top:1px solid #E4E1DB;display:flex;justify-content:space-between;font-size:8px;color:#888}
+    .gantt-header{font-size:7px;color:#888;border-bottom:1px solid #E0E0E0;padding:2px 0}
+    .footer{margin-top:12px;padding-top:8px;border-top:1px solid #E0E0E0;display:flex;justify-content:space-between;font-size:8px;color:#888}
     .totrow td{font-weight:700;border-top:2px solid #111;padding-top:6px}
     @media print{body{padding:0}}
     </style></head><body>`;
@@ -5312,7 +5312,7 @@ function TPla({ d, set, r }) {
     const totalC = pers.reduce((s,p) => s+p.costo, 0);
     const totalPers = pers.reduce((s,p) => s+p.personas, 0);
     const pais2 = d.pais || "CO";
-    const S = `@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');@page{size:portrait;margin:12mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Outfit',sans-serif;color:#111;font-size:9px;padding:20px}.header{display:flex;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:3px solid #111}.logo{font-size:16px;font-weight:800;letter-spacing:3px}.logo-sub{font-size:7px;letter-spacing:2px;color:#888;text-transform:uppercase}h2{font-size:12px;margin:14px 0 6px;padding:5px 0;border-bottom:2px solid #111}h3{font-size:10px;margin:8px 0 4px}.kpis{display:flex;gap:16px;margin-bottom:12px;font-size:9px;color:#555}.kpi strong{color:#111}table{width:100%;border-collapse:collapse;margin-bottom:10px}th{background:#F5F4F1;padding:3px 5px;font-size:7px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;color:#888;text-align:left;border-bottom:2px solid #E4E1DB}td{padding:3px 5px;border-bottom:1px solid #F0EEE9;font-size:8px}.mono{font-family:'DM Mono',monospace}.green{color:#1E6B42}.blue{color:#1E4F8C}.bold{font-weight:700}.totrow td{font-weight:700;border-top:2px solid #111}.badge{background:#E6EFF9;color:#1E4F8C;padding:2px 8px;border-radius:3px;font-weight:700;font-size:10px}.footer{margin-top:12px;padding-top:6px;border-top:1px solid #E4E1DB;display:flex;justify-content:space-between;font-size:7px;color:#888}@media print{body{padding:8px}}`;
+    const S = `@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');@page{size:portrait;margin:12mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;color:#111;font-size:9px;padding:20px}.header{display:flex;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:3px solid #111}.logo{font-size:16px;font-weight:800;letter-spacing:3px}.logo-sub{font-size:7px;letter-spacing:2px;color:#888;text-transform:uppercase}h2{font-size:12px;margin:14px 0 6px;padding:5px 0;border-bottom:2px solid #111}h3{font-size:10px;margin:8px 0 4px}.kpis{display:flex;gap:16px;margin-bottom:12px;font-size:9px;color:#555}.kpi strong{color:#111}table{width:100%;border-collapse:collapse;margin-bottom:10px}th{background:#F5F4F1;padding:3px 5px;font-size:7px;text-transform:uppercase;letter-spacing:.4px;font-weight:700;color:#888;text-align:left;border-bottom:2px solid #E0E0E0}td{padding:3px 5px;border-bottom:1px solid #F5F5F5;font-size:8px}.mono{font-family:'DM Mono',monospace}.green{color:#111111}.blue{color:#3B3B3B}.bold{font-weight:700}.totrow td{font-weight:700;border-top:2px solid #111}.badge{background:#F0F0F0;color:#3B3B3B;padding:2px 8px;border-radius:3px;font-weight:700;font-size:10px}.footer{margin-top:12px;padding-top:6px;border-top:1px solid #E0E0E0;display:flex;justify-content:space-between;font-size:7px;color:#888}@media print{body{padding:8px}}`;
     let html = `<html><head><title>Plan de Recursos - ${d.codigoOferta||""}</title><style>${S}</style></head><body>`;
 
     html += `<div class="header"><div><div class="logo">HABITARIS</div><div class="logo-sub">Arquitectura · Interiorismo · Construcción</div></div>`;
@@ -5359,7 +5359,7 @@ function TPla({ d, set, r }) {
   };
 
   const inp = { border:`1px solid ${C.border}`, borderRadius:3, padding:"3px 5px",
-    fontSize:11, fontFamily:"'Outfit',sans-serif", background:"#fff" };
+    fontSize:11, fontFamily:"'DM Sans',sans-serif", background:"#fff" };
 
   return (
     <div className="fade">
@@ -5376,20 +5376,20 @@ function TPla({ d, set, r }) {
           <button onClick={()=>setVistaVal(!vistaVal)}
             style={{ padding:"5px 12px", fontSize:10, fontWeight:600, cursor:"pointer",
               border:`1px solid ${vistaVal?C.accent:C.border}`, borderRadius:4,
-              background:vistaVal?"#E6F4EC":"#fff", color:vistaVal?"#1E6B42":C.inkMid,
-              fontFamily:"'Outfit',sans-serif" }}>
+              background:vistaVal?"#E6F4EC":"#fff", color:vistaVal?"#111111":C.inkMid,
+              fontFamily:"'DM Sans',sans-serif" }}>
             {vistaVal?"💰 Valorado":"📊 Valorado"}
           </button>
           <button onClick={printCronograma}
             style={{ padding:"5px 12px", fontSize:10, fontWeight:600, cursor:"pointer",
               border:"none", borderRadius:4, background:"#111", color:"#fff",
-              fontFamily:"'Outfit',sans-serif", display:"flex", alignItems:"center", gap:4 }}>
+              fontFamily:"'DM Sans',sans-serif", display:"flex", alignItems:"center", gap:4 }}>
             <FileText size={11}/> Vista PDF
           </button>
           <button onClick={()=>setShowRecursos(true)}
             style={{ padding:"5px 12px", fontSize:10, fontWeight:600, cursor:"pointer",
-              border:"none", borderRadius:4, background:"#1E4F8C", color:"#fff",
-              fontFamily:"'Outfit',sans-serif", display:"flex", alignItems:"center", gap:4 }}>
+              border:"none", borderRadius:4, background:"#3B3B3B", color:"#fff",
+              fontFamily:"'DM Sans',sans-serif", display:"flex", alignItems:"center", gap:4 }}>
             <HardHat size={11}/> Recursos
           </button>
         </div>
@@ -5433,8 +5433,8 @@ function TPla({ d, set, r }) {
                     const displayAvance = isCap && summary ? summary.avance : (a.avance||0);
                     return (
                       <tr key={a.id} style={{
-                        background: isCap ? "#F5F4F1" : (idx%2===0 ? "#fff" : "#FAFAF8"),
-                        borderBottom: `1px solid ${isCap ? C.border : "#F0EEE9"}`,
+                        background: isCap ? "#F5F4F1" : (idx%2===0 ? "#fff" : "#FFFFFF"),
+                        borderBottom: `1px solid ${isCap ? C.border : "#F5F5F5"}`,
                         height: isCap ? 32 : 28
                       }}>
                         <td style={{ padding:"2px 4px", textAlign:"center", fontSize:9, color:"#BBB" }}>{idx+1}</td>
@@ -5448,7 +5448,7 @@ function TPla({ d, set, r }) {
                         </td>
                         <td style={{ padding:"2px 6px" }}>
                           <div style={{ paddingLeft: nivel*16, display:"flex", alignItems:"center", gap:4 }}>
-                            {isCap && <span style={{ background:"#1E6B42", color:"#fff", padding:"0px 4px", borderRadius:2, fontSize:7, fontWeight:700, lineHeight:"14px" }}>▼</span>}
+                            {isCap && <span style={{ background:"#111111", color:"#fff", padding:"0px 4px", borderRadius:2, fontSize:7, fontWeight:700, lineHeight:"14px" }}>▼</span>}
                             <input value={a.nombre||""} onChange={e=>updAct(a.id,"nombre",e.target.value)}
                               style={{ border:"none", background:"transparent", outline:"none", width:"100%",
                                 fontWeight:isCap?700:400, fontSize:isCap?11:10.5, color:C.ink,
@@ -5468,7 +5468,7 @@ function TPla({ d, set, r }) {
                         <td style={{ padding:"2px 4px", fontSize:9, color:C.inkMid, textAlign:"center" }}>{endDate(a)}</td>
                         <td style={{ padding:"2px 3px", textAlign:"center" }}>
                           <span style={{ fontSize:9, fontWeight:displayAvance>0?600:400,
-                            color: displayAvance>=100?"#1E6B42":displayAvance>0?"#1E4F8C":"#CCC" }}>
+                            color: displayAvance>=100?"#111111":displayAvance>0?"#3B3B3B":"#CCC" }}>
                             {displayAvance}%
                           </span>
                         </td>
@@ -5483,7 +5483,7 @@ function TPla({ d, set, r }) {
                             {isCap ? fmtC(summary?.cd||0) : (a.precioCD>0 ? fmtC(a.precioCD) : "—")}
                           </td>
                           <td style={{ padding:"2px 4px", textAlign:"right", fontSize:9, fontFamily:"'DM Mono',monospace",
-                            fontWeight:isCap?700:400, color:isCap?"#1E6B42":"#1E4F8C" }}>
+                            fontWeight:isCap?700:400, color:isCap?"#111111":"#3B3B3B" }}>
                             {isCap ? fmtC(summary?.venta||0) : (a.totalVenta>0 ? fmtC(a.totalVenta) : "—")}
                           </td>
                         </>}
@@ -5497,10 +5497,10 @@ function TPla({ d, set, r }) {
                   })}
                 </tbody>
                 {vistaVal && (
-                <tfoot><tr style={{ background:"#E6F4EC", borderTop:"2px solid #1E6B42" }}>
-                  <td colSpan={8} style={{ padding:"6px 8px", fontSize:10, fontWeight:700, color:"#1E6B42" }}>TOTAL PROYECTO</td>
-                  <td style={{ padding:"6px 4px", textAlign:"right", fontSize:10, fontWeight:700, fontFamily:"'DM Mono',monospace", color:"#1E6B42" }}>{fmtC(totalCD)}</td>
-                  <td style={{ padding:"6px 4px", textAlign:"right", fontSize:10, fontWeight:700, fontFamily:"'DM Mono',monospace", color:"#1E6B42" }}>{fmtC(totalVenta)}</td>
+                <tfoot><tr style={{ background:"#E6F4EC", borderTop:"2px solid #111111" }}>
+                  <td colSpan={8} style={{ padding:"6px 8px", fontSize:10, fontWeight:700, color:"#111111" }}>TOTAL PROYECTO</td>
+                  <td style={{ padding:"6px 4px", textAlign:"right", fontSize:10, fontWeight:700, fontFamily:"'DM Mono',monospace", color:"#111111" }}>{fmtC(totalCD)}</td>
+                  <td style={{ padding:"6px 4px", textAlign:"right", fontSize:10, fontWeight:700, fontFamily:"'DM Mono',monospace", color:"#111111" }}>{fmtC(totalVenta)}</td>
                   <td/>
                 </tr></tfoot>
                 )}
@@ -5508,12 +5508,12 @@ function TPla({ d, set, r }) {
             </div>
 
             {/* RIGHT: Gantt bars */}
-            <div style={{ flex:1, overflowX:"auto", overflowY:"hidden", background:"#FAFAF8" }}>
+            <div style={{ flex:1, overflowX:"auto", overflowY:"hidden", background:"#FFFFFF" }}>
               {/* Week headers */}
               <div style={{ display:"flex", borderBottom:`2px solid ${C.border}`, background:"#EDEBE7", height:28, position:"sticky", top:0 }}>
                 {weeks.map((dd,w) => (
                   <div key={w} style={{ width:7*dayPx, minWidth:7*dayPx, flexShrink:0,
-                    fontSize:8, color:"#888", textAlign:"center", borderRight:"1px solid #E4E1DB",
+                    fontSize:8, color:"#888", textAlign:"center", borderRight:"1px solid #E0E0E0",
                     display:"flex", alignItems:"center", justifyContent:"center", fontWeight:600 }}>
                     {dd.toLocaleDateString("es",{month:"short",day:"numeric"})}
                   </div>
@@ -5540,7 +5540,7 @@ function TPla({ d, set, r }) {
 
                 return (
                   <div key={a.id} style={{ position:"relative", height:rowH,
-                    borderBottom:`1px solid ${isCap?"#E4E1DB":"#F0EEE9"}` }}>
+                    borderBottom:`1px solid ${isCap?"#E0E0E0":"#F5F5F5"}` }}>
                     {/* Today line */}
                     {idx===0 && (() => {
                       const todayX = dayX(today()) * dayPx;
@@ -5619,7 +5619,7 @@ function TPla({ d, set, r }) {
         };
 
         const thS = { padding:"5px 8px", fontSize:8, fontWeight:700, color:"#888", textTransform:"uppercase",
-          letterSpacing:.4, borderBottom:"2px solid #E4E1DB", textAlign:"left" };
+          letterSpacing:.4, borderBottom:"2px solid #E0E0E0", textAlign:"left" };
         const thR = { ...thS, textAlign:"right" };
 
         return (
@@ -5641,12 +5641,12 @@ function TPla({ d, set, r }) {
                 </div>
                 <div style={{ display:"flex", gap:6 }}>
                   <button onClick={exportCSVRecursos}
-                    style={{ padding:"5px 12px", background:"#fff", border:"1px solid #E4E1DB", borderRadius:4,
-                      fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+                    style={{ padding:"5px 12px", background:"#fff", border:"1px solid #E0E0E0", borderRadius:4,
+                      fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
                       display:"flex", alignItems:"center", gap:4 }}><Download size={11}/> CSV</button>
                   <button onClick={() => exportRecursosPrint(rec)}
                     style={{ padding:"5px 12px", background:"#111", color:"#fff", border:"none", borderRadius:4,
-                      fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+                      fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
                       display:"flex", alignItems:"center", gap:4 }}><FileText size={11}/> PDF</button>
                   <button onClick={() => setShowRecursos(false)}
                     style={{ background:"none", border:"none", cursor:"pointer", color:"#888" }}><X size={18}/></button>
@@ -5654,11 +5654,11 @@ function TPla({ d, set, r }) {
               </div>
 
               {/* KPIs */}
-              <div style={{ padding:"8px 22px", background:"#F5F4F1", borderBottom:"1px solid #E4E1DB",
+              <div style={{ padding:"8px 22px", background:"#F5F4F1", borderBottom:"1px solid #E0E0E0",
                 display:"flex", gap:18, flexWrap:"wrap", flexShrink:0, fontSize:10, color:"#555" }}>
-                <span>👷 Personas: <strong style={{ background:"#E6EFF9", color:"#1E4F8C", padding:"2px 8px", borderRadius:3, fontFamily:"'DM Mono',monospace" }}>{totalPers}</strong></span>
+                <span>👷 Personas: <strong style={{ background:"#F0F0F0", color:"#3B3B3B", padding:"2px 8px", borderRadius:3, fontFamily:"'DM Mono',monospace" }}>{totalPers}</strong></span>
                 <span>⏱ Horas MO: <strong style={{ fontFamily:"'DM Mono',monospace" }}>{totalH.toFixed(0)}h</strong></span>
-                <span>💰 Costo MO: <strong style={{ fontFamily:"'DM Mono',monospace", color:"#1E6B42" }}>{fmtC(totalC)}</strong></span>
+                <span>💰 Costo MO: <strong style={{ fontFamily:"'DM Mono',monospace", color:"#111111" }}>{fmtC(totalC)}</strong></span>
                 <span>🦺 EPPs: <strong>{epps.length} ítems</strong></span>
                 <span>🔨 Herr./Equipos: <strong>{herr.length + eqO.length}</strong></span>
               </div>
@@ -5682,7 +5682,7 @@ function TPla({ d, set, r }) {
                   </h3>
                   <table style={{ width:"100%", borderCollapse:"collapse", marginBottom:16 }}>
                     <thead>
-                      <tr style={{ background:"#FAFAF8" }}>
+                      <tr style={{ background:"#FFFFFF" }}>
                         <th style={thS}>Categoría</th><th style={thR}>Personas</th><th style={thR}>Horas</th>
                         <th style={thR}>Costo</th><th style={thS}>Ingreso estimado</th><th style={thS}>Hasta</th>
                         <th style={thS}>Actividades</th>
@@ -5690,16 +5690,16 @@ function TPla({ d, set, r }) {
                     </thead>
                     <tbody>
                       {pers.map(p => (
-                        <tr key={p.catId} style={{ borderBottom:"1px solid #F0EEE9" }}>
+                        <tr key={p.catId} style={{ borderBottom:"1px solid #F5F5F5" }}>
                           <td style={{ padding:"7px 8px", fontWeight:600 }}>{p.label}</td>
                           <td style={{ padding:"7px 8px", textAlign:"right" }}>
-                            <span style={{ background:"#E6EFF9", color:"#1E4F8C", padding:"2px 10px",
+                            <span style={{ background:"#F0F0F0", color:"#3B3B3B", padding:"2px 10px",
                               borderRadius:4, fontWeight:700, fontFamily:"'DM Mono',monospace", fontSize:13 }}>{p.personas}</span>
                           </td>
                           <td style={{ padding:"7px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace" }}>{p.horas.toFixed(0)}h</td>
-                          <td style={{ padding:"7px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", color:"#1E6B42", fontWeight:600 }}>{fmtC(p.costo)}</td>
+                          <td style={{ padding:"7px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", color:"#111111", fontWeight:600 }}>{fmtC(p.costo)}</td>
                           <td style={{ padding:"7px 8px" }}>
-                            <span style={{ background:"#E8F4EE", color:"#1E6B42", padding:"2px 8px", borderRadius:3, fontWeight:600, fontSize:10 }}>
+                            <span style={{ background:"#E8F4EE", color:"#111111", padding:"2px 8px", borderRadius:3, fontWeight:600, fontSize:10 }}>
                               📅 {fmtFecha(p.inicioMasTemprano)}
                             </span>
                           </td>
@@ -5716,7 +5716,7 @@ function TPla({ d, set, r }) {
                             borderRadius:4, fontWeight:700, fontFamily:"'DM Mono',monospace", fontSize:14 }}>{totalPers}</span>
                         </td>
                         <td style={{ padding:"8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontWeight:700 }}>{totalH.toFixed(0)}h</td>
-                        <td style={{ padding:"8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontWeight:700, color:"#1E6B42", fontSize:13 }}>{fmtC(totalC)}</td>
+                        <td style={{ padding:"8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontWeight:700, color:"#111111", fontSize:13 }}>{fmtC(totalC)}</td>
                         <td colSpan={3}/>
                       </tr>
                     </tbody>
@@ -5727,31 +5727,31 @@ function TPla({ d, set, r }) {
                     <h3 style={{ fontSize:13, fontWeight:700, margin:"16px 0 8px", padding:"8px 0 6px",
                       borderBottom:"2px solid #111", display:"flex", alignItems:"center", gap:6, justifyContent:"space-between" }}>
                       <span>🦺 2. Elementos de Protección Personal (EPP)</span>
-                      <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:"#1E6B42", fontWeight:600 }}>
+                      <span style={{ fontFamily:"'DM Mono',monospace", fontSize:11, color:"#111111", fontWeight:600 }}>
                         Est. {fmtC(epps.reduce((s,e) => s + (e.costoTotal||0), 0))}
                       </span>
                     </h3>
                     <table style={{ width:"100%", borderCollapse:"collapse", marginBottom:16 }}>
                       <thead>
-                        <tr style={{ background:"#FAFAF8" }}>
+                        <tr style={{ background:"#FFFFFF" }}>
                           <th style={thS}>Código</th><th style={thS}>Elemento</th><th style={thR}>Cant.</th>
                           <th style={thR}>Precio ref.</th><th style={thR}>Subtotal</th><th style={thS}>Necesario desde</th>
                         </tr>
                       </thead>
                       <tbody>
                         {epps.map((e,i) => (
-                          <tr key={i} style={{ borderBottom:"1px solid #F0EEE9" }}>
+                          <tr key={i} style={{ borderBottom:"1px solid #F5F5F5" }}>
                             <td style={{ padding:"6px 8px" }}>
-                              <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:700, fontSize:10, background:"#FFF8E7", color:"#7A5218", padding:"1px 6px", borderRadius:3 }}>
+                              <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:700, fontSize:10, background:"#FFF8E7", color:"#8C6A00", padding:"1px 6px", borderRadius:3 }}>
                                 {e.codigo||"—"}
                               </span>
                             </td>
                             <td style={{ padding:"6px 8px", fontWeight:600 }}>{FAMILIA_ICONS_CAT[e.familia]||"🦺"} {e.nombre}</td>
                             <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontWeight:700 }}>{e.cantTotal}</td>
                             <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:10, color:"#888" }}>{fmtC(e.precioRef||0)}</td>
-                            <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontWeight:600, color:"#1E6B42" }}>{fmtC(e.costoTotal||0)}</td>
+                            <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontWeight:600, color:"#111111" }}>{fmtC(e.costoTotal||0)}</td>
                             <td style={{ padding:"6px 8px" }}>
-                              <span style={{ background:"#FFF8E7", color:"#7A5218", padding:"2px 8px", borderRadius:3, fontSize:10, fontWeight:600 }}>
+                              <span style={{ background:"#FFF8E7", color:"#8C6A00", padding:"2px 8px", borderRadius:3, fontSize:10, fontWeight:600 }}>
                                 📅 {fmtFecha(e.inicioNecesario)}
                               </span>
                             </td>
@@ -5761,7 +5761,7 @@ function TPla({ d, set, r }) {
                           <td colSpan={2} style={{ padding:"6px 8px", fontWeight:700 }}>TOTAL EPPs</td>
                           <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontWeight:700 }}>{epps.reduce((s,e)=>s+e.cantTotal,0)}</td>
                           <td/>
-                          <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontWeight:700, color:"#1E6B42" }}>{fmtC(epps.reduce((s,e)=>s+(e.costoTotal||0),0))}</td>
+                          <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontWeight:700, color:"#111111" }}>{fmtC(epps.reduce((s,e)=>s+(e.costoTotal||0),0))}</td>
                           <td/>
                         </tr>
                       </tbody>
@@ -5776,7 +5776,7 @@ function TPla({ d, set, r }) {
                     </h3>
                     <table style={{ width:"100%", borderCollapse:"collapse", marginBottom:16 }}>
                       <thead>
-                        <tr style={{ background:"#FAFAF8" }}>
+                        <tr style={{ background:"#FFFFFF" }}>
                           <th style={thS}>Código</th><th style={thS}>Recurso</th><th style={thS}>Tipo</th>
                           <th style={thR}>Cant.</th><th style={thR}>Precio ref.</th><th style={thS}>Necesario desde</th>
                           <th style={thS}>Actividades</th>
@@ -5784,9 +5784,9 @@ function TPla({ d, set, r }) {
                       </thead>
                       <tbody>
                         {[...herr, ...eqO].map((h,i) => (
-                          <tr key={i} style={{ borderBottom:"1px solid #F0EEE9" }}>
+                          <tr key={i} style={{ borderBottom:"1px solid #F5F5F5" }}>
                             <td style={{ padding:"6px 8px" }}>
-                              <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:700, fontSize:10, background:"#E6EFF9", color:"#1E4F8C", padding:"1px 6px", borderRadius:3 }}>
+                              <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:700, fontSize:10, background:"#F0F0F0", color:"#3B3B3B", padding:"1px 6px", borderRadius:3 }}>
                                 {h.codigo||"—"}
                               </span>
                             </td>
@@ -5797,7 +5797,7 @@ function TPla({ d, set, r }) {
                             <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontWeight:700 }}>{h.cantTotal}</td>
                             <td style={{ padding:"6px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontSize:10, color:"#888" }}>{fmtC(h.precioRef||0)}</td>
                             <td style={{ padding:"6px 8px" }}>
-                              <span style={{ background:"#E6EFF9", color:"#1E4F8C", padding:"2px 8px", borderRadius:3, fontSize:10, fontWeight:600 }}>
+                              <span style={{ background:"#F0F0F0", color:"#3B3B3B", padding:"2px 8px", borderRadius:3, fontSize:10, fontWeight:600 }}>
                                 📅 {fmtFecha(h.inicioNecesario)}
                               </span>
                             </td>
@@ -5819,23 +5819,23 @@ function TPla({ d, set, r }) {
                     <div key={p.catId} style={{ marginBottom:12 }}>
                       <h4 style={{ fontSize:11, fontWeight:700, margin:"8px 0 4px", display:"flex", justifyContent:"space-between" }}>
                         <span>{p.label}</span>
-                        <span style={{ fontFamily:"'DM Mono',monospace", color:"#1E6B42", fontWeight:600, fontSize:10 }}>
+                        <span style={{ fontFamily:"'DM Mono',monospace", color:"#111111", fontWeight:600, fontSize:10 }}>
                           {p.personas} pers. · {p.horas.toFixed(0)}h · {fmtC(p.costo)}
                         </span>
                       </h4>
                       <table style={{ width:"100%", borderCollapse:"collapse", fontSize:10 }}>
                         <thead>
-                          <tr style={{ background:"#FAFAF8" }}>
+                          <tr style={{ background:"#FFFFFF" }}>
                             {["Actividad","Equipo","Pers.","Horas","Inicio","Fin","Días"].map(h => (
                               <th key={h} style={{ padding:"3px 6px", fontSize:7, fontWeight:700, color:"#888",
-                                textTransform:"uppercase", letterSpacing:.4, borderBottom:"1px solid #E4E1DB",
+                                textTransform:"uppercase", letterSpacing:.4, borderBottom:"1px solid #E0E0E0",
                                 textAlign: h==="Actividad"||h==="Equipo"||h==="Inicio"||h==="Fin" ? "left" : "right" }}>{h}</th>
                             ))}
                           </tr>
                         </thead>
                         <tbody>
                           {p.actividades.map((a,i) => (
-                            <tr key={i} style={{ borderBottom:"1px solid #F0EEE9" }}>
+                            <tr key={i} style={{ borderBottom:"1px solid #F5F5F5" }}>
                               <td style={{ padding:"4px 6px" }}>{a.nombre}</td>
                               <td style={{ padding:"4px 6px", color:"#888" }}>{a.equipo}</td>
                               <td style={{ padding:"4px 6px", textAlign:"right", fontFamily:"'DM Mono',monospace" }}>{a.cant}</td>
@@ -5964,7 +5964,7 @@ function TGG({ d, set, r }) {
     const orgNodes = [];
     // 1) GG personal → top-level roles
     const personalItems = items.filter(it => it.categoria === "personal_dir" && it.desc.trim().length > 0);
-    const colorMap = { "director":"#1E6B42", "residente":"#2A5F8C", "hse":"#8C2A2A", "siso":"#8C2A2A",
+    const colorMap = { "director":"#111111", "residente":"#2A5F8C", "hse":"#8C2A2A", "siso":"#8C2A2A",
       "coordinador":"#6B5B8C", "almacen":"#5B8DB8", "admin":"#6B5B8C" };
     const iconMap = { "director":"👔", "residente":"📋", "hse":"🦺", "siso":"🦺",
       "coordinador":"💼", "almacen":"📦", "admin":"💼" };
@@ -5978,9 +5978,9 @@ function TGG({ d, set, r }) {
     const dirItem = personalItems.find(it => it.desc.toLowerCase().includes("director"));
     const rootId = uid();
     if (dirItem) {
-      orgNodes.push({ id:rootId, parentId:null, nombre:"", cargo:dirItem.desc, color:"#1E6B42", icon:"👔" });
+      orgNodes.push({ id:rootId, parentId:null, nombre:"", cargo:dirItem.desc, color:"#111111", icon:"👔" });
     } else {
-      orgNodes.push({ id:rootId, parentId:null, nombre:"", cargo:"Director de Proyecto", color:"#1E6B42", icon:"👔" });
+      orgNodes.push({ id:rootId, parentId:null, nombre:"", cargo:"Director de Proyecto", color:"#111111", icon:"👔" });
     }
 
     // Other GG personnel as direct reports
@@ -6012,7 +6012,7 @@ function TGG({ d, set, r }) {
   // PDF Export
   const printGG = () => {
     const w = window.open("","_blank");
-    const S = `@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');@page{size:portrait;margin:12mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Outfit',sans-serif;color:#111;font-size:9px;padding:20px}.header{display:flex;justify-content:space-between;margin-bottom:12px;padding-bottom:8px;border-bottom:3px solid #111}.logo{font-size:14px;font-weight:800;letter-spacing:3px}.logo-sub{font-size:6px;letter-spacing:2px;color:#888;text-transform:uppercase}h2{font-size:12px;margin:10px 0 4px;padding:6px 0 4px;border-bottom:2px solid #111}.kpis{display:flex;gap:14px;margin-bottom:10px;font-size:9px;color:#555}.kpi strong{color:#111}.kpi .badge{background:#1E6B42;color:#fff;padding:1px 8px;border-radius:3px;font-weight:700;font-family:'DM Mono',monospace}table{width:100%;border-collapse:collapse;margin-bottom:8px}th{background:#F5F4F1;padding:3px 6px;font-size:7px;text-transform:uppercase;letter-spacing:.3px;font-weight:700;color:#888;text-align:left;border-bottom:1px solid #E4E1DB}td{padding:3px 6px;font-size:8px;border-bottom:1px solid #F0EEE9}.mono{font-family:'DM Mono',monospace}.green{color:#1E6B42}.bold{font-weight:700}.r{text-align:right}.cat{background:#E8E6E1;font-weight:700;font-size:7px;text-transform:uppercase;letter-spacing:.4px;padding:4px 6px}.totrow td{border-top:2px solid #111;font-weight:700}.footer{margin-top:10px;padding-top:4px;border-top:1px solid #E4E1DB;display:flex;justify-content:space-between;font-size:7px;color:#888}`;
+    const S = `@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');@page{size:portrait;margin:12mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;color:#111;font-size:9px;padding:20px}.header{display:flex;justify-content:space-between;margin-bottom:12px;padding-bottom:8px;border-bottom:3px solid #111}.logo{font-size:14px;font-weight:800;letter-spacing:3px}.logo-sub{font-size:6px;letter-spacing:2px;color:#888;text-transform:uppercase}h2{font-size:12px;margin:10px 0 4px;padding:6px 0 4px;border-bottom:2px solid #111}.kpis{display:flex;gap:14px;margin-bottom:10px;font-size:9px;color:#555}.kpi strong{color:#111}.kpi .badge{background:#111111;color:#fff;padding:1px 8px;border-radius:3px;font-weight:700;font-family:'DM Mono',monospace}table{width:100%;border-collapse:collapse;margin-bottom:8px}th{background:#F5F4F1;padding:3px 6px;font-size:7px;text-transform:uppercase;letter-spacing:.3px;font-weight:700;color:#888;text-align:left;border-bottom:1px solid #E0E0E0}td{padding:3px 6px;font-size:8px;border-bottom:1px solid #F5F5F5}.mono{font-family:'DM Mono',monospace}.green{color:#111111}.bold{font-weight:700}.r{text-align:right}.cat{background:#E8E6E1;font-weight:700;font-size:7px;text-transform:uppercase;letter-spacing:.4px;padding:4px 6px}.totrow td{border-top:2px solid #111;font-weight:700}.footer{margin-top:10px;padding-top:4px;border-top:1px solid #E0E0E0;display:flex;justify-content:space-between;font-size:7px;color:#888}`;
     let html = `<html><head><title>Gastos Generales - ${d.codigoOferta||""}</title><style>${S}</style></head><body>`;
     html += `<div class="header"><div><div class="logo">HABITARIS</div><div class="logo-sub">Arquitectura · Interiorismo · Construcción</div></div>`;
     html += `<div style="text-align:right"><div style="font-size:13px;font-weight:700">Gastos Generales de Obra</div>`;
@@ -6058,7 +6058,7 @@ function TGG({ d, set, r }) {
     a.download = `GG_${d.codigoOferta||"proyecto"}.csv`; a.click();
   };
 
-  const inp = { border:`1px solid ${C.border}`, borderRadius:3, padding:"3px 6px", fontSize:11, fontFamily:"'Outfit',sans-serif", background:"#fff" };
+  const inp = { border:`1px solid ${C.border}`, borderRadius:3, padding:"3px 6px", fontSize:11, fontFamily:"'DM Sans',sans-serif", background:"#fff" };
 
   return (
     <div className="fade">
@@ -6071,22 +6071,22 @@ function TGG({ d, set, r }) {
         <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
           <button onClick={autoFillMeses}
             style={{ padding:"6px 12px", border:`1px solid ${C.border}`, borderRadius:4, background:"#fff",
-              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", color:C.inkMid }}>
+              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", color:C.inkMid }}>
             ⚡ Auto {ggMeses} meses
           </button>
           <button onClick={generarOrgAutomatic}
             style={{ padding:"6px 12px", border:`1px solid ${C.border}`, borderRadius:4, background:"#fff",
-              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", color:C.inkMid }}>
+              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", color:C.inkMid }}>
             👔 → Organigrama
           </button>
           <button onClick={exportCSV}
             style={{ padding:"6px 12px", border:`1px solid ${C.border}`, borderRadius:4, background:"#fff",
-              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", color:C.inkMid }}>
+              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", color:C.inkMid }}>
             📥 CSV
           </button>
           <button onClick={printGG}
             style={{ padding:"6px 14px", background:"#111", color:"#fff", border:"none", borderRadius:5,
-              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
               display:"flex", alignItems:"center", gap:4 }}>
             <FileText size={11}/> Vista PDF
           </button>
@@ -6097,9 +6097,9 @@ function TGG({ d, set, r }) {
       <div style={{ display:"grid", gridTemplateColumns:"repeat(5, 1fr)", gap:12, marginBottom:16 }}>
         {[
           ["Costo directo", fmt(costoDirecto), C.ink],
-          ["Total GG", fmt(totalGG), "#1E6B42"],
-          ["% GG / CD", (pctGG*100).toFixed(2)+"%", "#1E4F8C"],
-          ["GG por actividad", fmt(totalActividades > 0 ? totalGG/totalActividades : 0), "#7A5218"],
+          ["Total GG", fmt(totalGG), "#111111"],
+          ["% GG / CD", (pctGG*100).toFixed(2)+"%", "#3B3B3B"],
+          ["GG por actividad", fmt(totalActividades > 0 ? totalGG/totalActividades : 0), "#8C6A00"],
         ].map(([l,v,col]) => (
           <Card key={l} style={{ padding:"10px 14px", textAlign:"center" }}>
             <div style={{ fontSize:8, fontWeight:700, color:"#888", textTransform:"uppercase", letterSpacing:0.5 }}>{l}</div>
@@ -6126,33 +6126,33 @@ function TGG({ d, set, r }) {
                 set("ggMesCierre", on);
                 set("ggMeses", on ? ggMeses + 1 : Math.max(1, ggMeses - 1));
               }}
-              style={{ width:12, height:12, accentColor:"#1E6B42" }}/>
+              style={{ width:12, height:12, accentColor:"#111111" }}/>
             +1 mes cierre admin.
           </label>
           {/* Discrepancy alert */}
           {hayDiscrepancia && (
             <div style={{ marginTop:6, background:"#FFF8E6", border:"1px solid #E6D44D55", borderRadius:4, padding:"5px 8px" }}>
-              <div style={{ fontSize:8, color:"#7A5218", fontWeight:600, marginBottom:3 }}>
+              <div style={{ fontSize:8, color:"#8C6A00", fontWeight:600, marginBottom:3 }}>
                 ⚠️ Cronograma da {mesesCrono} meses, tienes {ggMeses}
               </div>
               <div style={{ display:"flex", gap:3 }}>
                 <button onClick={()=>sincronizarCrono(false)}
                   style={{ flex:1, padding:"3px 4px", fontSize:7, fontWeight:700, cursor:"pointer",
-                    border:`1px solid #1E4F8C44`, borderRadius:3, background:"#E6EFF9", color:"#1E4F8C",
-                    fontFamily:"'Outfit',sans-serif" }}>
+                    border:`1px solid #3B3B3B44`, borderRadius:3, background:"#F0F0F0", color:"#3B3B3B",
+                    fontFamily:"'DM Sans',sans-serif" }}>
                   Usar {mesesCrono}m
                 </button>
                 <button onClick={()=>sincronizarCrono(true)}
                   style={{ flex:1, padding:"3px 4px", fontSize:7, fontWeight:700, cursor:"pointer",
-                    border:`1px solid #1E6B4244`, borderRadius:3, background:"#E8F4EE", color:"#1E6B42",
-                    fontFamily:"'Outfit',sans-serif" }}>
+                    border:`1px solid #11111144`, borderRadius:3, background:"#E8F4EE", color:"#111111",
+                    fontFamily:"'DM Sans',sans-serif" }}>
                   {mesesCrono}m + 1 cierre
                 </button>
               </div>
             </div>
           )}
           {mesesCrono > 0 && !hayDiscrepancia && (
-            <div style={{ fontSize:7, color:"#1E6B42", marginTop:4 }}>✅ Sincronizado con cronograma</div>
+            <div style={{ fontSize:7, color:"#111111", marginTop:4 }}>✅ Sincronizado con cronograma</div>
           )}
         </Card>
       </div>
@@ -6172,11 +6172,11 @@ function TGG({ d, set, r }) {
               ].map((opt,i) => (
                 <button key={opt.id} onClick={()=>set("ggCriterio",opt.id)}
                   style={{ flex:1, padding:"5px 4px", fontSize:9, cursor:"pointer", fontWeight:600,
-                    border:`1px solid ${C.border}`, fontFamily:"'Outfit',sans-serif",
+                    border:`1px solid ${C.border}`, fontFamily:"'DM Sans',sans-serif",
                     borderRadius:i===0?"4px 0 0 4px":i===2?"0 4px 4px 0":"0",
                     borderLeft:i>0?"none":undefined,
-                    background:criterio===opt.id?"#E6EFF9":"#fff",
-                    color:criterio===opt.id?"#1E4F8C":C.inkMid }}>
+                    background:criterio===opt.id?"#F0F0F0":"#fff",
+                    color:criterio===opt.id?"#3B3B3B":C.inkMid }}>
                   {opt.lbl}
                 </button>
               ))}
@@ -6187,14 +6187,14 @@ function TGG({ d, set, r }) {
                "Cada actividad recibe GG proporcional a su componente de mano de obra"}
             </div>
           </div>
-          <div style={{ flex:1, background:"#E6EFF9", borderRadius:4, padding:"8px 12px" }}>
-            <div style={{ fontSize:11, color:"#1E4F8C" }}>
+          <div style={{ flex:1, background:"#F0F0F0", borderRadius:4, padding:"8px 12px" }}>
+            <div style={{ fontSize:11, color:"#3B3B3B" }}>
               💡 Estos gastos se <strong>distribuyen en cada actividad</strong> como coeficiente indirecto.
               {d.modoCalcObra==="aiu"
                 ? ` En AIU → entra como A (Administración) = ${(pctGG*100).toFixed(2)}%. Se multiplica: CD × (1 + ${(pctGG*100).toFixed(1)}% + I + U).`
                 : ` En modo margen → GG = ${(pctGG*100).toFixed(2)}% entra en el denominador: PVP = CD / (1 − M − GC − GG) × (1 − GF).`}
             </div>
-            <div style={{ fontSize:10, color:"#1E4F8C", marginTop:4, fontWeight:600 }}>
+            <div style={{ fontSize:10, color:"#3B3B3B", marginTop:4, fontWeight:600 }}>
               No visible en presupuesto de venta salvo que se solicite la estructura de costos.
             </div>
           </div>
@@ -6210,13 +6210,13 @@ function TGG({ d, set, r }) {
             <div style={{ padding:"8px 14px", background:"#F5F4F1", borderBottom:`1px solid ${C.border}`,
               display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <div style={{ fontSize:12, fontWeight:700, color:C.ink }}>{cat.label}</div>
-              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:12, fontWeight:700, color:catTotal>0?"#1E6B42":"#CCC" }}>
+              <div style={{ fontFamily:"'DM Mono',monospace", fontSize:12, fontWeight:700, color:catTotal>0?"#111111":"#CCC" }}>
                 {fmt(catTotal)} {moneda}
               </div>
             </div>
             <table style={{ width:"100%", borderCollapse:"collapse" }}>
               <thead>
-                <tr style={{ background:"#FAFAF8" }}>
+                <tr style={{ background:"#FFFFFF" }}>
                   <th style={{ padding:"4px 8px", fontSize:8, fontWeight:700, color:"#888", textTransform:"uppercase", textAlign:"left", width:"40%" }}>Descripción</th>
                   <th style={{ padding:"4px 8px", fontSize:8, fontWeight:700, color:"#888", textTransform:"uppercase", textAlign:"center", width:70 }}>Unidad</th>
                   <th style={{ padding:"4px 8px", fontSize:8, fontWeight:700, color:"#888", textTransform:"uppercase", textAlign:"center", width:80 }}>Cant.</th>
@@ -6249,7 +6249,7 @@ function TGG({ d, set, r }) {
                         style={{ ...inp, width:"100%", textAlign:"right", fontFamily:"'DM Mono',monospace" }}/>
                     </td>
                     <td style={{ padding:"4px 8px", textAlign:"right", fontFamily:"'DM Mono',monospace", fontWeight:700,
-                      fontSize:11, color:subtotalItem(it)>0?"#1E6B42":"#CCC" }}>
+                      fontSize:11, color:subtotalItem(it)>0?"#111111":"#CCC" }}>
                       {fmt(subtotalItem(it))}
                     </td>
                     <td style={{ padding:"4px 4px" }}>
@@ -6265,7 +6265,7 @@ function TGG({ d, set, r }) {
               <button onClick={()=>addItem(cat.id)}
                 style={{ width:"100%", padding:"4px 8px", fontSize:10, cursor:"pointer",
                   border:`1px dashed ${C.border}`, borderRadius:3, background:"#fff", color:C.inkMid,
-                  fontFamily:"'Outfit',sans-serif" }}>
+                  fontFamily:"'DM Sans',sans-serif" }}>
                 + Añadir ítem
               </button>
             </div>
@@ -6277,13 +6277,13 @@ function TGG({ d, set, r }) {
       <Card style={{ padding:"14px 18px", background:"#E8F4EE", border:"1px solid #B8DEC9" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center" }}>
           <div>
-            <div style={{ fontSize:11, fontWeight:700, color:"#1E6B42", textTransform:"uppercase", letterSpacing:0.5 }}>Total gastos generales</div>
-            <div style={{ fontSize:10, color:"#1E6B42", marginTop:2 }}>
+            <div style={{ fontSize:11, fontWeight:700, color:"#111111", textTransform:"uppercase", letterSpacing:0.5 }}>Total gastos generales</div>
+            <div style={{ fontSize:10, color:"#111111", marginTop:2 }}>
               Incidencia: <strong>{(pctGG*100).toFixed(2)}%</strong> sobre costo directo →
               {d.modoCalcObra==="aiu" ? ` AIU → A = ${(pctGG*100).toFixed(2)}%` : ` Coeficiente GG = ${(pctGG*100).toFixed(2)}%`}
             </div>
           </div>
-          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:22, fontWeight:800, color:"#1E6B42" }}>
+          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:22, fontWeight:800, color:"#111111" }}>
             {fmt(totalGG)} <span style={{ fontSize:11, fontWeight:600 }}>{moneda}</span>
           </div>
         </div>
@@ -6335,7 +6335,7 @@ function TGG({ d, set, r }) {
             <div style={{ overflowX:"auto" }}>
               <table style={{ width:"100%", borderCollapse:"collapse" }}>
                 <thead>
-                  <tr style={{ background:"#FAFAF8" }}>
+                  <tr style={{ background:"#FFFFFF" }}>
                     <th style={{ padding:"4px 8px", fontSize:8, fontWeight:700, color:"#888", textAlign:"left" }}>Actividad</th>
                     <th style={{ padding:"4px 8px", fontSize:8, fontWeight:700, color:"#888", textAlign:"right" }}>CD</th>
                     <th style={{ padding:"4px 8px", fontSize:8, fontWeight:700, color:"#888", textAlign:"right" }}>Peso %</th>
@@ -6357,18 +6357,18 @@ function TGG({ d, set, r }) {
                         <td style={{ padding:"3px 8px", fontSize:10, textAlign:"right", fontFamily:"'DM Mono',monospace" }}>
                           {fmt(l.precioCD||0)}
                         </td>
-                        <td style={{ padding:"3px 8px", fontSize:10, textAlign:"right", fontFamily:"'DM Mono',monospace", color:"#1E4F8C" }}>
+                        <td style={{ padding:"3px 8px", fontSize:10, textAlign:"right", fontFamily:"'DM Mono',monospace", color:"#3B3B3B" }}>
                           {(w*100).toFixed(1)}%
                         </td>
-                        <td style={{ padding:"3px 8px", fontSize:10, textAlign:"right", fontFamily:"'DM Mono',monospace", fontWeight:600, color:"#1E6B42" }}>
+                        <td style={{ padding:"3px 8px", fontSize:10, textAlign:"right", fontFamily:"'DM Mono',monospace", fontWeight:600, color:"#111111" }}>
                           {fmt(ggLine)}
                         </td>
                         <td style={{ padding:"3px 8px", fontSize:10, textAlign:"right", fontFamily:"'DM Mono',monospace", fontWeight:700 }}>
                           {fmt(cdGG)}
                         </td>
                         <td style={{ padding:"3px 8px", fontSize:10, textAlign:"right" }}>
-                          <div style={{ background:"#E6EFF9", borderRadius:10, height:6, overflow:"hidden" }}>
-                            <div style={{ background:"#1E4F8C", height:"100%", width:`${Math.min(w*100*3,100)}%`, borderRadius:10 }}/>
+                          <div style={{ background:"#F0F0F0", borderRadius:10, height:6, overflow:"hidden" }}>
+                            <div style={{ background:"#3B3B3B", height:"100%", width:`${Math.min(w*100*3,100)}%`, borderRadius:10 }}/>
                           </div>
                         </td>
                       </tr>
@@ -6553,7 +6553,7 @@ function TFlu({ d, set, r }) {
     const totalRet = series.reduce((s,d2) => s+d2.retM, 0);
     const totalCos = series.reduce((s,d2) => s+d2.cos, 0);
     const lastAcum = series.length > 0 ? series[series.length-1].acum : 0;
-    const S = `@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');@page{size:landscape;margin:10mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Outfit',sans-serif;color:#111;font-size:8px;padding:16px}.header{display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:3px solid #111}.logo{font-size:14px;font-weight:800;letter-spacing:3px}.logo-sub{font-size:6px;letter-spacing:2px;color:#888;text-transform:uppercase}h2{font-size:11px;margin:10px 0 4px}.kpis{display:flex;gap:14px;margin-bottom:8px;font-size:8px;color:#555}.kpi strong{color:#111}table{width:100%;border-collapse:collapse}th{background:#F5F4F1;padding:2px 4px;font-size:6px;text-transform:uppercase;letter-spacing:.3px;font-weight:700;color:#888;text-align:right;border-bottom:1px solid #E4E1DB}th:first-child{text-align:left}td{padding:2px 4px;font-size:7px;text-align:right;border-bottom:1px solid #F0EEE9}td:first-child{text-align:left;font-weight:600;background:#FAFAF8}td.section{background:#E8E6E1;font-weight:700;font-size:6px;text-transform:uppercase;letter-spacing:.4px;text-align:left;padding:3px 4px}.mono{font-family:'DM Mono',monospace}.green{color:#1E6B42}.red{color:#AE2C2C}.bold{font-weight:700}.footer{margin-top:8px;padding-top:4px;border-top:1px solid #E4E1DB;display:flex;justify-content:space-between;font-size:6px;color:#888}`;
+    const S = `@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');@page{size:landscape;margin:10mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;color:#111;font-size:8px;padding:16px}.header{display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:3px solid #111}.logo{font-size:14px;font-weight:800;letter-spacing:3px}.logo-sub{font-size:6px;letter-spacing:2px;color:#888;text-transform:uppercase}h2{font-size:11px;margin:10px 0 4px}.kpis{display:flex;gap:14px;margin-bottom:8px;font-size:8px;color:#555}.kpi strong{color:#111}table{width:100%;border-collapse:collapse}th{background:#F5F4F1;padding:2px 4px;font-size:6px;text-transform:uppercase;letter-spacing:.3px;font-weight:700;color:#888;text-align:right;border-bottom:1px solid #E0E0E0}th:first-child{text-align:left}td{padding:2px 4px;font-size:7px;text-align:right;border-bottom:1px solid #F5F5F5}td:first-child{text-align:left;font-weight:600;background:#FFFFFF}td.section{background:#E8E6E1;font-weight:700;font-size:6px;text-transform:uppercase;letter-spacing:.4px;text-align:left;padding:3px 4px}.mono{font-family:'DM Mono',monospace}.green{color:#111111}.red{color:#B91C1C}.bold{font-weight:700}.footer{margin-top:8px;padding-top:4px;border-top:1px solid #E0E0E0;display:flex;justify-content:space-between;font-size:6px;color:#888}`;
     let html = `<html><head><title>Flujo de caja - ${d.codigoOferta||""}</title><style>${S}</style></head><body>`;
     html += `<div class="header"><div><div class="logo">HABITARIS</div><div class="logo-sub">Arquitectura · Interiorismo · Construcción</div></div>`;
     html += `<div style="text-align:right"><div style="font-size:12px;font-weight:700">Flujo de Caja Proyectado</div>`;
@@ -6566,7 +6566,7 @@ function TFlu({ d, set, r }) {
 
     html += `<table><thead><tr><th>Concepto</th>`;
     series.forEach(s => { html += `<th>${s.m===0?"M0":s.m+"°"}</th>`; });
-    html += `<th style="background:#E6F4EC;color:#1E6B42">Total</th></tr></thead><tbody>`;
+    html += `<th style="background:#E6F4EC;color:#111111">Total</th></tr></thead><tbody>`;
 
     // Avance %
     if (modoCobro !== "hitos") {
@@ -6624,7 +6624,7 @@ function TFlu({ d, set, r }) {
 
   // ── UI ──
   const inp = { border:`1px solid ${C.border}`, borderRadius:4, padding:"5px 8px",
-    fontSize:12, fontFamily:"'Outfit',sans-serif", background:C.bg };
+    fontSize:12, fontFamily:"'DM Sans',sans-serif", background:C.bg };
   const modos = [
     { id:"hitos", lbl:"Hitos de pago", desc:"Pagos en fechas específicas" },
     { id:"avance", lbl:"Avance s/ anticipo", desc:"Certificación mensual por avance" },
@@ -6641,7 +6641,7 @@ function TFlu({ d, set, r }) {
         </div>
         <button onClick={printFlujoCaja}
           style={{ padding:"7px 16px", background:"#111", color:"#fff", border:"none", borderRadius:5,
-            fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+            fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
             display:"flex", alignItems:"center", gap:6 }}>
           <FileText size={12}/> Vista PDF
         </button>
@@ -6657,7 +6657,7 @@ function TFlu({ d, set, r }) {
             {modos.map((opt,i) => (
               <button key={opt.id} onClick={()=>set("modoCobro",opt.id)}
                 style={{ flex:1, padding:"8px 6px", fontSize:10, cursor:"pointer", fontWeight:600,
-                  border:`1px solid ${C.ink}`, fontFamily:"'Outfit',sans-serif",
+                  border:`1px solid ${C.ink}`, fontFamily:"'DM Sans',sans-serif",
                   borderRadius:i===0?"5px 0 0 5px":i===2?"0 5px 5px 0":"0",
                   borderLeft:i>0?"none":undefined,
                   background:modoCobro===opt.id?C.ink:"#fff",
@@ -6682,14 +6682,14 @@ function TFlu({ d, set, r }) {
             </div>
             {modoCobro === "avance_anticipo" && (
               <div style={{ background:"#FFF8E7", borderRadius:4, padding:"6px 10px" }}>
-                <div style={{ fontSize:8, fontWeight:700, color:"#7A5218", textTransform:"uppercase" }}>% Anticipo</div>
+                <div style={{ fontSize:8, fontWeight:700, color:"#8C6A00", textTransform:"uppercase" }}>% Anticipo</div>
                 <div style={{ display:"flex", alignItems:"center", gap:4 }}>
                   <input type="number" value={(pctAnticipo*100).toFixed(0)} min={0} max={100}
                     onChange={e => set("fluPctAnticipo", +e.target.value/100)}
                     style={{ ...inp, width:50, fontSize:14, fontWeight:700, textAlign:"center", padding:"2px 6px" }}/>
-                  <span style={{ fontSize:12, fontWeight:600, color:"#7A5218" }}>%</span>
+                  <span style={{ fontSize:12, fontWeight:600, color:"#8C6A00" }}>%</span>
                 </div>
-                <div style={{ fontSize:8, color:"#7A5218" }}>{fmt(pctAnticipo * pvp)} {moneda}</div>
+                <div style={{ fontSize:8, color:"#8C6A00" }}>{fmt(pctAnticipo * pvp)} {moneda}</div>
               </div>
             )}
             {modoCobro === "hitos" && (
@@ -6736,17 +6736,17 @@ function TFlu({ d, set, r }) {
               {[{id:"cronograma",lbl:"📊 Desde cronograma"},{id:"manual",lbl:"✏️ Manual"}].map((opt,i) => (
                 <button key={opt.id} onClick={()=>set("fuenteAvance",opt.id)}
                   style={{ flex:1, padding:"6px 10px", fontSize:10, cursor:"pointer", fontWeight:600,
-                    border:`1px solid ${C.border}`, fontFamily:"'Outfit',sans-serif",
+                    border:`1px solid ${C.border}`, fontFamily:"'DM Sans',sans-serif",
                     borderRadius:i===0?"4px 0 0 4px":"0 4px 4px 0", borderLeft:i>0?"none":undefined,
-                    background:fuenteAvance===opt.id?"#E6EFF9":"#fff",
-                    color:fuenteAvance===opt.id?"#1E4F8C":C.inkMid }}>
+                    background:fuenteAvance===opt.id?"#F0F0F0":"#fff",
+                    color:fuenteAvance===opt.id?"#3B3B3B":C.inkMid }}>
                   {opt.lbl}
                 </button>
               ))}
             </div>
 
             {fuenteAvance === "cronograma" ? (
-              <div style={{ background:"#E6F4EC", borderRadius:4, padding:"8px 10px", fontSize:11, color:"#1E6B42" }}>
+              <div style={{ background:"#E6F4EC", borderRadius:4, padding:"8px 10px", fontSize:11, color:"#111111" }}>
                 ✅ Avance calculado desde <strong>{(d.cronogramaActivos||[]).filter(a=>!a.esCapitulo).length} actividades</strong> del cronograma.
                 El % de avance mensual se distribuye proporcionalmente al valor de cada actividad.
               </div>
@@ -6774,13 +6774,13 @@ function TFlu({ d, set, r }) {
 
             {/* Explanation box */}
             {modoCobro === "avance_anticipo" && (
-              <div style={{ background:"#FFF8E7", borderRadius:4, padding:"8px 10px", fontSize:10, color:"#7A5218", marginTop:8 }}>
+              <div style={{ background:"#FFF8E7", borderRadius:4, padding:"8px 10px", fontSize:10, color:"#8C6A00", marginTop:8 }}>
                 <strong>Anticipo amortizable:</strong> Mes 0 → prefactura {(pctAnticipo*100).toFixed(0)}% ({fmt(pctAnticipo*pvp)}).
                 Desde mes {mesPrimerCobro} → certificación por avance − amortización proporcional del anticipo.
               </div>
             )}
             {modoCobro === "avance" && (
-              <div style={{ background:"#E6EFF9", borderRadius:4, padding:"8px 10px", fontSize:10, color:"#1E4F8C", marginTop:8 }}>
+              <div style={{ background:"#F0F0F0", borderRadius:4, padding:"8px 10px", fontSize:10, color:"#3B3B3B", marginTop:8 }}>
                 <strong>Sin anticipo:</strong> Desde mes {mesPrimerCobro} → certificación directa por % de avance ejecutado.
               </div>
             )}
@@ -6823,7 +6823,7 @@ function TFlu({ d, set, r }) {
             const th = { padding:"5px 6px", fontSize:8, fontWeight:700, color:"#666", textTransform:"uppercase",
               letterSpacing:0.3, borderBottom:"2px solid #CCC", textAlign:"right", whiteSpace:"nowrap" };
             const tdL = { padding:"4px 8px", fontSize:10, fontWeight:600, color:"#333", whiteSpace:"nowrap",
-              borderRight:"1px solid #E4E1DB", background:"#F5F4F1", position:"sticky", left:0, zIndex:1, minWidth:160 };
+              borderRight:"1px solid #E0E0E0", background:"#F5F4F1", position:"sticky", left:0, zIndex:1, minWidth:160 };
             const td = (v, color) => ({ padding:"4px 6px", fontSize:10, fontFamily:"'DM Mono',monospace",
               textAlign:"right", color: v===0||v===undefined ? "#CCC" : (color||"#333"), whiteSpace:"nowrap" });
             const fmtS = (n) => n===0?"—":new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(n);
@@ -6845,71 +6845,71 @@ function TFlu({ d, set, r }) {
                 <thead><tr>
                   <th style={{ ...th, textAlign:"left", position:"sticky", left:0, background:"#F5F4F1", zIndex:2, minWidth:160 }}>CONCEPTO</th>
                   {mArr.map(s=><th key={s.m} style={th}>{s.m===0?"MES 0":s.m+"°"}</th>)}
-                  <th style={{ ...th, background:"#E8F4EE", color:"#1E6B42" }}>TOTAL</th>
+                  <th style={{ ...th, background:"#E8F4EE", color:"#111111" }}>TOTAL</th>
                 </tr></thead>
                 <tbody>
                   {/* Avance % */}
                   {modoCobro !== "hitos" && (<>
-                    {secHdr("% AVANCE","#E6EFF9")}
+                    {secHdr("% AVANCE","#F0F0F0")}
                     <tr>
                       <td style={tdL}>% Avance ejecutado</td>
-                      {mArr.map(s=><td key={s.m} style={td(s.avPct,"#1E4F8C")}>{s.avPct>0?(s.avPct*100).toFixed(1)+"%":"—"}</td>)}
-                      <td style={td(1,"#1E4F8C")}><strong>{(mArr.reduce((a,s)=>a+s.avPct,0)*100).toFixed(1)}%</strong></td>
+                      {mArr.map(s=><td key={s.m} style={td(s.avPct,"#3B3B3B")}>{s.avPct>0?(s.avPct*100).toFixed(1)+"%":"—"}</td>)}
+                      <td style={td(1,"#3B3B3B")}><strong>{(mArr.reduce((a,s)=>a+s.avPct,0)*100).toFixed(1)}%</strong></td>
                     </tr>
                   </>)}
 
                   {secHdr("COBROS","#D4EDDA")}
                   <tr>
                     <td style={tdL}>{modoCobro==="hitos"?"Cobros hitos":"Cobro neto"}</td>
-                    {mArr.map(s=><td key={s.m} style={td(s.cobro,"#1E6B42")}>{fmtS(s.cobro)}</td>)}
-                    <td style={td(totCobro,"#1E6B42")}><strong>{fmtS(totCobro)}</strong></td>
+                    {mArr.map(s=><td key={s.m} style={td(s.cobro,"#111111")}>{fmtS(s.cobro)}</td>)}
+                    <td style={td(totCobro,"#111111")}><strong>{fmtS(totCobro)}</strong></td>
                   </tr>
                   {modoCobro==="avance_anticipo" && (<>
                     <tr>
                       <td style={tdL}>↳ Anticipo ({(pctAnticipo*100).toFixed(0)}%)</td>
-                      {mArr.map(s=><td key={s.m} style={td(s.anticipoM,"#7A5218")}>{fmtS(s.anticipoM)}</td>)}
-                      <td style={td(mArr.reduce((a,s)=>a+s.anticipoM,0),"#7A5218")}><strong>{fmtS(mArr.reduce((a,s)=>a+s.anticipoM,0))}</strong></td>
+                      {mArr.map(s=><td key={s.m} style={td(s.anticipoM,"#8C6A00")}>{fmtS(s.anticipoM)}</td>)}
+                      <td style={td(mArr.reduce((a,s)=>a+s.anticipoM,0),"#8C6A00")}><strong>{fmtS(mArr.reduce((a,s)=>a+s.anticipoM,0))}</strong></td>
                     </tr>
                     <tr>
                       <td style={tdL}>↳ Amortización anticipo</td>
-                      {mArr.map(s=><td key={s.m} style={td(s.amortM,"#7A5218")}>{fmtS(s.amortM)}</td>)}
-                      <td style={td(mArr.reduce((a,s)=>a+s.amortM,0),"#7A5218")}><strong>{fmtS(mArr.reduce((a,s)=>a+s.amortM,0))}</strong></td>
+                      {mArr.map(s=><td key={s.m} style={td(s.amortM,"#8C6A00")}>{fmtS(s.amortM)}</td>)}
+                      <td style={td(mArr.reduce((a,s)=>a+s.amortM,0),"#8C6A00")}><strong>{fmtS(mArr.reduce((a,s)=>a+s.amortM,0))}</strong></td>
                     </tr>
                   </>)}
 
                   {secHdr("IMPUESTOS","#FFF3CD")}
                   <tr>
                     <td style={tdL}>IVA facturado</td>
-                    {mArr.map(s=><td key={s.m} style={td(s.ivaM,"#7A5218")}>{fmtS(s.ivaM)}</td>)}
-                    <td style={td(totIva,"#7A5218")}><strong>{fmtS(totIva)}</strong></td>
+                    {mArr.map(s=><td key={s.m} style={td(s.ivaM,"#8C6A00")}>{fmtS(s.ivaM)}</td>)}
+                    <td style={td(totIva,"#8C6A00")}><strong>{fmtS(totIva)}</strong></td>
                   </tr>
 
                   {pais === "CO" && (<>
                     {secHdr("RETENCIONES","#FCE4EC")}
                     <tr>
                       <td style={tdL}>Total retenciones</td>
-                      {mArr.map(s=><td key={s.m} style={td(s.retM,"#AE2C2C")}>{fmtS(s.retM)}</td>)}
-                      <td style={td(totRet,"#AE2C2C")}><strong>{fmtS(totRet)}</strong></td>
+                      {mArr.map(s=><td key={s.m} style={td(s.retM,"#B91C1C")}>{fmtS(s.retM)}</td>)}
+                      <td style={td(totRet,"#B91C1C")}><strong>{fmtS(totRet)}</strong></td>
                     </tr>
                   </>)}
 
                   {secHdr("COSTOS","#F8D7DA")}
                   <tr>
                     <td style={tdL}>{cronoActs.length>0?"Costos (cronograma)":"Costos (distribución lineal)"}</td>
-                    {mArr.map(s=><td key={s.m} style={td(s.cos,"#AE2C2C")}>{fmtS(s.cos)}</td>)}
-                    <td style={td(totCos,"#AE2C2C")}><strong>{fmtS(totCos)}</strong></td>
+                    {mArr.map(s=><td key={s.m} style={td(s.cos,"#B91C1C")}>{fmtS(s.cos)}</td>)}
+                    <td style={td(totCos,"#B91C1C")}><strong>{fmtS(totCos)}</strong></td>
                   </tr>
 
                   {secHdr("RESULTADO","#D6E9F8")}
                   <tr style={{ background:"#F0F7FF" }}>
                     <td style={{ ...tdL, background:"#F0F7FF", fontWeight:700 }}>Caja mensual</td>
-                    {mArr.map(s=><td key={s.m} style={{ ...td(s.neto, s.neto>=0?"#1E6B42":"#AE2C2C"), fontWeight:700 }}>{fmtS(s.neto)}</td>)}
+                    {mArr.map(s=><td key={s.m} style={{ ...td(s.neto, s.neto>=0?"#111111":"#B91C1C"), fontWeight:700 }}>{fmtS(s.neto)}</td>)}
                     <td style={{ ...td(0), fontWeight:700 }}/>
                   </tr>
                   <tr style={{ background:"#E6F4EC" }}>
                     <td style={{ ...tdL, background:"#E6F4EC", fontWeight:700 }}>Caja acumulada</td>
-                    {mArr.map(s=><td key={s.m} style={{ ...td(s.acum, s.acum>=0?"#1E6B42":"#AE2C2C"), fontWeight:700, fontSize:11 }}>{fmtS(s.acum)}</td>)}
-                    <td style={{ ...td(lastAcum, lastAcum>=0?"#1E6B42":"#AE2C2C"), fontWeight:700, fontSize:11 }}><strong>{fmtS(lastAcum)}</strong></td>
+                    {mArr.map(s=><td key={s.m} style={{ ...td(s.acum, s.acum>=0?"#111111":"#B91C1C"), fontWeight:700, fontSize:11 }}>{fmtS(s.acum)}</td>)}
+                    <td style={{ ...td(lastAcum, lastAcum>=0?"#111111":"#B91C1C"), fontWeight:700, fontSize:11 }}><strong>{fmtS(lastAcum)}</strong></td>
                   </tr>
                 </tbody>
               </table>
@@ -7081,12 +7081,12 @@ function TEqu({ d, set }) {
     return { moH, eqH, licH, logH: totalLogH, totalH: moH+eqH+licH+totalLogH, totalMes: (moH+eqH+licH+totalLogH) * ((horasProdAnio||1760) / 12) };
   };
 
-  const inp = { border:`1px solid ${C.border}`, borderRadius:3, padding:"4px 6px", fontSize:11, fontFamily:"'Outfit',sans-serif", background:"#fff" };
+  const inp = { border:`1px solid ${C.border}`, borderRadius:3, padding:"4px 6px", fontSize:11, fontFamily:"'DM Sans',sans-serif", background:"#fff" };
 
   // ── PDF export ──
   const printEquipos = () => {
     const w = window.open("","_blank");
-    const S = `@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');@page{size:portrait;margin:12mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Outfit',sans-serif;color:#111;font-size:9px;padding:20px}.header{display:flex;justify-content:space-between;margin-bottom:12px;padding-bottom:8px;border-bottom:3px solid #111}.logo{font-size:14px;font-weight:800;letter-spacing:3px}.logo-sub{font-size:6px;letter-spacing:2px;color:#888;text-transform:uppercase}.eq-card{border:1.5px solid #1E4F8C;border-radius:6px;margin-bottom:10px;overflow:hidden;page-break-inside:avoid}.eq-header{background:#E6EFF9;padding:6px 12px;border-bottom:1px solid #C4D8EE}.eq-name{font-size:12px;font-weight:700}.eq-sub{font-size:7px;color:#555;margin-top:1px}.eq-body{padding:8px 12px}.section-title{font-size:7px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin:6px 0 3px;padding-bottom:2px;border-bottom:1px solid #F0EEE9}table{width:100%;border-collapse:collapse}th{font-size:6px;font-weight:700;color:#888;text-transform:uppercase;text-align:left;padding:2px 4px;border-bottom:1px solid #E4E1DB}td{padding:2px 4px;font-size:8px;border-bottom:1px solid #F0EEE9}.mono{font-family:'DM Mono',monospace}.bold{font-weight:700}.r{text-align:right}.blue{color:#1E4F8C}.green{color:#1E6B42}.tag{font-size:7px;background:#FFF8E7;color:#7A5218;padding:1px 5px;border-radius:3px;display:inline-block;margin:1px}.tag-blue{background:#E6EFF9;color:#1E4F8C}.cost-box{background:#F5F4F1;border-radius:4px;padding:6px 10px;margin-top:6px;font-size:9px}.cost-row{display:flex;justify-content:space-between;margin-bottom:2px}.cost-total{border-top:1px solid #DDD;padding-top:3px;margin-top:3px;font-weight:700}.footer{margin-top:14px;padding-top:4px;border-top:1px solid #E4E1DB;display:flex;justify-content:space-between;font-size:7px;color:#888}`;
+    const S = `@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');@page{size:portrait;margin:12mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;color:#111;font-size:9px;padding:20px}.header{display:flex;justify-content:space-between;margin-bottom:12px;padding-bottom:8px;border-bottom:3px solid #111}.logo{font-size:14px;font-weight:800;letter-spacing:3px}.logo-sub{font-size:6px;letter-spacing:2px;color:#888;text-transform:uppercase}.eq-card{border:1.5px solid #3B3B3B;border-radius:6px;margin-bottom:10px;overflow:hidden;page-break-inside:avoid}.eq-header{background:#F0F0F0;padding:6px 12px;border-bottom:1px solid #C4D8EE}.eq-name{font-size:12px;font-weight:700}.eq-sub{font-size:7px;color:#555;margin-top:1px}.eq-body{padding:8px 12px}.section-title{font-size:7px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;margin:6px 0 3px;padding-bottom:2px;border-bottom:1px solid #F5F5F5}table{width:100%;border-collapse:collapse}th{font-size:6px;font-weight:700;color:#888;text-transform:uppercase;text-align:left;padding:2px 4px;border-bottom:1px solid #E0E0E0}td{padding:2px 4px;font-size:8px;border-bottom:1px solid #F5F5F5}.mono{font-family:'DM Mono',monospace}.bold{font-weight:700}.r{text-align:right}.blue{color:#3B3B3B}.green{color:#111111}.tag{font-size:7px;background:#FFF8E7;color:#8C6A00;padding:1px 5px;border-radius:3px;display:inline-block;margin:1px}.tag-blue{background:#F0F0F0;color:#3B3B3B}.cost-box{background:#F5F4F1;border-radius:4px;padding:6px 10px;margin-top:6px;font-size:9px}.cost-row{display:flex;justify-content:space-between;margin-bottom:2px}.cost-total{border-top:1px solid #DDD;padding-top:3px;margin-top:3px;font-weight:700}.footer{margin-top:14px;padding-top:4px;border-top:1px solid #E0E0E0;display:flex;justify-content:space-between;font-size:7px;color:#888}`;
 
     let html = `<html><head><title>Equipos - ${d.codigoOferta||""}</title><style>${S}</style></head><body>`;
     html += `<div class="header"><div><div class="logo">HABITARIS</div><div class="logo-sub">Arquitectura · Interiorismo · Construcción</div></div>`;
@@ -7156,7 +7156,7 @@ function TEqu({ d, set }) {
           {equipos.length > 0 && (
             <button onClick={printEquipos}
               style={{ padding:"6px 14px", background:"#111", color:"#fff", border:"none", borderRadius:5,
-                fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+                fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
                 display:"flex", alignItems:"center", gap:4 }}>
               <FileText size={11}/> Vista PDF
             </button>
@@ -7168,10 +7168,10 @@ function TEqu({ d, set }) {
       <Card style={{ padding:"10px 14px", marginBottom:14, background: useFallback ? "#FFF8E7" : "#E6F4EC" }}>
         <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", fontSize:11 }}>
           {useFallback ? (
-            <><span style={{ color:"#7A5218" }}>⚠️ <strong>Sin cargos en RRHH</strong> — Usando tarifas predeterminadas.
+            <><span style={{ color:"#8C6A00" }}>⚠️ <strong>Sin cargos en RRHH</strong> — Usando tarifas predeterminadas.
               Crea cargos en el módulo <strong>RRHH → Cargos</strong> para que se reflejen aquí.</span></>
           ) : (
-            <><span style={{ color:"#1E6B42" }}>✅ <strong>{rrhhCargos.filter(c=>c.activo!==false).length} cargos</strong> desde RRHH ·
+            <><span style={{ color:"#111111" }}>✅ <strong>{rrhhCargos.filter(c=>c.activo!==false).length} cargos</strong> desde RRHH ·
               <strong>{activosActivos.length} activos</strong> · <strong>{licenciasActivas.length} licencias</strong> ·
               Horas productivas/año: <strong>{Math.round(horasProdAnio)}</strong>
               {logItems.length > 0 && <> · <strong>{logItems.length} ítems</strong> desde Logística</>}
@@ -7192,9 +7192,9 @@ function TEqu({ d, set }) {
             const cost = calcCosto(eq);
             const isE = editId === eq.id;
             return (
-              <Card key={eq.id} style={{ padding:0, overflow:"hidden", border:isE?"2px solid #1E4F8C":`1px solid ${C.border}` }}>
+              <Card key={eq.id} style={{ padding:0, overflow:"hidden", border:isE?"2px solid #3B3B3B":`1px solid ${C.border}` }}>
                 {/* Header */}
-                <div style={{ padding:"10px 14px", background:isE?"#E6EFF9":"#F5F4F1", borderBottom:`1px solid ${C.border}`,
+                <div style={{ padding:"10px 14px", background:isE?"#F0F0F0":"#F5F4F1", borderBottom:`1px solid ${C.border}`,
                   display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                   <div style={{ flex:1 }}>
                     {isE ? <input value={eq.nombre} onChange={e=>updEquipo(eq.id,"nombre",e.target.value)}
@@ -7205,7 +7205,7 @@ function TEqu({ d, set }) {
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:4 }}>
-                    <button onClick={()=>setEditId(isE?null:eq.id)} style={{ background:"none",border:"none",cursor:"pointer",color:isE?"#1E4F8C":C.inkLight,padding:4 }}><Edit2 size={13}/></button>
+                    <button onClick={()=>setEditId(isE?null:eq.id)} style={{ background:"none",border:"none",cursor:"pointer",color:isE?"#3B3B3B":C.inkLight,padding:4 }}><Edit2 size={13}/></button>
                     <button onClick={()=>delEquipo(eq.id)} style={{ background:"none",border:"none",cursor:"pointer",color:"#C44",padding:4 }}><Trash2 size={13}/></button>
                   </div>
                 </div>
@@ -7228,7 +7228,7 @@ function TEqu({ d, set }) {
                         const ch = getCostoHora(c.cargoId);
                         return (
                           <React.Fragment key={c.id}>
-                          <tr style={{ borderBottom:`1px solid #F0EEE9` }}>
+                          <tr style={{ borderBottom:`1px solid #F5F5F5` }}>
                             <td style={{ padding:"3px 4px" }}>
                               {isE ? <select value={c.cargoId} onChange={e=>updCargo(eq.id,c.id,"cargoId",e.target.value)}
                                 style={{ ...inp, width:"100%", fontSize:10 }}>
@@ -7252,7 +7252,7 @@ function TEqu({ d, set }) {
                               {(c.recursosAsignados || EPP_DEFAULTS_POR_CARGO[c.cargoId] || []).map(cod => {
                                 const rec = getRecursoByCodigo(cod);
                                 return rec ? (
-                                  <span key={cod} style={{ fontSize:8, background:"#FFF8E7", color:"#7A5218", padding:"1px 5px",
+                                  <span key={cod} style={{ fontSize:8, background:"#FFF8E7", color:"#8C6A00", padding:"1px 5px",
                                     borderRadius:3, display:"inline-flex", alignItems:"center", gap:2 }}>
                                     {FAMILIA_ICONS_CAT[rec.familia]||"📦"} <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:600 }}>{cod}</span> {rec.nombre}
                                     {isE && <button onClick={()=>{
@@ -7293,7 +7293,7 @@ function TEqu({ d, set }) {
                     {(eq.herrAsignadas || []).map(cod => {
                       const rec = getRecursoByCodigo(cod);
                       return rec ? (
-                        <span key={cod} style={{ fontSize:8, background:"#E6EFF9", color:"#1E4F8C", padding:"2px 6px",
+                        <span key={cod} style={{ fontSize:8, background:"#F0F0F0", color:"#3B3B3B", padding:"2px 6px",
                           borderRadius:3, display:"inline-flex", alignItems:"center", gap:2 }}>
                           {FAMILIA_ICONS_CAT[rec.familia]||"🔧"} <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:600 }}>{cod}</span> {rec.nombre}
                           {isE && <button onClick={()=>{
@@ -7323,7 +7323,7 @@ function TEqu({ d, set }) {
                       const matchKey = Object.keys(HERR_DEFAULTS_POR_EQUIPO).find(k => eq.nombre?.toLowerCase().includes(k.replace("eq_","").replace("_"," ")));
                       return matchKey ? (
                         <button onClick={()=>updEquipo(eq.id,"herrAsignadas",[...(eq.herrAsignadas||[]),...HERR_DEFAULTS_POR_EQUIPO[matchKey]])}
-                          style={{ fontSize:8, padding:"2px 8px", background:"#E6F4EC", border:"1px solid #1E6B42", borderRadius:3, color:"#1E6B42", cursor:"pointer", fontWeight:600 }}>
+                          style={{ fontSize:8, padding:"2px 8px", background:"#E6F4EC", border:"1px solid #111111", borderRadius:3, color:"#111111", cursor:"pointer", fontWeight:600 }}>
                           ⚡ Cargar defaults
                         </button>
                       ) : null;
@@ -7344,7 +7344,7 @@ function TEqu({ d, set }) {
                             const act = rrhhActivos.find(x=>x.id===a.activoId);
                             const ch = costoHoraActivo(a.activoId);
                             return (
-                              <tr key={a.id} style={{ borderBottom:`1px solid #F0EEE9` }}>
+                              <tr key={a.id} style={{ borderBottom:`1px solid #F5F5F5` }}>
                                 <td style={{ padding:"2px 4px" }}>
                                   {isE ? <select value={a.activoId} onChange={e=>updActivo(eq.id,a.id,"activoId",e.target.value)}
                                     style={{ ...inp, width:"100%", fontSize:10 }}>
@@ -7382,7 +7382,7 @@ function TEqu({ d, set }) {
                             const lic = rrhhLicencias.find(x=>x.id===l.licId);
                             const ch = lic ? (lic.costoAnual||0) / (horasProdAnio||1760) : 0;
                             return (
-                              <tr key={l.id} style={{ borderBottom:`1px solid #F0EEE9` }}>
+                              <tr key={l.id} style={{ borderBottom:`1px solid #F5F5F5` }}>
                                 <td style={{ padding:"2px 4px" }}>
                                   {isE ? <select value={l.licId} onChange={e=>updLic(eq.id,l.id,"licId",e.target.value)}
                                     style={{ ...inp, width:"100%", fontSize:10 }}>
@@ -7435,7 +7435,7 @@ function TEqu({ d, set }) {
                               const item = logItems.find(x=>x.id===li.itemId);
                               const ch = costoHoraLogItem(li.itemId);
                               return (
-                                <tr key={li.id} style={{ borderBottom:`1px solid #F0EEE9` }}>
+                                <tr key={li.id} style={{ borderBottom:`1px solid #F5F5F5` }}>
                                   <td style={{ padding:"2px 4px" }}>
                                     {isE ? <select value={li.itemId} onChange={e=>updLogItem(eq.id,li.id,"itemId",e.target.value)}
                                       style={{ ...inp, width:"100%", fontSize:10 }}>
@@ -7497,7 +7497,7 @@ function TEqu({ d, set }) {
                     </div>}
                     <div style={{ display:"flex", justifyContent:"space-between", borderTop:`1px solid ${C.border}`, paddingTop:3, marginTop:3 }}>
                       <span style={{ fontWeight:600 }}>Total / hora</span>
-                      <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:700, color:"#1E4F8C" }}>{fmtN(cost.totalH)} {moneda}</span>
+                      <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:700, color:"#3B3B3B" }}>{fmtN(cost.totalH)} {moneda}</span>
                     </div>
                   </div>
 
@@ -7505,8 +7505,8 @@ function TEqu({ d, set }) {
                   {isE && (
                     <button onClick={()=>setEditId(null)}
                       style={{ width:"100%", marginTop:10, padding:"7px 12px", fontSize:11, fontWeight:700, cursor:"pointer",
-                        border:"none", borderRadius:4, background:"#1E6B42", color:"#fff",
-                        fontFamily:"'Outfit',sans-serif", display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
+                        border:"none", borderRadius:4, background:"#111111", color:"#fff",
+                        fontFamily:"'DM Sans',sans-serif", display:"flex", alignItems:"center", justifyContent:"center", gap:5 }}>
                       <Check size={12}/> Guardar equipo
                     </button>
                   )}
@@ -7562,8 +7562,8 @@ function TMat({ d, set, r }) {
 
   const SLOTS = ["slot1","slot2","slot3"];
   const SLOT_LABELS = { slot1:"Cotización 1", slot2:"Cotización 2", slot3:"Cotización 3" };
-  const SLOT_COLORS = { slot1:"#1E4F8C", slot2:"#7A5218", slot3:"#5B3A8C" };
-  const SLOT_BGS = { slot1:"#E6EFF9", slot2:"#FAF0E0", slot3:"#F0ECF6" };
+  const SLOT_COLORS = { slot1:"#3B3B3B", slot2:"#8C6A00", slot3:"#5B3A8C" };
+  const SLOT_BGS = { slot1:"#F0F0F0", slot2:"#FAF0E0", slot3:"#F0ECF6" };
 
   // ── Auto-generate code ──
   const nextCode = (fam) => {
@@ -7709,7 +7709,7 @@ function TMat({ d, set, r }) {
   // ── PDF ──
   const printInsumos = () => {
     const w = window.open("","_blank");
-    const S = `@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');@page{size:landscape;margin:10mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Outfit',sans-serif;color:#111;font-size:8px;padding:16px}.header{display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:3px solid #111}.logo{font-size:14px;font-weight:800;letter-spacing:3px}h2{font-size:11px;margin:10px 0 4px;border-bottom:2px solid #111;padding-bottom:4px}table{width:100%;border-collapse:collapse;margin-bottom:8px}th{background:#F5F4F1;padding:3px 4px;font-size:6px;text-transform:uppercase;letter-spacing:.3px;font-weight:700;color:#888;text-align:left;border-bottom:1px solid #E4E1DB}td{padding:2px 4px;font-size:7px;border-bottom:1px solid #F0EEE9}.mono{font-family:'DM Mono',monospace}.green{color:#1E6B42}.r{text-align:right}.bold{font-weight:700}.adj{background:#D4EDDA;font-weight:700;color:#1E6B42}.footer{margin-top:10px;padding-top:4px;border-top:1px solid #E4E1DB;display:flex;justify-content:space-between;font-size:6px;color:#888}`;
+    const S = `@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');@page{size:landscape;margin:10mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;color:#111;font-size:8px;padding:16px}.header{display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:3px solid #111}.logo{font-size:14px;font-weight:800;letter-spacing:3px}h2{font-size:11px;margin:10px 0 4px;border-bottom:2px solid #111;padding-bottom:4px}table{width:100%;border-collapse:collapse;margin-bottom:8px}th{background:#F5F4F1;padding:3px 4px;font-size:6px;text-transform:uppercase;letter-spacing:.3px;font-weight:700;color:#888;text-align:left;border-bottom:1px solid #E0E0E0}td{padding:2px 4px;font-size:7px;border-bottom:1px solid #F5F5F5}.mono{font-family:'DM Mono',monospace}.green{color:#111111}.r{text-align:right}.bold{font-weight:700}.adj{background:#D4EDDA;font-weight:700;color:#111111}.footer{margin-top:10px;padding-top:4px;border-top:1px solid #E0E0E0;display:flex;justify-content:space-between;font-size:6px;color:#888}`;
     let html = `<html><head><title>Comparativo - ${d.codigoOferta||""}</title><style>${S}</style></head><body>`;
     html += `<div class="header"><div><div class="logo">HABITARIS</div></div>`;
     html += `<div style="text-align:right"><div style="font-size:13px;font-weight:700">Comparativo de Insumos</div>`;
@@ -7742,8 +7742,8 @@ function TMat({ d, set, r }) {
     setTimeout(() => w.print(), 400);
   };
 
-  const inp = { border:`1px solid ${C.border}`, borderRadius:3, padding:"3px 6px", fontSize:11, fontFamily:"'Outfit',sans-serif", background:"#fff" };
-  const chk = { width:15, height:15, accentColor:"#1E6B42", cursor:"pointer" };
+  const inp = { border:`1px solid ${C.border}`, borderRadius:3, padding:"3px 6px", fontSize:11, fontFamily:"'DM Sans',sans-serif", background:"#fff" };
+  const chk = { width:15, height:15, accentColor:"#111111", cursor:"pointer" };
 
   return (
     <div className="fade">
@@ -7756,24 +7756,24 @@ function TMat({ d, set, r }) {
         <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
           {selIds.length > 0 && (
             <button onClick={()=>setShowAsignar(true)}
-              style={{ padding:"6px 14px", background:"#1E4F8C", color:"#fff", border:"none", borderRadius:5,
-                fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+              style={{ padding:"6px 14px", background:"#3B3B3B", color:"#fff", border:"none", borderRadius:5,
+                fontSize:10, fontWeight:700, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
               📋 Asignar proveedor a {selIds.length} insumos
             </button>
           )}
           <button onClick={()=>{ setNewInsumo({...newInsumo, familia:familiaActiva}); setShowAddInsumo(true); }}
             style={{ padding:"6px 12px", border:`1px solid ${C.border}`, borderRadius:4, background:"#fff",
-              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", color:C.inkMid }}>
+              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", color:C.inkMid }}>
             + Insumo
           </button>
           <button onClick={()=>{ setNewProv({ nombre:"", contacto:"", tel:"", email:"", nit:"" }); setEditProv(null); setShowAddProv(true); }}
             style={{ padding:"6px 12px", border:`1px solid ${C.border}`, borderRadius:4, background:"#fff",
-              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif", color:C.inkMid }}>
+              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif", color:C.inkMid }}>
             + Proveedor
           </button>
           <button onClick={printInsumos}
             style={{ padding:"6px 14px", background:"#111", color:"#fff", border:"none", borderRadius:5,
-              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
               display:"flex", alignItems:"center", gap:4 }}>
             <FileText size={11}/> Vista PDF
           </button>
@@ -7788,12 +7788,12 @@ function TMat({ d, set, r }) {
             <button key={fam.id} onClick={()=>{setFamiliaActiva(fam.id);setSelIds([]);}}
               style={{ padding:"8px 12px", fontSize:10, fontWeight:600, cursor:"pointer",
                 border:`1px solid ${C.border}`, borderLeft:i>0?"none":undefined,
-                fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap",
+                fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap",
                 borderRadius:i===0?"5px 0 0 5px":i===FAMILIAS.length-1?"0 5px 5px 0":"0",
                 background:familiaActiva===fam.id?"#111":"#fff",
                 color:familiaActiva===fam.id?"#fff":C.inkMid }}>
               {fam.icon} {fam.label.split(" ").slice(1).join(" ")} {cnt>0 && <span style={{ marginLeft:4,
-                background:familiaActiva===fam.id?"rgba(255,255,255,0.2)":"#F0EEE9",
+                background:familiaActiva===fam.id?"rgba(255,255,255,0.2)":"#F5F5F5",
                 padding:"0 5px", borderRadius:8, fontSize:9 }}>{cnt}</span>}
             </button>
           );
@@ -7813,12 +7813,12 @@ function TMat({ d, set, r }) {
                   <div style={{ flex:1 }}>
                     <div style={{ fontSize:11, fontWeight:700 }}>{p.nombre}</div>
                     {p.contacto && <div style={{ fontSize:9, color:"#888" }}>{p.contacto}</div>}
-                    {p.email && <div style={{ fontSize:8, color:"#1E4F8C" }}>✉ {p.email}</div>}
+                    {p.email && <div style={{ fontSize:8, color:"#3B3B3B" }}>✉ {p.email}</div>}
                     {p.nit && <div style={{ fontSize:8, color:"#888" }}>NIT: {p.nit}</div>}
                   </div>
                   <div style={{ display:"flex", gap:2 }}>
                     <button onClick={()=>{ setEditProv(p.id); setNewProv({nombre:p.nombre,contacto:p.contacto||"",tel:p.tel||"",email:p.email||"",nit:p.nit||""}); setShowAddProv(true); }}
-                      style={{ background:"none",border:"none",cursor:"pointer",color:"#1E4F8C",padding:2,fontSize:10 }}>✏️</button>
+                      style={{ background:"none",border:"none",cursor:"pointer",color:"#3B3B3B",padding:2,fontSize:10 }}>✏️</button>
                     <button onClick={()=>delProv(p.id)}
                       style={{ background:"none",border:"none",cursor:"pointer",color:"#C44",padding:2 }}><X size={10}/></button>
                   </div>
@@ -7829,22 +7829,22 @@ function TMat({ d, set, r }) {
             <button onClick={()=>{ setNewProv({ nombre:"", contacto:"", tel:"", email:"", nit:"" }); setEditProv(null); setShowAddProv(true); }}
               style={{ width:"100%", marginTop:6, padding:"5px", fontSize:10, cursor:"pointer",
                 border:`1px dashed ${C.border}`, borderRadius:4, background:"#fff", color:C.inkMid,
-                fontFamily:"'Outfit',sans-serif" }}>+ Añadir proveedor</button>
+                fontFamily:"'DM Sans',sans-serif" }}>+ Añadir proveedor</button>
           </Card>
 
           {familiaActiva === "epp" && (
             <button onClick={cargarDesdeEPP}
               style={{ width:"100%", padding:"6px 10px", fontSize:10, fontWeight:600, cursor:"pointer",
-                border:`1px solid ${C.border}`, borderRadius:4, background:"#FFF8E7", color:"#7A5218",
-                fontFamily:"'Outfit',sans-serif", marginBottom:8 }}>
+                border:`1px solid ${C.border}`, borderRadius:4, background:"#FFF8E7", color:"#8C6A00",
+                fontFamily:"'DM Sans',sans-serif", marginBottom:8 }}>
               ⚡ Cargar EPPs desde catálogo
             </button>
           )}
           {familiaActiva === "herr" && (
             <button onClick={cargarDesdeHerr}
               style={{ width:"100%", padding:"6px 10px", fontSize:10, fontWeight:600, cursor:"pointer",
-                border:`1px solid ${C.border}`, borderRadius:4, background:"#FFF8E7", color:"#7A5218",
-                fontFamily:"'Outfit',sans-serif", marginBottom:8 }}>
+                border:`1px solid ${C.border}`, borderRadius:4, background:"#FFF8E7", color:"#8C6A00",
+                fontFamily:"'DM Sans',sans-serif", marginBottom:8 }}>
               ⚡ Cargar herramientas desde catálogo
             </button>
           )}
@@ -7853,18 +7853,18 @@ function TMat({ d, set, r }) {
             style={{ ...inp, width:"100%", marginBottom:8 }}/>
 
           {selIds.length > 0 && (
-            <div style={{ background:"#E6EFF9", border:"1px solid #1E4F8C33", borderRadius:6, padding:"8px 10px", fontSize:10 }}>
+            <div style={{ background:"#F0F0F0", border:"1px solid #3B3B3B33", borderRadius:6, padding:"8px 10px", fontSize:10 }}>
               <strong>{selIds.length}</strong> insumos seleccionados
               <button onClick={()=>setShowAsignar(true)}
                 style={{ display:"block", width:"100%", marginTop:4, padding:"5px", fontSize:10, fontWeight:700,
-                  cursor:"pointer", border:"none", borderRadius:4, background:"#1E4F8C", color:"#fff",
-                  fontFamily:"'Outfit',sans-serif" }}>
+                  cursor:"pointer", border:"none", borderRadius:4, background:"#3B3B3B", color:"#fff",
+                  fontFamily:"'DM Sans',sans-serif" }}>
                 📋 Asignar proveedor
               </button>
               <button onClick={()=>setSelIds([])}
                 style={{ display:"block", width:"100%", marginTop:3, padding:"4px", fontSize:9,
                   cursor:"pointer", border:`1px solid ${C.border}`, borderRadius:4, background:"#fff", color:C.inkMid,
-                  fontFamily:"'Outfit',sans-serif" }}>
+                  fontFamily:"'DM Sans',sans-serif" }}>
                 Deseleccionar todo
               </button>
             </div>
@@ -7897,8 +7897,8 @@ function TMat({ d, set, r }) {
                       {SLOT_LABELS[s]}
                     </th>
                   ))}
-                  <th style={{ padding:"6px 6px", fontSize:8, fontWeight:700, color:"#1E6B42", textTransform:"uppercase",
-                    borderBottom:"2px solid #1E6B42", textAlign:"center", width:120, background:"#E6F4EC" }}>
+                  <th style={{ padding:"6px 6px", fontSize:8, fontWeight:700, color:"#111111", textTransform:"uppercase",
+                    borderBottom:"2px solid #111111", textAlign:"center", width:120, background:"#E6F4EC" }}>
                     P. Final / Adjud.
                   </th>
                   <th style={{ width:30 }}/>
@@ -7913,13 +7913,13 @@ function TMat({ d, set, r }) {
                   const pf = getPrecioFinal(ins.id);
                   const isSel = selIds.includes(ins.id);
                   return (
-                    <tr key={ins.id} style={{ background:isSel?"#E6EFF922":idx%2===0?"#fff":"#FAFAF8", borderBottom:`1px solid ${C.border}` }}>
+                    <tr key={ins.id} style={{ background:isSel?"#F0F0F022":idx%2===0?"#fff":"#FFFFFF", borderBottom:`1px solid ${C.border}` }}>
                       <td style={{ padding:"4px 4px", textAlign:"center" }}>
                         <input type="checkbox" checked={isSel} onChange={()=>toggleOne(ins.id)} style={chk}/>
                       </td>
                       <td style={{ padding:"4px 6px" }}>
                         <span style={{ fontFamily:"'DM Mono',monospace", fontWeight:700, fontSize:10,
-                          background:"#F0EEE9", padding:"1px 6px", borderRadius:3 }}>{ins.codigo}</span>
+                          background:"#F5F5F5", padding:"1px 6px", borderRadius:3 }}>{ins.codigo}</span>
                       </td>
                       <td style={{ padding:"4px 6px" }}>
                         <input value={ins.descripcion} onChange={e=>updInsumo(ins.id,"descripcion",e.target.value)}
@@ -7969,7 +7969,7 @@ function TMat({ d, set, r }) {
                                   style={{ ...inp, width:"100%", textAlign:"right", fontSize:10,
                                     fontFamily:"'DM Mono',monospace",
                                     fontWeight:isAdj?700:400,
-                                    border:isAdj?"2px solid #1E6B42":`1px solid ${C.border}`,
+                                    border:isAdj?"2px solid #111111":`1px solid ${C.border}`,
                                     background:isAdj?"#D4EDDA":"#fff" }}/>
                                 {/* Attachments */}
                                 <div style={{ display:"flex", gap:2, marginTop:2 }}>
@@ -7986,9 +7986,9 @@ function TMat({ d, set, r }) {
                                 {cot.precio > 0 && (
                                   <button onClick={()=>isAdj?quitarAdj(ins.id):adjudicar(ins.id,slot)}
                                     style={{ width:"100%", marginTop:3, padding:"2px", fontSize:8, fontWeight:700,
-                                      border:isAdj?"1px solid #1E6B42":`1px dashed ${C.border}`, borderRadius:3,
-                                      background:isAdj?"#1E6B42":"#fff",
-                                      color:isAdj?"#fff":"#888", cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                                      border:isAdj?"1px solid #111111":`1px dashed ${C.border}`, borderRadius:3,
+                                      background:isAdj?"#111111":"#fff",
+                                      color:isAdj?"#fff":"#888", cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
                                     {isAdj?"✅ Adjudicado":"Adjudicar"}
                                   </button>
                                 )}
@@ -8010,10 +8010,10 @@ function TMat({ d, set, r }) {
                       <td style={{ padding:"4px 6px", textAlign:"center", background:"#E6F4EC", verticalAlign:"middle" }}>
                         {pf.adjudicado ? (
                           <div>
-                            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:12, fontWeight:800, color:"#1E6B42" }}>
+                            <div style={{ fontFamily:"'DM Mono',monospace", fontSize:12, fontWeight:800, color:"#111111" }}>
                               {fmtM(pf.precio)}
                             </div>
-                            <div style={{ fontSize:7, color:"#1E6B42", fontWeight:600 }}>✅ {pf.provNombre}</div>
+                            <div style={{ fontSize:7, color:"#111111", fontWeight:600 }}>✅ {pf.provNombre}</div>
                           </div>
                         ) : (
                           <span style={{ fontSize:8, color:"#999", fontStyle:"italic" }}>Pendiente</span>
@@ -8034,7 +8034,7 @@ function TMat({ d, set, r }) {
             <button onClick={()=>{ setNewInsumo({...newInsumo, familia:familiaActiva}); setShowAddInsumo(true); }}
               style={{ width:"100%", padding:"5px 8px", fontSize:10, cursor:"pointer",
                 border:`1px dashed ${C.border}`, borderRadius:3, background:"#fff", color:C.inkMid,
-                fontFamily:"'Outfit',sans-serif" }}>
+                fontFamily:"'DM Sans',sans-serif" }}>
               + Añadir insumo a {FAMILIAS.find(f=>f.id===familiaActiva)?.label||""}
             </button>
           </div>
@@ -8137,7 +8137,7 @@ function TMat({ d, set, r }) {
                         <button key={p.id} onClick={()=>asignarProvASeleccion(p.id, slot)}
                           style={{ padding:"6px 14px", border:`1px solid ${SLOT_COLORS[slot]}44`, borderRadius:5,
                             background:SLOT_BGS[slot], color:SLOT_COLORS[slot], fontSize:10, fontWeight:700,
-                            cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                            cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
                           {p.nombre}
                         </button>
                       ))}
@@ -8165,7 +8165,7 @@ function TOrg({ d, set }) {
 
   const PLANTILLAS = {
     obra: { label:"🏗️ Obra civil", nodes:[
-      { id:"o1", parentId:null, nombre:"", cargo:"Director de Proyecto", color:"#1E6B42", icon:"👔" },
+      { id:"o1", parentId:null, nombre:"", cargo:"Director de Proyecto", color:"#111111", icon:"👔" },
       { id:"o2", parentId:"o1", nombre:"", cargo:"Director de Obra", color:"#2A5F8C", icon:"🏗️" },
       { id:"o3", parentId:"o2", nombre:"", cargo:"Residente de Obra", color:"#5B8DB8", icon:"📋" },
       { id:"o4", parentId:"o2", nombre:"", cargo:"Maestro de Obra", color:"#5B8DB8", icon:"🔨" },
@@ -8176,7 +8176,7 @@ function TOrg({ d, set }) {
       { id:"o9", parentId:"o1", nombre:"", cargo:"Coord. Administrativo", color:"#6B5B8C", icon:"💼" },
     ]},
     diseno: { label:"🎨 Diseño interior", nodes:[
-      { id:"d1", parentId:null, nombre:"", cargo:"Director de Proyecto", color:"#1E6B42", icon:"👔" },
+      { id:"d1", parentId:null, nombre:"", cargo:"Director de Proyecto", color:"#111111", icon:"👔" },
       { id:"d2", parentId:"d1", nombre:"", cargo:"Directora Creativa", color:"#8C5B2A", icon:"🎨" },
       { id:"d3", parentId:"d2", nombre:"", cargo:"Diseñador Senior", color:"#B88C5B", icon:"✏️" },
       { id:"d4", parentId:"d2", nombre:"", cargo:"Diseñador Junior", color:"#B88C5B", icon:"📐" },
@@ -8185,7 +8185,7 @@ function TOrg({ d, set }) {
       { id:"d7", parentId:"d6", nombre:"", cargo:"Dibujante / Planos", color:"#5B8DB8", icon:"📏" },
     ]},
     mixto: { label:"🏠 Obra + Diseño", nodes:[
-      { id:"m1", parentId:null, nombre:"", cargo:"Gerente de Proyecto", color:"#1E6B42", icon:"👔" },
+      { id:"m1", parentId:null, nombre:"", cargo:"Gerente de Proyecto", color:"#111111", icon:"👔" },
       { id:"m2", parentId:"m1", nombre:"", cargo:"Director de Obra", color:"#2A5F8C", icon:"🏗️" },
       { id:"m3", parentId:"m2", nombre:"", cargo:"Residente de Obra", color:"#5B8DB8", icon:"📋" },
       { id:"m4", parentId:"m2", nombre:"", cargo:"Maestro de Obra", color:"#5B8DB8", icon:"🔨" },
@@ -8198,7 +8198,7 @@ function TOrg({ d, set }) {
       { id:"m11", parentId:"m1", nombre:"", cargo:"Coord. Compras", color:"#6B5B8C", icon:"🚛" },
     ]},
     pequeno: { label:"📐 Proyecto pequeño", nodes:[
-      { id:"p1", parentId:null, nombre:"", cargo:"Director de Proyecto", color:"#1E6B42", icon:"👔" },
+      { id:"p1", parentId:null, nombre:"", cargo:"Director de Proyecto", color:"#111111", icon:"👔" },
       { id:"p2", parentId:"p1", nombre:"", cargo:"Arquitecto / Diseñador", color:"#8C5B2A", icon:"🎨" },
       { id:"p3", parentId:"p1", nombre:"", cargo:"Maestro de Obra", color:"#2A5F8C", icon:"🔨" },
     ]},
@@ -8245,8 +8245,8 @@ function TOrg({ d, set }) {
   })();
 
   const ICONS = ["👔","🏗️","📋","🔨","📦","🎨","📐","✏️","🖥️","📏","🦺","💼","👤","👷","🧑‍💻","📊","🔧","🏠","🧹","📞","🚛","⚡","💧","🧑‍🔬"];
-  const COLORS = ["#1E6B42","#2A5F8C","#8C5B2A","#8C2A2A","#6B5B8C","#5B8DB8","#B88C5B","#555","#2B7A52","#1E4F8C","#C44","#888"];
-  const inp = { border:`1px solid ${C.border}`, borderRadius:3, padding:"3px 6px", fontSize:11, fontFamily:"'Outfit',sans-serif", background:"#fff" };
+  const COLORS = ["#111111","#2A5F8C","#8C5B2A","#8C2A2A","#6B5B8C","#5B8DB8","#B88C5B","#555","#2B7A52","#3B3B3B","#C44","#888"];
+  const inp = { border:`1px solid ${C.border}`, borderRadius:3, padding:"3px 6px", fontSize:11, fontFamily:"'DM Sans',sans-serif", background:"#fff" };
 
   // Visual org chart node
   const NodeCard = ({ node }) => {
@@ -8291,7 +8291,7 @@ function TOrg({ d, set }) {
   // PDF Print
   const printOrg = () => {
     const w = window.open("","_blank");
-    const S = `@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');@page{size:landscape;margin:12mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Outfit',sans-serif;color:#111;padding:20px}.header{display:flex;justify-content:space-between;margin-bottom:16px;padding-bottom:10px;border-bottom:3px solid #111}.logo{font-size:16px;font-weight:800;letter-spacing:3px}.logo-sub{font-size:7px;letter-spacing:2px;color:#888;text-transform:uppercase}.org-container{display:flex;justify-content:center;padding:16px 0}.node{background:#fff;border:2px solid var(--c);border-radius:8px;padding:8px 14px;min-width:120px;max-width:180px;text-align:center;display:inline-flex;flex-direction:column;align-items:center}.node .icon{font-size:18px;margin-bottom:2px}.node .name{font-size:10px;font-weight:700;color:#111;line-height:1.2}.node .role{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--c);line-height:1.2;margin-top:1px}.branch{display:flex;flex-direction:column;align-items:center}.children{display:flex;gap:12px;align-items:flex-start;position:relative}.vline{width:2px;height:16px;background:#DDD;margin:0 auto}.hline{position:absolute;top:0;height:2px;background:#DDD}.footer{margin-top:20px;padding-top:6px;border-top:1px solid #E4E1DB;display:flex;justify-content:space-between;font-size:7px;color:#888}`;
+    const S = `@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');@page{size:landscape;margin:12mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',sans-serif;color:#111;padding:20px}.header{display:flex;justify-content:space-between;margin-bottom:16px;padding-bottom:10px;border-bottom:3px solid #111}.logo{font-size:16px;font-weight:800;letter-spacing:3px}.logo-sub{font-size:7px;letter-spacing:2px;color:#888;text-transform:uppercase}.org-container{display:flex;justify-content:center;padding:16px 0}.node{background:#fff;border:2px solid var(--c);border-radius:8px;padding:8px 14px;min-width:120px;max-width:180px;text-align:center;display:inline-flex;flex-direction:column;align-items:center}.node .icon{font-size:18px;margin-bottom:2px}.node .name{font-size:10px;font-weight:700;color:#111;line-height:1.2}.node .role{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--c);line-height:1.2;margin-top:1px}.branch{display:flex;flex-direction:column;align-items:center}.children{display:flex;gap:12px;align-items:flex-start;position:relative}.vline{width:2px;height:16px;background:#DDD;margin:0 auto}.hline{position:absolute;top:0;height:2px;background:#DDD}.footer{margin-top:20px;padding-top:6px;border-top:1px solid #E0E0E0;display:flex;justify-content:space-between;font-size:7px;color:#888}`;
 
     const renderNode = (node) => {
       const children = getChildren(node.id);
@@ -8338,7 +8338,7 @@ function TOrg({ d, set }) {
           </label>
           <button onClick={printOrg}
             style={{ padding:"6px 14px", background:"#111", color:"#fff", border:"none", borderRadius:5,
-              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+              fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
               display:"flex", alignItems:"center", gap:4 }}>
             <FileText size={11}/> Vista PDF
           </button>
@@ -8356,7 +8356,7 @@ function TOrg({ d, set }) {
                 <button key={k} onClick={()=>loadPlantilla(k)}
                   style={{ padding:"6px 8px", fontSize:10, fontWeight:600, cursor:"pointer",
                     border:`1px solid ${C.border}`, borderRadius:4, background:"#fff",
-                    fontFamily:"'Outfit',sans-serif", color:C.inkMid, textAlign:"left",
+                    fontFamily:"'DM Sans',sans-serif", color:C.inkMid, textAlign:"left",
                     whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
                   {v.label}
                 </button>
@@ -8378,7 +8378,7 @@ function TOrg({ d, set }) {
                   onClick={() => setSelId(isSel ? null : n.id)}
                   style={{ padding:"5px 10px 5px " + (12 + depth*16) + "px",
                     display:"flex", alignItems:"center", gap:6, cursor:"pointer",
-                    background:isSel ? "#E6EFF9" : "transparent",
+                    background:isSel ? "#F0F0F0" : "transparent",
                     borderLeft:isSel ? `3px solid ${n.color||"#555"}` : "3px solid transparent",
                     borderBottom:`1px solid ${C.border}`,
                     transition:"background .1s" }}>
@@ -8407,7 +8407,7 @@ function TOrg({ d, set }) {
               <button onClick={() => addNodo(null)}
                 style={{ width:"100%", padding:"5px 8px", fontSize:10, fontWeight:600, cursor:"pointer",
                   border:`1px dashed ${C.border}`, borderRadius:4, background:"#fff", color:C.inkMid,
-                  fontFamily:"'Outfit',sans-serif" }}>
+                  fontFamily:"'DM Sans',sans-serif" }}>
                 + Añadir cargo raíz
               </button>
             </div>
@@ -8449,7 +8449,7 @@ function TOrg({ d, set }) {
                 <div style={{ display:"flex", flexWrap:"wrap", gap:3 }}>
                   {ICONS.map(ic=>(
                     <button key={ic} onClick={()=>updNodo(selNode.id,"icon",ic)}
-                      style={{ width:24, height:24, border:`1px solid ${selNode.icon===ic?"#111":"#E4E1DB"}`,
+                      style={{ width:24, height:24, border:`1px solid ${selNode.icon===ic?"#111":"#E0E0E0"}`,
                         borderRadius:3, background:selNode.icon===ic?"#F5F4F1":"#fff",
                         cursor:"pointer", fontSize:12, display:"flex", alignItems:"center", justifyContent:"center" }}>{ic}</button>
                   ))}
@@ -8462,7 +8462,7 @@ function TOrg({ d, set }) {
                   {COLORS.map(cl=>(
                     <button key={cl} onClick={()=>updNodo(selNode.id,"color",cl)}
                       style={{ width:20, height:20, borderRadius:3, background:cl, cursor:"pointer",
-                        border:selNode.color===cl?"2px solid #111":"2px solid #E4E1DB" }}/>
+                        border:selNode.color===cl?"2px solid #111":"2px solid #E0E0E0" }}/>
                   ))}
                 </div>
               </div>
@@ -8470,13 +8470,13 @@ function TOrg({ d, set }) {
                 <button onClick={()=>addNodo(selNode.id)}
                   style={{ flex:1, padding:"5px 8px", fontSize:10, fontWeight:600, cursor:"pointer",
                     border:`1px solid ${C.border}`, borderRadius:4, background:"#fff", color:C.inkMid,
-                    fontFamily:"'Outfit',sans-serif" }}>
+                    fontFamily:"'DM Sans',sans-serif" }}>
                   + Subordinado
                 </button>
                 <button onClick={()=>delNodo(selNode.id)}
                   style={{ padding:"5px 10px", fontSize:10, fontWeight:600, cursor:"pointer",
                     border:"1px solid #C44", borderRadius:4, background:"#FEE", color:"#C44",
-                    fontFamily:"'Outfit',sans-serif" }}>
+                    fontFamily:"'DM Sans',sans-serif" }}>
                   <Trash2 size={10}/>
                 </button>
               </div>
@@ -8527,7 +8527,7 @@ function TRes({ d, r }) {
     null,
     { l: `Margen objetivo ${pct(d.margen)}`, v: r.margenCOP, b: true, col: C.success },
     ...(isObra ? [
-      { l: `→ Utilidad declarada para IVA (U): ${pct(uDecl)}${modoCalc==="aiu"?" (AIU)":" (manual)"}`, v: uDecl * r.PVP, sub: true, col: "#1E4F8C" },
+      { l: `→ Utilidad declarada para IVA (U): ${pct(uDecl)}${modoCalc==="aiu"?" (AIU)":" (manual)"}`, v: uDecl * r.PVP, sub: true, col: "#3B3B3B" },
       { l: modoCalc==="aiu"
         ? `→ AIU: A ${pct(d.aiuA||0.08)} + I ${pct(d.aiuI||0.03)} + U ${pct(d.aiuU||0.07)} = ${pct((d.aiuA||0.08)+(d.aiuI||0.03)+(d.aiuU||0.07))}`
         : `→ Margen ${pct(d.margen)} sobre PVP · U para IVA: ${pct(uDecl)}`, v: null, sub: true, note: true },
@@ -8582,7 +8582,7 @@ function TRes({ d, r }) {
         {/* Hero PVP */}
         <div style={{ background: C.ink, borderRadius: 3, padding: "28px 28px" }}>
           <p style={{ margin: "0 0 6px", fontSize: 9, letterSpacing: 2.5, textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>PVP Total al cliente</p>
-          <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: 40, fontWeight: 700, color: "#fff", margin: "0 0 10px", letterSpacing: -1 }}>{fmt(r.PVP_IVA)}</p>
+          <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 40, fontWeight: 700, color: "#fff", margin: "0 0 10px", letterSpacing: -1 }}>{fmt(r.PVP_IVA)}</p>
           <p style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", margin: 0 }}>
             IVA {pct(d.tarifaIVA)} · Modo {d.tipoProyecto}
             {isObra && ` · U declarada ${pct(uDecl)}`}
@@ -8596,13 +8596,13 @@ function TRes({ d, r }) {
             ["PVP sin IVA",      fmt(r.PVP),       C.ink],
             ["IVA",              fmt(r.IVA),        C.info],
             ["Margen (" + pct(d.margen) + ")", fmt(r.margenCOP), C.success],
-            ...(isObra ? [["Utilidad decl. ("+pct(uDecl)+")", fmt(uDecl*r.PVP), "#1E4F8C"]] : []),
+            ...(isObra ? [["Utilidad decl. ("+pct(uDecl)+")", fmt(uDecl*r.PVP), "#3B3B3B"]] : []),
             ["Retenciones", fmt(r.ret), C.warning],
             ["Neto a recibir",   fmt(r.neto),       C.ink],
           ].map(([l, v, col]) => (
             <Card key={l} style={{ padding: "13px 16px" }}>
               <p style={{ margin: "0 0 4px", fontSize: 9, fontWeight: 600, color: C.inkLight, textTransform: "uppercase", letterSpacing: 1 }}>{l}</p>
-              <p style={{ fontFamily: "'Outfit', sans-serif", fontSize: 16, fontWeight: 700, color: col, margin: 0 }}>{v}</p>
+              <p style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 700, color: col, margin: 0 }}>{v}</p>
             </Card>
           ))}
         </div>
@@ -8640,14 +8640,14 @@ function TEnt({ d, set, r }) {
     <textarea value={getText(k, def)} rows={rows}
       onChange={e => setText(k, e.target.value)}
       style={{ width:"100%", border:`1px solid ${C.border}`, borderRadius:4, padding:"8px 10px",
-        fontSize:12, fontFamily:"'Outfit',sans-serif", resize:"vertical", lineHeight:1.5,
+        fontSize:12, fontFamily:"'DM Sans',sans-serif", resize:"vertical", lineHeight:1.5,
         background:C.bg, color:C.ink }}/>
     <div className="ptr" style={{ fontSize:12, lineHeight:1.6 }}>{getText(k, def)}</div>
   </>);
   const inp = (k, def) => (
     <input value={getText(k, def)} onChange={e => setText(k, e.target.value)}
       style={{ width:"100%", border:`1px solid ${C.border}`, borderRadius:4, padding:"7px 10px",
-        fontSize:13, fontFamily:"'Outfit',sans-serif", background:C.bg, color:C.ink }}/>
+        fontSize:13, fontFamily:"'DM Sans',sans-serif", background:C.bg, color:C.ink }}/>
   );
   const label = (text) => (
     <p className="no-print" style={{ fontSize:9, fontWeight:600, color:C.inkLight, textTransform:"uppercase",
@@ -8759,10 +8759,10 @@ function TEnt({ d, set, r }) {
   /* ── Vista previa profesional (new window) ── */
   const printEntregaPreview = () => {
     const w = window.open("","_blank");
-    const S = `@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+    const S = `@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
     @page{size:A4 portrait;margin:15mm 18mm}
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Outfit',sans-serif;color:#1A1A1A;font-size:10px;line-height:1.6}
+    body{font-family:'DM Sans',sans-serif;color:#1A1A1A;font-size:10px;line-height:1.6}
     .cover{min-height:100vh;display:flex;flex-direction:column;justify-content:space-between;padding:40px 50px;page-break-after:always}
     .cover-brand{border-bottom:3px solid #111;padding-bottom:16px}
     .cover-brand h1{font-size:36px;font-weight:800;letter-spacing:10px;text-transform:uppercase}
@@ -8783,12 +8783,12 @@ function TEnt({ d, set, r }) {
     .page-header{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:8px;border-bottom:2px solid #111;margin-bottom:20px}
     .page-header .brand{font-weight:700;font-size:12px;letter-spacing:4px}
     .page-header .meta{text-align:right;font-size:8px;color:#666}
-    .section-title{font-size:16px;font-weight:700;letter-spacing:1px;color:#111;margin:20px 0 10px;padding-bottom:4px;border-bottom:1px solid #E4E1DB}
+    .section-title{font-size:16px;font-weight:700;letter-spacing:1px;color:#111;margin:20px 0 10px;padding-bottom:4px;border-bottom:1px solid #E0E0E0}
     .section-num{color:#888;font-weight:400;margin-right:8px}
     .content{font-size:11px;line-height:1.8;color:#333;white-space:pre-wrap}
     table{width:100%;border-collapse:collapse;margin:10px 0}
     th{background:#F5F4F1;padding:8px 12px;font-size:8px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:2px solid #DDD}
-    td{padding:7px 12px;font-size:10px;border-bottom:1px solid #F0EEE9}
+    td{padding:7px 12px;font-size:10px;border-bottom:1px solid #F5F5F5}
     .mono{font-family:'DM Mono',monospace}
     .r{text-align:right}
     .bold{font-weight:700}
@@ -8799,7 +8799,7 @@ function TEnt({ d, set, r }) {
     .sign-box{text-align:center;padding-top:40px;border-top:1px solid #111}
     .sign-box .name{font-size:11px;font-weight:700}
     .sign-box .role{font-size:9px;color:#666}
-    .doc-footer{position:fixed;bottom:10mm;left:18mm;right:18mm;display:flex;justify-content:space-between;font-size:7px;color:#AAA;border-top:1px solid #E4E1DB;padding-top:4px}`;
+    .doc-footer{position:fixed;bottom:10mm;left:18mm;right:18mm;display:flex;justify-content:space-between;font-size:7px;color:#AAA;border-top:1px solid #E0E0E0;padding-top:4px}`;
 
     const hdr = `<div class="page-header"><div class="brand">HABITARIS</div><div class="meta"><div>${titulo}</div><div>${refOferta} · Rev.${revision} · ${fechaDoc}</div></div></div>`;
     const nl2p = (txt) => (txt||"").split("\n").map(l=>l.trim()).filter(Boolean).map(l=>`<p>${l}</p>`).join("");
@@ -8871,7 +8871,7 @@ function TEnt({ d, set, r }) {
       capTotals.forEach((cap,i) => {
         html += `<tr><td class="bold">${i+1}</td><td class="bold">${cap.nombre||"Capítulo "+(i+1)}</td><td class="mono r bold">${fmt(cap.total)}</td></tr>`;
       });
-      html += `<tr style="border-top:2px solid #111;background:#FAFAF8"><td colspan="2" class="bold">Subtotal</td><td class="mono r bold">${fmt(r.PVP)}</td></tr>`;
+      html += `<tr style="border-top:2px solid #111;background:#FFFFFF"><td colspan="2" class="bold">Subtotal</td><td class="mono r bold">${fmt(r.PVP)}</td></tr>`;
       html += `<tr class="iva-row"><td colspan="2">${isObra?"IVA sobre la utilidad":`IVA ${pct(d.tarifaIVA)}`}</td><td class="mono r">${fmt(r.IVA)}</td></tr>`;
       html += `<tr class="total-row"><td colspan="2">VALOR TOTAL</td><td class="mono r">${fmt(r.PVP_IVA)}</td></tr>`;
       html += `</tbody></table>`;
@@ -8885,7 +8885,7 @@ function TEnt({ d, set, r }) {
           html += `<td class="mono r">${it.cantidad||1}</td><td class="mono r">${v?fmt(v.puVenta):"—"}</td><td class="mono r">${v?fmt(v.totalVenta):"—"}</td></tr>`;
         });
       });
-      html += `<tr style="border-top:2px solid #111;background:#FAFAF8"><td colspan="5" class="bold">Subtotal</td><td class="mono r bold">${fmt(r.PVP)}</td></tr>`;
+      html += `<tr style="border-top:2px solid #111;background:#FFFFFF"><td colspan="5" class="bold">Subtotal</td><td class="mono r bold">${fmt(r.PVP)}</td></tr>`;
       html += `<tr class="iva-row"><td colspan="5">${isObra?"IVA sobre la utilidad":`IVA ${pct(d.tarifaIVA)}`}</td><td class="mono r">${fmt(r.IVA)}</td></tr>`;
       html += `<tr class="total-row"><td colspan="5">VALOR TOTAL</td><td class="mono r">${fmt(r.PVP_IVA)}</td></tr>`;
       html += `</tbody></table>`;
@@ -9036,11 +9036,11 @@ function TEnt({ d, set, r }) {
   const WF_ESTADOS = {
     borrador:              { label:"Borrador",               color:"#888",    icon:"📝", desc:"En elaboración" },
     pendiente_aprobacion:  { label:"Pendiente aprobación",   color:"#D4840A", icon:"⏳", desc:`Esperando aprobación de ${wfAprobador?.nombre||"—"}` },
-    devuelta_internamente: { label:"Devuelta con cambios",   color:"#AE2C2C", icon:"🔄", desc:"Requiere correcciones antes de aprobar" },
-    aprobada_internamente: { label:"Aprobada internamente",  color:"#1E6B42", icon:"✅", desc:"Lista para enviar al cliente" },
-    enviada:               { label:"Enviada al cliente",     color:"#1E4F8C", icon:"📨", desc:"Esperando respuesta del cliente" },
-    aprobada_cliente:      { label:"Aprobada por cliente",   color:"#1E6B42", icon:"🎉", desc:"¡Oferta ganada!" },
-    rechazada_cliente:     { label:"Rechazada por cliente",  color:"#AE2C2C", icon:"❌", desc:"Cliente rechazó la propuesta" },
+    devuelta_internamente: { label:"Devuelta con cambios",   color:"#B91C1C", icon:"🔄", desc:"Requiere correcciones antes de aprobar" },
+    aprobada_internamente: { label:"Aprobada internamente",  color:"#111111", icon:"✅", desc:"Lista para enviar al cliente" },
+    enviada:               { label:"Enviada al cliente",     color:"#3B3B3B", icon:"📨", desc:"Esperando respuesta del cliente" },
+    aprobada_cliente:      { label:"Aprobada por cliente",   color:"#111111", icon:"🎉", desc:"¡Oferta ganada!" },
+    rechazada_cliente:     { label:"Rechazada por cliente",  color:"#B91C1C", icon:"❌", desc:"Cliente rechazó la propuesta" },
     devuelta_cliente:      { label:"Devuelta por cliente",   color:"#D4840A", icon:"💬", desc:"Cliente solicita cambios" },
   };
   const wfInfo = WF_ESTADOS[wfEstado] || WF_ESTADOS.borrador;
@@ -9051,7 +9051,7 @@ function TEnt({ d, set, r }) {
       {/* ═══════════ COVER PAGE (print only) ═══════════ */}
       <div className="p-cover">
         <div style={{ borderBottom:"2pt solid #111", paddingBottom:16, marginBottom:40, width:"100%" }}>
-          <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:32, letterSpacing:8, textTransform:"uppercase" }}>HABITARIS</div>
+          <div style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:800, fontSize:32, letterSpacing:8, textTransform:"uppercase" }}>HABITARIS</div>
           <div style={{ fontSize:9, letterSpacing:3, color:"#999", textTransform:"uppercase", marginTop:4 }}>Arquitectura · Interiorismo · Construcción</div>
         </div>
         <div style={{ marginTop:60, marginBottom:60 }}>
@@ -9111,10 +9111,10 @@ function TEnt({ d, set, r }) {
                       applyTemplate(pl.id);
                     }}
                       style={{ padding:"7px 14px", fontSize:10, fontWeight:600, cursor:"pointer",
-                        border:`1px solid ${active?"#1E6B42":C.border}`, borderLeft:i>0?"none":undefined,
-                        fontFamily:"'Outfit',sans-serif", whiteSpace:"nowrap",
+                        border:`1px solid ${active?"#111111":C.border}`, borderLeft:i>0?"none":undefined,
+                        fontFamily:"'DM Sans',sans-serif", whiteSpace:"nowrap",
                         borderRadius:i===0?"5px 0 0 5px":i===arr.length-1?"0 5px 5px 0":"0",
-                        background:active?"#1E6B42":"#fff",
+                        background:active?"#111111":"#fff",
                         color:active?"#fff":C.ink }}>
                       {pl.lbl}
                     </button>
@@ -9124,7 +9124,7 @@ function TEnt({ d, set, r }) {
             </div>
             <button onClick={printEntregaPreview}
               style={{ padding:"8px 18px", background:"#111", color:"#fff", border:"none", borderRadius:5,
-                fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+                fontSize:11, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
                 display:"flex", alignItems:"center", gap:6 }}>
               <FileText size={12}/> Vista previa PDF
             </button>
@@ -9138,7 +9138,7 @@ function TEnt({ d, set, r }) {
               {[["detallado","Detallado"],["capitulos","Por capítulos"],["total","Total único"]].map(([k,lbl],i)=>(
                 <button key={k} onClick={()=>onNivelChange(k)}
                   style={{ padding:"6px 14px", fontSize:11, fontWeight:600, cursor:"pointer",
-                    border:`1px solid ${C.border}`, fontFamily:"'Outfit',sans-serif",
+                    border:`1px solid ${C.border}`, fontFamily:"'DM Sans',sans-serif",
                     borderRadius: k==="detallado"?"5px 0 0 5px":k==="total"?"0 5px 5px 0":"0",
                     borderLeft:i>0?"none":undefined,
                     background:nivelDetalle===k?"#111":"#fff",
@@ -9152,25 +9152,25 @@ function TEnt({ d, set, r }) {
             ].map(([k, val, setter, lbl]) => (
               <label key={k} style={{ display:"flex", alignItems:"center", gap:6, cursor:"pointer", fontSize:11,
                 padding:"5px 10px", borderRadius:4, background:val?"#E8F4EE":"#F5F4F1",
-                border:`1px solid ${val?"#1E6B42":"transparent"}` }}>
+                border:`1px solid ${val?"#111111":"transparent"}` }}>
                 <input type="checkbox" checked={val} onChange={e => onToggle(k, e.target.checked, setter)}
-                  style={{ accentColor:"#1E6B42" }} />
-                <span style={{ fontWeight:val?600:400, color:val?"#1E6B42":C.inkMid }}>{lbl}</span>
+                  style={{ accentColor:"#111111" }} />
+                <span style={{ fontWeight:val?600:400, color:val?"#111111":C.inkMid }}>{lbl}</span>
               </label>
             ))}
             <label style={{ display:"flex", alignItems:"center", gap:6, cursor:"pointer", fontSize:11,
               padding:"5px 10px", borderRadius:4, background:d.ent_inclCondPago?"#E8F4EE":"#F5F4F1",
-              border:`1px solid ${d.ent_inclCondPago?"#1E6B42":"transparent"}` }}>
+              border:`1px solid ${d.ent_inclCondPago?"#111111":"transparent"}` }}>
               <input type="checkbox" checked={d.ent_inclCondPago??true} onChange={e => set("ent_inclCondPago", e.target.checked)}
-                style={{ accentColor:"#1E6B42" }} />
-              <span style={{ fontWeight:d.ent_inclCondPago?600:400, color:d.ent_inclCondPago?"#1E6B42":C.inkMid }}>💰 Condiciones de pago</span>
+                style={{ accentColor:"#111111" }} />
+              <span style={{ fontWeight:d.ent_inclCondPago?600:400, color:d.ent_inclCondPago?"#111111":C.inkMid }}>💰 Condiciones de pago</span>
             </label>
             <label style={{ display:"flex", alignItems:"center", gap:6, cursor:"pointer", fontSize:11,
               padding:"5px 10px", borderRadius:4, background:d.ent_inclGarantias?"#E8F4EE":"#F5F4F1",
-              border:`1px solid ${d.ent_inclGarantias?"#1E6B42":"transparent"}` }}>
+              border:`1px solid ${d.ent_inclGarantias?"#111111":"transparent"}` }}>
               <input type="checkbox" checked={d.ent_inclGarantias??true} onChange={e => set("ent_inclGarantias", e.target.checked)}
-                style={{ accentColor:"#1E6B42" }} />
-              <span style={{ fontWeight:d.ent_inclGarantias?600:400, color:d.ent_inclGarantias?"#1E6B42":C.inkMid }}>🛡️ Garantías</span>
+                style={{ accentColor:"#111111" }} />
+              <span style={{ fontWeight:d.ent_inclGarantias?600:400, color:d.ent_inclGarantias?"#111111":C.inkMid }}>🛡️ Garantías</span>
             </label>
           </div>
         </div>
@@ -9210,15 +9210,15 @@ function TEnt({ d, set, r }) {
               <div key={step.key} style={{ display:"flex", alignItems:"center" }}>
                 <div style={{ display:"flex", flexDirection:"column", alignItems:"center", minWidth:70 }}>
                   <div style={{ width:28, height:28, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center",
-                    background: done ? "#1E6B42" : active ? "#D4840A" : "#E4E1DB",
+                    background: done ? "#111111" : active ? "#D4840A" : "#E0E0E0",
                     fontSize:13, transition:"all .2s" }}>
                     {done ? <span style={{ color:"#fff", fontSize:11 }}>✓</span> : <span>{step.icon}</span>}
                   </div>
-                  <span style={{ fontSize:8, fontWeight:600, color: done ? "#1E6B42" : active ? "#D4840A" : "#999",
+                  <span style={{ fontSize:8, fontWeight:600, color: done ? "#111111" : active ? "#D4840A" : "#999",
                     marginTop:3, textAlign:"center", lineHeight:1.2 }}>{step.lbl}</span>
                 </div>
                 {i < arr.length - 1 && (
-                  <div style={{ width:30, height:2, background: stepIdx < currentIdx ? "#1E6B42" : "#E4E1DB", margin:"0 2px", marginBottom:14 }}/>
+                  <div style={{ width:30, height:2, background: stepIdx < currentIdx ? "#111111" : "#E0E0E0", margin:"0 2px", marginBottom:14 }}/>
                 )}
               </div>
             );
@@ -9233,10 +9233,10 @@ function TEnt({ d, set, r }) {
             {USUARIOS_INTERNOS.map(u => (
               <button key={u.id} onClick={() => { setWfUsuario(u.id); set("wf_usuario", u.id); }}
                 style={{ padding:"4px 10px", fontSize:10, fontWeight:600, cursor:"pointer",
-                  border:`1px solid ${wfUsuario===u.id ? "#1E6B42" : C.border}`, borderRadius:4,
+                  border:`1px solid ${wfUsuario===u.id ? "#111111" : C.border}`, borderRadius:4,
                   background: wfUsuario===u.id ? "#E8F4EE" : "#fff",
-                  color: wfUsuario===u.id ? "#1E6B42" : C.inkMid,
-                  fontFamily:"'Outfit',sans-serif" }}>
+                  color: wfUsuario===u.id ? "#111111" : C.inkMid,
+                  fontFamily:"'DM Sans',sans-serif" }}>
                 {u.id === "david" ? "👤" : "👩"} {u.nombre.split(" ")[0]}
               </button>
             ))}
@@ -9248,7 +9248,7 @@ function TEnt({ d, set, r }) {
               <input value={wfComment} onChange={e => setWfComment(e.target.value)}
                 placeholder={wfEstado === "pendiente_aprobacion" ? "Observaciones de aprobación (opcional)..." : "Comentarios sobre los cambios realizados..."}
                 style={{ width:"100%", padding:"8px 12px", border:`1px solid ${C.border}`, borderRadius:4,
-                  fontSize:12, fontFamily:"'Outfit',sans-serif", background:"#fff" }}/>
+                  fontSize:12, fontFamily:"'DM Sans',sans-serif", background:"#fff" }}/>
             </div>
           )}
 
@@ -9258,21 +9258,21 @@ function TEnt({ d, set, r }) {
               <button onClick={() => wfAction("solicitar")}
                 style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px",
                   background:"#D4840A", color:"#fff", border:"none", borderRadius:5,
-                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'Outfit',sans-serif" }}>
+                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'DM Sans',sans-serif" }}>
                 <Send size={13}/> Solicitar aprobación a {wfAprobador?.nombre?.split(" ")[0]}
               </button>
             )}
             {wfEstado === "pendiente_aprobacion" && wfUsuario === wfAprobador?.id && (<>
               <button onClick={() => wfAction("aprobar_interno")}
                 style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px",
-                  background:"#1E6B42", color:"#fff", border:"none", borderRadius:5,
-                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'Outfit',sans-serif" }}>
+                  background:"#111111", color:"#fff", border:"none", borderRadius:5,
+                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'DM Sans',sans-serif" }}>
                 <Check size={13}/> Aprobar
               </button>
               <button onClick={() => { if(!wfComment) { alert("Escribe las observaciones"); return; } wfAction("devolver_interno"); }}
                 style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px",
                   background:"#FFF8E7", color:"#D4840A", border:"1px solid #D4840A33", borderRadius:5,
-                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'Outfit',sans-serif" }}>
+                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'DM Sans',sans-serif" }}>
                 <RotateCcw size={13}/> Devolver con observaciones
               </button>
             </>)}
@@ -9285,7 +9285,7 @@ function TEnt({ d, set, r }) {
               <button onClick={() => wfAction("solicitar")}
                 style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px",
                   background:"#D4840A", color:"#fff", border:"none", borderRadius:5,
-                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'Outfit',sans-serif" }}>
+                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'DM Sans',sans-serif" }}>
                 <Send size={13}/> Re-solicitar aprobación
               </button>
             )}
@@ -9296,24 +9296,24 @@ function TEnt({ d, set, r }) {
                 alert(`✅ Portal creado y URL copiada.\n\nEnvía este link al cliente:\n${p.portalUrl}`);
               }}
                 style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px",
-                  background:"#1E4F8C", color:"#fff", border:"none", borderRadius:5,
-                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'Outfit',sans-serif" }}>
+                  background:"#3B3B3B", color:"#fff", border:"none", borderRadius:5,
+                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'DM Sans',sans-serif" }}>
                 <Send size={13}/> Enviar al cliente (crear portal)
               </button>
               <button onClick={downloadPDF}
                 style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px",
                   background:"#111", color:"#fff", border:"none", borderRadius:5,
-                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'Outfit',sans-serif" }}>
+                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'DM Sans',sans-serif" }}>
                 <Download size={13}/> Descargar PDF
               </button>
             </>)}
             {wfEstado === "enviada" && (
-              <div style={{ fontSize:11, color:"#1E4F8C", padding:"8px 0" }}>
+              <div style={{ fontSize:11, color:"#3B3B3B", padding:"8px 0" }}>
                 📨 Esperando respuesta del cliente. Portal activo.
                 {d.wf_lastPortalUrl && (
                   <button onClick={() => navigator.clipboard?.writeText(d.wf_lastPortalUrl).then(() => alert("✅ URL copiada"))}
-                    style={{ marginLeft:8, background:"#E6EFF9", border:"1px solid #1E4F8C33", borderRadius:3,
-                      padding:"3px 8px", fontSize:10, cursor:"pointer", color:"#1E4F8C", fontWeight:600, fontFamily:"'Outfit',sans-serif" }}>
+                    style={{ marginLeft:8, background:"#F0F0F0", border:"1px solid #3B3B3B33", borderRadius:3,
+                      padding:"3px 8px", fontSize:10, cursor:"pointer", color:"#3B3B3B", fontWeight:600, fontFamily:"'DM Sans',sans-serif" }}>
                     📋 Copiar URL portal
                   </button>
                 )}
@@ -9323,17 +9323,17 @@ function TEnt({ d, set, r }) {
               <button onClick={() => { set("revision", revision + 1); wfAction("solicitar"); }}
                 style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 16px",
                   background:"#D4840A", color:"#fff", border:"none", borderRadius:5,
-                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'Outfit',sans-serif" }}>
+                  cursor:"pointer", fontSize:12, fontWeight:600, fontFamily:"'DM Sans',sans-serif" }}>
                 <RotateCcw size={13}/> Crear Rev.{revision+1} y solicitar aprobación
               </button>
             </>)}
             {wfEstado === "aprobada_cliente" && (
-              <div style={{ fontSize:12, color:"#1E6B42", padding:"8px 0", fontWeight:600 }}>
+              <div style={{ fontSize:12, color:"#111111", padding:"8px 0", fontWeight:600 }}>
                 🎉 ¡Oferta ganada! El cliente aceptó la propuesta.
               </div>
             )}
             {wfEstado === "rechazada_cliente" && (
-              <div style={{ fontSize:12, color:"#AE2C2C", padding:"8px 0" }}>
+              <div style={{ fontSize:12, color:"#B91C1C", padding:"8px 0" }}>
                 ❌ El cliente rechazó la propuesta. {wfHistory.filter(h=>h.accion==="rechazar_cliente").slice(-1)[0]?.comentarios && (
                   <span style={{ fontStyle:"italic" }}>Motivo: "{wfHistory.filter(h=>h.accion==="rechazar_cliente").slice(-1)[0]?.comentarios}"</span>
                 )}
@@ -9345,7 +9345,7 @@ function TEnt({ d, set, r }) {
               <button onClick={downloadPDF}
                 style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px",
                   background:"transparent", color:C.inkMid, border:`1px solid ${C.border}`, borderRadius:5,
-                  cursor:"pointer", fontSize:11, fontWeight:500, fontFamily:"'Outfit',sans-serif" }}>
+                  cursor:"pointer", fontSize:11, fontWeight:500, fontFamily:"'DM Sans',sans-serif" }}>
                 <Download size={12}/> PDF
               </button>
             )}
@@ -9369,7 +9369,7 @@ function TEnt({ d, set, r }) {
                     rechazar_cliente:"Cliente rechazó", devolver_cliente:"Cliente devolvió"
                   };
                   return (
-                    <div key={h.id||i} style={{ display:"flex", gap:8, padding:"5px 0", borderBottom:`1px solid #F0EEE9`, fontSize:10 }}>
+                    <div key={h.id||i} style={{ display:"flex", gap:8, padding:"5px 0", borderBottom:`1px solid #F5F5F5`, fontSize:10 }}>
                       <div style={{ minWidth:100, color:C.inkLight }}>{new Date(h.fecha).toLocaleString("es-CO",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</div>
                       <div style={{ flex:1 }}>
                         <span style={{ fontWeight:600 }}>{h.por?.nombre?.split(" ")[0] || "—"}</span>
@@ -9394,15 +9394,15 @@ function TEnt({ d, set, r }) {
                 Portales cliente ({wfPortals.length})
               </summary>
               {wfPortals.map((p, i) => (
-                <div key={p.token||i} style={{ display:"flex", gap:8, padding:"5px 0", borderBottom:`1px solid #F0EEE9`, fontSize:10, alignItems:"center" }}>
+                <div key={p.token||i} style={{ display:"flex", gap:8, padding:"5px 0", borderBottom:`1px solid #F5F5F5`, fontSize:10, alignItems:"center" }}>
                   <span style={{ fontSize:14 }}>{p.estado==="aprobada"?"✅":p.estado==="rechazada"?"❌":p.estado==="devuelta"?"🔄":"📨"}</span>
                   <div style={{ flex:1 }}>
                     <div style={{ fontWeight:600 }}>Rev.{p.revision} · {new Date(p.fechaCreacion).toLocaleDateString("es-CO")}</div>
                     <div style={{ color:C.inkLight }}>{p.clienteEmail || p.clienteNombre}</div>
                   </div>
                   <span style={{ fontSize:9, fontWeight:600, padding:"2px 6px", borderRadius:3,
-                    color: p.estado==="pendiente"?"#1E4F8C":p.estado==="aprobada"?"#1E6B42":"#AE2C2C",
-                    background: p.estado==="pendiente"?"#E6EFF9":p.estado==="aprobada"?"#E8F4EE":"#FAE8E8" }}>
+                    color: p.estado==="pendiente"?"#3B3B3B":p.estado==="aprobada"?"#111111":"#B91C1C",
+                    background: p.estado==="pendiente"?"#F0F0F0":p.estado==="aprobada"?"#E8F4EE":"#FAE8E8" }}>
                     {p.estado}
                   </span>
                 </div>
@@ -9438,7 +9438,7 @@ function TEnt({ d, set, r }) {
         <Card style={{ padding:22, background:C.ink, color:"#fff", position:"relative" }}>
           <div style={{ position:"absolute", top:8, right:10, background:"rgba(255,255,255,0.15)", padding:"2px 8px", borderRadius:3, fontSize:8, fontWeight:600, color:"rgba(255,255,255,0.5)", textTransform:"uppercase", letterSpacing:0.8 }}>Solo uso interno</div>
           <p style={{ fontSize:9, letterSpacing:1.5, textTransform:"uppercase", color:"rgba(255,255,255,0.4)", margin:"0 0 6px" }}>PVP Total</p>
-          <p style={{ fontFamily:"'Outfit',sans-serif", fontSize:32, fontWeight:700, color:"#fff", margin:"0 0 4px", letterSpacing:-1 }}>{fmt(r.PVP_IVA)}</p>
+          <p style={{ fontFamily:"'DM Sans',sans-serif", fontSize:32, fontWeight:700, color:"#fff", margin:"0 0 4px", letterSpacing:-1 }}>{fmt(r.PVP_IVA)}</p>
           <p style={{ fontSize:10, color:"rgba(255,255,255,0.4)", margin:"0 0 16px" }}>{isObra ? "IVA sobre utilidad" : "IVA incluido"} · {d.divisa||"COP"}</p>
           <div style={{ borderTop:"1px solid rgba(255,255,255,0.15)", paddingTop:12 }}>
             {[["PVP sin IVA", fmt(r.PVP)],
@@ -9459,10 +9459,10 @@ function TEnt({ d, set, r }) {
         <Card style={{ padding:22 }}>
           <STitle t="Alcance del servicio" s="" />
           {d.alcanceTexto && (
-            <div className="no-print" style={{ background:"#E8F4EE", borderRadius:4, padding:"8px 12px", fontSize:10, color:"#1E6B42", marginTop:6, marginBottom:6, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <div className="no-print" style={{ background:"#E8F4EE", borderRadius:4, padding:"8px 12px", fontSize:10, color:"#111111", marginTop:6, marginBottom:6, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               <span>📋 Hay un alcance configurado en la pestaña General</span>
               <button onClick={()=>set("ent_alcance", d.alcanceTexto)}
-                style={{ background:"#1E6B42", color:"#fff", border:"none", borderRadius:3, padding:"3px 10px", fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif" }}>
+                style={{ background:"#111111", color:"#fff", border:"none", borderRadius:3, padding:"3px 10px", fontSize:10, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif" }}>
                 Usar plantilla
               </button>
             </div>
@@ -9501,7 +9501,7 @@ function TEnt({ d, set, r }) {
           </div>
           {nivelDetalle === "total" ? (
             <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}>
-              <thead><tr style={{ background:"#FAFAF8" }}>
+              <thead><tr style={{ background:"#FFFFFF" }}>
                 {["Item","Descripción","Total"].map(h=>(
                   <th key={h} style={{ padding:"9px 14px", textAlign:h==="Total"?"right":"left",
                     fontSize:9, fontWeight:600, color:C.inkLight, textTransform:"uppercase", letterSpacing:0.8 }}>{h}</th>
@@ -9527,7 +9527,7 @@ function TEnt({ d, set, r }) {
             </table>
           ) : nivelDetalle === "capitulos" ? (
             <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}>
-              <thead><tr style={{ background:"#FAFAF8" }}>
+              <thead><tr style={{ background:"#FFFFFF" }}>
                 {["Item","Descripción","Total"].map(h=>(
                   <th key={h} style={{ padding:"9px 14px", textAlign:h==="Total"?"right":"left",
                     fontSize:9, fontWeight:600, color:C.inkLight, textTransform:"uppercase", letterSpacing:0.8 }}>{h}</th>
@@ -9557,7 +9557,7 @@ function TEnt({ d, set, r }) {
             </table>
           ) : (
             <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}>
-              <thead><tr style={{ background:"#FAFAF8" }}>
+              <thead><tr style={{ background:"#FFFFFF" }}>
                 {["Ref.","Descripción","Und","Cant.","PU","Total"].map(h=>(
                   <th key={h} style={{ padding:"9px 14px", textAlign:h==="Total"||h==="PU"?"right":"left",
                     fontSize:9, fontWeight:600, color:C.inkLight, textTransform:"uppercase", letterSpacing:0.8 }}>{h}</th>
@@ -9698,7 +9698,7 @@ function TEnt({ d, set, r }) {
       </div>
 
       {/* ═══════════ COMPARTIR (no-print) ═══════════ */}
-      <Card className="no-print" style={{ padding:16, background:"#F0EEE9" }}>
+      <Card className="no-print" style={{ padding:16, background:"#F5F5F5" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", flexWrap:"wrap", gap:8 }}>
           <span style={{ fontSize:10, fontWeight:600, color:C.inkLight, textTransform:"uppercase", letterSpacing:1 }}>Compartir manualmente</span>
           <div style={{ display:"flex", gap:6 }}>
@@ -9711,8 +9711,8 @@ function TEnt({ d, set, r }) {
               }
             }}
               style={{ display:"flex", alignItems:"center", gap:4, padding:"6px 12px",
-                background:"#1E4F8C", color:"#fff", border:"none", borderRadius:4,
-                cursor:"pointer", fontSize:10, fontWeight:600, fontFamily:"'Outfit',sans-serif" }}>
+                background:"#3B3B3B", color:"#fff", border:"none", borderRadius:4,
+                cursor:"pointer", fontSize:10, fontWeight:600, fontFamily:"'DM Sans',sans-serif" }}>
               <Mail size={11}/> Email
             </button>
             <button onClick={() => {
@@ -9721,13 +9721,13 @@ function TEnt({ d, set, r }) {
             }}
               style={{ display:"flex", alignItems:"center", gap:4, padding:"6px 12px",
                 background:"#25D366", color:"#fff", border:"none", borderRadius:4,
-                cursor:"pointer", fontSize:10, fontWeight:600, fontFamily:"'Outfit',sans-serif" }}>
+                cursor:"pointer", fontSize:10, fontWeight:600, fontFamily:"'DM Sans',sans-serif" }}>
               <MessageCircle size={11}/> WhatsApp
             </button>
             <button onClick={() => { navigator.clipboard?.writeText(`${titulo} — ${refOferta} — ${clienteNombre} — PVP: ${fmt(r.PVP_IVA)}`); alert("✅ Copiado"); }}
               style={{ display:"flex", alignItems:"center", gap:4, padding:"6px 12px",
                 background:"transparent", color:"#555", border:`1px solid ${C.border}`, borderRadius:4,
-                cursor:"pointer", fontSize:10, fontWeight:500, fontFamily:"'Outfit',sans-serif" }}>
+                cursor:"pointer", fontSize:10, fontWeight:500, fontFamily:"'DM Sans',sans-serif" }}>
               <Copy size={11}/> Copiar
             </button>
           </div>
@@ -9804,8 +9804,8 @@ function TabEncuestas({ offers }) {
     <div style={{ display:"flex", gap:3, flexWrap:"wrap" }}>
       {Array.from({length:11},(_,i)=>i).map(n => (
         <button key={n} onClick={()=>onChange(n)}
-          style={{ width:32, height:32, borderRadius:6, border:"1px solid "+(n===value?"#111":"#E4E1DB"),
-            background: n===value ? (n>=9?"#1E6B42":n>=7?"#F5A623":"#AE2C2C") : "#fff",
+          style={{ width:32, height:32, borderRadius:6, border:"1px solid "+(n===value?"#111":"#E0E0E0"),
+            background: n===value ? (n>=9?"#111111":n>=7?"#F5A623":"#B91C1C") : "#fff",
             color: n===value ? "#fff" : "#555", fontWeight:n===value?700:400, fontSize:12,
             cursor:"pointer", transition:"all .1s" }}>{n}</button>
       ))}
@@ -9839,7 +9839,7 @@ function TabEncuestas({ offers }) {
             <div style={{ display:"flex", gap:8 }}>
               {["Sí","No","Con reservas"].map(op => (
                 <button key={op} onClick={() => setResp({...resp, [q.id]:op})}
-                  style={{ padding:"6px 16px", borderRadius:6, border:`1px solid ${resp[q.id]===op?"#111":"#E4E1DB"}`,
+                  style={{ padding:"6px 16px", borderRadius:6, border:`1px solid ${resp[q.id]===op?"#111":"#E0E0E0"}`,
                     background:resp[q.id]===op?"#111":"#fff", color:resp[q.id]===op?"#fff":"#555",
                     fontSize:12, cursor:"pointer", fontWeight:resp[q.id]===op?600:400 }}>{op}</button>
               ))}
@@ -9849,7 +9849,7 @@ function TabEncuestas({ offers }) {
             <textarea value={resp[q.id]||""} onChange={e => setResp({...resp, [q.id]:e.target.value})}
               rows={2} placeholder="Escribe aquí..."
               style={{ width:"100%", border:`1px solid ${C.border}`, borderRadius:6, padding:"8px 10px",
-                fontSize:12, fontFamily:"'Outfit',sans-serif", resize:"vertical" }} />
+                fontSize:12, fontFamily:"'DM Sans',sans-serif", resize:"vertical" }} />
           )}
         </div>
       ))}
@@ -9868,13 +9868,13 @@ function TabEncuestas({ offers }) {
       {/* KPIs */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:10, marginBottom:16 }}>
         {[
-          ["Enc. satisfacción", encSat.length, "#1E6B42"],
+          ["Enc. satisfacción", encSat.length, "#111111"],
           ["Promedio general", promedioEstrellas(encSat)+"★", "#F5A623"],
-          ["NPS Score", npsScore(encSat), "#1E4F8C"],
-          ["Eval. proveedores", encPrv.length, "#7A5218"],
+          ["NPS Score", npsScore(encSat), "#3B3B3B"],
+          ["Eval. proveedores", encPrv.length, "#8C6A00"],
           ["Promedio proveed.", promedioEstrellas(encPrv)+"★", "#F5A623"],
         ].map(([l,v,color])=>(
-          <div key={l} style={{ background:"#fff", border:"1px solid #E4E1DB", borderRadius:8,
+          <div key={l} style={{ background:"#fff", border:"1px solid #E0E0E0", borderRadius:8,
             padding:"10px 12px", borderLeft:"3px solid "+color }}>
             <div style={{ fontSize:9, color:"#888", marginBottom:2 }}>{l}</div>
             <div style={{ fontSize:16, fontWeight:700, color, fontFamily:"'DM Mono',monospace" }}>{v}</div>
@@ -9887,7 +9887,7 @@ function TabEncuestas({ offers }) {
         {[["satisfaccion","Satisfacción cliente"],["proveedores","Evaluación proveedores"]].map(([k,lbl])=>(
           <button key={k} onClick={()=>setVista(k)}
             style={{ padding:"8px 18px", border:`1px solid ${C.border}`, borderRadius:k==="satisfaccion"?"6px 0 0 6px":"0 6px 6px 0",
-              fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+              fontSize:12, fontWeight:600, cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
               background:vista===k?"#111":"#fff", color:vista===k?"#fff":"#555" }}>
             {lbl}
           </button>
@@ -9898,18 +9898,18 @@ function TabEncuestas({ offers }) {
       {vista === "satisfaccion" && (<>
         <div style={{ display:"flex", gap:8, marginBottom:14 }}>
           <select onChange={e => { if(e.target.value) { const of = ofertasGanadas.find(o=>o.id===e.target.value); setFormSat(nuevaEncSat(of)); e.target.value=""; }}}
-            style={{ border:`1px solid ${C.border}`, borderRadius:6, padding:"7px 12px", fontSize:12, fontFamily:"'Outfit',sans-serif" }}>
+            style={{ border:`1px solid ${C.border}`, borderRadius:6, padding:"7px 12px", fontSize:12, fontFamily:"'DM Sans',sans-serif" }}>
             <option value="">+ Nueva encuesta desde oferta ganada...</option>
             {ofertasGanadas.map(o => <option key={o.id} value={o.id}>{o.proyecto||o.cliente||o.id}</option>)}
           </select>
           <button onClick={()=>setFormSat(nuevaEncSat({}))}
-            style={{ padding:"7px 14px", border:"none", borderRadius:6, background:"#1E6B42",
+            style={{ padding:"7px 14px", border:"none", borderRadius:6, background:"#111111",
               color:"#fff", cursor:"pointer", fontSize:12, fontWeight:600, display:"flex", alignItems:"center", gap:4 }}>
             <Plus size={12}/> Nueva en blanco
           </button>
         </div>
         {formSat && (
-          <Card style={{ padding:22, marginBottom:16, borderLeft:"3px solid #1E6B42" }}>
+          <Card style={{ padding:22, marginBottom:16, borderLeft:"3px solid #111111" }}>
             <STitle t="Encuesta de satisfacción" s={formSat.proyecto||"Proyecto sin nombre"} />
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
               <FI lbl="Cliente" val={formSat.cliente} on={e=>setFormSat(f=>({...f,cliente:e.target.value}))} />
@@ -9933,7 +9933,7 @@ function TabEncuestas({ offers }) {
               <thead><tr style={{ background:"#F5F4F1" }}>
                 {["Fecha","Cliente","Proyecto","Promedio","NPS","Estado",""].map(h=>(
                   <th key={h} style={{ padding:"8px 12px", textAlign:"left", fontSize:9, fontWeight:700,
-                    color:"#888", textTransform:"uppercase", letterSpacing:0.5, borderBottom:"2px solid #E4E1DB" }}>{h}</th>
+                    color:"#888", textTransform:"uppercase", letterSpacing:0.5, borderBottom:"2px solid #E0E0E0" }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
@@ -9949,13 +9949,13 @@ function TabEncuestas({ offers }) {
                       <td style={{ padding:"8px 12px", fontFamily:"'DM Mono',monospace" }}>{e.respuestas?.q5??"-"}</td>
                       <td style={{ padding:"8px 12px" }}>
                         <span style={{ background:e.estado==="completada"?"#E6F4EC":"#FFF3E0",
-                          color:e.estado==="completada"?"#1E6B42":"#F5A623", padding:"2px 8px",
+                          color:e.estado==="completada"?"#111111":"#F5A623", padding:"2px 8px",
                           borderRadius:4, fontSize:10, fontWeight:600 }}>{e.estado}</span>
                       </td>
                       <td style={{ padding:"8px 12px" }}>
                         <div style={{ display:"flex", gap:4 }}>
                           <button onClick={()=>setFormSat({...e})} style={{ background:"none",border:"none",cursor:"pointer",color:C.ink }}><Edit2 size={12}/></button>
-                          <button onClick={()=>{ if(window.confirm("¿Eliminar?")) saveSat(encSat.filter(x=>x.id!==e.id)); }} style={{ background:"none",border:"none",cursor:"pointer",color:"#AE2C2C" }}><Trash2 size={12}/></button>
+                          <button onClick={()=>{ if(window.confirm("¿Eliminar?")) saveSat(encSat.filter(x=>x.id!==e.id)); }} style={{ background:"none",border:"none",cursor:"pointer",color:"#B91C1C" }}><Trash2 size={12}/></button>
                         </div>
                       </td>
                     </tr>
@@ -9971,13 +9971,13 @@ function TabEncuestas({ offers }) {
       {vista === "proveedores" && (<>
         <div style={{ marginBottom:14 }}>
           <button onClick={()=>setFormPrv(nuevaEncPrv())}
-            style={{ padding:"7px 14px", border:"none", borderRadius:6, background:"#7A5218",
+            style={{ padding:"7px 14px", border:"none", borderRadius:6, background:"#8C6A00",
               color:"#fff", cursor:"pointer", fontSize:12, fontWeight:600, display:"flex", alignItems:"center", gap:4 }}>
             <Plus size={12}/> Evaluar proveedor
           </button>
         </div>
         {formPrv && (
-          <Card style={{ padding:22, marginBottom:16, borderLeft:"3px solid #7A5218" }}>
+          <Card style={{ padding:22, marginBottom:16, borderLeft:"3px solid #8C6A00" }}>
             <STitle t="Evaluación de proveedor" s="" />
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
               <FI lbl="Proveedor" val={formPrv.proveedor} on={e=>setFormPrv(f=>({...f,proveedor:e.target.value}))} />
@@ -10001,7 +10001,7 @@ function TabEncuestas({ offers }) {
               <thead><tr style={{ background:"#F5F4F1" }}>
                 {["Fecha","Proveedor","Proyecto","Promedio","¿Repetir?","Estado",""].map(h=>(
                   <th key={h} style={{ padding:"8px 12px", textAlign:"left", fontSize:9, fontWeight:700,
-                    color:"#888", textTransform:"uppercase", letterSpacing:0.5, borderBottom:"2px solid #E4E1DB" }}>{h}</th>
+                    color:"#888", textTransform:"uppercase", letterSpacing:0.5, borderBottom:"2px solid #E0E0E0" }}>{h}</th>
                 ))}
               </tr></thead>
               <tbody>
@@ -10017,13 +10017,13 @@ function TabEncuestas({ offers }) {
                       <td style={{ padding:"8px 12px" }}>{e.respuestas?.p5||"—"}</td>
                       <td style={{ padding:"8px 12px" }}>
                         <span style={{ background:e.estado==="completada"?"#E6F4EC":"#FFF3E0",
-                          color:e.estado==="completada"?"#1E6B42":"#F5A623", padding:"2px 8px",
+                          color:e.estado==="completada"?"#111111":"#F5A623", padding:"2px 8px",
                           borderRadius:4, fontSize:10, fontWeight:600 }}>{e.estado}</span>
                       </td>
                       <td style={{ padding:"8px 12px" }}>
                         <div style={{ display:"flex", gap:4 }}>
                           <button onClick={()=>setFormPrv({...e})} style={{ background:"none",border:"none",cursor:"pointer",color:C.ink }}><Edit2 size={12}/></button>
-                          <button onClick={()=>{ if(window.confirm("¿Eliminar?")) savePrv(encPrv.filter(x=>x.id!==e.id)); }} style={{ background:"none",border:"none",cursor:"pointer",color:"#AE2C2C" }}><Trash2 size={12}/></button>
+                          <button onClick={()=>{ if(window.confirm("¿Eliminar?")) savePrv(encPrv.filter(x=>x.id!==e.id)); }} style={{ background:"none",border:"none",cursor:"pointer",color:"#B91C1C" }}><Trash2 size={12}/></button>
                         </div>
                       </td>
                     </tr>
@@ -10044,15 +10044,15 @@ function Config() {
   return (
     <div className="fade">
       <p style={{ fontSize: 9, letterSpacing: 2.5, textTransform: "uppercase", color: C.inkLight, margin: "0 0 6px" }}>Sistema</p>
-      <h1 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 28, fontWeight: 700, color: C.ink, margin: "0 0 28px", letterSpacing: -0.5 }}>Configuración</h1>
+      <h1 style={{ fontFamily: "'DM Sans', sans-serif", fontSize: 28, fontWeight: 700, color: C.ink, margin: "0 0 28px", letterSpacing: -0.5 }}>Configuración</h1>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
         <Card style={{ padding: 24 }}>
           <STitle t="Marca" s="Identidad visual aplicada" />
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
             <div style={{ background: C.ink, borderRadius: 3, padding: "16px" }}><LogoMark size={44} color="#fff" /></div>
             <div>
-              <p style={{ margin: "0 0 2px", fontFamily: "'Outfit', sans-serif", fontSize: 16, fontWeight: 700, color: C.ink }}>Habitaris</p>
-              <p style={{ margin: "0 0 2px", fontSize: 11, color: C.inkLight }}>Tipografía: Outfit (sans-serif)</p>
+              <p style={{ margin: "0 0 2px", fontFamily: "'DM Sans', sans-serif", fontSize: 16, fontWeight: 700, color: C.ink }}>Habitaris</p>
+              <p style={{ margin: "0 0 2px", fontSize: 11, color: C.inkLight }}>Tipografía: DM Sans (sans-serif)</p>
               <p style={{ margin: 0, fontSize: 11, color: C.inkLight }}>Paleta: B&W + off-white. Manual 2025 ✓</p>
             </div>
           </div>

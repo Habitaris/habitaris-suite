@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { DollarSign, Plus, Trash2, Edit3, Check, X, Search, Download, Upload, FileText, BarChart2, TrendingUp, CreditCard, Receipt, PieChart, ArrowUpRight, ArrowDownRight, Calendar } from "lucide-react";
 
-const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:'Outfit',sans-serif;background:#F5F4F1}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}input,select,textarea,button{font-family:'Outfit',sans-serif;outline:none}button{cursor:pointer}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fade-up{animation:fadeUp .22s ease both}`}</style>;
-const T = { bg:"#F5F4F1",surface:"#FFFFFF",surfaceAlt:"#FAFAF8",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E4E1DB",accent:"#EDEBE7",green:"#1E6B42",greenBg:"#E8F4EE",red:"#AE2C2C",redBg:"#FAE8E8",amber:"#7A5218",amberBg:"#FAF0E0",blue:"#1E4F8C",blueBg:"#E6EFF9",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
+const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;background:#F5F4F1}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}input,select,textarea,button{font-family:'DM Sans',sans-serif;outline:none}button{cursor:pointer}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fade-up{animation:fadeUp .22s ease both}`}</style>;
+const T = { bg:"#F5F4F1",surface:"#FFFFFF",surfaceAlt:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E0E0E0",accent:"#EDEBE7",green:"#111111",greenBg:"#E8F4EE",red:"#B91C1C",redBg:"#FAE8E8",amber:"#8C6A00",amberBg:"#FAF0E0",blue:"#3B3B3B",blueBg:"#F0F0F0",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
 const uid = () => Math.random().toString(36).slice(2, 9);
 const today = () => new Date().toISOString().split("T")[0];
 const fmt = (n) => n ? new Intl.NumberFormat("es-CO", { maximumFractionDigits:0 }).format(n) : "$0";
@@ -113,7 +113,7 @@ export default function HabitarisContabilidad() {
                   {movimientos.length === 0 ? (
                     <div style={{ padding:30, textAlign:"center", color:T.inkLight }}>Sin movimientos registrados</div>
                   ) : [...movimientos].sort((a,b) => b.fecha > a.fecha ? 1 : -1).slice(0,15).map(m => (
-                    <div key={m.id} style={{ padding:"8px 16px", borderBottom:`1px solid #F0EEE9`, display:"flex", alignItems:"center", gap:10, fontSize:11 }}>
+                    <div key={m.id} style={{ padding:"8px 16px", borderBottom:`1px solid #F5F5F5`, display:"flex", alignItems:"center", gap:10, fontSize:11 }}>
                       <span style={{ fontSize:14 }}>{m.tipo==="ingreso"?"💰":"💸"}</span>
                       <span style={{ fontSize:10, color:T.inkLight }}>{fmtD(m.fecha)}</span>
                       <span style={{ flex:1, fontWeight:500 }}>{m.concepto || "Sin concepto"}</span>

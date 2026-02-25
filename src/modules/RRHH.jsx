@@ -18,14 +18,14 @@ import {
 ───────────────────────────────────────────── */
 const Fonts = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Outfit', sans-serif; background: #F5F4F1; -webkit-font-smoothing: antialiased; }
+    body { font-family: 'DM Sans', sans-serif; background: #F5F4F1; -webkit-font-smoothing: antialiased; }
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #C8C5BE; border-radius: 2px; }
-    input, select, textarea { font-family: 'Outfit', sans-serif; outline: none; }
-    button { font-family: 'Outfit', sans-serif; cursor: pointer; }
+    input, select, textarea { font-family: 'DM Sans', sans-serif; outline: none; }
+    button { font-family: 'DM Sans', sans-serif; cursor: pointer; }
     @keyframes fadeUp   { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
     @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
     @keyframes slideIn  { from { transform:translateX(-6px); opacity:0; } to { transform:translateX(0); opacity:1; } }
@@ -43,31 +43,31 @@ const Fonts = () => (
 const T = {
   bg:          "#F5F4F1",
   surface:     "#FFFFFF",
-  surfaceAlt:  "#FAFAF8",
+  surfaceAlt:  "#FFFFFF",
   sidebar:     "#0D0D0D",
   ink:         "#111111",
   inkMid:      "#555555",
   inkLight:    "#909090",
   inkXLight:   "#C8C5BE",
-  border:      "#E4E1DB",
+  border:      "#E0E0E0",
   borderMid:   "#C8C5BE",
   accent:      "#EDEBE7",
-  green:       "#1E6B42",
+  green:       "#111111",
   greenBg:     "#E8F4EE",
   greenLight:  "#D0EBDA",
-  red:         "#AE2C2C",
+  red:         "#B91C1C",
   redBg:       "#FAE8E8",
-  amber:       "#7A5218",
+  amber:       "#8C6A00",
   amberBg:     "#FAF0E0",
-  blue:        "#1E4F8C",
-  blueBg:      "#E6EFF9",
+  blue:        "#3B3B3B",
+  blueBg:      "#F0F0F0",
   shadow:      "0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.05)",
   shadowMd:    "0 8px 32px rgba(0,0,0,.12)",
   // aliases for C.* references in components
   card:        "#FFFFFF",
   greenL:      "#D0EBDA",
   redL:        "#FAE8E8",
-  blueL:       "#E6EFF9",
+  blueL:       "#F0F0F0",
   amberL:      "#FAF0E0",
   teal:        "#0D7377",
   tealL:       "#E0F4F4",
@@ -196,10 +196,10 @@ const DEF_GASTO = () => ({
    TIPOS DE NOVEDAD DE NÓMINA
 ───────────────────────────────────────────── */
 const NOVEDAD_TIPOS = [
-  { id:"vacaciones",   lbl:"Vacaciones",       icono:"🏖️",  color:"#1E6B42", bg:"#E8F4EE", requiereDoc:false, requiereFechas:true,  requiereHoras:false },
-  { id:"baja",         lbl:"Baja Médica",       icono:"🏥",  color:"#AE2C2C", bg:"#FAE8E8", requiereDoc:true,  requiereFechas:true,  requiereHoras:false },
-  { id:"permiso",      lbl:"Permiso / Ausencia",icono:"📋",  color:"#7A5218", bg:"#FAF0E0", requiereDoc:false, requiereFechas:false, requiereHoras:true  },
-  { id:"horasExtra",   lbl:"Horas Extra",       icono:"⏰",  color:"#1E4F8C", bg:"#E6EFF9", requiereDoc:false, requiereFechas:false, requiereHoras:true  },
+  { id:"vacaciones",   lbl:"Vacaciones",       icono:"🏖️",  color:"#111111", bg:"#E8F4EE", requiereDoc:false, requiereFechas:true,  requiereHoras:false },
+  { id:"baja",         lbl:"Baja Médica",       icono:"🏥",  color:"#B91C1C", bg:"#FAE8E8", requiereDoc:true,  requiereFechas:true,  requiereHoras:false },
+  { id:"permiso",      lbl:"Permiso / Ausencia",icono:"📋",  color:"#8C6A00", bg:"#FAF0E0", requiereDoc:false, requiereFechas:false, requiereHoras:true  },
+  { id:"horasExtra",   lbl:"Horas Extra",       icono:"⏰",  color:"#3B3B3B", bg:"#F0F0F0", requiereDoc:false, requiereFechas:false, requiereHoras:true  },
   { id:"licEspecial",  lbl:"Licencia Especial", icono:"📄",  color:"#5B3A8C", bg:"#EDE8F4", requiereDoc:true,  requiereFechas:true,  requiereHoras:false },
   { id:"otro",         lbl:"Otro",              icono:"📎",  color:"#555555", bg:"#EDEBE7", requiereDoc:false, requiereFechas:false, requiereHoras:false },
 ];
@@ -271,7 +271,7 @@ const Inp = ({ label, value, onChange, type="text", placeholder="", readOnly=fal
     {label && <label style={{ display:"block", fontSize:10, fontWeight:600, color:T.inkLight, marginBottom:4, textTransform:"uppercase", letterSpacing:0.8 }}>{label}</label>}
     <input type={type} value={value??""} onChange={onChange} placeholder={placeholder} readOnly={readOnly}
       style={{ width:"100%", padding:"7px 10px", border:`1px solid ${T.border}`, borderRadius:3,
-        fontSize:12, color:T.ink, background:readOnly?T.accent:T.surface, fontFamily:"'Outfit',sans-serif" }} {...rest}/>
+        fontSize:12, color:T.ink, background:readOnly?T.accent:T.surface, fontFamily:"'DM Sans',sans-serif" }} {...rest}/>
     {note && <p style={{ fontSize:10, color:T.inkLight, marginTop:3 }}>{note}</p>}
   </div>
 );
@@ -906,7 +906,7 @@ function TabActivos({ activos, saveActivos, licencias, saveLicencias, gastos, sa
                   background: formA.categoria===n.cat ? T.ink : T.surface,
                   color: formA.categoria===n.cat ? "#fff" : T.inkMid,
                   fontSize:10, cursor:"pointer", textAlign:"center", lineHeight:1.3,
-                  fontFamily:"'Outfit',sans-serif",
+                  fontFamily:"'DM Sans',sans-serif",
                 }}>
                   <div style={{ fontSize:18, marginBottom:3 }}>{n.icono}</div>
                   <div style={{ fontWeight: formA.categoria===n.cat ? 700 : 400 }}>{n.cat}</div>
@@ -1683,10 +1683,10 @@ function TabAsistencia({ equipo, asistencia, setAsistencia, pais }) {
     <div>
       {/* Selector de modo */}
       <Row gap={8} style={{marginBottom:16}} wrap>
-        <button onClick={()=>setModo("encargado")} style={{flex:1,padding:"10px 16px",borderRadius:8,border:`2px solid ${modo==="encargado"?C.green:C.border}`,background:modo==="encargado"?C.greenL:C.card,cursor:"pointer",fontFamily:"Outfit,sans-serif",fontSize:13,fontWeight:modo==="encargado"?600:400,color:modo==="encargado"?C.green:C.inkMid}}>
+        <button onClick={()=>setModo("encargado")} style={{flex:1,padding:"10px 16px",borderRadius:8,border:`2px solid ${modo==="encargado"?C.green:C.border}`,background:modo==="encargado"?C.greenL:C.card,cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:modo==="encargado"?600:400,color:modo==="encargado"?C.green:C.inkMid}}>
           👔 Vista encargado — Panel del día
         </button>
-        <button onClick={()=>{setModo("fichaje");resetFichaje();}} style={{flex:1,padding:"10px 16px",borderRadius:8,border:`2px solid ${modo==="fichaje"?C.teal:C.border}`,background:modo==="fichaje"?C.tealL:C.card,cursor:"pointer",fontFamily:"Outfit,sans-serif",fontSize:13,fontWeight:modo==="fichaje"?600:400,color:modo==="fichaje"?C.teal:C.inkMid}}>
+        <button onClick={()=>{setModo("fichaje");resetFichaje();}} style={{flex:1,padding:"10px 16px",borderRadius:8,border:`2px solid ${modo==="fichaje"?C.teal:C.border}`,background:modo==="fichaje"?C.tealL:C.card,cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:modo==="fichaje"?600:400,color:modo==="fichaje"?C.teal:C.inkMid}}>
           📱 Fichaje del trabajador — Foto + GPS
         </button>
       </Row>
@@ -1898,10 +1898,10 @@ function TabNovedades({ novedades, saveNovedades }) {
   const tipoInfo = (t) => NOVEDAD_TIPOS.find(x => x.id === t) || NOVEDAD_TIPOS[5];
 
   const estadoBadge = (e) => ({
-    "Pendiente":   { color:"#7A5218", bg:"#FAF0E0" },
-    "En revisión": { color:"#1E4F8C", bg:"#E6EFF9" },
-    "Aprobada":    { color:"#1E6B42", bg:"#E8F4EE" },
-    "Rechazada":   { color:"#AE2C2C", bg:"#FAE8E8" },
+    "Pendiente":   { color:"#8C6A00", bg:"#FAF0E0" },
+    "En revisión": { color:"#3B3B3B", bg:"#F0F0F0" },
+    "Aprobada":    { color:"#111111", bg:"#E8F4EE" },
+    "Rechazada":   { color:"#B91C1C", bg:"#FAE8E8" },
   }[e] || { color:"#555", bg:"#EDEBE7" });
 
   return (
@@ -2056,7 +2056,7 @@ function TabNovedades({ novedades, saveNovedades }) {
                       <Label>Comentario para el empleado (opcional)</Label>
                       <textarea value={comentario} onChange={e=>setComentario(e.target.value)}
                         placeholder="Motivo de aprobación o rechazo…"
-                        style={{ width:"100%", marginTop:5, padding:"8px 10px", border:`1px solid ${T.border}`, borderRadius:3, fontSize:12, minHeight:70, resize:"vertical", fontFamily:"'Outfit',sans-serif" }}/>
+                        style={{ width:"100%", marginTop:5, padding:"8px 10px", border:`1px solid ${T.border}`, borderRadius:3, fontSize:12, minHeight:70, resize:"vertical", fontFamily:"'DM Sans',sans-serif" }}/>
                     </div>
                     <div style={{ display:"flex", gap:8, justifyContent:"flex-end" }}>
                       <Btn variant="outline" onClick={() => setDetalle(null)}>Cancelar</Btn>
@@ -2105,7 +2105,7 @@ const DEF_DOC = (empNombre = "") => ({
 
 /* Styles for Portal Empleado */
 const S = {
-  page:   { minHeight:"100vh", background:T.bg, fontFamily:"'Outfit',sans-serif" },
+  page:   { minHeight:"100vh", background:T.bg, fontFamily:"'DM Sans',sans-serif" },
   card:   { background:T.surface, border:`1px solid ${T.border}`, borderRadius:8, padding:16, marginBottom:12, boxShadow:T.shadow },
   overlay:{ position:"fixed", inset:0, background:"rgba(0,0,0,.45)", zIndex:200, display:"flex", alignItems:"center", justifyContent:"center" },
   modal:  { background:T.surface, borderRadius:8, padding:24, width:520, maxWidth:"95vw", boxShadow:T.shadowMd, maxHeight:"90vh", overflowY:"auto" },
@@ -2390,7 +2390,7 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
   const bajaActiva=misNov.find(n=>n.tipo==="baja"&&n.estado==="Aprobada"&&!n.fechaFin);
 
   const upd=(set,k,v)=>set(f=>({...f,[k]:v}));
-  const estC=e=>({Borrador:{c:T.inkLight,bg:T.accent},Enviado:{c:T.blue,bg:T.blueBg},Aprobado:{c:T.green,bg:T.greenBg},Rechazado:{c:T.red,bg:T.redBg},Pendiente:{c:"#7A5218",bg:"#FAF0E0"},Aprobada:{c:T.green,bg:T.greenBg},Rechazada:{c:T.red,bg:T.redBg}}[e]||{c:T.inkLight,bg:T.accent});
+  const estC=e=>({Borrador:{c:T.inkLight,bg:T.accent},Enviado:{c:T.blue,bg:T.blueBg},Aprobado:{c:T.green,bg:T.greenBg},Rechazado:{c:T.red,bg:T.redBg},Pendiente:{c:"#8C6A00",bg:"#FAF0E0"},Aprobada:{c:T.green,bg:T.greenBg},Rechazada:{c:T.red,bg:T.redBg}}[e]||{c:T.inkLight,bg:T.accent});
 
   const saveParte=()=>{
     if(!formParte?.otCodigo||!formParte?.actividad) return;
@@ -2418,7 +2418,7 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
 
   /* ── Styles ── */
   const S={
-    page:{minHeight:"100vh",background:T.bg,fontFamily:"'Outfit',sans-serif"},
+    page:{minHeight:"100vh",background:T.bg,fontFamily:"'DM Sans',sans-serif"},
     card:{background:T.surface,border:`1px solid ${T.border}`,borderRadius:6,padding:"16px 18px",marginBottom:12},
     row:{display:"flex",gap:8,alignItems:"center"},
     col:{display:"flex",flexDirection:"column",gap:4},
@@ -2451,7 +2451,7 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
           <Input value={nombre} onChange={setNombre} placeholder="Ej. María García López"
             style={{marginBottom:8}} onKeyDown={e=>e.key==="Enter"&&nombre.trim()&&setLogged(true)}/>
           <button onClick={()=>nombre.trim()&&setLogged(true)}
-            style={{width:"100%",padding:"9px",background:T.ink,color:"#fff",border:"none",borderRadius:3,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+            style={{width:"100%",padding:"9px",background:T.ink,color:"#fff",border:"none",borderRadius:3,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
             Entrar al portal
           </button>
           <p style={{fontSize:9,color:T.inkXLight,marginTop:10,textAlign:"center",lineHeight:1.4}}>Fase 1 · En producción se usará email + contraseña</p>
@@ -2513,7 +2513,7 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
             let dotC=null;
             if(evs.some(e=>e.kind==="novedad"&&e.obj.estado==="Rechazada")) dotC=T.red;
             else if(evs.some(e=>e.kind==="novedad"&&e.obj.estado==="Aprobada")) dotC=T.green;
-            else if(evs.some(e=>e.kind==="novedad"&&e.obj.estado==="Pendiente")) dotC="#7A5218";
+            else if(evs.some(e=>e.kind==="novedad"&&e.obj.estado==="Pendiente")) dotC="#8C6A00";
             else if(evs.some(e=>e.kind==="parte"&&e.obj.estado==="Aprobado")) dotC=T.blue;
             else if(evs.length) dotC="#555";
             return (
@@ -2755,7 +2755,7 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
         <div><h3 style={{margin:0,fontSize:16,fontWeight:700}}>✈️ Mis Viajes y Viáticos</h3>
           <p style={{margin:0,fontSize:10,color:T.inkLight}}>Solicita viáticos, registra gastos y legaliza</p></div>
         <button onClick={()=>setShowNewViaje(true)}
-          style={{padding:"8px 16px",background:T.ink,color:"#fff",border:"none",borderRadius:5,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5}}>
+          style={{padding:"8px 16px",background:T.ink,color:"#fff",border:"none",borderRadius:5,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",gap:5}}>
           <Plus size={11}/> Solicitar viaje
         </button>
       </div>
@@ -2811,13 +2811,13 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
                           const canEdit = v.estado==="solicitado" || v.estado==="aprobado";
                           const canEditReal = v.estado==="entregado" || v.estado==="legalizado";
                           return (
-                            <tr key={it.id} style={{borderBottom:`1px solid ${T.border}`,background:i%2?"#FAFAF8":"#fff"}}>
+                            <tr key={it.id} style={{borderBottom:`1px solid ${T.border}`,background:i%2?"#FFFFFF":"#fff"}}>
                               <td style={{padding:"4px 8px",fontSize:10,fontWeight:600}}>{it.icon} {it.lbl}</td>
                               <td style={{padding:"3px 4px"}}>
                                 {canEdit ? (
                                   <input type="text" value={item.detalle||""} placeholder="Detalle..."
                                     onChange={e=>updViajeItem(v.id,it.id,"detalle",e.target.value)}
-                                    style={{width:"100%",border:`1px solid ${T.border}`,borderRadius:3,padding:"3px 6px",fontSize:9,background:"#fff",fontFamily:"'Outfit',sans-serif"}}/>
+                                    style={{width:"100%",border:`1px solid ${T.border}`,borderRadius:3,padding:"3px 6px",fontSize:9,background:"#fff",fontFamily:"'DM Sans',sans-serif"}}/>
                                 ) : <span style={{fontSize:9,color:T.inkMid}}>{item.detalle||"—"}</span>}
                               </td>
                               <td style={{padding:"3px 4px"}}>
@@ -2868,7 +2868,7 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
                       <div style={{background:"#F0ECF6",border:"1px solid #5B3A8C33",borderRadius:4,padding:"8px 12px",fontSize:10,color:"#5B3A8C",fontWeight:600}}>
                         💰 Anticipo entregado: ${new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(v.anticipoEntregado||0)}. Registra los gastos reales en la columna "Real" y añade gastos extra abajo.
                         <button onClick={()=>setNewGastoV({fecha:today(),concepto:"",monto:0,soporte:""})}
-                          style={{display:"block",marginTop:6,padding:"4px 12px",background:"#5B3A8C",color:"#fff",border:"none",borderRadius:3,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+                          style={{display:"block",marginTop:6,padding:"4px 12px",background:"#5B3A8C",color:"#fff",border:"none",borderRadius:3,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
                           + Añadir gasto extra
                         </button>
                       </div>
@@ -3122,9 +3122,9 @@ export default function HabitarisRRHH({ pais = "CO" }) {
               <AlertTriangle size={11} color={T.amber}/>
               <span style={{ fontSize:10, fontWeight:700, color:T.amber }}>{pendientes} parte{pendientes>1?"s":""} pendiente{pendientes>1?"s":""}</span>
             </div>}
-            {pendNovAdmin>0&&<div style={{ background:"#FAF0E0", border:`1px solid #7A521833`, borderRadius:3, padding:"5px 10px", display:"flex", alignItems:"center", gap:5, cursor:"pointer" }} onClick={()=>setTab("novedades")}>
-              <Bell size={11} color="#7A5218"/>
-              <span style={{ fontSize:10, fontWeight:700, color:"#7A5218" }}>{pendNovAdmin} nov. pendiente{pendNovAdmin>1?"s":""}</span>
+            {pendNovAdmin>0&&<div style={{ background:"#FAF0E0", border:`1px solid #8C6A0033`, borderRadius:3, padding:"5px 10px", display:"flex", alignItems:"center", gap:5, cursor:"pointer" }} onClick={()=>setTab("novedades")}>
+              <Bell size={11} color="#8C6A00"/>
+              <span style={{ fontSize:10, fontWeight:700, color:"#8C6A00" }}>{pendNovAdmin} nov. pendiente{pendNovAdmin>1?"s":""}</span>
             </div>}
           </div>
         </div>
@@ -3149,7 +3149,7 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                   <t.I size={13} style={{ flexShrink:0 }}/>
                   <span style={{ lineHeight:1.2 }}>{t.lbl}</span>
                   {t.id==="partes"    && pendientes>0   && <span style={{marginLeft:"auto",background:T.amber,color:"#fff",fontSize:8,fontWeight:800,padding:"1px 5px",borderRadius:8}}>{pendientes}</span>}
-                  {t.id==="novedades" && pendNovAdmin>0  && <span style={{marginLeft:"auto",background:"#7A5218",color:"#fff",fontSize:8,fontWeight:800,padding:"1px 5px",borderRadius:8}}>{pendNovAdmin}</span>}
+                  {t.id==="novedades" && pendNovAdmin>0  && <span style={{marginLeft:"auto",background:"#8C6A00",color:"#fff",fontSize:8,fontWeight:800,padding:"1px 5px",borderRadius:8}}>{pendNovAdmin}</span>}
                 </button>
               );
             })}
@@ -3174,11 +3174,11 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
                         {[
                           ["👷 Cargos",cargos.length,"#111"],
-                          ["👥 Empleados",empleados.length,"#1E4F8C"],
+                          ["👥 Empleados",empleados.length,"#3B3B3B"],
                           ["📋 Partes",partes.length,"#111"],
-                          ["📨 Novedades pend.",novedades.filter(n=>n.estado==="Pendiente").length,novedades.filter(n=>n.estado==="Pendiente").length>0?"#7A5218":"#1E6B42"]
+                          ["📨 Novedades pend.",novedades.filter(n=>n.estado==="Pendiente").length,novedades.filter(n=>n.estado==="Pendiente").length>0?"#8C6A00":"#111111"]
                         ].map(([l,v,c])=>(
-                          <div key={l} style={{background:"#fff",border:`1px solid #E4E1DB`,borderRadius:8,padding:"14px 16px",boxShadow:"0 1px 3px rgba(0,0,0,.06)"}}>
+                          <div key={l} style={{background:"#fff",border:`1px solid #E0E0E0`,borderRadius:8,padding:"14px 16px",boxShadow:"0 1px 3px rgba(0,0,0,.06)"}}>
                             <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div>
                             <div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:c}}>{v}</div>
                           </div>
@@ -3186,12 +3186,12 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
                         {[
-                          ["⏰ Horas aprobadas",partes.filter(p=>p.estado==="Aprobado").reduce((s,p)=>s+Number(p.horasNormales||0)+Number(p.horasExtra||0),0)+"h","#1E6B42"],
-                          ["🏖️ Vacaciones aprobadas",novedades.filter(n=>n.tipo==="vacaciones"&&n.estado==="Aprobada").reduce((s,n)=>s+Number(n.dias||0),0)+"d","#1E4F8C"],
-                          ["🏥 Bajas activas",novedades.filter(n=>n.tipo==="baja"&&n.estado==="Aprobada").length,"#AE2C2C"],
-                          ["✈️ Viáticos pend.",(()=>{try{return(JSON.parse(localStorage.getItem("habitaris_admin"))||{}).adm_viaticos||[];}catch{return[];}})().filter(v=>v.estado==="solicitado").length,"#7A5218"]
+                          ["⏰ Horas aprobadas",partes.filter(p=>p.estado==="Aprobado").reduce((s,p)=>s+Number(p.horasNormales||0)+Number(p.horasExtra||0),0)+"h","#111111"],
+                          ["🏖️ Vacaciones aprobadas",novedades.filter(n=>n.tipo==="vacaciones"&&n.estado==="Aprobada").reduce((s,n)=>s+Number(n.dias||0),0)+"d","#3B3B3B"],
+                          ["🏥 Bajas activas",novedades.filter(n=>n.tipo==="baja"&&n.estado==="Aprobada").length,"#B91C1C"],
+                          ["✈️ Viáticos pend.",(()=>{try{return(JSON.parse(localStorage.getItem("habitaris_admin"))||{}).adm_viaticos||[];}catch{return[];}})().filter(v=>v.estado==="solicitado").length,"#8C6A00"]
                         ].map(([l,v,c])=>(
-                          <div key={l} style={{background:"#fff",border:`1px solid #E4E1DB`,borderRadius:8,padding:"14px 16px",boxShadow:"0 1px 3px rgba(0,0,0,.06)"}}>
+                          <div key={l} style={{background:"#fff",border:`1px solid #E0E0E0`,borderRadius:8,padding:"14px 16px",boxShadow:"0 1px 3px rgba(0,0,0,.06)"}}>
                             <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div>
                             <div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:c}}>{v}</div>
                           </div>

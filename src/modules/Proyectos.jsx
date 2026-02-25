@@ -8,22 +8,22 @@ import {
 /* ─── STYLES ─── */
 const Fonts = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Outfit',sans-serif;background:#F5F4F1;-webkit-font-smoothing:antialiased}
+    body{font-family:'DM Sans',sans-serif;background:#F5F4F1;-webkit-font-smoothing:antialiased}
     ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}
-    input,select,textarea{font-family:'Outfit',sans-serif;outline:none}
-    button{font-family:'Outfit',sans-serif;cursor:pointer}
+    input,select,textarea{font-family:'DM Sans',sans-serif;outline:none}
+    button{font-family:'DM Sans',sans-serif;cursor:pointer}
     @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
     .fade-up{animation:fadeUp .22s ease both}
   `}</style>
 );
 
 const T = {
-  bg:"#F5F4F1",surface:"#FFFFFF",surfaceAlt:"#FAFAF8",ink:"#111",inkMid:"#555",inkLight:"#909090",
-  inkXLight:"#C8C5BE",border:"#E4E1DB",accent:"#EDEBE7",
-  green:"#1E6B42",greenBg:"#E8F4EE",red:"#AE2C2C",redBg:"#FAE8E8",
-  amber:"#7A5218",amberBg:"#FAF0E0",blue:"#1E4F8C",blueBg:"#E6EFF9",
+  bg:"#F5F4F1",surface:"#FFFFFF",surfaceAlt:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",
+  inkXLight:"#C8C5BE",border:"#E0E0E0",accent:"#EDEBE7",
+  green:"#111111",greenBg:"#E8F4EE",red:"#B91C1C",redBg:"#FAE8E8",
+  amber:"#8C6A00",amberBg:"#FAF0E0",blue:"#3B3B3B",blueBg:"#F0F0F0",
   purple:"#5B3A8C",purpleBg:"#F0ECF6",
   shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)",
 };
@@ -188,8 +188,8 @@ export default function HabitarisProyectos() {
                     <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
                       {[
                         ["📅 Proyectos",proyectos.length,"#111",`${proyectos.filter(p=>p.estado==="activo").length} activos`],
-                        ["📊 Avance global",`${pct(avanceGlobal)}%`,avanceGlobal>=70?"#1E6B42":avanceGlobal>=40?"#7A5218":"#AE2C2C",`${actsProy.length} actividades`],
-                        ["🏁 Hitos",`${hitosProy.filter(h=>h.completado).length}/${hitosProy.length}`,"#1E4F8C",`${hitosProy.filter(h=>!h.completado).length} pendientes`],
+                        ["📊 Avance global",`${pct(avanceGlobal)}%`,avanceGlobal>=70?"#111111":avanceGlobal>=40?"#8C6A00":"#B91C1C",`${actsProy.length} actividades`],
+                        ["🏁 Hitos",`${hitosProy.filter(h=>h.completado).length}/${hitosProy.length}`,"#3B3B3B",`${hitosProy.filter(h=>!h.completado).length} pendientes`],
                         ["📋 Actividades",actsProy.length,"#111",proy?`en ${proy.nombre}`:""]
                       ].map(([l,v,c,s])=>(
                         <Card key={l} style={{padding:"14px 16px"}}><div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div><div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:c}}>{v}</div>{s&&<div style={{fontSize:9,color:"#909090",marginTop:2}}>{s}</div>}</Card>
@@ -198,8 +198,8 @@ export default function HabitarisProyectos() {
                     {proy && (
                       <Card style={{marginBottom:12}}>
                         <div style={{fontSize:10,fontWeight:700,marginBottom:8}}>📊 Avance — {proy.nombre}</div>
-                        <div style={{height:12,background:"#E4E1DB",borderRadius:6,overflow:"hidden",marginBottom:6}}>
-                          <div style={{width:`${pct(avanceGlobal)}%`,height:"100%",borderRadius:6,background:avanceGlobal>=70?"#1E6B42":avanceGlobal>=40?"#7A5218":"#AE2C2C"}}/>
+                        <div style={{height:12,background:"#E0E0E0",borderRadius:6,overflow:"hidden",marginBottom:6}}>
+                          <div style={{width:`${pct(avanceGlobal)}%`,height:"100%",borderRadius:6,background:avanceGlobal>=70?"#111111":avanceGlobal>=40?"#8C6A00":"#B91C1C"}}/>
                         </div>
                         <div style={{fontSize:9,color:"#909090"}}>Inicio: {proy.inicio} · Fin: {proy.fin} · {actsProy.length} actividades</div>
                       </Card>

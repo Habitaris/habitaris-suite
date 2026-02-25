@@ -3,14 +3,14 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 /* ─────── palette ─────── */
 const C = {
   ink:"#111", inkMid:"#444", inkLight:"#888",
-  bg:"#F0EEE9", surface:"#FAFAF8", border:"#E4E1DB",
-  accent:"#1E6B42", accentBg:"#EEF6F2",
-  info:"#1E4F8C", infoBg:"#E6EFF9",
-  warning:"#7A5218", warningBg:"#FFF8EE",
-  danger:"#AE2C2C", dangerBg:"#FDF0F0",
+  bg:"#F5F5F5", surface:"#FFFFFF", border:"#E0E0E0",
+  accent:"#111111", accentBg:"#EBEBEB",
+  info:"#3B3B3B", infoBg:"#F0F0F0",
+  warning:"#8C6A00", warningBg:"#FFF8EE",
+  danger:"#B91C1C", dangerBg:"#FDF0F0",
   shadow:"0 1px 4px rgba(0,0,0,.06)", shadowMd:"0 4px 16px rgba(0,0,0,.10)",
 }
-const F = { fontFamily:"'Outfit',sans-serif" }
+const F = { fontFamily:"'DM Sans',sans-serif" }
 const SK = "hab:legal:"
 const load  = k => { try { return JSON.parse(localStorage.getItem(SK+k)) || null } catch { return null }}
 const save  = (k,v) => { localStorage.setItem(SK+k, JSON.stringify(v)); try { window.storage?.set?.(SK+k, JSON.stringify(v)); } catch {} }
@@ -26,10 +26,10 @@ function daysUntil(d) { return d ? Math.ceil((new Date(d)-new Date())/(1000*60*6
    PLANTILLAS DE DOCUMENTOS TIPO
    ═══════════════════════════════════════════════════ */
 const CATEGORIAS_DOC = [
-  { id:"contratos",      label:"Contratos",               icon:"📄", color:"#1E4F8C" },
+  { id:"contratos",      label:"Contratos",               icon:"📄", color:"#3B3B3B" },
   { id:"otrosies",       label:"Otrosíes / Modificaciones", icon:"📎", color:"#5B3A8C" },
-  { id:"actas",          label:"Actas",                   icon:"📋", color:"#1E6B42" },
-  { id:"cartas",         label:"Cartas / Comunicaciones", icon:"✉️", color:"#7A5218" },
+  { id:"actas",          label:"Actas",                   icon:"📋", color:"#111111" },
+  { id:"cartas",         label:"Cartas / Comunicaciones", icon:"✉️", color:"#8C6A00" },
   { id:"poderes",        label:"Poderes / Autorizaciones", icon:"🔏", color:"#0D5E6E" },
   { id:"formatos",       label:"Formatos Internos",       icon:"📝", color:"#555" },
 ]
@@ -127,11 +127,11 @@ const PLANTILLAS_SEED = [
    SEGUROS / PÓLIZAS
    ═══════════════════════════════════════════════════ */
 const TIPOS_SEGURO = [
-  { id:"rcextra",    label:"RC Extracontractual",    icon:"🛡", color:"#AE2C2C" },
-  { id:"todo_riesgo",label:"Todo Riesgo Construcción", icon:"🏗", color:"#1E4F8C" },
-  { id:"cumplimiento",label:"Cumplimiento",           icon:"✅", color:"#1E6B42" },
+  { id:"rcextra",    label:"RC Extracontractual",    icon:"🛡", color:"#B91C1C" },
+  { id:"todo_riesgo",label:"Todo Riesgo Construcción", icon:"🏗", color:"#3B3B3B" },
+  { id:"cumplimiento",label:"Cumplimiento",           icon:"✅", color:"#111111" },
   { id:"calidad",    label:"Calidad / Estabilidad",  icon:"🔍", color:"#5B3A8C" },
-  { id:"prestaciones",label:"Prestaciones Sociales",  icon:"👷", color:"#7A5218" },
+  { id:"prestaciones",label:"Prestaciones Sociales",  icon:"👷", color:"#8C6A00" },
   { id:"vehicular",  label:"Vehicular / SOAT",       icon:"🚗", color:"#0D5E6E" },
   { id:"otro",       label:"Otro seguro",            icon:"📋", color:"#555" },
 ]
@@ -155,11 +155,11 @@ const SAMPLE_SEGUROS = [
    PROCESOS LEGALES
    ═══════════════════════════════════════════════════ */
 const ESTADOS_PROCESO = [
-  { id:"abierto",   label:"Abierto",     color:"#1E4F8C", bg:"#E6EFF9" },
-  { id:"en_curso",  label:"En curso",    color:"#7A5218", bg:"#FFF8EE" },
-  { id:"favorable", label:"Favorable",   color:"#1E6B42", bg:"#EEF6F2" },
-  { id:"cerrado",   label:"Cerrado",     color:"#555",    bg:"#F0EEE9" },
-  { id:"perdido",   label:"Desfavorable",color:"#AE2C2C", bg:"#FDF0F0" },
+  { id:"abierto",   label:"Abierto",     color:"#3B3B3B", bg:"#F0F0F0" },
+  { id:"en_curso",  label:"En curso",    color:"#8C6A00", bg:"#FFF8EE" },
+  { id:"favorable", label:"Favorable",   color:"#111111", bg:"#EBEBEB" },
+  { id:"cerrado",   label:"Cerrado",     color:"#555",    bg:"#F5F5F5" },
+  { id:"perdido",   label:"Desfavorable",color:"#B91C1C", bg:"#FDF0F0" },
 ]
 
 const SAMPLE_PROCESOS = [

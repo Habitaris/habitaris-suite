@@ -7,8 +7,8 @@ import { AlertTriangle, TrendingUp, TrendingDown, DollarSign, Calendar, Truck, F
    Filtro por módulo
    ═══════════════════════════════════════════════════════════════ */
 
-const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:'Outfit',sans-serif;background:#F5F4F1}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}input,select,textarea,button{font-family:'Outfit',sans-serif;outline:none}button{cursor:pointer}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fade-up{animation:fadeUp .22s ease both}`}</style>;
-const T = { bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E4E1DB",accent:"#EDEBE7",green:"#1E6B42",greenBg:"#E8F4EE",red:"#AE2C2C",redBg:"#FAE8E8",amber:"#7A5218",amberBg:"#FAF0E0",blue:"#1E4F8C",blueBg:"#E6EFF9",purple:"#5B3A8C",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
+const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;background:#F5F4F1}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}input,select,textarea,button{font-family:'DM Sans',sans-serif;outline:none}button{cursor:pointer}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fade-up{animation:fadeUp .22s ease both}`}</style>;
+const T = { bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E0E0E0",accent:"#EDEBE7",green:"#111111",greenBg:"#E8F4EE",red:"#B91C1C",redBg:"#FAE8E8",amber:"#8C6A00",amberBg:"#FAF0E0",blue:"#3B3B3B",blueBg:"#F0F0F0",purple:"#5B3A8C",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
 const fmt = (n) => new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(n||0);
 const today = () => new Date().toISOString().split("T")[0];
 const Card = ({children,style,...p}) => <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:8,padding:16,boxShadow:T.shadow,...style}} {...p}>{children}</div>;
@@ -20,8 +20,8 @@ const MODULOS = [
   { id:"admin",      lbl:"💼 Administración",  color:"#6B5B8C" },
   { id:"compras",    lbl:"🛒 Compras",         color:"#0D5E6E" },
   { id:"flotas",     lbl:"🚗 Flotas",          color:"#2E5E4E" },
-  { id:"rrhh",       lbl:"👷 RRHH",            color:"#1E4F8C" },
-  { id:"crm",        lbl:"📋 CRM / Ofertas",   color:"#1E6B42" },
+  { id:"rrhh",       lbl:"👷 RRHH",            color:"#3B3B3B" },
+  { id:"crm",        lbl:"📋 CRM / Ofertas",   color:"#111111" },
   { id:"formularios",lbl:"📋 Formularios",      color:"#5B3A8C" },
 ];
 
@@ -397,7 +397,7 @@ export default function Dashboard() {
             <button key={m.id} onClick={()=>setModulo(m.id)}
               style={{padding:"10px 18px",fontSize:11,fontWeight:600,cursor:"pointer",
                 border:`1px solid ${T.border}`,borderLeft:i>0?"none":undefined,
-                fontFamily:"'Outfit',sans-serif",whiteSpace:"nowrap",
+                fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",
                 borderRadius:i===0?"6px 0 0 6px":i===MODULOS.length-1?"0 6px 6px 0":"0",
                 background:modulo===m.id?m.color:"#fff",
                 color:modulo===m.id?"#fff":T.inkMid}}>

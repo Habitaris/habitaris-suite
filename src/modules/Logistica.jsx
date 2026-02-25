@@ -9,12 +9,12 @@ import {
 /* ─── TOKENS ─────────────────────────────────────── */
 const C = {
   bg:"#F5F4F1", surface:"#FFFFFF", ink:"#111", inkMid:"#555",
-  inkLight:"#909090", border:"#E4E1DB", borderMid:"#D5D2CC",
-  accent:"#EDEBE7", accentBg:"#FAFAF8",
-  success:"#1E6B42", successBg:"#E8F4EE",
-  warning:"#7A5218", warningBg:"#FFF8E7",
-  danger:"#AE2C2C", dangerBg:"#FAE8E8",
-  info:"#1E4F8C", infoBg:"#E6EFF9",
+  inkLight:"#909090", border:"#E0E0E0", borderMid:"#D5D2CC",
+  accent:"#EDEBE7", accentBg:"#FFFFFF",
+  success:"#111111", successBg:"#E8F4EE",
+  warning:"#8C6A00", warningBg:"#FFF8E7",
+  danger:"#B91C1C", dangerBg:"#FAE8E8",
+  info:"#3B3B3B", infoBg:"#F0F0F0",
   sidebar:"#111", sidebarHover:"#222",
 };
 
@@ -34,15 +34,15 @@ const NS = {
 
 /* ─── FAMILIES ───────────────────────────────────── */
 const FAMILIAS = [
-  { id:"epp",           label:"EPPs",                   icon:"🦺", color:"#AE2C2C", desc:"Elementos de protección personal" },
+  { id:"epp",           label:"EPPs",                   icon:"🦺", color:"#B91C1C", desc:"Elementos de protección personal" },
   { id:"dotacion",      label:"Dotaciones",             icon:"👕", color:"#5B3A8C", desc:"Uniformes, chalecos, calzado de dotación" },
-  { id:"herr_menor",    label:"Herramienta menor",      icon:"🔨", color:"#7A5218", desc:"Martillos, niveles, flexómetros, paletas, llanas" },
-  { id:"herr_mayor",    label:"Herramienta mayor",      icon:"⚙️", color:"#1E4F8C", desc:"Taladros, pulidoras, cortadoras, mezcladoras" },
+  { id:"herr_menor",    label:"Herramienta menor",      icon:"🔨", color:"#8C6A00", desc:"Martillos, niveles, flexómetros, paletas, llanas" },
+  { id:"herr_mayor",    label:"Herramienta mayor",      icon:"⚙️", color:"#3B3B3B", desc:"Taladros, pulidoras, cortadoras, mezcladoras" },
   { id:"equipo_obra",   label:"Equipos de obra",        icon:"🏗️", color:"#0D5E6E", desc:"Andamios, escaleras, formaletas, compresores" },
-  { id:"equipo_medic",  label:"Equipos de medición",    icon:"📐", color:"#1E6B42", desc:"Niveles láser, distanciómetros, estaciones" },
+  { id:"equipo_medic",  label:"Equipos de medición",    icon:"📐", color:"#111111", desc:"Niveles láser, distanciómetros, estaciones" },
   { id:"equipo_computo",label:"Equipos de cómputo",     icon:"💻", color:"#555",    desc:"PCs, portátiles, tablets, monitores" },
   { id:"consumible",    label:"Consumibles",            icon:"📦", color:"#7C3A1E", desc:"Discos de corte, brocas, lijas, cintas" },
-  { id:"seguridad",     label:"Señalización / Seguridad",icon:"🚧",color:"#AE2C2C", desc:"Conos, cintas, señales, extintores, botiquines" },
+  { id:"seguridad",     label:"Señalización / Seguridad",icon:"🚧",color:"#B91C1C", desc:"Conos, cintas, señales, extintores, botiquines" },
   { id:"transporte",    label:"Transporte / Vehículos", icon:"🚛", color:"#555",    desc:"Vehículos, carretillas, montacargas" },
 ];
 
@@ -59,7 +59,7 @@ const Card = ({ children, style }) => (
 );
 const Btn = ({ children, on, sm, v, style, ...p }) => {
   const base = { display:"inline-flex", alignItems:"center", gap:5, border:"none",
-    borderRadius:4, cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+    borderRadius:4, cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
     fontWeight:600, transition:"filter .15s", ...style };
   const variants = {
     pri:  { background:C.ink, color:"#fff", padding:sm?"5px 12px":"8px 18px", fontSize:sm?10:12 },
@@ -81,7 +81,7 @@ const FI = ({ lbl, val, on, type="text", ph, style }) => (
       marginBottom:3, textTransform:"uppercase", letterSpacing:1 }}>{lbl}</label>
     <input type={type} value={val||""} onChange={on} placeholder={ph}
       style={{ width:"100%", padding:"6px 10px", border:`1px solid ${C.border}`,
-        borderRadius:3, fontSize:12, fontFamily:"'Outfit',sans-serif", background:C.bg, color:C.ink }}/>
+        borderRadius:3, fontSize:12, fontFamily:"'DM Sans',sans-serif", background:C.bg, color:C.ink }}/>
   </div>
 );
 
@@ -230,7 +230,7 @@ export default function Logistica() {
   return (
     <div style={{ minHeight:"100vh", background:C.bg }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
         *, *::before, *::after { box-sizing: border-box; }
         input:focus, select:focus { outline: none; border-color: ${C.ink} !important; }
         ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -244,7 +244,7 @@ export default function Logistica() {
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:20, flexWrap:"wrap", gap:12 }}>
           <div>
             <p style={{ fontSize:9, letterSpacing:2, textTransform:"uppercase", color:C.inkLight, margin:"0 0 3px" }}>Logística y recursos</p>
-            <h1 style={{ fontFamily:"'Outfit',sans-serif", fontSize:24, fontWeight:800, color:C.ink, margin:0 }}>
+            <h1 style={{ fontFamily:"'DM Sans',sans-serif", fontSize:24, fontWeight:800, color:C.ink, margin:0 }}>
               Almacén · EPPs · Herramientas · Equipos
             </h1>
           </div>
@@ -257,7 +257,7 @@ export default function Logistica() {
         <div style={{ display:"flex", borderBottom:`1px solid ${C.border}`, marginBottom:20 }}>
           {[{id:"dashboard",lbl:"Dashboard"},{id:"inventario",lbl:"Inventario"},{id:"proveedores",lbl:"Proveedores"},{id:"comparativo",lbl:"Comparativo precios"},{id:"compras",lbl:"Lista de compra"}].map(t=>(
             <button key={t.id} onClick={()=>setTab(t.id)}
-              style={{ padding:"10px 16px", border:"none", cursor:"pointer", fontFamily:"'Outfit',sans-serif",
+              style={{ padding:"10px 16px", border:"none", cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
                 fontSize:11, fontWeight:600, letterSpacing:1, textTransform:"uppercase", background:"transparent",
                 color:tab===t.id?C.ink:C.inkLight, borderBottom:tab===t.id?`2px solid ${C.ink}`:"2px solid transparent",
                 transition:"all .15s", marginBottom:-1 }}>{t.lbl}</button>
@@ -270,8 +270,8 @@ export default function Logistica() {
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
               {[
                 ["📦 Ítems inventario",items.length,"#111"],
-                ["🏢 Proveedores",proveedores.length,"#1E4F8C"],
-                ["⚠️ Stock bajo",items.filter(i=>i.stockActual<=i.stockMinimo).length,items.filter(i=>i.stockActual<=i.stockMinimo).length>0?"#AE2C2C":"#1E6B42"],
+                ["🏢 Proveedores",proveedores.length,"#3B3B3B"],
+                ["⚠️ Stock bajo",items.filter(i=>i.stockActual<=i.stockMinimo).length,items.filter(i=>i.stockActual<=i.stockMinimo).length>0?"#B91C1C":"#111111"],
                 ["💰 Valor inventario","$"+fmt(items.reduce((s,i)=>s+(i.stockActual||0)*(i.precioRef||0),0)),"#111"]
               ].map(([l,v,c])=>(
                 <div key={l} style={{background:"#fff",border:`1px solid ${C.border}`,borderRadius:8,padding:"14px 16px",boxShadow:"0 1px 3px rgba(0,0,0,.06)"}}>
@@ -281,7 +281,7 @@ export default function Logistica() {
               ))}
             </div>
             {items.filter(i=>i.stockActual<=i.stockMinimo).length>0&&(
-              <div style={{background:"#FAE8E8",border:"1px solid #AE2C2C33",borderRadius:6,padding:"10px 14px",fontSize:10,color:"#AE2C2C",fontWeight:600}}>
+              <div style={{background:"#FAE8E8",border:"1px solid #B91C1C33",borderRadius:6,padding:"10px 14px",fontSize:10,color:"#B91C1C",fontWeight:600}}>
                 ⚠️ Stock bajo: {items.filter(i=>i.stockActual<=i.stockMinimo).map(i=>i.nombre).join(", ")}
               </div>
             )}
@@ -298,7 +298,7 @@ export default function Logistica() {
                   style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 12px",
                     border:`1px solid ${familiaFilter===f.id?f.color:C.border}`, borderRadius:6,
                     background:familiaFilter===f.id?f.color+"15":"#fff", cursor:"pointer",
-                    fontFamily:"'Outfit',sans-serif", transition:"all .1s" }}>
+                    fontFamily:"'DM Sans',sans-serif", transition:"all .1s" }}>
                   <span style={{ fontSize:16 }}>{f.icon}</span>
                   <div style={{ textAlign:"left" }}>
                     <div style={{ fontSize:10, fontWeight:600, color:familiaFilter===f.id?f.color:C.inkMid }}>{f.label}</div>
@@ -314,7 +314,7 @@ export default function Logistica() {
                 <Search size={14} style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", color:C.inkLight }}/>
                 <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar por nombre o referencia..."
                   style={{ width:"100%", padding:"8px 8px 8px 32px", border:`1px solid ${C.border}`, borderRadius:4,
-                    fontSize:12, fontFamily:"'Outfit',sans-serif", background:"#fff" }}/>
+                    fontSize:12, fontFamily:"'DM Sans',sans-serif", background:"#fff" }}/>
               </div>
               <Btn on={()=>{ setEditItem(defItem(familiaFilter==="todos"?"epp":familiaFilter)); setShowForm(true); }}>
                 <Plus size={12}/> Nuevo ítem
@@ -342,7 +342,7 @@ export default function Logistica() {
                       const fam = FAMILIAS.find(f=>f.id===item.familia);
                       const prov = proveedores.find(p=>p.id===item.proveedorId);
                       return (
-                        <tr key={item.id} style={{ background:idx%2===0?"#fff":"#FAFAF8", borderBottom:`1px solid #F0EEE9` }}>
+                        <tr key={item.id} style={{ background:idx%2===0?"#fff":"#FFFFFF", borderBottom:`1px solid #F5F5F5` }}>
                           <td style={{ padding:"5px 6px", fontSize:16, textAlign:"center" }}>{fam?.icon||"📦"}</td>
                           <td style={{ padding:"5px 8px" }}>
                             <div style={{ fontSize:12, fontWeight:600, color:C.ink }}>{item.nombre||"Sin nombre"}</div>
@@ -458,9 +458,9 @@ export default function Logistica() {
                         const bestCot = bestId ? getCot(item.id, bestId) : {};
                         const fam = FAMILIAS.find(f=>f.id===item.familia);
                         return (
-                          <tr key={item.id} style={{ background:idx%2===0?"#fff":"#FAFAF8", borderBottom:`1px solid ${C.border}` }}>
-                            <td style={{ padding:"4px 8px", fontSize:10, color:"#999", position:"sticky", left:0, background:idx%2===0?"#fff":"#FAFAF8", zIndex:1 }}>{idx+1}</td>
-                            <td style={{ padding:"4px 8px", position:"sticky", left:50, background:idx%2===0?"#fff":"#FAFAF8", zIndex:1 }}>
+                          <tr key={item.id} style={{ background:idx%2===0?"#fff":"#FFFFFF", borderBottom:`1px solid ${C.border}` }}>
+                            <td style={{ padding:"4px 8px", fontSize:10, color:"#999", position:"sticky", left:0, background:idx%2===0?"#fff":"#FFFFFF", zIndex:1 }}>{idx+1}</td>
+                            <td style={{ padding:"4px 8px", position:"sticky", left:50, background:idx%2===0?"#fff":"#FFFFFF", zIndex:1 }}>
                               <span style={{ fontSize:11, fontWeight:500 }}>{fam?.icon} {item.nombre}</span>
                             </td>
                             <td style={{ padding:"4px 6px", textAlign:"center", fontSize:10, color:C.inkMid }}>{item.unidad}</td>
@@ -541,7 +541,7 @@ export default function Logistica() {
                               const bestCot = bestId ? getCot(i.id, bestId) : {};
                               const pu = bestCot.precio || i.precio || 0;
                               return (
-                                <tr key={i.id} style={{ borderBottom:`1px solid #F0EEE9` }}>
+                                <tr key={i.id} style={{ borderBottom:`1px solid #F5F5F5` }}>
                                   <td style={{ padding:"4px 6px", fontWeight:500 }}>
                                     {FAMILIAS.find(f=>f.id===i.familia)?.icon} {i.nombre}
                                   </td>
@@ -580,7 +580,7 @@ export default function Logistica() {
                 <div style={{ marginBottom:8 }}>
                   <label style={{ display:"block", fontSize:9, fontWeight:600, color:C.inkLight, marginBottom:3, textTransform:"uppercase", letterSpacing:1 }}>Familia</label>
                   <select value={editItem.familia} onChange={e=>setEditItem({...editItem,familia:e.target.value})}
-                    style={{ width:"100%", padding:"6px 10px", border:`1px solid ${C.border}`, borderRadius:3, fontSize:12, fontFamily:"'Outfit',sans-serif", background:C.bg }}>
+                    style={{ width:"100%", padding:"6px 10px", border:`1px solid ${C.border}`, borderRadius:3, fontSize:12, fontFamily:"'DM Sans',sans-serif", background:C.bg }}>
                     {FAMILIAS.map(f=><option key={f.id} value={f.id}>{f.icon} {f.label}</option>)}
                   </select>
                 </div>
@@ -590,7 +590,7 @@ export default function Logistica() {
                 <div style={{ marginBottom:8 }}>
                   <label style={{ display:"block", fontSize:9, fontWeight:600, color:C.inkLight, marginBottom:3, textTransform:"uppercase", letterSpacing:1 }}>Subfamilia EPP</label>
                   <select value={editItem.subfamilia||""} onChange={e=>setEditItem({...editItem,subfamilia:e.target.value})}
-                    style={{ width:"100%", padding:"6px 10px", border:`1px solid ${C.border}`, borderRadius:3, fontSize:12, fontFamily:"'Outfit',sans-serif", background:C.bg }}>
+                    style={{ width:"100%", padding:"6px 10px", border:`1px solid ${C.border}`, borderRadius:3, fontSize:12, fontFamily:"'DM Sans',sans-serif", background:C.bg }}>
                     <option value="">— Seleccionar —</option>
                     {SUBFAMILIAS_EPP.map(s=><option key={s} value={s}>{s}</option>)}
                   </select>
@@ -603,7 +603,7 @@ export default function Logistica() {
                 <div style={{ marginBottom:8 }}>
                   <label style={{ display:"block", fontSize:9, fontWeight:600, color:C.inkLight, marginBottom:3, textTransform:"uppercase", letterSpacing:1 }}>Unidad</label>
                   <select value={editItem.unidad} onChange={e=>setEditItem({...editItem,unidad:e.target.value})}
-                    style={{ width:"100%", padding:"6px 10px", border:`1px solid ${C.border}`, borderRadius:3, fontSize:12, fontFamily:"'Outfit',sans-serif", background:C.bg }}>
+                    style={{ width:"100%", padding:"6px 10px", border:`1px solid ${C.border}`, borderRadius:3, fontSize:12, fontFamily:"'DM Sans',sans-serif", background:C.bg }}>
                     {UNIDADES.map(u=><option key={u} value={u}>{u}</option>)}
                   </select>
                 </div>
@@ -619,7 +619,7 @@ export default function Logistica() {
               <div style={{ marginBottom:8 }}>
                 <label style={{ display:"block", fontSize:9, fontWeight:600, color:C.inkLight, marginBottom:3, textTransform:"uppercase", letterSpacing:1 }}>Proveedor principal</label>
                 <select value={editItem.proveedorId||""} onChange={e=>setEditItem({...editItem,proveedorId:e.target.value})}
-                  style={{ width:"100%", padding:"6px 10px", border:`1px solid ${C.border}`, borderRadius:3, fontSize:12, fontFamily:"'Outfit',sans-serif", background:C.bg }}>
+                  style={{ width:"100%", padding:"6px 10px", border:`1px solid ${C.border}`, borderRadius:3, fontSize:12, fontFamily:"'DM Sans',sans-serif", background:C.bg }}>
                   <option value="">— Sin asignar —</option>
                   {proveedores.map(p=><option key={p.id} value={p.id}>{p.nombre}</option>)}
                 </select>
@@ -641,7 +641,7 @@ export default function Logistica() {
                         }}
                           style={{ padding:"3px 8px", fontSize:10, cursor:"pointer", border:`1px solid ${selected?C.warning:C.border}`,
                             borderRadius:3, background:selected?C.warning+"25":"#fff", color:selected?C.warning:C.inkMid,
-                            fontFamily:"'Outfit',sans-serif", fontWeight:selected?600:400 }}>
+                            fontFamily:"'DM Sans',sans-serif", fontWeight:selected?600:400 }}>
                           {selected?"✓ ":""}{cargo.nombre}
                         </button>
                       );

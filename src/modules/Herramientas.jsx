@@ -4,25 +4,25 @@ import { Zap, Hammer, Building2, Package, ArrowLeftRight, Plus, Trash2, Download
 /* ─── TOKENS ─────────────────────────────────────────────────────────── */
 const T = {
   bg:"#F5F4F1", surface:"#FFFFFF", ink:"#111111", inkMid:"#555555",
-  inkLight:"#909090", inkXLight:"#C0BDB8", border:"#E4E1DB",
+  inkLight:"#909090", inkXLight:"#C0BDB8", border:"#E0E0E0",
   accent:"#EDEBE7", shadow:"0 1px 3px rgba(0,0,0,.06)",
   shadowMd:"0 4px 20px rgba(0,0,0,.09)",
-  green:"#1E6B42", greenBg:"#E8F4EE",
-  red:"#AE2C2C",   redBg:"#FAE8E8",
-  amber:"#7A5218", amberBg:"#FAF0E0",
-  blue:"#1E4F8C",  blueBg:"#E6EFF9",
+  green:"#111111", greenBg:"#E8F4EE",
+  red:"#B91C1C",   redBg:"#FAE8E8",
+  amber:"#8C6A00", amberBg:"#FAF0E0",
+  blue:"#3B3B3B",  blueBg:"#F0F0F0",
   orange:"#7C3A1E",orangeBg:"#FDF0E8",
 };
 
 const Fonts = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap');
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'Outfit',sans-serif;background:${T.bg};}
+    body{font-family:'DM Sans',sans-serif;background:${T.bg};}
     .mono{font-family:'DM Mono',monospace;}
     @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
     .fade-up{animation:fadeUp .18s ease both}
-    input,button,select{font-family:'Outfit',sans-serif;}
+    input,button,select{font-family:'DM Sans',sans-serif;}
     input:focus,select:focus{outline:none;border-color:${T.ink}!important;}
     ::-webkit-scrollbar{width:4px;height:4px;}
     ::-webkit-scrollbar-thumb{background:${T.border};border-radius:2px;}
@@ -238,7 +238,7 @@ function CuadroDeCargas({pais}) {
           <span style={{fontWeight:700,color:T.amber,marginLeft:6}}>Breaker principal: {breakerPrincipal} A</span>
         </div>
         <div style={{marginLeft:"auto",display:"flex",gap:6}}>
-          <button onClick={addRow} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",background:T.ink,color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"'Outfit',sans-serif"}}>
+          <button onClick={addRow} style={{display:"flex",alignItems:"center",gap:5,padding:"7px 12px",background:T.ink,color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontSize:11,fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>
             <Plus size={12}/>Circuito
           </button>
         </div>
@@ -607,7 +607,7 @@ function CalcMateriales() {
         <Sel label="Unidad" value={form.unidad} onChange={v=>upd("unidad",v)} options={["m²","m³","ml","kg","und","gl","m"]}/>
         <Inp label="Cantidad" value={form.cantidad} onChange={v=>upd("cantidad",v)}/>
         <Inp label="Precio unitario" value={form.precioUnit} onChange={v=>upd("precioUnit",v)}/>
-        <div style={{paddingBottom:0}}><button onClick={add} style={{padding:"9px 16px",background:T.ink,color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'Outfit',sans-serif",whiteSpace:"nowrap",height:36}}>+ Añadir</button></div>
+        <div style={{paddingBottom:0}}><button onClick={add} style={{padding:"9px 16px",background:T.ink,color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontSize:12,fontWeight:700,fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",height:36}}>+ Añadir</button></div>
       </div>
       {items.length===0
         ?<div style={{textAlign:"center",padding:"40px",color:T.inkXLight,fontSize:12,background:T.surface,border:`1px solid ${T.border}`,borderRadius:8}}>Añade materiales para calcular</div>
@@ -800,7 +800,7 @@ function CalcIluminacion({pais}) {
     <div className="fade-up" style={{maxWidth:1100}}>
       {/* Ref table toggle */}
       <div style={{display:"flex",gap:8,marginBottom:12}}>
-        <button onClick={()=>setShowRef(!showRef)} style={{padding:"6px 14px",border:`1px solid ${T.border}`,borderRadius:4,background:showRef?T.blueBg:"#fff",color:showRef?T.blue:T.inkLight,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+        <button onClick={()=>setShowRef(!showRef)} style={{padding:"6px 14px",border:`1px solid ${T.border}`,borderRadius:4,background:showRef?T.blueBg:"#fff",color:showRef?T.blue:T.inkLight,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
           📋 {showRef?"Ocultar":"Ver"} tabla normativa — {pais==="CO"?"RETILAP":"UNE 12464-1"}
         </button>
         <Norma pais={pais}/>
@@ -914,7 +914,7 @@ function CalcIluminacion({pais}) {
             {/* ── AUTO-FIX: Recommendations when non-compliant ── */}
             {!calc.allOk && recomendaciones.length > 0 && (
               <div style={{...sec, background:"#FFFBE6", border:`1px solid #E6D44D55`, padding:14}}>
-                <div style={{fontSize:11,fontWeight:700,color:"#7A5218",marginBottom:8}}>💡 Soluciones que SÍ cumplen normativa</div>
+                <div style={{fontSize:11,fontWeight:700,color:"#8C6A00",marginBottom:8}}>💡 Soluciones que SÍ cumplen normativa</div>
                 <div style={{fontSize:9,color:T.inkMid,marginBottom:8}}>Haz clic en "Aplicar" para usar esa opción automáticamente</div>
                 {recomendaciones.slice(0,3).map((rec,i) => (
                   <div key={rec.lumOp.id} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",
@@ -930,7 +930,7 @@ function CalcIluminacion({pais}) {
                     <button onClick={()=>aplicarRecomendacion(rec)}
                       style={{padding:"4px 12px",background:i===0?T.green:"#fff",color:i===0?"#fff":T.blue,
                         border:i===0?"none":`1px solid ${T.blue}`,borderRadius:4,fontSize:9,fontWeight:700,
-                        cursor:"pointer",fontFamily:"'Outfit',sans-serif",whiteSpace:"nowrap"}}>
+                        cursor:"pointer",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}>
                       Aplicar
                     </button>
                   </div>
@@ -956,7 +956,7 @@ function CalcIluminacion({pais}) {
                       </div>
                       <button onClick={()=>aplicarRecomendacion(rec)}
                         style={{padding:"3px 10px",background:"#fff",color:T.blue,border:`1px solid ${T.blue}`,
-                          borderRadius:3,fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>
+                          borderRadius:3,fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
                         Cambiar
                       </button>
                     </div>
@@ -1079,7 +1079,7 @@ function CalcUnidades() {
     <div className="fade-up" style={{maxWidth:620}}>
       <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:16}}>
         {Object.entries(CATS).map(([k,v])=>(
-          <button key={k} onClick={()=>handleCat(k)} style={{padding:"6px 14px",border:`1px solid ${cat===k?T.ink:T.border}`,borderRadius:20,background:cat===k?T.ink:"transparent",color:cat===k?"#fff":T.inkMid,fontSize:11,fontWeight:cat===k?700:400,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>{v.l}</button>
+          <button key={k} onClick={()=>handleCat(k)} style={{padding:"6px 14px",border:`1px solid ${cat===k?T.ink:T.border}`,borderRadius:20,background:cat===k?T.ink:"transparent",color:cat===k?"#fff":T.inkMid,fontSize:11,fontWeight:cat===k?700:400,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{v.l}</button>
         ))}
       </div>
       <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:8,padding:"24px"}}>
@@ -1118,7 +1118,7 @@ export default function HerramientasTecnicas() {
   return (
     <>
       <Fonts/>
-      <div style={{minHeight:"100vh",background:T.bg,fontFamily:"'Outfit',sans-serif"}}>
+      <div style={{minHeight:"100vh",background:T.bg,fontFamily:"'DM Sans',sans-serif"}}>
         {/* Header */}
         <div style={{background:T.ink,padding:"14px 28px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
           <div>
@@ -1131,7 +1131,7 @@ export default function HerramientasTecnicas() {
             <div style={{display:"flex",background:"rgba(255,255,255,.08)",borderRadius:4,overflow:"hidden",border:"1px solid rgba(255,255,255,.12)"}}>
               {["CO","ES"].map(p=>(
                 <button key={p} onClick={()=>setPais(p)}
-                  style={{padding:"6px 14px",border:"none",background:pais===p?"#fff":"transparent",color:pais===p?T.ink:"rgba(255,255,255,.5)",fontSize:11,fontWeight:pais===p?700:400,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"flex",alignItems:"center",gap:5,transition:"all .12s"}}>
+                  style={{padding:"6px 14px",border:"none",background:pais===p?"#fff":"transparent",color:pais===p?T.ink:"rgba(255,255,255,.5)",fontSize:11,fontWeight:pais===p?700:400,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",gap:5,transition:"all .12s"}}>
                   <span style={{fontSize:13}}>{p==="CO"?"🇨🇴":"🇪🇸"}</span>{p==="CO"?"Colombia":"España"}
                 </button>
               ))}
@@ -1146,7 +1146,7 @@ export default function HerramientasTecnicas() {
             const act=tab===t.id;
             return(
               <button key={t.id} onClick={()=>setTab(t.id)}
-                style={{display:"flex",alignItems:"center",gap:6,padding:"12px 16px",border:"none",background:"transparent",flexShrink:0,borderBottom:act?`2px solid ${T.ink}`:"2px solid transparent",color:act?T.ink:T.inkLight,fontSize:11,fontWeight:act?700:400,cursor:"pointer",fontFamily:"'Outfit',sans-serif",letterSpacing:.2,transition:"color .1s"}}>
+                style={{display:"flex",alignItems:"center",gap:6,padding:"12px 16px",border:"none",background:"transparent",flexShrink:0,borderBottom:act?`2px solid ${T.ink}`:"2px solid transparent",color:act?T.ink:T.inkLight,fontSize:11,fontWeight:act?700:400,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",letterSpacing:.2,transition:"color .1s"}}>
                 <t.I size={12}/>{t.label}
               </button>
             );

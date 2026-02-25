@@ -10,14 +10,14 @@ import {
 /* ─── STYLES ─── */
 const Fonts = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Outfit', sans-serif; background: #F5F4F1; -webkit-font-smoothing: antialiased; }
+    body { font-family: 'DM Sans', sans-serif; background: #F5F4F1; -webkit-font-smoothing: antialiased; }
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #C8C5BE; border-radius: 2px; }
-    input, select, textarea { font-family: 'Outfit', sans-serif; outline: none; }
-    button { font-family: 'Outfit', sans-serif; cursor: pointer; }
+    input, select, textarea { font-family: 'DM Sans', sans-serif; outline: none; }
+    button { font-family: 'DM Sans', sans-serif; cursor: pointer; }
     @keyframes fadeUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
     .fade-up { animation: fadeUp .22s ease both; }
   `}</style>
@@ -25,11 +25,11 @@ const Fonts = () => (
 
 /* ─── TOKENS ─── */
 const T = {
-  bg:"#F5F4F1", surface:"#FFFFFF", surfaceAlt:"#FAFAF8", ink:"#111111",
+  bg:"#F5F4F1", surface:"#FFFFFF", surfaceAlt:"#FFFFFF", ink:"#111111",
   inkMid:"#555555", inkLight:"#909090", inkXLight:"#C8C5BE",
-  border:"#E4E1DB", accent:"#EDEBE7",
-  green:"#1E6B42", greenBg:"#E8F4EE", red:"#AE2C2C", redBg:"#FAE8E8",
-  amber:"#7A5218", amberBg:"#FAF0E0", blue:"#1E4F8C", blueBg:"#E6EFF9",
+  border:"#E0E0E0", accent:"#EDEBE7",
+  green:"#111111", greenBg:"#E8F4EE", red:"#B91C1C", redBg:"#FAE8E8",
+  amber:"#8C6A00", amberBg:"#FAF0E0", blue:"#3B3B3B", blueBg:"#F0F0F0",
   shadow:"0 1px 3px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.05)",
 };
 
@@ -80,12 +80,12 @@ function useStore(key, init) {
 
 /* ─── MODULES THAT GENERATE APPROVALS ─── */
 const MODULOS_APROB = [
-  { id:"ofertas",   label:"Ofertas / CRM",         icon:ClipboardList, color:"#1E6B42", desc:"Presupuestos y propuestas comerciales" },
+  { id:"ofertas",   label:"Ofertas / CRM",         icon:ClipboardList, color:"#111111", desc:"Presupuestos y propuestas comerciales" },
   { id:"compras",   label:"Compras / Insumos",      icon:Package,       color:"#0D5E6E", desc:"Órdenes de compra y contratos proveedores" },
-  { id:"rrhh",      label:"RRHH",                   icon:Users,         color:"#1E4F8C", desc:"Contrataciones, vacaciones y novedades" },
-  { id:"pagos",     label:"Pagos / Tesorería",      icon:DollarSign,    color:"#7A5218", desc:"Pagos a proveedores, anticipos y facturas" },
+  { id:"rrhh",      label:"RRHH",                   icon:Users,         color:"#3B3B3B", desc:"Contrataciones, vacaciones y novedades" },
+  { id:"pagos",     label:"Pagos / Tesorería",      icon:DollarSign,    color:"#8C6A00", desc:"Pagos a proveedores, anticipos y facturas" },
   { id:"subcontratos",label:"Subcontratos",          icon:Briefcase,     color:"#5B3A8C", desc:"Contratos con subcontratistas" },
-  { id:"calidad",   label:"Calidad / SST",          icon:Shield,        color:"#AE2C2C", desc:"No conformidades, inspecciones y permisos" },
+  { id:"calidad",   label:"Calidad / SST",          icon:Shield,        color:"#B91C1C", desc:"No conformidades, inspecciones y permisos" },
 ];
 
 /* ─── ESTADOS ─── */
@@ -423,7 +423,7 @@ function TabDashboard({ stats, aprobaciones, config, usuarioActivo, actuar, setT
             const lastAction = (a.historial||[]).slice(-1)[0];
             const modInfo = MODULOS_APROB.find(m => m.id === a.modulo);
             return (
-              <div key={a.id} style={{ padding:"8px 16px", borderBottom:`1px solid #F0EEE9`,
+              <div key={a.id} style={{ padding:"8px 16px", borderBottom:`1px solid #F5F5F5`,
                 display:"flex", alignItems:"center", gap:10, fontSize:11 }}>
                 <Badge estado={a.estado}/>
                 <div style={{ flex:1 }}>
@@ -494,7 +494,7 @@ function ApprovalRow({ item, actuar, config, usuarioActivo, compact, ofertas }) 
       <div onClick={() => setExpanded(!expanded)}
         style={{ padding: compact ? "8px 16px" : "12px 16px", cursor:"pointer", display:"flex", alignItems:"center", gap:10,
           transition:"background .1s", background: expanded ? T.surfaceAlt : "transparent" }}
-        onMouseEnter={e => { if(!expanded) e.currentTarget.style.background = "#FAFAF8"; }}
+        onMouseEnter={e => { if(!expanded) e.currentTarget.style.background = "#FFFFFF"; }}
         onMouseLeave={e => { if(!expanded) e.currentTarget.style.background = "transparent"; }}>
         {/* Module icon */}
         {!compact && modInfo && (

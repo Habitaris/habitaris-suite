@@ -100,14 +100,14 @@ export default function LoginScreen({onSuccess}){
   }
 
   const brand=(()=>{try{return JSON.parse(localStorage.getItem("habitaris_config")||"{}").empresa?.nombre||"Habitaris"}catch{return"Habitaris"}})();
-  const inp={width:"100%",padding:"10px 12px 10px 34px",border:`1px solid ${T.border}`,borderRadius:8,fontSize:13,fontFamily:"'Outfit',sans-serif",background:"#FAFAF8"};
+  const inp={width:"100%",padding:"10px 12px 10px 34px",border:`1px solid ${T.border}`,borderRadius:8,fontSize:13,fontFamily:"'DM Sans',sans-serif",background:"#FFFFFF"};
   const inpN={...inp,paddingLeft:12};
 
-  if(load&&mode==="login")return(<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,#F8F7F4,#EDEBE7)",fontFamily:"'Outfit',sans-serif"}}><style>{`*{box-sizing:border-box}@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');`}</style><div style={{color:T.inkLight,fontSize:14}}>Cargando...</div></div>);
+  if(load&&mode==="login")return(<div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,#F8F7F4,#EDEBE7)",fontFamily:"'DM Sans',sans-serif"}}><style>{`*{box-sizing:border-box}@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&display=swap');`}</style><div style={{color:T.inkLight,fontSize:14}}>Cargando...</div></div>);
 
   return(
-    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,#F8F7F4,#EDEBE7)",fontFamily:"'Outfit',sans-serif",padding:20}}>
-      <style>{`*{box-sizing:border-box}@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');.li:focus{outline:none;border-color:${T.green}!important;box-shadow:0 0 0 3px ${T.green}18}`}</style>
+    <div style={{minHeight:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg,#F8F7F4,#EDEBE7)",fontFamily:"'DM Sans',sans-serif",padding:20}}>
+      <style>{`*{box-sizing:border-box}@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&display=swap');.li:focus{outline:none;border-color:${T.green}!important;box-shadow:0 0 0 3px ${T.green}18}`}</style>
       <div style={{width:"100%",maxWidth:400,background:"#fff",borderRadius:16,boxShadow:"0 4px 24px rgba(0,0,0,.08)",padding:"36px 32px"}}>
         <div style={{textAlign:"center",marginBottom:28}}>
           <div style={{width:52,height:52,borderRadius:0,background:"transparent",display:"inline-flex",alignItems:"center",justifyContent:"center",marginBottom:14}}><svg width="52" height="52" viewBox="0 0 52 52" fill="none"><rect x="6" y="8" width="36" height="36" stroke="#111" strokeWidth="1.8" fill="none"/><line x1="3" y1="6" x2="15" y2="6" stroke="#111" strokeWidth="1.5"/><line x1="3" y1="6" x2="3" y2="18" stroke="#111" strokeWidth="1.5"/><line x1="45" y1="46" x2="33" y2="46" stroke="#111" strokeWidth="1.5"/><line x1="45" y1="46" x2="45" y2="34" stroke="#111" strokeWidth="1.5"/><rect x="15" y="16" width="6.5" height="18" fill="#111"/><rect x="15" y="23" width="18" height="5.5" fill="#111"/><rect x="26.5" y="16" width="6.5" height="18" fill="#111"/></svg></div>
@@ -122,7 +122,7 @@ export default function LoginScreen({onSuccess}){
         {mode==="login"&&<>
           <div style={{marginBottom:12}}><label style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",letterSpacing:.5,display:"block",marginBottom:4}}>Email</label><div style={{position:"relative"}}><Mail size={14} color={T.inkLight} style={{position:"absolute",left:10,top:11}}/><input className="li" value={email} onChange={e=>setEmail(e.target.value)} placeholder="tu@email.com" type="email" onKeyDown={e=>e.key==="Enter"&&doLogin()} style={inp}/></div></div>
           <div style={{marginBottom:18}}><label style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",letterSpacing:.5,display:"block",marginBottom:4}}>Contraseña</label><div style={{position:"relative"}}><Lock size={14} color={T.inkLight} style={{position:"absolute",left:10,top:11}}/><input className="li" value={pw} onChange={e=>setPw(e.target.value)} placeholder="••••••••" type={showPw?"text":"password"} onKeyDown={e=>e.key==="Enter"&&doLogin()} style={inp}/><button onClick={()=>setShowPw(!showPw)} style={{position:"absolute",right:8,top:8,border:"none",background:"none",cursor:"pointer"}}>{showPw?<EyeOff size={15} color={T.inkLight}/>:<Eye size={15} color={T.inkLight}/>}</button></div></div>
-          <button onClick={doLogin} disabled={load} style={{width:"100%",padding:"11px",borderRadius:8,border:"none",background:T.ink,color:"#fff",fontSize:13,fontWeight:600,fontFamily:"'Outfit',sans-serif",cursor:"pointer",opacity:load?.6:1}}>{load?"Verificando...":"Iniciar sesión"}</button>
+          <button onClick={doLogin} disabled={load} style={{width:"100%",padding:"11px",borderRadius:8,border:"none",background:T.ink,color:"#fff",fontSize:13,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",opacity:load?.6:1}}>{load?"Verificando...":"Iniciar sesión"}</button>
           <p style={{textAlign:"center",marginTop:18,fontSize:10,color:T.inkLight}}>¿No tienes cuenta? Solicita acceso al administrador</p>
         </>}
 
@@ -132,7 +132,7 @@ export default function LoginScreen({onSuccess}){
           <div style={{marginBottom:12}}><label style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",display:"block",marginBottom:4}}>Nueva contraseña</label><input className="li" value={pw} onChange={e=>setPw(e.target.value)} placeholder="Mínimo 6 caracteres" type={showPw?"text":"password"} style={inpN}/></div>
           <div style={{marginBottom:14}}><label style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",display:"block",marginBottom:4}}>Confirmar</label><input className="li" value={pw2} onChange={e=>setPw2(e.target.value)} placeholder="Repite la contraseña" type={showPw?"text":"password"} onKeyDown={e=>e.key==="Enter"&&doSetup()} style={inpN}/></div>
           <label style={{display:"flex",alignItems:"center",gap:6,marginBottom:14,fontSize:10,color:T.inkMid,cursor:"pointer"}}><input type="checkbox" checked={showPw} onChange={()=>setShowPw(!showPw)}/> Mostrar</label>
-          <button onClick={doSetup} disabled={load} style={{width:"100%",padding:"11px",borderRadius:8,border:"none",background:T.green,color:"#fff",fontSize:13,fontWeight:600,fontFamily:"'Outfit',sans-serif",cursor:"pointer",opacity:load?.6:1}}>{load?"Configurando...":"🔐 Crear mi cuenta"}</button>
+          <button onClick={doSetup} disabled={load} style={{width:"100%",padding:"11px",borderRadius:8,border:"none",background:T.green,color:"#fff",fontSize:13,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",opacity:load?.6:1}}>{load?"Configurando...":"🔐 Crear mi cuenta"}</button>
         </>}
 
         {mode==="invite"&&invUser&&<>
@@ -140,7 +140,7 @@ export default function LoginScreen({onSuccess}){
           <div style={{marginBottom:12}}><label style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",display:"block",marginBottom:4}}>Email</label><input value={invUser.email} disabled style={{...inpN,background:"#f0f0f0",color:T.inkMid}}/></div>
           <div style={{marginBottom:12}}><label style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",display:"block",marginBottom:4}}>Nueva contraseña</label><input className="li" value={pw} onChange={e=>setPw(e.target.value)} placeholder="Mínimo 6 caracteres" type={showPw?"text":"password"} style={inpN}/></div>
           <div style={{marginBottom:14}}><label style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",display:"block",marginBottom:4}}>Confirmar</label><input className="li" value={pw2} onChange={e=>setPw2(e.target.value)} placeholder="Repite" type={showPw?"text":"password"} onKeyDown={e=>e.key==="Enter"&&doInvite()} style={inpN}/></div>
-          <button onClick={doInvite} disabled={load} style={{width:"100%",padding:"11px",borderRadius:8,border:"none",background:T.blue,color:"#fff",fontSize:13,fontWeight:600,fontFamily:"'Outfit',sans-serif",cursor:"pointer",opacity:load?.6:1}}>{load?"Configurando...":"✓ Activar mi cuenta"}</button>
+          <button onClick={doInvite} disabled={load} style={{width:"100%",padding:"11px",borderRadius:8,border:"none",background:T.blue,color:"#fff",fontSize:13,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:"pointer",opacity:load?.6:1}}>{load?"Configurando...":"✓ Activar mi cuenta"}</button>
         </>}
 
         <div style={{textAlign:"center",marginTop:20,fontSize:9,color:T.inkLight}}>{brand} Suite · Acceso protegido</div>
@@ -178,13 +178,13 @@ export function UserManagement(){
   async function resend(u){const tk=genToken();await supa.u("users",`id=eq.${u.id}`,{invite_token:tk,invite_expires:new Date(Date.now()+7*24*60*60*1000).toISOString()});setSending(true);setStatus("Reenviando...");const ok=await sendInviteEmail(u.nombre,u.email,tk);setSending(false);setStatus(ok?"✅ Reenviada":"❌ Error");setTimeout(()=>setStatus(""),4000)}
   function copyLnk(u){if(u.invite_token){navigator.clipboard.writeText(`${window.location.origin}?invite=${u.invite_token}`);setStatus("📋 Copiado");setTimeout(()=>setStatus(""),3000)}}
 
-  const inp={border:`1px solid ${T.border}`,borderRadius:6,padding:"8px 10px",fontSize:12,fontFamily:"'Outfit',sans-serif",background:"#fff",width:"100%"};
-  const Btn=({children,on,v,style,...p})=><button onClick={on} style={{padding:"7px 14px",borderRadius:6,border:v==="sec"?`1px solid ${T.border}`:"none",background:v==="sec"?"#fff":v==="danger"?T.red:T.ink,color:v==="sec"?T.inkMid:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:5,...style}} {...p}>{children}</button>;
+  const inp={border:`1px solid ${T.border}`,borderRadius:6,padding:"8px 10px",fontSize:12,fontFamily:"'DM Sans',sans-serif",background:"#fff",width:"100%"};
+  const Btn=({children,on,v,style,...p})=><button onClick={on} style={{padding:"7px 14px",borderRadius:6,border:v==="sec"?`1px solid ${T.border}`:"none",background:v==="sec"?"#fff":v==="danger"?T.red:T.ink,color:v==="sec"?T.inkMid:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"inline-flex",alignItems:"center",gap:5,...style}} {...p}>{children}</button>;
 
   if(load)return<div style={{padding:20,textAlign:"center",fontSize:12,color:T.inkLight}}>Cargando usuarios...</div>;
 
   return(
-    <div style={{fontFamily:"'Outfit',sans-serif"}}>
+    <div style={{fontFamily:"'DM Sans',sans-serif"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16,flexWrap:"wrap",gap:8}}>
         <div><h2 style={{margin:0,fontSize:18,fontWeight:700}}>👥 Usuarios</h2><p style={{margin:"2px 0 0",fontSize:10,color:T.inkMid}}>{users.length} usuarios · {users.filter(u=>u.estado==="activo").length} activos · Supabase</p></div>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>{status&&<span style={{fontSize:10,fontWeight:600,color:status.startsWith("✅")?T.green:status.startsWith("❌")?T.red:T.amber}}>{status}</span>}{isAdm&&<Btn on={()=>setShowAdd(!showAdd)}><UserPlus size={12}/> Invitar</Btn>}</div>
@@ -202,7 +202,7 @@ export function UserManagement(){
 
       <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:8,overflow:"hidden",boxShadow:T.shadow}}>
         <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
-          <thead><tr style={{background:"#FAFAF8"}}>{["Usuario","Rol","Estado","Último acceso","Acciones"].map(h=><th key={h} style={{padding:"10px 14px",textAlign:h==="Acciones"?"right":"left",fontSize:9,fontWeight:700,color:T.inkLight,textTransform:"uppercase",borderBottom:`1px solid ${T.border}`}}>{h}</th>)}</tr></thead>
+          <thead><tr style={{background:"#FFFFFF"}}>{["Usuario","Rol","Estado","Último acceso","Acciones"].map(h=><th key={h} style={{padding:"10px 14px",textAlign:h==="Acciones"?"right":"left",fontSize:9,fontWeight:700,color:T.inkLight,textTransform:"uppercase",borderBottom:`1px solid ${T.border}`}}>{h}</th>)}</tr></thead>
           <tbody>{users.map(u=>{const rl=ROLES[u.rol]||{label:u.rol,color:T.inkLight};const isS=u.email==="dparra@habitaris.co";return(
             <tr key={u.id} style={{borderBottom:`1px solid ${T.border}22`}}>
               <td style={{padding:"10px 14px"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:32,height:32,borderRadius:"50%",background:isS?T.gold+"22":T.blueBg,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:700,color:isS?T.gold:T.blue}}>{u.nombre?.split(" ").map(n=>n[0]).join("").substring(0,2).toUpperCase()||"?"}</div><div><div style={{fontWeight:600}}>{u.nombre}</div><div style={{fontSize:9,color:T.inkLight}}>{u.email}</div></div></div></td>

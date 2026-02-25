@@ -3,14 +3,14 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 /* ─────── palette ─────── */
 const C = {
   ink:"#111", inkMid:"#444", inkLight:"#888",
-  bg:"#F0EEE9", surface:"#FAFAF8", border:"#E4E1DB",
-  accent:"#1E6B42", accentBg:"#EEF6F2",
-  info:"#1E4F8C", infoBg:"#E6EFF9",
-  warning:"#7A5218", warningBg:"#FFF8EE",
-  danger:"#AE2C2C", dangerBg:"#FDF0F0",
+  bg:"#F5F5F5", surface:"#FFFFFF", border:"#E0E0E0",
+  accent:"#111111", accentBg:"#EBEBEB",
+  info:"#3B3B3B", infoBg:"#F0F0F0",
+  warning:"#8C6A00", warningBg:"#FFF8EE",
+  danger:"#B91C1C", dangerBg:"#FDF0F0",
   shadow:"0 1px 4px rgba(0,0,0,.06)", shadowMd:"0 4px 16px rgba(0,0,0,.10)",
 }
-const F = { fontFamily:"'Outfit',sans-serif" }
+const F = { fontFamily:"'DM Sans',sans-serif" }
 const SK = "hab:firmas:"
 const load  = k => { try { return JSON.parse(localStorage.getItem(SK+k)) || null } catch { return null }}
 const save  = (k,v) => { localStorage.setItem(SK+k, JSON.stringify(v)); try { window.storage?.set?.(SK+k, JSON.stringify(v)); } catch {} }
@@ -32,7 +32,7 @@ function SignaturePad({ onSave, onCancel, signer, width=480, height=200 }) {
     ctx.fillStyle = "#fff"
     ctx.fillRect(0, 0, width, height)
     // Guide line
-    ctx.strokeStyle = "#E4E1DB"
+    ctx.strokeStyle = "#E0E0E0"
     ctx.lineWidth = 1
     ctx.setLineDash([4,4])
     ctx.beginPath()
@@ -42,7 +42,7 @@ function SignaturePad({ onSave, onCancel, signer, width=480, height=200 }) {
     ctx.setLineDash([])
     // Label
     ctx.fillStyle = "#AAA"
-    ctx.font = "10px 'Outfit', sans-serif"
+    ctx.font = "10px 'DM Sans', sans-serif"
     ctx.fillText("Firma aquí", 30, height-20)
   }, [width, height])
 
@@ -85,7 +85,7 @@ function SignaturePad({ onSave, onCancel, signer, width=480, height=200 }) {
     const ctx = canvas.getContext("2d")
     ctx.fillStyle = "#fff"
     ctx.fillRect(0, 0, width, height)
-    ctx.strokeStyle = "#E4E1DB"
+    ctx.strokeStyle = "#E0E0E0"
     ctx.lineWidth = 1
     ctx.setLineDash([4,4])
     ctx.beginPath()
@@ -94,7 +94,7 @@ function SignaturePad({ onSave, onCancel, signer, width=480, height=200 }) {
     ctx.stroke()
     ctx.setLineDash([])
     ctx.fillStyle = "#AAA"
-    ctx.font = "10px 'Outfit', sans-serif"
+    ctx.font = "10px 'DM Sans', sans-serif"
     ctx.fillText("Firma aquí", 30, height-20)
     setHasContent(false)
   }
@@ -163,24 +163,24 @@ function generateHash(text) {
 
 /* ─────── DOCUMENT TYPES ─────── */
 const DOC_TYPES = [
-  { id:"contrato",         label:"Contrato",            icon:"📄", color:"#1E4F8C" },
-  { id:"acta",             label:"Acta",                icon:"📋", color:"#1E6B42" },
+  { id:"contrato",         label:"Contrato",            icon:"📄", color:"#3B3B3B" },
+  { id:"acta",             label:"Acta",                icon:"📋", color:"#111111" },
   { id:"otrosí",           label:"Otrosí / Anexo",      icon:"📎", color:"#5B3A8C" },
-  { id:"carta",            label:"Carta / Comunicación", icon:"✉️", color:"#7A5218" },
+  { id:"carta",            label:"Carta / Comunicación", icon:"✉️", color:"#8C6A00" },
   { id:"poder",            label:"Poder / Autorización", icon:"🔏", color:"#0D5E6E" },
-  { id:"poliza",           label:"Póliza / Seguro",     icon:"🛡", color:"#AE2C2C" },
-  { id:"recibo",           label:"Recibo / Paz y Salvo", icon:"✅", color:"#1E6B42" },
+  { id:"poliza",           label:"Póliza / Seguro",     icon:"🛡", color:"#B91C1C" },
+  { id:"recibo",           label:"Recibo / Paz y Salvo", icon:"✅", color:"#111111" },
   { id:"conformidad",      label:"Acta de Conformidad",  icon:"🤝", color:"#0D7377" },
   { id:"otro",             label:"Otro documento",       icon:"📁", color:"#555" },
 ]
 
 const ESTADOS_FIRMA = [
-  { id:"borrador",    label:"Borrador",      color:"#888",    bg:"#F0EEE9" },
-  { id:"pendiente",   label:"Pendiente",     color:"#7A5218", bg:"#FFF8EE" },
-  { id:"parcial",     label:"Firma parcial", color:"#1E4F8C", bg:"#E6EFF9" },
-  { id:"completado",  label:"Firmado",       color:"#1E6B42", bg:"#EEF6F2" },
-  { id:"rechazado",   label:"Rechazado",     color:"#AE2C2C", bg:"#FDF0F0" },
-  { id:"vencido",     label:"Vencido",       color:"#AE2C2C", bg:"#FDF0F0" },
+  { id:"borrador",    label:"Borrador",      color:"#888",    bg:"#F5F5F5" },
+  { id:"pendiente",   label:"Pendiente",     color:"#8C6A00", bg:"#FFF8EE" },
+  { id:"parcial",     label:"Firma parcial", color:"#3B3B3B", bg:"#F0F0F0" },
+  { id:"completado",  label:"Firmado",       color:"#111111", bg:"#EBEBEB" },
+  { id:"rechazado",   label:"Rechazado",     color:"#B91C1C", bg:"#FDF0F0" },
+  { id:"vencido",     label:"Vencido",       color:"#B91C1C", bg:"#FDF0F0" },
 ]
 
 /* ─────── SAMPLE DATA ─────── */
@@ -423,7 +423,7 @@ export default function FirmaDigital() {
           {/* Certificate preview for completed docs */}
           {doc.estado === "completado" && (
             <div style={{ marginTop:20, padding:20, borderRadius:10,
-              background:"linear-gradient(135deg, #EEF6F2 0%, #E6EFF9 100%)", border:`1px solid ${C.accent}33`, textAlign:"center" }}>
+              background:"linear-gradient(135deg, #EBEBEB 0%, #F0F0F0 100%)", border:`1px solid ${C.accent}33`, textAlign:"center" }}>
               <div style={{ fontSize:28, marginBottom:8 }}>🔏</div>
               <div style={{ ...F, fontSize:14, fontWeight:700, color:C.accent }}>Documento firmado digitalmente</div>
               <div style={{ ...F, fontSize:11, color:C.inkMid, marginTop:4 }}>

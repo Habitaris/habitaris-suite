@@ -6,16 +6,16 @@ import { Plus, Trash2, Check, X, Search, Edit3, AlertTriangle, ChevronDown, Eye,
    Tabs: Órdenes de Compra · Recepción · Evaluación Proveedores
    ═══════════════════════════════════════════════════════════════ */
 
-const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:'Outfit',sans-serif;background:#F5F4F1}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}input,select,textarea,button{font-family:'Outfit',sans-serif;outline:none}button{cursor:pointer}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fade-up{animation:fadeUp .22s ease both}`}</style>;
-const T = { bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E4E1DB",accent:"#EDEBE7",green:"#1E6B42",greenBg:"#E8F4EE",red:"#AE2C2C",redBg:"#FAE8E8",amber:"#7A5218",amberBg:"#FAF0E0",blue:"#1E4F8C",blueBg:"#E6EFF9",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
+const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;background:#F5F4F1}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}input,select,textarea,button{font-family:'DM Sans',sans-serif;outline:none}button{cursor:pointer}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fade-up{animation:fadeUp .22s ease both}`}</style>;
+const T = { bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E0E0E0",accent:"#EDEBE7",green:"#111111",greenBg:"#E8F4EE",red:"#B91C1C",redBg:"#FAE8E8",amber:"#8C6A00",amberBg:"#FAF0E0",blue:"#3B3B3B",blueBg:"#F0F0F0",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
 const uid = () => Math.random().toString(36).slice(2,10);
 const today = () => new Date().toISOString().split("T")[0];
 const fmt = (n) => new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(n||0);
 const Card = ({children,style,...p}) => <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:8,padding:16,boxShadow:T.shadow,...style}} {...p}>{children}</div>;
-const Btn = ({children,on,v,style,...p}) => <button onClick={on} style={{padding:"7px 16px",borderRadius:5,border:v==="sec"?`1px solid ${T.border}`:"none",background:v==="sec"?"#fff":v==="danger"?"#AE2C2C":"#111",color:v==="sec"?T.inkMid:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:5,...style}} {...p}>{children}</button>;
+const Btn = ({children,on,v,style,...p}) => <button onClick={on} style={{padding:"7px 16px",borderRadius:5,border:v==="sec"?`1px solid ${T.border}`:"none",background:v==="sec"?"#fff":v==="danger"?"#B91C1C":"#111",color:v==="sec"?T.inkMid:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"inline-flex",alignItems:"center",gap:5,...style}} {...p}>{children}</button>;
 const FI = ({lbl,val,on,ph,type,style,children,...p}) => <div style={{marginBottom:8,...style}}><label style={{display:"block",fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>{lbl}</label>{children||<input type={type||"text"} value={val} onChange={on} placeholder={ph||""} style={{width:"100%",padding:"6px 8px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,background:"#fff"}} {...p}/>}</div>;
 const Badge = ({children,color}) => <span style={{fontSize:8,fontWeight:700,padding:"2px 8px",borderRadius:10,background:color+"22",color}}>{children}</span>;
-const inp = { border:`1px solid ${T.border}`, borderRadius:3, padding:"4px 8px", fontSize:11, fontFamily:"'Outfit',sans-serif", background:"#fff" };
+const inp = { border:`1px solid ${T.border}`, borderRadius:3, padding:"4px 8px", fontSize:11, fontFamily:"'DM Sans',sans-serif", background:"#fff" };
 const ths = {padding:"5px 8px",fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",borderBottom:`2px solid ${T.border}`,textAlign:"left"};
 const tds = {padding:"5px 8px",fontSize:10,borderBottom:`1px solid ${T.border}`};
 
@@ -93,7 +93,7 @@ function TabOC({ ocs, setOCs }) {
         {[["todos","Todos"],...Object.entries(ESTADOS).map(([k,v])=>[k,v.lbl])].map(([k,lbl],i,arr) => (
           <button key={k} onClick={()=>setFiltro(k)}
             style={{padding:"5px 12px",fontSize:9,fontWeight:600,cursor:"pointer",border:`1px solid ${T.border}`,borderLeft:i>0?"none":undefined,
-              fontFamily:"'Outfit',sans-serif",borderRadius:i===0?"5px 0 0 5px":i===arr.length-1?"0 5px 5px 0":"0",
+              fontFamily:"'DM Sans',sans-serif",borderRadius:i===0?"5px 0 0 5px":i===arr.length-1?"0 5px 5px 0":"0",
               background:filtro===k?"#111":"#fff",color:filtro===k?"#fff":T.inkMid}}>
             {lbl} <span style={{fontSize:7,marginLeft:2}}>({ocs.filter(o=>k==="todos"||o.estado===k).length})</span>
           </button>
@@ -118,7 +118,7 @@ function TabOC({ ocs, setOCs }) {
                 const est = ESTADOS[o.estado]||ESTADOS.borrador;
                 return (
                   <tr key={o.id} onClick={()=>setSelId(o.id===selId?null:o.id)}
-                    style={{cursor:"pointer",background:selId===o.id?"#E6EFF922":i%2?"#FAFAF8":"#fff"}}>
+                    style={{cursor:"pointer",background:selId===o.id?"#F0F0F022":i%2?"#FFFFFF":"#fff"}}>
                     <td style={{...tds,fontFamily:"'DM Mono',monospace",fontWeight:700,color:T.blue}}>{o.num}</td>
                     <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>{o.fecha}</td>
                     <td style={{...tds,fontWeight:600}}>{o.proveedor}</td>
@@ -210,7 +210,7 @@ function TabOC({ ocs, setOCs }) {
             <div style={{marginBottom:8}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
                 <label style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Ítems</label>
-                <button onClick={addItem} style={{fontSize:9,color:T.blue,background:"none",border:"none",cursor:"pointer",fontWeight:600,fontFamily:"'Outfit',sans-serif"}}>+ Añadir línea</button>
+                <button onClick={addItem} style={{fontSize:9,color:T.blue,background:"none",border:"none",cursor:"pointer",fontWeight:600,fontFamily:"'DM Sans',sans-serif"}}>+ Añadir línea</button>
               </div>
               <table style={{borderCollapse:"collapse",width:"100%"}}>
                 <thead>
@@ -323,7 +323,7 @@ function TabRecepcion({ ocs, setOCs, recepciones, setRecepciones }) {
               const totalItems = (r.items||[]).filter(it=>it.cantRecibida>0).length;
               const conformes = (r.items||[]).filter(it=>it.cantRecibida>0 && it.conforme).length;
               return (
-                <tr key={r.id} style={{background:i%2?"#FAFAF8":"#fff"}}>
+                <tr key={r.id} style={{background:i%2?"#FFFFFF":"#fff"}}>
                   <td style={{...tds,fontFamily:"'DM Mono',monospace"}}>{r.fecha}</td>
                   <td style={{...tds,fontFamily:"'DM Mono',monospace",fontWeight:700,color:T.blue}}>{oc?.num||"—"}</td>
                   <td style={{...tds,fontWeight:600}}>{oc?.proveedor||"—"}</td>
@@ -374,7 +374,7 @@ function TabRecepcion({ ocs, setOCs, recepciones, setRecepciones }) {
                     {form.items.map((it,i) => {
                       const pendiente = it.cantOC - it.cantYaRecibida;
                       return (
-                        <tr key={it.itemId} style={{borderBottom:`1px solid ${T.border}`,background:i%2?"#FAFAF8":"#fff"}}>
+                        <tr key={it.itemId} style={{borderBottom:`1px solid ${T.border}`,background:i%2?"#FFFFFF":"#fff"}}>
                           <td style={{padding:"4px 6px",fontSize:10}}>{it.desc}</td>
                           <td style={{padding:"4px 6px",fontSize:9,textAlign:"center"}}>{it.und}</td>
                           <td style={{padding:"4px 6px",textAlign:"right",fontFamily:"'DM Mono',monospace",fontSize:10}}>{it.cantOC}</td>
@@ -455,7 +455,7 @@ function TabEval({ ocs, recepciones, evaluaciones, setEvaluaciones }) {
 
   const StarBar = ({val,max=10}) => (
     <div style={{display:"flex",alignItems:"center",gap:6}}>
-      <div style={{width:80,height:6,background:"#E4E1DB",borderRadius:3,overflow:"hidden"}}>
+      <div style={{width:80,height:6,background:"#E0E0E0",borderRadius:3,overflow:"hidden"}}>
         <div style={{width:`${val/max*100}%`,height:"100%",background:starColor(val),borderRadius:3}}/>
       </div>
       <span style={{fontSize:10,fontFamily:"'DM Mono',monospace",fontWeight:700,color:starColor(val)}}>{val}</span>
@@ -486,7 +486,7 @@ function TabEval({ ocs, recepciones, evaluaciones, setEvaluaciones }) {
             </thead>
             <tbody>
               {rankList.map((r,i) => (
-                <tr key={r.prov} style={{background:i%2?"#FAFAF8":"#fff"}}>
+                <tr key={r.prov} style={{background:i%2?"#FFFFFF":"#fff"}}>
                   <td style={{...tds,textAlign:"center",fontWeight:800,fontSize:12,color:i===0?"#D4A700":i===1?"#888":i===2?"#A0522D":T.ink}}>
                     {i===0?"🥇":i===1?"🥈":i===2?"🥉":i+1}
                   </td>
@@ -516,7 +516,7 @@ function TabEval({ ocs, recepciones, evaluaciones, setEvaluaciones }) {
             {evaluaciones.length===0 ? (
               <tr><td colSpan={10} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin evaluaciones</td></tr>
             ) : evaluaciones.sort((a,b)=>b.fecha.localeCompare(a.fecha)).map((e,i) => (
-              <tr key={e.id} style={{background:i%2?"#FAFAF8":"#fff"}}>
+              <tr key={e.id} style={{background:i%2?"#FFFFFF":"#fff"}}>
                 <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>{e.fecha}</td>
                 <td style={{...tds,fontWeight:600}}>{e.proveedor}</td>
                 <td style={{...tds,fontSize:9}}>{e.periodo||"—"}</td>
@@ -615,7 +615,7 @@ export default function Compras() {
             <button key={t.id} onClick={()=>setTab(t.id)}
               style={{padding:"10px 18px",fontSize:11,fontWeight:600,cursor:"pointer",
                 border:`1px solid ${T.border}`,borderLeft:i>0?"none":undefined,
-                fontFamily:"'Outfit',sans-serif",whiteSpace:"nowrap",
+                fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",
                 borderRadius:i===0?"6px 0 0 6px":i===TABS.length-1?"0 6px 6px 0":"0",
                 background:tab===t.id?"#111":"#fff",
                 color:tab===t.id?"#fff":T.inkMid}}>
@@ -627,12 +627,12 @@ export default function Compras() {
         {tab === "dashboard" && (
           <div className="fade-up">
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
-              {[["📦 Total OCs",ocs.length,"#111"],["⏳ Pendientes",ocsPend.length,ocsPend.length>0?"#7A5218":"#1E6B42"],["✅ Completas",ocsComp.length,"#1E6B42"],["💰 Valor total",`$${fmt(totalVal)}`,"#111"]].map(([l,v,c])=>(
+              {[["📦 Total OCs",ocs.length,"#111"],["⏳ Pendientes",ocsPend.length,ocsPend.length>0?"#8C6A00":"#111111"],["✅ Completas",ocsComp.length,"#111111"],["💰 Valor total",`$${fmt(totalVal)}`,"#111"]].map(([l,v,c])=>(
                 <div key={l} style={{background:"#fff",border:`1px solid ${T.border}`,borderRadius:8,padding:"14px 16px",boxShadow:T.shadow}}><div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div><div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:c}}>{v}</div></div>
               ))}
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12,marginBottom:16}}>
-              {[["📥 Recepciones",recepciones.length,"#1E4F8C"],["⭐ Evaluaciones",evaluaciones.length,"#111"],["⭐ Nota media proveedores",promEval>0?promEval.toFixed(1):"—",promEval>=8?"#1E6B42":promEval>=5?"#7A5218":"#AE2C2C"]].map(([l,v,c])=>(
+              {[["📥 Recepciones",recepciones.length,"#3B3B3B"],["⭐ Evaluaciones",evaluaciones.length,"#111"],["⭐ Nota media proveedores",promEval>0?promEval.toFixed(1):"—",promEval>=8?"#111111":promEval>=5?"#8C6A00":"#B91C1C"]].map(([l,v,c])=>(
                 <div key={l} style={{background:"#fff",border:`1px solid ${T.border}`,borderRadius:8,padding:"14px 16px",boxShadow:T.shadow}}><div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div><div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:c}}>{v}</div></div>
               ))}
             </div>

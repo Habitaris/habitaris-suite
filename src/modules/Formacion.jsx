@@ -3,15 +3,15 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 /* ─────── palette ─────── */
 const C = {
   ink:"#111", inkMid:"#444", inkLight:"#888",
-  bg:"#F0EEE9", surface:"#FAFAF8", border:"#E4E1DB",
-  accent:"#1E6B42", accentBg:"#EEF6F2",
-  info:"#1E4F8C", infoBg:"#E6EFF9",
-  warning:"#7A5218", warningBg:"#FFF8EE",
-  danger:"#AE2C2C", dangerBg:"#FDF0F0",
-  success:"#1E6B42", successBg:"#EEF6F2",
+  bg:"#F5F5F5", surface:"#FFFFFF", border:"#E0E0E0",
+  accent:"#111111", accentBg:"#EBEBEB",
+  info:"#3B3B3B", infoBg:"#F0F0F0",
+  warning:"#8C6A00", warningBg:"#FFF8EE",
+  danger:"#B91C1C", dangerBg:"#FDF0F0",
+  success:"#111111", successBg:"#EBEBEB",
   shadow:"0 1px 4px rgba(0,0,0,.06)", shadowMd:"0 4px 16px rgba(0,0,0,.10)",
 }
-const F = { fontFamily:"'Outfit',sans-serif" }
+const F = { fontFamily:"'DM Sans',sans-serif" }
 
 /* ─────── STORAGE ─────── */
 const SK = "hab:formacion:"
@@ -21,12 +21,12 @@ const genId = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7
 
 /* ─────── CATÁLOGO PRE-CARGADO DE FORMACIONES ─────── */
 const CATEGORIAS = [
-  { id:"legal_sst",  label:"Legal / SST",       icon:"🦺", color:"#AE2C2C" },
-  { id:"legal_corp", label:"Legal Corporativo",  icon:"⚖️", color:"#1E4F8C" },
+  { id:"legal_sst",  label:"Legal / SST",       icon:"🦺", color:"#B91C1C" },
+  { id:"legal_corp", label:"Legal Corporativo",  icon:"⚖️", color:"#3B3B3B" },
   { id:"operativo",  label:"Operativo / Diseño", icon:"🎨", color:"#5B3A8C" },
-  { id:"admin",      label:"Administrativo",     icon:"💼", color:"#7A5218" },
+  { id:"admin",      label:"Administrativo",     icon:"💼", color:"#8C6A00" },
   { id:"tech",       label:"Tecnología / Herramientas", icon:"💻", color:"#0D5E6E" },
-  { id:"cliente",    label:"Atención al Cliente", icon:"🤝", color:"#1E6B42" },
+  { id:"cliente",    label:"Atención al Cliente", icon:"🤝", color:"#111111" },
 ]
 
 /* 
@@ -580,7 +580,7 @@ function QuizTaker({ preguntas, onComplete }) {
 function CertificatePreview({ curso, trabajador, fecha, score }) {
   return (
     <div style={{ border:`2px solid ${C.accent}`, borderRadius:12, padding:40, textAlign:"center",
-      background:"linear-gradient(135deg, #FAFAF8 0%, #EEF6F2 100%)", maxWidth:600, margin:"0 auto" }}>
+      background:"linear-gradient(135deg, #FFFFFF 0%, #EBEBEB 100%)", maxWidth:600, margin:"0 auto" }}>
       <div style={{ fontSize:12, letterSpacing:3, color:C.inkLight, textTransform:"uppercase", marginBottom:8 }}>Certificado de formación</div>
       <div style={{ width:60, height:2, background:C.accent, margin:"0 auto 20px" }}/>
       <div style={{ ...F, fontSize:10, color:C.inkLight, marginBottom:4 }}>Se certifica que</div>

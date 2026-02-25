@@ -41,9 +41,9 @@ const DEFAULT_CONFIG = {
   apariencia: {
     logo: "",
     colorPrimario: "#111111",
-    colorSecundario: "#1E4F8C",
+    colorSecundario: "#3B3B3B",
     colorAcento: "#C9A84C",
-    tipografia: "Outfit",
+    tipografia: "DM Sans",
     slogan: "Diseño · Interiorismo · Arquitectura",
   },
   supabase: {
@@ -102,19 +102,19 @@ function deepMerge(target, source) {
 /* ── Theme ── */
 const T = {
   ink:"#111", inkMid:"#444", inkLight:"#888",
-  bg:"#F0EEE9", surface:"#FAFAF8", border:"#E4E1DB",
-  green:"#1E6B42", greenBg:"#E8F4EE",
-  blue:"#1E4F8C", blueBg:"#E6EFF9",
-  amber:"#7A5218", amberBg:"#FFF4E0",
-  red:"#AE2C2C", redBg:"#FAE8E8",
+  bg:"#F5F5F5", surface:"#FFFFFF", border:"#E0E0E0",
+  green:"#111111", greenBg:"#E8F4EE",
+  blue:"#3B3B3B", blueBg:"#F0F0F0",
+  amber:"#8C6A00", amberBg:"#FFF4E0",
+  red:"#B91C1C", redBg:"#FAE8E8",
   purple:"#5B3A8C",
   gold:"#C9A84C",
   shadow:"0 1px 4px rgba(0,0,0,.06)",
 };
-const F = { fontFamily:"'Outfit',sans-serif" };
+const F = { fontFamily:"'DM Sans',sans-serif" };
 const Card = ({children,style,...p}) => <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:8,padding:16,boxShadow:T.shadow,...style}} {...p}>{children}</div>;
-const Btn = ({children,on,v,style,...p}) => <button onClick={on} style={{padding:"7px 16px",borderRadius:5,border:v==="sec"?`1px solid ${T.border}`:"none",background:v==="sec"?"#fff":v==="danger"?"#AE2C2C":"#111",color:v==="sec"?T.inkMid:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:5,...style}} {...p}>{children}</button>;
-const inp = { border:`1px solid ${T.border}`, borderRadius:4, padding:"6px 8px", fontSize:11, fontFamily:"'Outfit',sans-serif", background:"#fff", width:"100%" };
+const Btn = ({children,on,v,style,...p}) => <button onClick={on} style={{padding:"7px 16px",borderRadius:5,border:v==="sec"?`1px solid ${T.border}`:"none",background:v==="sec"?"#fff":v==="danger"?"#B91C1C":"#111",color:v==="sec"?T.inkMid:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"inline-flex",alignItems:"center",gap:5,...style}} {...p}>{children}</button>;
+const inp = { border:`1px solid ${T.border}`, borderRadius:4, padding:"6px 8px", fontSize:11, fontFamily:"'DM Sans',sans-serif", background:"#fff", width:"100%" };
 
 /* ── Sections ── */
 const SECTIONS = [
@@ -163,7 +163,7 @@ const FIELDS = {
   ],
   apariencia: [
     { key:"colorPrimario",   label:"Color primario (header, botones)",   placeholder:"#111111", color:true },
-    { key:"colorSecundario", label:"Color secundario (enlaces, badges)", placeholder:"#1E4F8C", color:true },
+    { key:"colorSecundario", label:"Color secundario (enlaces, badges)", placeholder:"#3B3B3B", color:true },
     { key:"colorAcento",     label:"Color acento (destacados, progreso)",placeholder:"#C9A84C", color:true },
     { key:"slogan",          label:"Slogan / Tagline",                   placeholder:"Diseño · Interiorismo · Arquitectura" },
   ],
@@ -237,7 +237,7 @@ export default function Configuracion() {
               return (
                 <button key={s.id} onClick={()=>setSection(s.id)}
                   style={{display:"flex",alignItems:"center",gap:8,width:"100%",padding:"8px 10px",
-                    border:"none",borderRadius:6,cursor:"pointer",fontFamily:"'Outfit',sans-serif",
+                    border:"none",borderRadius:6,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",
                     background:active?"#111":"transparent",color:active?"#fff":T.inkMid,
                     fontSize:11,fontWeight:active?700:500,textAlign:"left",transition:"all .15s",marginBottom:2}}>
                   <Icon size={13} color={active?"#fff":s.color}/>
@@ -294,7 +294,7 @@ export default function Configuracion() {
                       }} style={{fontSize:10,marginBottom:6}}/>
                       <div style={{fontSize:8,color:T.inkLight}}>PNG, SVG o JPG · máx 500KB · Se usa en header, formularios, PDFs y emails</div>
                       {config.apariencia?.logo && (
-                        <button onClick={()=>update("apariencia","logo","")} style={{marginTop:4,fontSize:9,color:T.red,background:"none",border:"none",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>🗑 Eliminar logo</button>
+                        <button onClick={()=>update("apariencia","logo","")} style={{marginTop:4,fontSize:9,color:T.red,background:"none",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>🗑 Eliminar logo</button>
                       )}
                     </div>
                   </div>
@@ -348,10 +348,10 @@ export default function Configuracion() {
                 {/* Font selector */}
                 <div style={{marginTop:20,borderTop:`1px solid ${T.border}`,paddingTop:14}}>
                   <div style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",marginBottom:8}}>🔤 Tipografía</div>
-                  <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');`}</style>
+                  <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=DM Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');`}</style>
                   <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                    {["Outfit","Inter","Poppins","DM Sans","Playfair Display"].map(font => {
-                      const active = (config.apariencia?.tipografia||"Outfit") === font;
+                    {["DM Sans","Inter","Poppins","DM Sans","Playfair Display"].map(font => {
+                      const active = (config.apariencia?.tipografia||"DM Sans") === font;
                       return (
                         <button key={font} onClick={()=>update("apariencia","tipografia",font)}
                           style={{padding:"10px 16px",borderRadius:8,cursor:"pointer",fontFamily:`'${font}',sans-serif`,
@@ -371,7 +371,7 @@ export default function Configuracion() {
                   <div style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",marginBottom:8}}>🎨 Paletas predefinidas</div>
                   <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                     {[
-                      { name:"Elegante oscuro", p:"#111111", s:"#1E4F8C", a:"#C9A84C" },
+                      { name:"Elegante oscuro", p:"#111111", s:"#3B3B3B", a:"#C9A84C" },
                       { name:"Profesional azul",p:"#1E3A5F", s:"#2E7D96", a:"#E8B931" },
                       { name:"Natural verde",   p:"#1B4332", s:"#52796F", a:"#D4A373" },
                       { name:"Moderno violeta", p:"#2D1B69", s:"#5B3A8C", a:"#F4A261" },
@@ -382,7 +382,7 @@ export default function Configuracion() {
                         update("apariencia","colorPrimario",pal.p);
                         update("apariencia","colorSecundario",pal.s);
                         update("apariencia","colorAcento",pal.a);
-                      }} style={{padding:"8px 12px",borderRadius:6,cursor:"pointer",border:`1px solid ${T.border}`,background:"#fff",fontFamily:"'Outfit',sans-serif",textAlign:"center",transition:"all .15s"}}>
+                      }} style={{padding:"8px 12px",borderRadius:6,cursor:"pointer",border:`1px solid ${T.border}`,background:"#fff",fontFamily:"'DM Sans',sans-serif",textAlign:"center",transition:"all .15s"}}>
                         <div style={{display:"flex",gap:4,marginBottom:4,justifyContent:"center"}}>
                           <div style={{width:18,height:18,borderRadius:"50%",background:pal.p}}/>
                           <div style={{width:18,height:18,borderRadius:"50%",background:pal.s}}/>
@@ -400,9 +400,9 @@ export default function Configuracion() {
                   {(()=>{
                     const ap = config.apariencia || {};
                     const cp = ap.colorPrimario || "#111";
-                    const cs = ap.colorSecundario || "#1E4F8C";
+                    const cs = ap.colorSecundario || "#3B3B3B";
                     const ca = ap.colorAcento || "#C9A84C";
-                    const font = ap.tipografia || "Outfit";
+                    const font = ap.tipografia || "DM Sans";
                     const slogan = ap.slogan || config.empresa?.eslogan || "Diseño · Interiorismo · Arquitectura";
                     const nombre = config.empresa?.nombre || "Habitaris";
 
@@ -584,7 +584,7 @@ function SupabaseSetup({ config }) {
           <Btn on={doCreate} v="sec" disabled={creating || !hasConfig}>
             {creating ? "Creando..." : "🔧 Verificar / Crear tablas"}
           </Btn>
-          <button onClick={()=>setShowSQL(!showSQL)} style={{fontSize:9,color:T.blue,background:"none",border:"none",cursor:"pointer",fontFamily:"'Outfit',sans-serif",textDecoration:"underline"}}>
+          <button onClick={()=>setShowSQL(!showSQL)} style={{fontSize:9,color:T.blue,background:"none",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textDecoration:"underline"}}>
             {showSQL?"Ocultar":"Ver"} SQL manual
           </button>
         </div>
@@ -613,7 +613,7 @@ function SupabaseSetup({ config }) {
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
               <span style={{fontSize:8,fontWeight:700,color:T.inkMid,textTransform:"uppercase"}}>SQL para copiar en Supabase → SQL Editor</span>
               <button onClick={()=>{navigator.clipboard?.writeText(getCreateSQL());alert("✅ SQL copiado")}}
-                style={{fontSize:9,color:T.blue,background:"none",border:"none",cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>📋 Copiar</button>
+                style={{fontSize:9,color:T.blue,background:"none",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>📋 Copiar</button>
             </div>
             <pre style={{fontSize:9,background:"#1a1a2e",color:"#e0e0e0",padding:14,borderRadius:6,overflow:"auto",maxHeight:300,lineHeight:1.5,fontFamily:"'DM Mono',monospace"}}>
               {getCreateSQL()}

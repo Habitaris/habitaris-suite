@@ -6,17 +6,17 @@ import { Plus, Trash2, Check, X, Search, Truck, Fuel, FileText, Wrench, AlertTri
    Tabs: Vehículos · Partes KM · Combustible · Documentación · Mantenimiento
    ═══════════════════════════════════════════════════════════════ */
 
-const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:'Outfit',sans-serif;background:#F5F4F1}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}input,select,textarea,button{font-family:'Outfit',sans-serif;outline:none}button{cursor:pointer}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fade-up{animation:fadeUp .22s ease both}`}</style>;
-const T = { bg:"#F5F4F1",surface:"#FFFFFF",surfaceAlt:"#FAFAF8",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E4E1DB",accent:"#EDEBE7",green:"#1E6B42",greenBg:"#E8F4EE",red:"#AE2C2C",redBg:"#FAE8E8",amber:"#7A5218",amberBg:"#FAF0E0",blue:"#1E4F8C",blueBg:"#E6EFF9",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
+const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;background:#F5F4F1}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}input,select,textarea,button{font-family:'DM Sans',sans-serif;outline:none}button{cursor:pointer}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fade-up{animation:fadeUp .22s ease both}`}</style>;
+const T = { bg:"#F5F4F1",surface:"#FFFFFF",surfaceAlt:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E0E0E0",accent:"#EDEBE7",green:"#111111",greenBg:"#E8F4EE",red:"#B91C1C",redBg:"#FAE8E8",amber:"#8C6A00",amberBg:"#FAF0E0",blue:"#3B3B3B",blueBg:"#F0F0F0",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
 const uid = () => Math.random().toString(36).slice(2,10);
 const today = () => new Date().toISOString().split("T")[0];
 const fmt = (n) => new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(n||0);
 const fmtDec = (n) => new Intl.NumberFormat("es-CO",{maximumFractionDigits:1}).format(n||0);
 const Card = ({children,style,...p}) => <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:8,padding:16,boxShadow:T.shadow,...style}} {...p}>{children}</div>;
-const Btn = ({children,on,v,style,...p}) => <button onClick={on} style={{padding:"7px 16px",borderRadius:5,border:v==="sec"?`1px solid ${T.border}`:"none",background:v==="sec"?"#fff":v==="danger"?"#AE2C2C":"#111",color:v==="sec"?T.inkMid:v==="danger"?"#fff":"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:5,...style}} {...p}>{children}</button>;
+const Btn = ({children,on,v,style,...p}) => <button onClick={on} style={{padding:"7px 16px",borderRadius:5,border:v==="sec"?`1px solid ${T.border}`:"none",background:v==="sec"?"#fff":v==="danger"?"#B91C1C":"#111",color:v==="sec"?T.inkMid:v==="danger"?"#fff":"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"inline-flex",alignItems:"center",gap:5,...style}} {...p}>{children}</button>;
 const FI = ({lbl,val,on,ph,type,style,children,...p}) => <div style={{marginBottom:8,...style}}><label style={{display:"block",fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>{lbl}</label>{children||<input type={type||"text"} value={val} onChange={on} placeholder={ph||""} style={{width:"100%",padding:"6px 8px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,background:"#fff"}} {...p}/>}</div>;
 const Badge = ({children,color}) => <span style={{fontSize:8,fontWeight:700,padding:"2px 8px",borderRadius:10,background:color+"22",color}}>{children}</span>;
-const inp = { border:`1px solid ${T.border}`, borderRadius:3, padding:"4px 8px", fontSize:11, fontFamily:"'Outfit',sans-serif", background:"#fff" };
+const inp = { border:`1px solid ${T.border}`, borderRadius:3, padding:"4px 8px", fontSize:11, fontFamily:"'DM Sans',sans-serif", background:"#fff" };
 const th = {padding:"5px 8px",fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",borderBottom:`2px solid ${T.border}`,textAlign:"left"};
 const td = {padding:"5px 8px",fontSize:10,borderBottom:`1px solid ${T.border}`};
 
@@ -97,7 +97,7 @@ function TabVehiculos({ vehs, setVehs }) {
             ) : filtered.map((v,i) => {
               const est = ESTADOS_VEH[v.estado]||ESTADOS_VEH.activo;
               return (
-                <tr key={v.id} style={{background:i%2?"#FAFAF8":"#fff"}}>
+                <tr key={v.id} style={{background:i%2?"#FFFFFF":"#fff"}}>
                   <td style={{...td,fontFamily:"'DM Mono',monospace",fontWeight:700,fontSize:12}}>{v.placa}</td>
                   <td style={{...td,fontSize:9}}>{v.tipo}</td>
                   <td style={{...td,fontWeight:600}}>{v.marca} {v.modelo}</td>
@@ -219,7 +219,7 @@ function TabKM({ vehs, setVehs, partes, setPartes }) {
             ) : partesMes.map((p,i) => {
               const rec = Math.max(0,(p.kmFin||0)-(p.kmInicio||0));
               return (
-                <tr key={p.id} style={{background:i%2?"#FAFAF8":"#fff"}}>
+                <tr key={p.id} style={{background:i%2?"#FFFFFF":"#fff"}}>
                   <td style={{...td,fontFamily:"'DM Mono',monospace"}}>{p.fecha}</td>
                   <td style={{...td,fontFamily:"'DM Mono',monospace",fontWeight:700}}>{p.placa}</td>
                   <td style={{...td,fontSize:9}}>{p.conductor||"—"}</td>
@@ -360,7 +360,7 @@ function TabCombustible({ vehs, tanqueos, setTanqueos }) {
             <thead><tr><th style={th}>Placa</th><th style={{...th,textAlign:"right"}}>Tanqueos</th><th style={{...th,textAlign:"right"}}>Litros</th><th style={{...th,textAlign:"right"}}>Gasto</th><th style={{...th,textAlign:"right"}}>$/Litro</th></tr></thead>
             <tbody>
               {Object.entries(resumen).sort((a,b)=>b[1].gasto-a[1].gasto).map(([placa,r],i) => (
-                <tr key={placa} style={{background:i%2?"#FAFAF8":"#fff"}}>
+                <tr key={placa} style={{background:i%2?"#FFFFFF":"#fff"}}>
                   <td style={{...td,fontFamily:"'DM Mono',monospace",fontWeight:700}}>{placa}</td>
                   <td style={{...td,textAlign:"right"}}>{r.tanqueos}</td>
                   <td style={{...td,textAlign:"right",fontFamily:"'DM Mono',monospace"}}>{fmtDec(r.litros)} L</td>
@@ -387,7 +387,7 @@ function TabCombustible({ vehs, tanqueos, setTanqueos }) {
             {tMes.length===0 ? (
               <tr><td colSpan={9} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin tanqueos en {mesVista}</td></tr>
             ) : tMes.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map((t,i) => (
-              <tr key={t.id} style={{background:i%2?"#FAFAF8":"#fff"}}>
+              <tr key={t.id} style={{background:i%2?"#FFFFFF":"#fff"}}>
                 <td style={{...td,fontFamily:"'DM Mono',monospace"}}>{t.fecha}</td>
                 <td style={{...td,fontFamily:"'DM Mono',monospace",fontWeight:700}}>{t.placa}</td>
                 <td style={{...td,fontSize:9}}>{t.tipoCombus}</td>
@@ -520,7 +520,7 @@ function TabDocs({ vehs, docVehs, setDocVehs }) {
               const vencido = d.fechaVence && d.fechaVence < hoy;
               const proximo = d.fechaVence && !vencido && d.fechaVence <= prontoStr;
               return (
-                <tr key={d.id} style={{background:vencido?"#FAE8E844":proximo?"#FAF0E044":i%2?"#FAFAF8":"#fff"}}>
+                <tr key={d.id} style={{background:vencido?"#FAE8E844":proximo?"#FAF0E044":i%2?"#FFFFFF":"#fff"}}>
                   <td style={{...td,fontFamily:"'DM Mono',monospace",fontWeight:700}}>{d.placa}</td>
                   <td style={{...td,fontWeight:600}}>{tipoDoc.icon} {tipoDoc.lbl}</td>
                   <td style={{...td,fontSize:9}}>{d.entidad||"—"}</td>
@@ -638,7 +638,7 @@ function TabMantenimiento({ vehs, mantos, setMantos }) {
         {[["todos","Todos"],["programado","Programados"],["en_curso","En curso"],["completado","Completados"]].map(([k,lbl],i,arr) => (
           <button key={k} onClick={()=>setFiltro(k)}
             style={{padding:"6px 14px",fontSize:10,fontWeight:600,cursor:"pointer",border:`1px solid ${T.border}`,borderLeft:i>0?"none":undefined,
-              fontFamily:"'Outfit',sans-serif",borderRadius:i===0?"5px 0 0 5px":i===arr.length-1?"0 5px 5px 0":"0",
+              fontFamily:"'DM Sans',sans-serif",borderRadius:i===0?"5px 0 0 5px":i===arr.length-1?"0 5px 5px 0":"0",
               background:filtro===k?"#111":"#fff",color:filtro===k?"#fff":T.inkMid}}>
             {lbl}
           </button>
@@ -662,7 +662,7 @@ function TabMantenimiento({ vehs, mantos, setMantos }) {
               const est = ESTADOS_M[m.estado]||ESTADOS_M.programado;
               const vencido = m.estado==="programado" && m.fechaProg && m.fechaProg < hoy;
               return (
-                <tr key={m.id} style={{background:vencido?"#FAE8E844":i%2?"#FAFAF8":"#fff"}}>
+                <tr key={m.id} style={{background:vencido?"#FAE8E844":i%2?"#FFFFFF":"#fff"}}>
                   <td style={{...td,fontFamily:"'DM Mono',monospace",fontWeight:700}}>{m.placa}</td>
                   <td style={{...td,fontSize:9}}>{tipoM.lbl}</td>
                   <td style={{...td,fontSize:10,maxWidth:200}}>{m.descripcion||"—"}</td>
@@ -779,7 +779,7 @@ export default function Flotas() {
             <button key={t.id} onClick={()=>setTab(t.id)}
               style={{padding:"10px 18px",fontSize:11,fontWeight:600,cursor:"pointer",
                 border:`1px solid ${T.border}`,borderLeft:i>0?"none":undefined,
-                fontFamily:"'Outfit',sans-serif",whiteSpace:"nowrap",
+                fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",
                 borderRadius:i===0?"6px 0 0 6px":i===TABS.length-1?"0 6px 6px 0":"0",
                 background:tab===t.id?"#111":"#fff",
                 color:tab===t.id?"#fff":T.inkMid}}>
@@ -791,17 +791,17 @@ export default function Flotas() {
         {tab === "dashboard" && (
           <div className="fade-up">
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
-              {[["🚗 Vehículos activos",`${vAct}/${vehs.length}`,T.ink],["🔧 En taller",vTaller,vTaller>0?"#7A5218":"#1E6B42"],["📏 KM mes",`${fmt(kmMes)} km`,"#1E4F8C"],["⛽ Combustible mes",`$${fmt(combMes)}`,"#AE2C2C"]].map(([l,v,c])=>(
+              {[["🚗 Vehículos activos",`${vAct}/${vehs.length}`,T.ink],["🔧 En taller",vTaller,vTaller>0?"#8C6A00":"#111111"],["📏 KM mes",`${fmt(kmMes)} km`,"#3B3B3B"],["⛽ Combustible mes",`$${fmt(combMes)}`,"#B91C1C"]].map(([l,v,c])=>(
                 <Card key={l} style={{padding:"14px 16px"}}><div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div><div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:c}}>{v}</div></Card>
               ))}
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
-              {[["📋 Docs vencidos",docsVenc,docsVenc>0?"#AE2C2C":"#1E6B42"],["⚠️ Docs por vencer",docsPronto,docsPronto>0?"#7A5218":"#1E6B42"],["🔧 Mantos vencidos",mantVenc,mantVenc>0?"#AE2C2C":"#1E6B42"],["💰 Costo mantos total",`$${fmt(costoManto)}`,T.ink]].map(([l,v,c])=>(
+              {[["📋 Docs vencidos",docsVenc,docsVenc>0?"#B91C1C":"#111111"],["⚠️ Docs por vencer",docsPronto,docsPronto>0?"#8C6A00":"#111111"],["🔧 Mantos vencidos",mantVenc,mantVenc>0?"#B91C1C":"#111111"],["💰 Costo mantos total",`$${fmt(costoManto)}`,T.ink]].map(([l,v,c])=>(
                 <Card key={l} style={{padding:"14px 16px"}}><div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div><div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:c}}>{v}</div></Card>
               ))}
             </div>
             {litMes>0&&<Card style={{marginBottom:12,padding:"10px 14px"}}><div style={{fontSize:9,fontWeight:600,color:T.inkMid}}>⛽ Precio promedio/litro: <strong style={{color:T.ink}}>${fmt(combMes/litMes)}</strong> · Litros mes: <strong>{fmtDec(litMes)} L</strong></div></Card>}
-            {(docsVenc>0||mantVenc>0)&&<div style={{background:"#FAE8E8",border:"1px solid #AE2C2C33",borderRadius:6,padding:"10px 14px",fontSize:10,color:"#AE2C2C",fontWeight:600}}>
+            {(docsVenc>0||mantVenc>0)&&<div style={{background:"#FAE8E8",border:"1px solid #B91C1C33",borderRadius:6,padding:"10px 14px",fontSize:10,color:"#B91C1C",fontWeight:600}}>
               ⚠️ {[docsVenc>0&&`${docsVenc} documentos vencidos`,mantVenc>0&&`${mantVenc} mantenimientos vencidos`].filter(Boolean).join(" · ")}
             </div>}
           </div>

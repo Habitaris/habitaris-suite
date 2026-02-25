@@ -7,17 +7,17 @@ import { Plus, Trash2, Check, X, Search, DollarSign, CreditCard, Briefcase, Tren
          Flujo de Caja Empresa · Cuentas por Cobrar / Pagar
    ═══════════════════════════════════════════════════════════════ */
 
-const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:'Outfit',sans-serif;background:#F5F4F1}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}input,select,textarea,button{font-family:'Outfit',sans-serif;outline:none}button{cursor:pointer}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fade-up{animation:fadeUp .22s ease both}`}</style>;
-const T = { bg:"#F5F4F1",surface:"#FFFFFF",surfaceAlt:"#FAFAF8",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E4E1DB",accent:"#EDEBE7",green:"#1E6B42",greenBg:"#E8F4EE",red:"#AE2C2C",redBg:"#FAE8E8",amber:"#7A5218",amberBg:"#FAF0E0",blue:"#1E4F8C",blueBg:"#E6EFF9",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
+const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;background:#F5F4F1}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}input,select,textarea,button{font-family:'DM Sans',sans-serif;outline:none}button{cursor:pointer}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fade-up{animation:fadeUp .22s ease both}`}</style>;
+const T = { bg:"#F5F4F1",surface:"#FFFFFF",surfaceAlt:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E0E0E0",accent:"#EDEBE7",green:"#111111",greenBg:"#E8F4EE",red:"#B91C1C",redBg:"#FAE8E8",amber:"#8C6A00",amberBg:"#FAF0E0",blue:"#3B3B3B",blueBg:"#F0F0F0",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
 const uid = () => Math.random().toString(36).slice(2,10);
 const today = () => new Date().toISOString().split("T")[0];
 const fmt = (n) => new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(n||0);
 const Card = ({children,style,...p}) => <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:8,padding:16,boxShadow:T.shadow,...style}} {...p}>{children}</div>;
-const Btn = ({children,on,v,style,...p}) => <button onClick={on} style={{padding:"7px 16px",borderRadius:5,border:v==="sec"?`1px solid ${T.border}`:"none",background:v==="sec"?"#fff":v==="danger"?"#AE2C2C":"#111",color:v==="sec"?T.inkMid:v==="danger"?"#fff":"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'Outfit',sans-serif",display:"inline-flex",alignItems:"center",gap:5,...style}} {...p}>{children}</button>;
+const Btn = ({children,on,v,style,...p}) => <button onClick={on} style={{padding:"7px 16px",borderRadius:5,border:v==="sec"?`1px solid ${T.border}`:"none",background:v==="sec"?"#fff":v==="danger"?"#B91C1C":"#111",color:v==="sec"?T.inkMid:v==="danger"?"#fff":"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"inline-flex",alignItems:"center",gap:5,...style}} {...p}>{children}</button>;
 const FI = ({lbl,val,on,ph,type,style,...p}) => <div style={{marginBottom:8,...style}}><label style={{display:"block",fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>{lbl}</label><input type={type||"text"} value={val} onChange={on} placeholder={ph||""} style={{width:"100%",padding:"6px 8px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,background:"#fff"}} {...p}/></div>;
 const STitle = ({t,s}) => <div style={{marginBottom:12}}><h3 style={{margin:0,fontSize:14,fontWeight:700}}>{t}</h3>{s && <p style={{margin:0,fontSize:10,color:T.inkMid}}>{s}</p>}</div>;
 const Badge = ({children,color}) => <span style={{fontSize:8,fontWeight:700,padding:"2px 8px",borderRadius:10,background:color+"22",color}}>{children}</span>;
-const inp = { border:`1px solid ${T.border}`, borderRadius:3, padding:"4px 8px", fontSize:11, fontFamily:"'Outfit',sans-serif", background:"#fff" };
+const inp = { border:`1px solid ${T.border}`, borderRadius:3, padding:"4px 8px", fontSize:11, fontFamily:"'DM Sans',sans-serif", background:"#fff" };
 
 const TABS = [
   { id:"dashboard",lbl:"📊 Dashboard",       icon:TrendingUp },
@@ -134,7 +134,7 @@ function TabCaja({ data, save }) {
                     {movimientos.length === 0 ? (
                       <tr><td colSpan={8} style={{padding:20,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin movimientos</td></tr>
                     ) : movimientos.map((m,i) => (
-                      <tr key={m.id} style={{borderBottom:`1px solid ${T.border}`,background:i%2?"#FAFAF8":"#fff"}}>
+                      <tr key={m.id} style={{borderBottom:`1px solid ${T.border}`,background:i%2?"#FFFFFF":"#fff"}}>
                         <td style={{padding:"5px 8px",fontSize:10,fontFamily:"'DM Mono',monospace"}}>{m.fecha}</td>
                         <td style={{padding:"5px 8px"}}><Badge color={m.tipo==="entrada"?T.green:T.red}>{m.tipo==="entrada"?"⬆ Entrada":"⬇ Salida"}</Badge></td>
                         <td style={{padding:"5px 8px",fontSize:10,fontWeight:500}}>{m.concepto}</td>
@@ -245,7 +245,7 @@ function TabTarjeta({ data, save }) {
         {[["todos","Todos"],["pendiente","Pendientes"],["legalizado","Legalizados"],["aprobado","Aprobados"],["rechazado","Rechazados"]].map(([k,lbl],i,arr) => (
           <button key={k} onClick={()=>setFiltro(k)}
             style={{padding:"6px 14px",fontSize:10,fontWeight:600,cursor:"pointer",border:`1px solid ${T.border}`,borderLeft:i>0?"none":undefined,
-              fontFamily:"'Outfit',sans-serif",borderRadius:i===0?"5px 0 0 5px":i===arr.length-1?"0 5px 5px 0":"0",
+              fontFamily:"'DM Sans',sans-serif",borderRadius:i===0?"5px 0 0 5px":i===arr.length-1?"0 5px 5px 0":"0",
               background:filtro===k?"#111":"#fff",color:filtro===k?"#fff":T.inkMid}}>
             {lbl} {k!=="todos" && <span style={{marginLeft:3,fontSize:8}}>({movs.filter(m=>k==="todos"||m.estado===k).length})</span>}
           </button>
@@ -265,7 +265,7 @@ function TabTarjeta({ data, save }) {
             {filtered.length===0 ? (
               <tr><td colSpan={10} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin movimientos</td></tr>
             ) : filtered.map((m,i) => (
-              <tr key={m.id} style={{borderBottom:`1px solid ${T.border}`,background:i%2?"#FAFAF8":"#fff"}}>
+              <tr key={m.id} style={{borderBottom:`1px solid ${T.border}`,background:i%2?"#FFFFFF":"#fff"}}>
                 <td style={{padding:"4px 8px",fontSize:10,fontFamily:"'DM Mono',monospace"}}>{m.fecha}</td>
                 <td style={{padding:"4px 8px",fontSize:9}}>{m.tarjeta}</td>
                 <td style={{padding:"4px 8px",fontSize:10,fontWeight:500}}>{m.concepto}</td>
@@ -484,7 +484,7 @@ function TabViaticos({ data, save }) {
                     const real = parseFloat(item.real)||0;
                     const dif = real - est;
                     return (
-                      <tr key={it.id} style={{borderBottom:`1px solid ${T.border}`,background:i%2?"#FAFAF8":"#fff"}}>
+                      <tr key={it.id} style={{borderBottom:`1px solid ${T.border}`,background:i%2?"#FFFFFF":"#fff"}}>
                         <td style={{padding:"5px 8px",fontSize:10,fontWeight:600}}>{it.icon} {it.lbl.replace(/^[^\s]+ /,"")}</td>
                         <td style={{padding:"3px 4px"}}>
                           <input type="text" value={item.detalle||""} placeholder="Aerolínea, hotel..."
@@ -541,7 +541,7 @@ function TabViaticos({ data, save }) {
                 {(sel.gastos||[]).length===0 ? (
                   <tr><td colSpan={5} style={{padding:12,textAlign:"center",color:T.inkLight,fontSize:9}}>Sin gastos adicionales</td></tr>
                 ) : (sel.gastos||[]).map((g,i) => (
-                  <tr key={g.id} style={{borderBottom:`1px solid ${T.border}`,background:i%2?"#FAFAF8":"#fff"}}>
+                  <tr key={g.id} style={{borderBottom:`1px solid ${T.border}`,background:i%2?"#FFFFFF":"#fff"}}>
                     <td style={{padding:"4px 8px",fontSize:10,fontFamily:"'DM Mono',monospace"}}>{g.fecha}</td>
                     <td style={{padding:"4px 8px",fontSize:10}}>{g.concepto}</td>
                     <td style={{padding:"4px 8px",fontSize:8,color:T.blue}}>{g.soporte||"—"}</td>
@@ -690,7 +690,7 @@ function TabFlujoEmpresa({ data, save }) {
             {movsMes.length===0 ? (
               <tr><td colSpan={9} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin movimientos en {mesVista}</td></tr>
             ) : movsMes.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map((m,i) => (
-              <tr key={m.id} style={{borderBottom:`1px solid ${T.border}`,background:i%2?"#FAFAF8":"#fff",opacity:m.estado==="proyectado"?0.6:1}}>
+              <tr key={m.id} style={{borderBottom:`1px solid ${T.border}`,background:i%2?"#FFFFFF":"#fff",opacity:m.estado==="proyectado"?0.6:1}}>
                 <td style={{padding:"4px 8px",fontSize:10,fontFamily:"'DM Mono',monospace"}}>{m.fecha}</td>
                 <td style={{padding:"4px 8px"}}><Badge color={m.tipo==="ingreso"?T.green:T.red}>{m.tipo==="ingreso"?"⬆ Ingreso":"⬇ Egreso"}</Badge></td>
                 <td style={{padding:"4px 8px",fontSize:9,color:T.inkMid}}>{m.categoria||"—"}</td>
@@ -801,7 +801,7 @@ function TabCxCxP({ data, save }) {
             {[["cobrar","📥 Por cobrar"],["pagar","📤 Por pagar"]].map(([k,lbl],i)=>(
               <button key={k} onClick={()=>setVista(k)}
                 style={{padding:"6px 14px",fontSize:10,fontWeight:600,cursor:"pointer",border:`1px solid ${T.border}`,
-                  borderLeft:i>0?"none":undefined,fontFamily:"'Outfit',sans-serif",
+                  borderLeft:i>0?"none":undefined,fontFamily:"'DM Sans',sans-serif",
                   borderRadius:i===0?"5px 0 0 5px":"0 5px 5px 0",
                   background:vista===k?"#111":"#fff",color:vista===k?"#fff":T.inkMid}}>
                 {lbl}
@@ -849,7 +849,7 @@ function TabCxCxP({ data, save }) {
             {filtered.length===0 ? (
               <tr><td colSpan={9} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin cuentas registradas</td></tr>
             ) : filtered.sort((a,b)=>(a.fechaVence||"").localeCompare(b.fechaVence||"")).map((c,i) => (
-              <tr key={c.id} style={{borderBottom:`1px solid ${T.border}`,background:c.estado==="vencida"?"#FAE8E844":i%2?"#FAFAF8":"#fff"}}>
+              <tr key={c.id} style={{borderBottom:`1px solid ${T.border}`,background:c.estado==="vencida"?"#FAE8E844":i%2?"#FFFFFF":"#fff"}}>
                 <td style={{padding:"4px 8px",fontSize:10,fontFamily:"'DM Mono',monospace",fontWeight:700}}>{c.factura||"—"}</td>
                 <td style={{padding:"4px 8px",fontSize:10,fontWeight:600}}>{c.tercero}</td>
                 <td style={{padding:"4px 8px",fontSize:10}}>{c.concepto}</td>
@@ -945,7 +945,7 @@ export default function Administracion() {
             <button key={t.id} onClick={()=>setTab(t.id)}
               style={{padding:"10px 18px",fontSize:11,fontWeight:600,cursor:"pointer",
                 border:`1px solid ${T.border}`,borderLeft:i>0?"none":undefined,
-                fontFamily:"'Outfit',sans-serif",whiteSpace:"nowrap",
+                fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap",
                 borderRadius:i===0?"6px 0 0 6px":i===TABS.length-1?"0 6px 6px 0":"0",
                 background:tab===t.id?"#111":"#fff",
                 color:tab===t.id?"#fff":T.inkMid,
@@ -959,7 +959,7 @@ export default function Administracion() {
         {tab === "dashboard" && (
           <div className="fade-up">
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
-              {[["💰 Saldo cajas","$"+F(saldoCajas),saldoCajas>=0?"#1E6B42":"#AE2C2C"],["💳 Legaliz. pend.",tarjPend.length,tarjPend.length>0?"#7A5218":"#1E6B42"],["✈️ Viáticos pend.",viatPend.length,viatPend.length>0?"#7A5218":"#1E6B42"],["📈 Flujo neto mes","$"+F(ingMes-egrMes),(ingMes-egrMes)>=0?"#1E6B42":"#AE2C2C"]].map(([l,v,c])=>(
+              {[["💰 Saldo cajas","$"+F(saldoCajas),saldoCajas>=0?"#111111":"#B91C1C"],["💳 Legaliz. pend.",tarjPend.length,tarjPend.length>0?"#8C6A00":"#111111"],["✈️ Viáticos pend.",viatPend.length,viatPend.length>0?"#8C6A00":"#111111"],["📈 Flujo neto mes","$"+F(ingMes-egrMes),(ingMes-egrMes)>=0?"#111111":"#B91C1C"]].map(([l,v,c])=>(
                 <div key={l} style={{background:"#fff",border:`1px solid ${T.border}`,borderRadius:8,padding:"14px 16px",boxShadow:T.shadow}}>
                   <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div>
                   <div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:c}}>{v}</div>
@@ -967,14 +967,14 @@ export default function Administracion() {
               ))}
             </div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
-              {[["⬆ Ingresos mes","$"+F(ingMes),"#1E6B42"],["⬇ Egresos mes","$"+F(egrMes),"#AE2C2C"],["🚨 CxC vencidas","$"+F(cxcVenc),cxcVenc>0?"#AE2C2C":"#1E6B42"],["🚨 CxP vencidas","$"+F(cxpVenc),cxpVenc>0?"#AE2C2C":"#1E6B42"]].map(([l,v,c])=>(
+              {[["⬆ Ingresos mes","$"+F(ingMes),"#111111"],["⬇ Egresos mes","$"+F(egrMes),"#B91C1C"],["🚨 CxC vencidas","$"+F(cxcVenc),cxcVenc>0?"#B91C1C":"#111111"],["🚨 CxP vencidas","$"+F(cxpVenc),cxpVenc>0?"#B91C1C":"#111111"]].map(([l,v,c])=>(
                 <div key={l} style={{background:"#fff",border:`1px solid ${T.border}`,borderRadius:8,padding:"14px 16px",boxShadow:T.shadow}}>
                   <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div>
                   <div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:c}}>{v}</div>
                 </div>
               ))}
             </div>
-            {(cxcVenc>0||cxpVenc>0||tarjPend.length>0)&&<div style={{background:"#FAE8E8",border:"1px solid #AE2C2C33",borderRadius:6,padding:"10px 14px",fontSize:10,color:"#AE2C2C",fontWeight:600}}>
+            {(cxcVenc>0||cxpVenc>0||tarjPend.length>0)&&<div style={{background:"#FAE8E8",border:"1px solid #B91C1C33",borderRadius:6,padding:"10px 14px",fontSize:10,color:"#B91C1C",fontWeight:600}}>
               ⚠️ {[cxcVenc>0&&`CxC vencidas $${F(cxcVenc)}`,cxpVenc>0&&`CxP vencidas $${F(cxpVenc)}`,tarjPend.length>0&&`${tarjPend.length} legalizaciones pendientes`].filter(Boolean).join(" · ")}
             </div>}
           </div>

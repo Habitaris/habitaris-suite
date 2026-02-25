@@ -3,14 +3,14 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 /* ─────── palette ─────── */
 const C = {
   ink:"#111", inkMid:"#444", inkLight:"#888",
-  bg:"#F0EEE9", surface:"#FAFAF8", border:"#E4E1DB",
-  accent:"#1E6B42", accentBg:"#EEF6F2",
-  info:"#1E4F8C", infoBg:"#E6EFF9",
-  warning:"#7A5218", warningBg:"#FFF8EE",
-  danger:"#AE2C2C", dangerBg:"#FDF0F0",
+  bg:"#F5F5F5", surface:"#FFFFFF", border:"#E0E0E0",
+  accent:"#111111", accentBg:"#EBEBEB",
+  info:"#3B3B3B", infoBg:"#F0F0F0",
+  warning:"#8C6A00", warningBg:"#FFF8EE",
+  danger:"#B91C1C", dangerBg:"#FDF0F0",
   shadow:"0 1px 4px rgba(0,0,0,.06)", shadowMd:"0 4px 16px rgba(0,0,0,.10)",
 }
-const F = { fontFamily:"'Outfit',sans-serif" }
+const F = { fontFamily:"'DM Sans',sans-serif" }
 
 /* ─────── STORAGE ─────── */
 const SK = "hab:carnets:"
@@ -64,11 +64,11 @@ function getBrand() {
       web: cfg.empresa?.web || "www.habitaris.co",
       logo: cfg.apariencia?.logo || null,
       colorPrimario: cfg.apariencia?.colorPrimario || "#111111",
-      colorAcento: cfg.apariencia?.colorAcento || "#1E6B42",
-      tipografia: cfg.apariencia?.tipografia || "Outfit",
+      colorAcento: cfg.apariencia?.colorAcento || "#111111",
+      tipografia: cfg.apariencia?.tipografia || "DM Sans",
       slogan: cfg.apariencia?.slogan || "Diseño · Arquitectura · Remodelación",
     }
-  } catch { return { nombre:"Habitaris", colorPrimario:"#111", colorAcento:"#1E6B42", tipografia:"Outfit", slogan:"Diseño · Arquitectura · Remodelación" } }
+  } catch { return { nombre:"Habitaris", colorPrimario:"#111", colorAcento:"#111111", tipografia:"DM Sans", slogan:"Diseño · Arquitectura · Remodelación" } }
 }
 
 /* ─────── SAMPLE EMPLOYEES ─────── */
@@ -244,19 +244,19 @@ function CarnetObra({ emp, brand, side }) {
     return (
       <div style={{ width:320, height:200, background:"#fff", borderRadius:10, overflow:"hidden",
         border:`1px solid ${C.border}`, position:"relative", fontFamily:`'${bf}',sans-serif` }}>
-        <div style={{ height:32, background:"#AE2C2C", display:"flex", alignItems:"center", padding:"0 16px" }}>
+        <div style={{ height:32, background:"#B91C1C", display:"flex", alignItems:"center", padding:"0 16px" }}>
           <span style={{ fontSize:10, fontWeight:700, color:"#fff", letterSpacing:1 }}>🚨 DATOS DE EMERGENCIA</span>
         </div>
         <div style={{ padding:"10px 16px", fontSize:9, color:C.ink, lineHeight:1.8 }}>
           <div style={{ display:"grid", gridTemplateColumns:"auto 1fr", gap:"2px 10px" }}>
-            <b>RH:</b><span style={{ fontSize:14, fontWeight:800, color:"#AE2C2C" }}>{emp.rh}</span>
+            <b>RH:</b><span style={{ fontSize:14, fontWeight:800, color:"#B91C1C" }}>{emp.rh}</span>
             <b>EPS:</b><span>{emp.eps}</span>
             <b>ARL:</b><span>{emp.arl}</span>
             <b>Doc:</b><span>{emp.tipoDoc} {emp.documento}</span>
             <b>Ingreso:</b><span>{new Date(emp.fechaIngreso).toLocaleDateString("es-CO")}</span>
           </div>
-          <div style={{ marginTop:8, padding:"6px 10px", background:"#FFF3F3", borderRadius:4, border:"1px solid #AE2C2C33" }}>
-            <div style={{ fontSize:8, fontWeight:700, color:"#AE2C2C" }}>Contacto de emergencia empresa:</div>
+          <div style={{ marginTop:8, padding:"6px 10px", background:"#FFF3F3", borderRadius:4, border:"1px solid #B91C1C33" }}>
+            <div style={{ fontSize:8, fontWeight:700, color:"#B91C1C" }}>Contacto de emergencia empresa:</div>
             <div style={{ fontSize:9, color:C.ink }}>{brand.telefono} · {brand.email}</div>
           </div>
         </div>
@@ -284,14 +284,14 @@ function CarnetObra({ emp, brand, side }) {
           <div style={{ fontSize:13, fontWeight:700, color:C.ink, marginBottom:1 }}>{emp.nombre}</div>
           <div style={{ fontSize:9, fontWeight:600, color:brand.colorAcento, marginBottom:4 }}>{emp.cargo}</div>
           <div style={{ display:"flex", gap:6 }}>
-            <span style={{ fontSize:18, fontWeight:800, color:"#AE2C2C", padding:"2px 8px", background:"#FFF3F3", borderRadius:4 }}>{emp.rh}</span>
+            <span style={{ fontSize:18, fontWeight:800, color:"#B91C1C", padding:"2px 8px", background:"#FFF3F3", borderRadius:4 }}>{emp.rh}</span>
             <div style={{ fontSize:8, color:C.inkLight, lineHeight:1.5 }}>
               EPS: {emp.eps}<br/>ARL: {emp.arl}
             </div>
           </div>
         </div>
       </div>
-      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:3, background:"#AE2C2C" }} />
+      <div style={{ position:"absolute", bottom:0, left:0, right:0, height:3, background:"#B91C1C" }} />
     </div>
   )
 }
@@ -894,7 +894,7 @@ export default function IdentidadCorporativa() {
                 <td style={{ ...F, padding:"8px 12px", color:C.inkLight, fontSize:11 }}>{e.email}</td>
                 <td style={{ ...F, padding:"8px 12px", color:C.inkLight, fontSize:11 }}>{e.tipoDoc} {e.documento}</td>
                 <td style={{ ...F, padding:"8px 12px" }}>
-                  <span style={{ fontWeight:700, color:"#AE2C2C", fontSize:13 }}>{e.rh}</span>
+                  <span style={{ fontWeight:700, color:"#B91C1C", fontSize:13 }}>{e.rh}</span>
                 </td>
                 <td style={{ padding:"8px 12px" }}>
                   <button onClick={()=>setEditEmp({...e})}
