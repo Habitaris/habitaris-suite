@@ -2018,13 +2018,13 @@ function EnviadosTab({ envios, save, respuestas }) {
                     {isBlocked ? (
                       <button onClick={()=>{
                         save("envios", envios.map(x => x.id===e.id ? {...x, blocked:false} : x));
-                        if (e.linkId && false) //SB.toggleLink && //SB.toggleLink(e.linkId, true).catch(()=>{});
+                        // SB disabled
                       }} style={{padding:"3px 10px",fontSize:8,fontWeight:700,background:T.green,color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>🔓 Desbloquear</button>
                     ) : (
                       <button onClick={()=>{
                         if (!confirm("¿Bloquear este enlace?")) return;
                         save("envios", envios.map(x => x.id===e.id ? {...x, blocked:true} : x));
-                        if (e.linkId && false) //SB.toggleLink && //SB.toggleLink(e.linkId, false).catch(()=>{});
+                        // SB disabled
                       }} style={{padding:"3px 10px",fontSize:8,fontWeight:700,background:T.red,color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontFamily:"'Outfit',sans-serif"}}>🚫 Bloquear</button>
                     )}
                     <button onClick={()=>confirmDelete({type:"single",target:e})}
