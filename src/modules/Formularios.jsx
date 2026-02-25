@@ -417,7 +417,7 @@ const vals={};let submitted=false;
 const privField=campos.find(c=>c.mapKey==='aceptaPrivacidad');
 const privId=privField?privField.id:'f_acepta_priv';
 const formKey='hab_used_'+(DEF.id||'')+'_'+(cliente?cliente.email||cliente.nombre:'');
-if(await store.get(formKey)){submitted=true;}
+if(store.getSync(formKey)){submitted=true;}
 // Prefill client fields
 if(cliente){campos.forEach(c=>{
   if(cliente.email&&(c.mapKey==="email"||c.tipo==="email"))vals[c.id]=cliente.email;
@@ -533,7 +533,7 @@ function doSubmit(){
   const cl=cliente?"👤 Cliente: "+(cliente.nombre||"")+" ("+(cliente.email||"")+")\\n":"";
   const msg="📋 RESPUESTA: "+(DEF.nombre||"Formulario")+"\\n\\n"+cl+lines.join("\\n")+"\\n\\nFecha: "+new Date().toISOString().split("T")[0];
   const tel="${telWA}";
-  submitted=true;await store.set(formKey,'1');render();
+  submitted=true;store.set(formKey,'1');render();
   setTimeout(()=>{window.open("https://wa.me/"+(tel?tel:"")+"?text="+encodeURIComponent(msg),"_blank");},600);
 }
 render();
@@ -1068,7 +1068,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioRegistered, setBioRegistered] = useState(false);
   const [procesados, setProcesados] = useState(() => {
-    try { return JSON.parse(await store.get("hab:form:procesados")||"[]"); } catch { return []; }
+    try { return JSON.parse(store.getSync("hab:form:procesados")||"[]"); } catch { return []; }
   });
   const [filtroEstado, setFiltroEstado] = useState("todos");
 
@@ -1077,7 +1077,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
   const toggleSel = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
   const toggleAll = (ids) => setSelectedIds(prev => prev.size===ids.length ? new Set() : new Set(ids));
 
-  const delPass = await store.get("hab:form:deletePass") || "";
+  const delPass = store.getSync("hab:form:deletePass") || "";
   const needsAuth = delPass || bioRegistered;
   const confirmDelete = async (action) => {
     if (!needsAuth) { executeDelete(action); return; }
@@ -1103,14 +1103,14 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
   const markProcesado = (id, sbId) => {
     const next = [...procesados, id];
     setProcesados(next);
-    await store.set("hab:form:procesados", JSON.stringify(next)); try { store.set("hab:form:procesados", JSON.stringify(next)); } catch {}
+    store.set("hab:form:procesados", JSON.stringify(next));
     // SB disabled;
   };
 
   const markPendiente = (id, sbId) => {
     const next = procesados.filter(x=>x!==id);
     setProcesados(next);
-    await store.set("hab:form:procesados", JSON.stringify(next)); try { store.set("hab:form:procesados", JSON.stringify(next)); } catch {}
+    store.set("hab:form:procesados", JSON.stringify(next));
     // SB disabled;
   };
 
@@ -1121,7 +1121,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
     try {
       // 1. Leer clientes desde cloud
       let clientes = [];
-      try { const cr = await store.get("hab:crm:clientes2"); if(cr) clientes = JSON.parse(cr)||[]; } catch {}
+      try { const cr = store.getSync("hab:crm:clientes2"); if(cr) clientes = JSON.parse(cr)||[]; } catch {}
 
       // Check duplicado por email
       const existingClient = clientes.find(c => c.email && c.email === r.clienteEmail);
@@ -1151,14 +1151,14 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
         };
         clientes.push(newClient);
         clienteId = newClient.id;
-        await store.set("hab:crm:clientes2", JSON.stringify(clientes));
+        store.set("hab:crm:clientes2", JSON.stringify(clientes));
       } else {
         clienteId = existingClient.id;
       }
 
       // 2. Leer ofertas desde cloud y crear borrador
       let ofertas = [];
-      try { const or2 = await store.get("hab:v4"); if(or2) ofertas = JSON.parse(or2)||[]; } catch {}
+      try { const or2 = store.getSync("hab:v4"); if(or2) ofertas = JSON.parse(or2)||[]; } catch {}
 
       const newOffer = {
         id: Math.random().toString(36).slice(2,9) + Date.now().toString(36),
@@ -1196,7 +1196,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
       };
 
       ofertas.push(newOffer);
-      await store.set("hab:v4", JSON.stringify(ofertas));
+      store.set("hab:v4", JSON.stringify(ofertas));
 
       // 3. Marcar como procesado
       markProcesado(r.id, r._sbId);
@@ -1468,9 +1468,9 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
               </button>
             )}
             <button onClick={()=>{
-              const current = await store.get("hab:form:deletePass")||"";
+              const current = store.getSync("hab:form:deletePass")||"";
               const newPass = prompt("Contraseña para eliminar (dejar vacío para desactivar):", current);
-              if (newPass !== null) { if(newPass) await store.set("hab:form:deletePass",newPass); else await store.delete("hab:form:deletePass"); }
+              if (newPass !== null) { if(newPass) store.set("hab:form:deletePass",newPass); else store.delete("hab:form:deletePass"); }
             }} style={{background:"none",border:"none",cursor:"pointer",fontSize:12,opacity:.4}} title={delPass?"🔒 Contraseña activa — clic para cambiar":"🔓 Sin contraseña — clic para configurar"}>{delPass?"🔒":"🔓"}</button>
           </div>
         </div>
@@ -1949,7 +1949,7 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
   const toggleSel = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
   const toggleAll = () => setSelectedIds(prev => prev.size===envios.length ? new Set() : new Set(envios.map(e=>e.id)));
 
-  const delPass = await store.get("hab:form:deletePass") || "";
+  const delPass = store.getSync("hab:form:deletePass") || "";
   const bioReg = false;
   const needsAuth = delPass || bioReg;
   const confirmDelete = async (action) => {
@@ -2072,16 +2072,16 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
 export default function Formularios() {
   const [data, setData] = useState(() => {
     try {
-      const saved = JSON.parse(await store.get(STORE_KEY)) || {};
+      const saved = JSON.parse(store.getSync(STORE_KEY)) || {};
       if (!saved.forms) saved.forms = [];
       return saved;
     } catch { return { forms: [] }; }
   });
   // Cloud sync: load from kv_store on mount, merge with local
   useEffect(() => {
-    (async () => {
+    (() => {
       try {
-        const r = await store.get(STORE_KEY);
+        const r = store.getSync(STORE_KEY);
         if (r?.value) {
           const cloud = JSON.parse(r);
           if (cloud?.forms?.length) {
@@ -2104,14 +2104,14 @@ export default function Formularios() {
 
   // Cloud sync: load procesados from kv_store
   useEffect(() => {
-    (async () => {
+    (() => {
       try {
-        const r = await store.get("hab:form:procesados");
+        const r = store.getSync("hab:form:procesados");
         if (r?.value) {
           const cloud = JSON.parse(r);
-          const local = JSON.parse(await store.get("hab:form:procesados")||"[]");
+          const local = JSON.parse(store.getSync("hab:form:procesados")||"[]");
           const merged = [...new Set([...local, ...cloud])];
-          await store.set("hab:form:procesados", JSON.stringify(merged));
+          store.set("hab:form:procesados", JSON.stringify(merged));
         }
       } catch {}
     })();
@@ -2251,10 +2251,8 @@ export default function Formularios() {
       } catch(e) { console.warn("Error loading Supabase responses:", e); }
     }
     // 2. Also check cloud store (migrated from cloud store)
-    const __cloudResp = await store.list("hab:form:resp:");
-    __cloudResp.forEach(__cr => { try { const r = JSON.parse(__cr.value); if(r) all.push(r); } catch {} }); catch {}
-      }
-    }
+    const __cloudResp = store.listSync("hab:form:resp:");
+    __cloudResp.forEach(__cr => { try { const r = JSON.parse(__cr.value); if(r) all.push(r); } catch {} });
     setRespuestas(arr);
     setRespLoading(false);
   };
@@ -2266,8 +2264,8 @@ export default function Formularios() {
       try {} catch {}
     }
     // Remove from cloud store
-    const __bDel = await store.list("hab:briefing:");
-    for (const __bd of __bDel) { try { const d = JSON.parse(__bd.value); if (d?.id === r.id) { await store.delete(__bd.key); break; } } catch {} }
+    const __bDel = store.listSync("hab:briefing:");
+    for (const __bd of __bDel) { try { const d = JSON.parse(__bd.value); if (d?.id === r.id) { store.delete(__bd.key); break; } } catch {} }
     setRespuestas(prev => prev.filter(x => x.id !== r.id));
   };
   const clearAllResponses = async () => {
@@ -2276,8 +2274,8 @@ export default function Formularios() {
       try {} catch {}
     }
     // Remove all from cloud store
-    const __bPurge = await store.list("hab:briefing:");
-    for (const __bp of __bPurge) { await store.delete(__bp.key); }
+    const __bPurge = store.listSync("hab:briefing:");
+    for (const __bp of __bPurge) { store.delete(__bp.key); }
     setRespuestas([]);
   };
 
@@ -2319,7 +2317,7 @@ export default function Formularios() {
           <div className="fade-up">
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
               {(()=>{
-                const proc = (() => { try { return JSON.parse(await store.get("hab:form:procesados")||"[]"); } catch { return []; } })();
+                const proc = [];
                 const sinProc = respuestas.filter(r => !proc.includes(r.id)).length;
                 return [
                   ["📋 Formularios",forms.length,"#111"],
@@ -2333,7 +2331,7 @@ export default function Formularios() {
             </div>
             {/* Quick actions */}
             {(()=>{
-              const proc = (() => { try { return JSON.parse(await store.get("hab:form:procesados")||"[]"); } catch { return []; } })();
+              const proc = [];
               const sinProc = respuestas.filter(r => !proc.includes(r.id)).length;
               if (sinProc === 0) return null;
               return (

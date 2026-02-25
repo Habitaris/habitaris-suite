@@ -42,8 +42,8 @@ const pct = (n) => Math.min(100, Math.max(0, Math.round(n||0)));
 /* ─── STORAGE HOOK ─── */
 function useStore(key, init) {
   const [data, setData] = useState(init);
-  useEffect(() => { (async () => { try { const r = await store.get(key); if (r?.value) setData(JSON.parse(r)); } catch {} })(); }, [key]);
-  const save = useCallback(async (v) => { const val = typeof v === "function" ? v(data) : v; setData(val); try { await store.set(key, JSON.stringify(val)); } catch {} }, [key, data]);
+  useEffect(() => { (() => { try { const r = store.getSync(key); if (r?.value) setData(JSON.parse(r)); } catch {} })(); }, [key]);
+  const save = useCallback(async (v) => { const val = typeof v === "function" ? v(data) : v; setData(val); try { store.set(key, JSON.stringify(val)); } catch {} }, [key, data]);
   return [data, save];
 }
 

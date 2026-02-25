@@ -905,10 +905,9 @@ function TabCxCxP({ data, save }) {
    ═══════════════════════════════════════════════════════════════ */
 export default function Administracion() {
   const STORE_KEY = "habitaris_admin";
-  const [data, setData] = useState(() => {
-    try { return JSON.parse(await store.get(STORE_KEY)) || {}; } catch { return {}; }
-  });
-  const save = (k,v) => setData(prev => { const n = {...prev,[k]:v}; await store.set(STORE_KEY,JSON.stringify(n)); try { store.set(STORE_KEY,JSON.stringify(n)); } catch {} return n; });
+  const [data, setData] = useState({});
+  useEffect(() => { store.get(STORE_KEY).then(r => { try { if(r) setData(JSON.parse(r)); } catch {} }).catch(()=>{}); }, []);
+  const save = (k,v) => setData(prev => { const n = {...prev,[k]:v}; store.set(STORE_KEY,JSON.stringify(n)); return n; });
   const [tab, setTab] = useState("dashboard");
 
   /* Mini-dashboard KPIs */

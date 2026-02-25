@@ -28,7 +28,7 @@ const MODULOS = [
 ];
 
 /* Helper to safely read cloud store */
-const getStore = async (key) => { try { const r = await store.get(key); return r ? JSON.parse(r) : {}; } catch { return {}; } };
+const getStore = (key) => { try { const r = store.getSync(key); return r ? JSON.parse(r) : {}; } catch { return {}; } };
 
 /* ── Data loaders from all modules ── */
 function useAllData() {
@@ -131,9 +131,9 @@ function useAllData() {
     const formStore = getStore("habitaris_formularios");
     const formsList = formStore.forms || [];
     const formResp = [];
-    const __dbResp = await store.list("hab:briefing:");
+    const __dbResp = store.listSync("hab:briefing:");
     __dbResp.forEach(__r => { try { formResp.push(JSON.parse(__r.value)); } catch {} });
-    const procesados = (() => { try { return JSON.parse(await store.get("hab:form:procesados")||"[]"); } catch { return []; } })();
+    const procesados = [];
     const sinProcesar = formResp.filter(r => !procesados.includes(r.id));
     // Group by module
     const sinProcesarPorModulo = {};

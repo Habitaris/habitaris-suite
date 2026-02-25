@@ -583,10 +583,9 @@ function TabEval({ ocs, recepciones, evaluaciones, setEvaluaciones }) {
    MAIN EXPORT
    ═══════════════════════════════════════════════════════════════ */
 export default function Compras() {
-  const [data, setData] = useState(() => {
-    try { return JSON.parse(await store.get(STORE_KEY)) || {}; } catch { return {}; }
-  });
-  const save = (k,v) => setData(prev => { const n = {...prev,[k]:typeof v==="function"?v(prev[k]):v}; await store.set(STORE_KEY,JSON.stringify(n)); try { store.set(STORE_KEY,JSON.stringify(n)); } catch {} return n; });
+  const [data, setData] = useState({});
+  useEffect(() => { store.get(STORE_KEY).then(r => { try { if(r) setData(JSON.parse(r)); } catch {} }).catch(()=>{}); }, []);
+  const save = (k,v) => setData(prev => { const n = {...prev,[k]:typeof v==="function"?v(prev[k]):v}; store.set(STORE_KEY,JSON.stringify(n)); return n; });
 
   const ocs = data.ocs || [];
   const setOCs = (v) => save("ocs", typeof v==="function"?v(ocs):v);

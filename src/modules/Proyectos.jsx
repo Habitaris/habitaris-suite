@@ -40,12 +40,12 @@ const fmtD = (d) => d ? new Date(d + "T12:00:00").toLocaleDateString("es-CO", { 
 function useStore(key, init) {
   const lsKey = "habitaris_proy";
   const [data, setData] = useState(() => {
-    try { const d = JSON.parse(await store.get(lsKey))||{}; return d[key]!=null ? d[key] : init; } catch { return init; }
+    try { const d = JSON.parse(store.getSync(lsKey))||{}; return d[key]!=null ? d[key] : init; } catch { return init; }
   });
   const save = useCallback((v) => {
     const val = typeof v === "function" ? v(data) : v;
     setData(val);
-    try { const d = JSON.parse(await store.get(lsKey))||{}; d[key]=val; await store.set(lsKey,JSON.stringify(d)); try { store.set(lsKey,JSON.stringify(d)); } catch {} } catch {}
+    try { const d = JSON.parse(store.getSync(lsKey))||{}; d[key]=val; store.set(lsKey,JSON.stringify(d)); } catch {}
   }, [key, data]);
   return [data, save];
 }

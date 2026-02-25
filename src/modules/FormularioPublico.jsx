@@ -211,7 +211,7 @@ export default function FormularioPublico() {
     }
     if (linkCfg.maxUsos && linkCfg.maxUsos > 0) {
       const usedKey = "hab_link_uses_"+(linkCfg.linkId||def.id||"");
-      const used = parseInt(await store.get(usedKey)||"0");
+      const used = parseInt(store.getSync(usedKey)||"0");
       if (used >= linkCfg.maxUsos) { setBlocked("maxuses"); return; }
     }
 
@@ -432,13 +432,13 @@ export default function FormularioPublico() {
     // Save to cloud store (backward compatible)
     try {
       const key = "hab:briefing:"+response.id;
-      await store.set(key, JSON.stringify(response));
+      store.set(key, JSON.stringify(response));
     } catch {}
     try {
       const idxKey = "hab:form:responses"; let idx = [];
-      try { const __r = await store.get(idxKey); if(__r) idx = JSON.parse(__r); } catch {}
+      try { const __r = store.getSync(idxKey); if(__r) idx = JSON.parse(__r); } catch {}
       idx.push({ id:response.id, formId:def.id, fecha:response.fecha, nombre:response.nombre||response.email||"" });
-      await store.set(idxKey, JSON.stringify(idx));
+      store.set(idxKey, JSON.stringify(idx));
     } catch {}
 
     // Save to Supabase
@@ -467,8 +467,8 @@ export default function FormularioPublico() {
     // Track local link usage
     if (linkCfg.maxUsos && linkCfg.maxUsos > 0) {
       const usedKey = "hab_link_uses_"+(linkCfg.linkId||def.id||"");
-      const used = parseInt(await store.get(usedKey)||"0");
-      await store.set(usedKey, String(used + 1));
+      const used = parseInt(store.getSync(usedKey)||"0");
+      store.set(usedKey, String(used + 1));
     }
 
     /* FIX: No auto-open WhatsApp — just mark as submitted */

@@ -57,10 +57,10 @@ const DEFAULT_CONFIG = {
 /* ── Public API: get config anywhere ── */
 export function getConfig() {
   try {
-    const raw = await store.get(STORAGE_KEY);
+    const raw = store.getSync(STORAGE_KEY);
     if (!raw) {
       // First time: auto-save defaults so they persist
-      await store.set(STORAGE_KEY, JSON.stringify(DEFAULT_CONFIG));
+      store.set(STORAGE_KEY, JSON.stringify(DEFAULT_CONFIG));
       return DEFAULT_CONFIG;
     }
     const saved = JSON.parse(raw);
@@ -70,7 +70,7 @@ export function getConfig() {
     if (!merged.supabase?.url) merged.supabase = { ...merged.supabase, url: DEFAULT_CONFIG.supabase.url };
     if (!merged.supabase?.anonKey) merged.supabase = { ...merged.supabase, anonKey: DEFAULT_CONFIG.supabase.anonKey };
     // Auto-update cloud store with merged config (picks up new default fields)
-    await store.set(STORAGE_KEY, JSON.stringify(merged));
+    store.set(STORAGE_KEY, JSON.stringify(merged));
     return merged;
   } catch { return DEFAULT_CONFIG; }
 }
@@ -191,7 +191,7 @@ export default function Configuracion() {
   };
 
   const guardar = () => {
-    await store.set(STORAGE_KEY, JSON.stringify(config));
+    store.set(STORAGE_KEY, JSON.stringify(config));
     setDirty(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
@@ -199,7 +199,7 @@ export default function Configuracion() {
 
   const resetear = () => {
     if (!confirm("¿Restablecer toda la configuración a los valores por defecto? Se perderán los cambios.")) return;
-    await store.delete(STORAGE_KEY);
+    store.delete(STORAGE_KEY);
     setConfig(DEFAULT_CONFIG);
     setDirty(false);
   };

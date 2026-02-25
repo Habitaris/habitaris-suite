@@ -334,24 +334,24 @@ const uid  = () => Math.random().toString(36).substr(2, 9);
 const today = () => new Date().toISOString().split("T")[0];
 
 /* ─── STORAGE ────────────────────────────────────────────────── */
-async function loadData() { try { const r = await store.get("hab:v4"); return r ? JSON.parse(r) : []; } catch { return []; } }
-async function saveData(d) { try { await store.set("hab:v4", JSON.stringify(d)); } catch(e) { console.error(e); } }
+async function loadData() { try { const r = store.getSync("hab:v4"); return r ? JSON.parse(r) : []; } catch { return []; } }
+async function saveData(d) { try { store.set("hab:v4", JSON.stringify(d)); } catch(e) { console.error(e); } }
 
 /* ─── BRIEFING STORAGE ───────────────────────────────────────── */
 async function loadBriefings() {
   try {
-    const items = await store.list("hab:briefing:");
+    const items = store.listSync("hab:briefing:");
     return items
       .map(r => { try { return JSON.parse(r); } catch { return null; } })
       .filter(Boolean)
       .sort((a,b) => new Date(b.fecha||0) - new Date(a.fecha||0));
   } catch { return []; }
 }
-async function saveBriefingEntry(data) {
-  try { await store.set("hab:briefing:" + data.id, JSON.stringify(data)); } catch {}
+function saveBriefingEntry(data) {
+  try { store.set("hab:briefing:" + data.id, JSON.stringify(data)); } catch {}
 }
 async function deleteBriefingEntry(id) {
-  try { await store.delete("hab:briefing:" + id); } catch {}
+  try { store.delete("hab:briefing:" + id); } catch {}
 }
 
 /* ─── BRIEFING → OFERTA (mapeador de campos) ─────────────────── */
@@ -583,18 +583,18 @@ function BriefingDetalle({ b, onClose, onCreateOffer, onCreateClient }) {
 /* ─── FORM STORAGE ────────────────────────────────────────────── */
 async function loadForms() {
   try {
-    const items = await store.list("hab:forms:");
+    const items = store.listSync("hab:forms:");
     return items
       .map(r => { try { return JSON.parse(r); } catch { return null; } })
       .filter(Boolean)
       .sort((a,b) => (b.updatedAt||"").localeCompare(a.updatedAt||""));
   } catch { return []; }
 }
-async function saveForm(f) {
-  try { f.updatedAt = new Date().toISOString(); await store.set(`hab:forms:${f.id}`, JSON.stringify(f)); } catch {}
+function saveForm(f) {
+  try { f.updatedAt = new Date().toISOString(); store.set(`hab:forms:${f.id}`, JSON.stringify(f)); } catch {}
 }
 async function deleteForm(id) {
-  try { await store.delete(`hab:forms:${id}`); } catch {}
+  try { store.delete(`hab:forms:${id}`); } catch {}
 }
 
 /* ─── TEMPLATES ───────────────────────────────────────────────── */
@@ -1523,7 +1523,7 @@ function TabClientesCRM() {
   const [showBriefPicker, setShowBriefPicker] = useState(false);
 
   useEffect(() => {
-    (async()=>{ try { const r = await store.get(SKEY); if(r) setClientes(JSON.parse(r)||[]); } catch{} })();
+    (() => { try { const r = store.getSync(SKEY); if(r) setClientes(JSON.parse(r)||[]); } catch{} })();
     loadBriefings().then(bs => setBriefings(bs));
   }, []);
   const save = (list) => { setClientes(list); try{ store.set(SKEY, JSON.stringify(list)); }catch{} };
@@ -1728,7 +1728,7 @@ function TabProveedores() {
   ];
 
   useEffect(() => {
-    (async()=>{ try { const r = await store.get(SKEY); if(r) setProvs(JSON.parse(r)||[]); } catch{} })();
+    (() => { try { const r = store.getSync(SKEY); if(r) setProvs(JSON.parse(r)||[]); } catch{} })();
   }, []);
   const save = (list) => { setProvs(list); try{ store.set(SKEY, JSON.stringify(list)); }catch{} };
   const uid2 = () => Math.random().toString(36).slice(2,9);
@@ -9770,9 +9770,9 @@ function TabEncuestas({ offers }) {
   const [formPrv, setFormPrv] = useState(null);
 
   useEffect(() => {
-    (async()=>{
-      try { const r = await store.get(SKEY_SAT); if(r) setEncSat(JSON.parse(r)||[]); } catch{}
-      try { const r = await store.get(SKEY_PRV); if(r) setEncPrv(JSON.parse(r)||[]); } catch{}
+    (() => {
+      try { const r = store.getSync(SKEY_SAT); if(r) setEncSat(JSON.parse(r)||[]); } catch{}
+      try { const r = store.getSync(SKEY_PRV); if(r) setEncPrv(JSON.parse(r)||[]); } catch{}
     })();
   }, []);
   const saveSat = (list) => { setEncSat(list); try{ store.set(SKEY_SAT, JSON.stringify(list)); }catch{} };
@@ -10067,7 +10067,7 @@ function Config() {
           <p style={{ fontSize: 12, color: C.inkMid, margin: "0 0 16px", lineHeight: 1.6 }}>Los datos se guardan en tu navegador. No requieren servidor ni cuenta externa.</p>
           <Btn v="danger" icon={Trash2} on={async () => {
             if (!window.confirm("¿Eliminar TODOS los datos? Irreversible.")) return;
-            await store.delete("hab:v4");
+            store.delete("hab:v4");
             window.location.reload();
           }}>Borrar todos los datos</Btn>
         </Card>
@@ -10116,7 +10116,7 @@ export default function CRMModule({ lang: langProp }) {
     const cliente = briefingToClient(b);
     // Leer clientes existentes, agregar el nuevo, guardar
     try {
-      const r = await store.get("hab:crm:clientes2");
+      const r = store.getSync("hab:crm:clientes2");
       const list = r ? JSON.parse(r) || [] : [];
       // Evitar duplicados por email
       const existe = list.find(c => c.email && c.email === cliente.email);
@@ -10126,7 +10126,7 @@ export default function CRMModule({ lang: langProp }) {
         return;
       }
       list.push(cliente);
-      await store.set("hab:crm:clientes2", JSON.stringify(list));
+      store.set("hab:crm:clientes2", JSON.stringify(list));
       alert(`✅ Cliente "${cliente.nombre}" creado desde briefing`);
     } catch {
       alert("Error guardando cliente");

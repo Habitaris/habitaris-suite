@@ -10,7 +10,7 @@
 
      store.getSync("hab:v4")          // instant, from RAM (like localStorage)
      store.set("hab:v4", jsonString)   // writes RAM + Supabase background
-     store.getSync("hab:v4")         // async read from Supabase (fallback)
+     await store.get("hab:v4")         // async read from Supabase (fallback)
      await store.list("hab:briefing:") // list keys by prefix
      await store.delete("hab:v4")      // remove from both
    ═══════════════════════════════════════════════════════════════ */
@@ -134,15 +134,6 @@ const store = {
   },
 
   /* ── Status ── */
-
-  /* ── Sync list from cache ── */
-  listSync(prefix = "") {
-    const items = Object.entries(_cache)
-      .filter(([k]) => k.startsWith(prefix))
-      .map(([key, value]) => ({ key, value }));
-    return { keys: items.map(i => i.key), items };
-  },
-
   get ready() { return _ready; },
   get tenantId() { return _tenantId; },
   get cacheSize() { return Object.keys(_cache).length; },

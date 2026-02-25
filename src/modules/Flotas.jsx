@@ -734,10 +734,9 @@ function TabMantenimiento({ vehs, mantos, setMantos }) {
    MAIN EXPORT
    ═══════════════════════════════════════════════════════════════ */
 export default function Flotas() {
-  const [data, setData] = useState(() => {
-    try { return JSON.parse(await store.get(STORE_KEY)) || {}; } catch { return {}; }
-  });
-  const save = (k,v) => setData(prev => { const n = {...prev,[k]:typeof v==="function"?v(prev[k]):v}; await store.set(STORE_KEY,JSON.stringify(n)); try { store.set(STORE_KEY,JSON.stringify(n)); } catch {} return n; });
+  const [data, setData] = useState({});
+  useEffect(() => { store.get(STORE_KEY).then(r => { try { if(r) setData(JSON.parse(r)); } catch {} }).catch(()=>{}); }, []);
+  const save = (k,v) => setData(prev => { const n = {...prev,[k]:typeof v==="function"?v(prev[k]):v}; store.set(STORE_KEY,JSON.stringify(n)); return n; });
 
   const vehs = data.vehiculos || [];
   const setVehs = (v) => save("vehiculos", typeof v==="function"?v(vehs):v);

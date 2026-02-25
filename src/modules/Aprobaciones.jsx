@@ -64,9 +64,9 @@ function useStore(key, init) {
   const [data, setData] = useState(init);
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
-    (async () => {
+    (() => {
       try {
-        const r = await store.get(key);
+        const r = store.getSync(key);
         if (r?.value) setData(JSON.parse(r));
       } catch {}
       setLoaded(true);
@@ -75,7 +75,7 @@ function useStore(key, init) {
   const save = useCallback(async (v) => {
     const val = typeof v === "function" ? v(data) : v;
     setData(val);
-    try { await store.set(key, JSON.stringify(val)); } catch {}
+    try { store.set(key, JSON.stringify(val)); } catch {}
   }, [key, data]);
   return [data, save, loaded];
 }
@@ -167,9 +167,9 @@ export default function HabitarisAprobaciones({ pais = "CO" }) {
   // ── Read CRM offers for context ──
   const [ofertas, setOfertas] = useState([]);
   useEffect(() => {
-    (async () => {
+    (() => {
       try {
-        const r = await store.get("hab:crm:ofertas");
+        const r = store.getSync("hab:crm:ofertas");
         if (r?.value) setOfertas(JSON.parse(r) || []);
       } catch {}
     })();

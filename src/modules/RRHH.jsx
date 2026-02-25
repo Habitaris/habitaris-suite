@@ -124,10 +124,7 @@ const NS = {
   equipos:   "hab:rrhh:equipos",
 };
 
-const store = {
-  get: async (k) => { try { const r = await store.get(k); return r ? JSON.parse(r) : null; } catch { return null; } },
-  set: async (k, v) => { try { await store.set(k, JSON.stringify(v)); } catch {} },
-};
+/* store imported from core */
 
 const useStore = (key, init) => {
   const [data, setData] = useState(init);
@@ -137,7 +134,7 @@ const useStore = (key, init) => {
   }, [key]);
   const save = useCallback(async (val) => {
     const next = typeof val === "function" ? val(data) : val;
-    setData(next); await store.set(key, next);
+    setData(next); store.set(key, next);
   }, [key, data]);
   return [data, save, ready];
 };
@@ -1297,29 +1294,25 @@ function TabPartes({ partes, setPartes, equipo, cargos, currentUser, pais }) {
 
   // OTs y actividades desde el CRM (exportadas al Gantt)
   const [actividadesGantt, setActividadesGantt] = useState({});
-  useEffect(()=>{
-    // Cargar actividades de todos los proyectos exportados desde CRM
+  useEffect(()=>{ (async () => {
     const all = {};
     try {
-      {
-        // Buscar todas las claves hab:proj:actividades:*
-        const listed = await store.list("hab:proj:actividades:");
-        if (listed?.keys) {
-          listed.keys.forEach(k=>{
-            try {
-              const data = await store.get(k);
-              if (data?.value) {
-                const acts = JSON.parse(data);
-                const otId = k.replace("hab:proj:actividades:","");
-                all[otId] = acts;
-              }
-            } catch{}
-          });
+      const listed = store.listSync("hab:proj:actividades:");
+      if (listed?.keys) {
+        for (const k of listed.keys) {
+          try {
+            const data = store.getSync(k);
+            if (data) {
+              const acts = JSON.parse(data);
+              const otId = k.replace("hab:proj:actividades:","");
+              all[otId] = acts;
+            }
+          } catch{}
         }
       }
     } catch{}
     setActividadesGantt(all);
-  },[]);
+  })(); },[]);
 
   const puedeCrear = !currentUser || ROLES_PARTE.includes(currentUser.rol);
   const otIds = [...new Set(partes.map(p=>p.otId).filter(Boolean))];
@@ -2695,8 +2688,8 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
 
   /* ── VIAJES: shared data with Admin module ── */
   const ADM_KEY = "habitaris_admin";
-  const getAdm = async () => { try { const r = await store.get(ADM_KEY); return r ? JSON.parse(r) : {}; } catch { return {}; } };
-  const saveAdm = async (k,v) => { const d = await getAdm(); d[k]=v; await store.set(ADM_KEY, JSON.stringify(d)); };
+  const getAdm = async () => { try { const r = store.getSync(ADM_KEY); return r ? JSON.parse(r) : {}; } catch { return {}; } };
+  const saveAdm = async (k,v) => { const d = await getAdm(); d[k]=v; store.set(ADM_KEY, JSON.stringify(d)); };
   const [misViajes, setMisViajes] = useState(() => (getAdm().adm_viaticos||[]).filter(v=>v.solicitante===nombre));
   const refreshViajes = () => setMisViajes((getAdm().adm_viaticos||[]).filter(v=>v.solicitante===nombre));
   const [showNewViaje, setShowNewViaje] = useState(false);
@@ -3191,7 +3184,7 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                           ["⏰ Horas aprobadas",partes.filter(p=>p.estado==="Aprobado").reduce((s,p)=>s+Number(p.horasNormales||0)+Number(p.horasExtra||0),0)+"h","#111111"],
                           ["🏖️ Vacaciones aprobadas",novedades.filter(n=>n.tipo==="vacaciones"&&n.estado==="Aprobada").reduce((s,n)=>s+Number(n.dias||0),0)+"d","#3B3B3B"],
                           ["🏥 Bajas activas",novedades.filter(n=>n.tipo==="baja"&&n.estado==="Aprobada").length,"#B91C1C"],
-                          ["✈️ Viáticos pend.",(()=>{try{return(JSON.parse(await store.get("habitaris_admin"))||{}).adm_viaticos||[];}catch{return[];}})().filter(v=>v.estado==="solicitado").length,"#8C6A00"]
+                          ["✈️ Viáticos pend.",[].filter(v=>v.estado==="solicitado").length,"#8C6A00"]
                         ].map(([l,v,c])=>(
                           <div key={l} style={{background:"#fff",border:`1px solid #E0E0E0`,borderRadius:8,padding:"14px 16px",boxShadow:"0 1px 3px rgba(0,0,0,.06)"}}>
                             <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div>

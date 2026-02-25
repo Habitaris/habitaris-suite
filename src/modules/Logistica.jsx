@@ -24,10 +24,6 @@ const uid = () => Math.random().toString(36).slice(2,11) + Date.now().toString(3
 const today = () => new Date().toISOString().split("T")[0];
 
 /* ─── STORAGE (async, same pattern as RRHH) ────── */
-const store = {
-  get: async (k) => { try { const r = await store.get(k); return r ? JSON.parse(r) : null; } catch { return null; } },
-  set: async (k, v) => { try { await store.set(k, JSON.stringify(v)); } catch {} },
-};
 const NS = {
   items:       "hab:logistica:items",
   proveedores: "hab:logistica:proveedores",
@@ -208,8 +204,8 @@ export default function Logistica() {
   // Load RRHH cargos for association
   const [rrhhCargos, setRrhhCargos] = useState([]);
   useEffect(() => {
-    (async () => {
-      try { const r = await store.get("hab:rrhh:cargos"); if (r) setRrhhCargos(JSON.parse(r)||[]); } catch {}
+    (() => {
+      try { const r = store.getSync("hab:rrhh:cargos"); if (r) setRrhhCargos(JSON.parse(r)||[]); } catch {}
     })();
   }, []);
 
