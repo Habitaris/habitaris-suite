@@ -1914,6 +1914,7 @@ const NAV = [
   { id: "dashboard",    lbl: "Dashboard",      en: "Dashboard",      I: LayoutDashboard },
   { id: "offers",       lbl: "Ofertas",         en: "Offers",         I: FileText },
   { id: "clientes",     lbl: "Clientes",        en: "Clients",        I: User },
+  { id: "formularios",  lbl: "Briefings",       en: "Briefings",      I: ClipboardList },
 ];
 
 function Sidebar({ view, sv, lang, setLang, open, toggle }) {
@@ -10208,8 +10209,9 @@ export default function CRMModule({ lang: langProp }) {
   // Crear oferta desde briefing
   const [prefill, setPrefill] = useState(null);
   const createOfferFromBriefing = useCallback((b, sv) => {
+    if (offers.some(o => o.briefingId === b.id)) { alert("Ya existe una oferta creada desde este briefing"); return; }
     setPrefill(briefingToOffer(b)); sv("offer-new");
-  }, []);
+  }, [offers]);
 
   // Crear cliente desde briefing
   const createClientFromBriefing = useCallback(async (b) => {
