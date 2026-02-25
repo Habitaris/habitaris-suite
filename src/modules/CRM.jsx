@@ -1698,65 +1698,79 @@ function TabClientesCRM() {
           <div style={{ display:"flex", gap:8, marginTop:14 }}>
             <Btn icon={FileText} v="sec" on={() => {
               const tel = (form.telMovil||"").replace(/^\+57\s*/,"");
+              const fv = (v) => v || '<span style="color:#ccc;font-style:italic">—</span>';
               const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${form.nombre} - Habitaris</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-@page{size:A4;margin:0}
-body{font-family:'DM Sans',sans-serif;color:#1a1a1a;background:#fff}
-.page{width:100%;max-width:210mm;margin:0 auto;padding:0}
-.hdr{background:#1a1a1a;padding:28px 36px;display:flex;justify-content:space-between;align-items:center}
-.hdr svg{flex-shrink:0}
-.hdr-right{text-align:right;color:#fff}
-.hdr-right .doc{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.45);font-weight:500}
-.hdr-right .nm{font-size:18px;font-weight:600;margin-top:3px;letter-spacing:-.3px;color:#fff}
-.accent{height:2px;background:linear-gradient(90deg,#c4a265,#e2d5be 60%,transparent)}
-.body{padding:28px 36px 20px}
-.sec{margin-bottom:22px}
-.sec-t{font-size:8px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#a09890;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #eae7e2}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px 24px}
-.f{margin-bottom:12px}
-.fl{font-size:7px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:#b5ada5;margin-bottom:2px}
-.fv{font-size:11.5px;font-weight:500;color:#1a1a1a;line-height:1.3}
-.fv.e{color:#d5d0ca;font-style:italic;font-weight:400}
-.tag{display:inline-block;padding:2px 8px;background:#f2f0ed;border-radius:2px;font-size:9px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:#777}
-.nbox{background:#faf9f7;border:1px solid #eceae6;border-radius:4px;padding:14px 18px;font-size:10.5px;line-height:1.7;color:#666;white-space:pre-wrap}
-.ft{padding:14px 36px;display:flex;justify-content:space-between;border-top:1px solid #eae7e2;margin-top:auto}
-.ft span{font-size:6.5px;letter-spacing:1.5px;text-transform:uppercase;color:#ccc}
-@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@page{size:A4;margin:20mm 0}
+body{font-family:'DM Sans',sans-serif;color:#1a1a1a}
+.page{max-width:170mm;margin:0 auto}
+/* Logo area */
+.logo-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.logo-svg{flex-shrink:0}
+.brand{font-size:22px;font-weight:300;letter-spacing:1px;color:#1a1a1a}
+.brand b{font-weight:800}
+/* Divider */
+.line{height:1px;background:#1a1a1a;margin:8px 0 20px}
+/* Doc title + client */
+.title-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:24px}
+.doc-title{font-size:8px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#999}
+.client-name{font-size:20px;font-weight:700;letter-spacing:-.3px}
+/* Sections */
+.sec{margin-bottom:20px}
+.sec-t{font-size:7.5px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:#999;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #e5e2de}
+.g{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px 20px}
+.f{margin-bottom:11px}
+.fl{font-size:6.5px;font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:#aaa;margin-bottom:1px}
+.fv{font-size:11px;font-weight:500;color:#1a1a1a;line-height:1.3}
+.tag{display:inline-block;padding:1px 7px;background:#f0efec;font-size:9px;font-weight:600;letter-spacing:.5px;color:#666}
+.nbox{background:#faf9f7;border-left:2px solid #ddd;padding:10px 14px;font-size:10px;line-height:1.7;color:#666;white-space:pre-wrap}
+/* Footer */
+.ft{margin-top:30px;padding-top:10px;border-top:1px solid #e5e2de;display:flex;justify-content:space-between}
+.ft span{font-size:6px;letter-spacing:1.5px;text-transform:uppercase;color:#bbb}
 </style></head><body>
 <div class="page">
-<div class="hdr">
-  <div style="display:flex;align-items:center;gap:12px">
-    <svg width="32" height="32" viewBox="0 0 34 34" fill="none"><rect x="4.5" y="2.5" width="25" height="25" stroke="#fff" stroke-width=".7" opacity=".4"/><rect x="2.5" y="4.5" width="25" height="25" stroke="#fff" stroke-width="1.1"/><rect x="7.5" y="10" width="4" height="13" fill="#fff"/><rect x="7.5" y="15.5" width="13" height="3" fill="#fff"/><rect x="16.5" y="10" width="4" height="13" fill="#fff"/></svg>
-    <div><div style="color:#fff;font-size:13px;font-weight:600;letter-spacing:4px;text-transform:uppercase">Habitaris</div><div style="font-size:7px;letter-spacing:2px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-top:1px">Arquitectura · Interiorismo</div></div>
+  <div class="logo-row">
+    <svg class="logo-svg" width="38" height="38" viewBox="0 0 34 34" fill="none">
+      <rect x="4.5" y="2.5" width="25" height="25" stroke="#1a1a1a" stroke-width=".7" opacity=".35"/>
+      <rect x="2.5" y="4.5" width="25" height="25" stroke="#1a1a1a" stroke-width="1.2"/>
+      <rect x="7.5" y="10" width="4" height="13" fill="#1a1a1a"/>
+      <rect x="7.5" y="15.5" width="13" height="3" fill="#1a1a1a"/>
+      <rect x="16.5" y="10" width="4" height="13" fill="#1a1a1a"/>
+    </svg>
+    <div class="brand"><b>H</b>abitaris</div>
   </div>
-  <div class="hdr-right"><div class="doc">Ficha de cliente</div><div class="nm">${form.nombre||""}</div></div>
-</div>
-<div class="accent"></div>
-<div class="body">
-  <div class="sec"><div class="sec-t">Información general</div><div class="g3">
-    <div class="f"><div class="fl">Nombre</div><div class="fv">${form.nombre||'<span class="e">—</span>'}</div></div>
+  <div class="line"></div>
+  <div class="title-row">
+    <span class="doc-title">Ficha de cliente</span>
+    <span class="client-name">${form.nombre||""}</span>
+  </div>
+
+  <div class="sec"><div class="sec-t">Información general</div><div class="g">
+    <div class="f"><div class="fl">Nombre</div><div class="fv">${fv(form.nombre)}</div></div>
     <div class="f"><div class="fl">Tipo</div><div class="fv"><span class="tag">${form.tipo||"—"}</span></div></div>
-    <div class="f"><div class="fl">NIT / CIF / DNI</div><div class="fv">${form.nit||'<span class="e">—</span>'}</div></div>
-    <div class="f"><div class="fl">Email</div><div class="fv">${form.email||'<span class="e">—</span>'}</div></div>
-    <div class="f"><div class="fl">Móvil</div><div class="fv">${tel?(form.prefijoMovil||"+57")+" "+tel:'<span class="e">—</span>'}</div></div>
-    <div class="f"><div class="fl">Fijo</div><div class="fv">${form.telFijo||'<span class="e">—</span>'}</div></div>
-    <div class="f"><div class="fl">Ciudad</div><div class="fv">${form.ciudad||'<span class="e">—</span>'}</div></div>
-    <div class="f"><div class="fl">País</div><div class="fv">${form.pais||'<span class="e">—</span>'}</div></div>
-    <div class="f"><div class="fl">Dirección</div><div class="fv">${form.direccion||'<span class="e">—</span>'}</div></div>
+    <div class="f"><div class="fl">NIT / CIF / DNI</div><div class="fv">${fv(form.nit)}</div></div>
+    <div class="f"><div class="fl">Email</div><div class="fv">${fv(form.email)}</div></div>
+    <div class="f"><div class="fl">Móvil</div><div class="fv">${tel?(form.prefijoMovil||"+57")+" "+tel:fv("")}</div></div>
+    <div class="f"><div class="fl">Fijo</div><div class="fv">${fv(form.telFijo)}</div></div>
+    <div class="f"><div class="fl">Ciudad</div><div class="fv">${fv(form.ciudad)}</div></div>
+    <div class="f"><div class="fl">País</div><div class="fv">${fv(form.pais)}</div></div>
+    <div class="f"><div class="fl">Dirección</div><div class="fv">${fv(form.direccion)}</div></div>
   </div></div>
-  <div class="sec"><div class="sec-t">Datos de facturación</div><div class="g3">
-    <div class="f"><div class="fl">Razón social</div><div class="fv">${form.razonSocial||'<span class="e">—</span>'}</div></div>
-    <div class="f"><div class="fl">Email facturación</div><div class="fv">${form.emailFactura||'<span class="e">—</span>'}</div></div>
-    <div class="f"><div class="fl">Dir. facturación</div><div class="fv">${form.dirFacturacion||'<span class="e">—</span>'}</div></div>
-    <div class="f"><div class="fl">Forma de pago</div><div class="fv">${form.formaPago||'<span class="e">—</span>'}</div></div>
-    <div class="f"><div class="fl">Retenciones</div><div class="fv">${form.retenciones||'<span class="e">—</span>'}</div></div>
-    <div class="f"><div class="fl">Detalle retenciones</div><div class="fv">${form.detalleRet||'<span class="e">—</span>'}</div></div>
+
+  <div class="sec"><div class="sec-t">Datos de facturación</div><div class="g">
+    <div class="f"><div class="fl">Razón social</div><div class="fv">${fv(form.razonSocial)}</div></div>
+    <div class="f"><div class="fl">Email facturación</div><div class="fv">${fv(form.emailFactura)}</div></div>
+    <div class="f"><div class="fl">Dir. facturación</div><div class="fv">${fv(form.dirFacturacion)}</div></div>
+    <div class="f"><div class="fl">Forma de pago</div><div class="fv">${fv(form.formaPago)}</div></div>
+    <div class="f"><div class="fl">Retenciones</div><div class="fv">${fv(form.retenciones)}</div></div>
+    <div class="f"><div class="fl">Detalle retenciones</div><div class="fv">${fv(form.detalleRet)}</div></div>
   </div></div>
+
   ${form.notas?'<div class="sec"><div class="sec-t">Notas</div><div class="nbox">'+form.notas+'</div></div>':""}
-</div>
-<div class="ft"><span>Habitaris Suite · CRM</span><span>Generado ${new Date().toLocaleDateString("es-CO")}</span><span>Confidencial</span></div>
+
+  <div class="ft"><span>Habitaris Suite · CRM</span><span>${new Date().toLocaleDateString("es-CO")}</span><span>Confidencial</span></div>
 </div></body></html>`;
               const w = window.open("","_blank","width=800,height=1000");
               w.document.write(html); w.document.close();
