@@ -1,5 +1,5 @@
 import React, { useState, Suspense, useMemo } from 'react'
-import { store, init as storeInit } from "./core/store.js";
+import { store } from "./core/store.js";
 import { tenant } from "./core/tenant.js";
 
 import CRM  from './modules/CRM.jsx'
@@ -208,6 +208,9 @@ function ModuleBar({ mod, onBack, lang, setLang, onLogout }) {
 }
 
 export default function App() {
+  const [storeReady, setStoreReady] = useState(false);
+  React.useEffect(() => { store.init("habitaris").then(() => setStoreReady(true)).catch(() => setStoreReady(true)); }, []);
+  if (!storeReady) return <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",fontFamily:"DM Sans,sans-serif",color:"#999"}}>Cargando...</div>;
   const [active, setActive] = useState(() => sessionStorage.getItem("hab:active_module") || null)
   const [lang, setLang]     = useState("es")
   const [authed, setAuthed]   = useState(isLoggedIn())
