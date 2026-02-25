@@ -358,8 +358,8 @@ async function deleteBriefingEntry(id) {
 function briefingToOffer(b) {
   return {
     cliente:        b.nombre        || "",
-    email:          b.email         || "",
-    telefono:       b.telefono      || "",
+    emailCliente:   b.email         || "",
+    telCliente:     b.telefono      || "",
     ubicacion:      [b.ciudad, b.edificio].filter(Boolean).join(" · ") || "",
     proyecto:       [b.edificio, b.nombre?.split(" ").slice(-1)[0]].filter(Boolean).join(" · ") || "",
     estado:         "Prospecto",
@@ -378,6 +378,9 @@ function briefingToOffer(b) {
     detalleRet:     b.detalle_retenciones || "",
     anticipoAcept:  b.anticipo      || "",
     formaPago:      b.forma_pago    || "",
+    fechaInicio:    b.fecha_inicio  || "",
+    fechaEntrega:   b.plazo         || "",
+    lugarNombre:    b.edificio      || "",
     briefingId:     b.id,
   };
 }
@@ -409,6 +412,9 @@ function briefingToClient(b) {
     formaPago:      b.forma_pago || "",
     anticipo:       b.anticipo || "",
     direccion:      b.direccion_proyecto || "",
+    fechaInicio:    b.fecha_inicio  || "",
+    fechaEntrega:   b.plazo         || "",
+    lugarNombre:    b.edificio      || "",
     briefingId:     b.id,
     fechaAlta:      new Date().toISOString().split("T")[0],
   };
@@ -1908,7 +1914,6 @@ const NAV = [
   { id: "dashboard",    lbl: "Dashboard",      en: "Dashboard",      I: LayoutDashboard },
   { id: "offers",       lbl: "Ofertas",         en: "Offers",         I: FileText },
   { id: "clientes",     lbl: "Clientes",        en: "Clients",        I: User },
-  { id: "formularios",  lbl: "Briefings",       en: "Briefings",      I: ClipboardList },
 ];
 
 function Sidebar({ view, sv, lang, setLang, open, toggle }) {
