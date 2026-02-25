@@ -1698,7 +1698,7 @@ function TabClientesCRM() {
           <div style={{ display:"flex", gap:8, marginTop:14 }}>
             <Btn icon={FileText} v="sec" on={() => {
               const tel = (form.telMovil||"").replace(/^\+57\s*/,"");
-              const w = window.open("","_blank");
+              let iframe = document.getElementById("__print_iframe"); if (iframe) iframe.remove(); iframe = document.createElement("iframe"); iframe.id = "__print_iframe"; iframe.style.cssText = "position:fixed;top:-9999px;left:-9999px;width:210mm;height:297mm;"; document.body.appendChild(iframe); const w = iframe.contentWindow;
               w.document.write(`<html><head><title>${form.nombre} — Habitaris</title>
               <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
               <style>
@@ -1709,7 +1709,7 @@ function TabClientesCRM() {
                 /* Header bar */
                 .header { background:#1a1a1a; color:#fff; padding:32px 40px; display:flex; justify-content:space-between; align-items:flex-start; }
                 .logo-area { display:flex; align-items:center; gap:14px; }
-                .logo-mark { width:36px; height:36px; border:2px solid #fff; border-radius:6px; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; }
+
                 .logo-text { font-size:15px; font-weight:700; letter-spacing:5px; text-transform:uppercase; }
                 .logo-sub { font-size:8px; letter-spacing:3px; color:rgba(255,255,255,0.4); text-transform:uppercase; margin-top:2px; }
                 .doc-type { text-align:right; }
@@ -1739,7 +1739,7 @@ function TabClientesCRM() {
               <div class="page">
                 <div class="header">
                   <div class="logo-area">
-                    <div class="logo-mark">H</div>
+                    <svg width="36" height="36" viewBox="0 0 34 34" fill="none"><rect x="4.5" y="2.5" width="25" height="25" stroke="#fff" stroke-width="0.7" opacity="0.4"/><rect x="2.5" y="4.5" width="25" height="25" stroke="#fff" stroke-width="1.1"/><rect x="7.5" y="10" width="4" height="13" fill="#fff"/><rect x="7.5" y="15.5" width="13" height="3" fill="#fff"/><rect x="16.5" y="10" width="4" height="13" fill="#fff"/></svg>
                     <div><div class="logo-text">Habitaris</div><div class="logo-sub">Arquitectura &middot; Interiorismo</div></div>
                   </div>
                   <div class="doc-type">
@@ -1783,7 +1783,7 @@ function TabClientesCRM() {
                 </div>
               </div>
               </body></html>`);
-              w.document.close(); setTimeout(()=>w.print(), 300);
+              w.document.close(); setTimeout(()=>{ iframe.contentWindow.print(); setTimeout(()=>iframe.remove(), 1000); }, 400);
             }}>PDF / Imprimir</Btn>
             {form.briefingId && <Btn v="sec" on={() => {
               try {
