@@ -2582,6 +2582,127 @@ const FAMILIA_ICONS_CAT = { epp:"🦺", dotacion:"👕", herr_menor:"🔨", herr
 const getRecursoByCodigo = (codigo) => CATALOGO_RECURSOS.find(r => r.codigo === codigo);
 
 /* ─── CO/ES TARIFAS MO (precargadas 2025) ───────────────────── */
+
+/* ─── DATOS DE PRUEBA RRHH + LOGÍSTICA ───────────────────────── */
+const TEST_RRHH_CARGOS = [
+  { id: "dir_creativo",   nombre: "Director Creativo",       salarioBruto: 8000000, prestaciones: 52.18, segSocial: 12.5, parafiscales: 9, activo: true },
+  { id: "arq_senior",     nombre: "Arquitecto Senior",       salarioBruto: 5500000, prestaciones: 52.18, segSocial: 12.5, parafiscales: 9, activo: true },
+  { id: "arq_junior",     nombre: "Arquitecto Junior",       salarioBruto: 3000000, prestaciones: 52.18, segSocial: 12.5, parafiscales: 9, activo: true },
+  { id: "disenador_int",  nombre: "Diseñador de Interiores", salarioBruto: 4000000, prestaciones: 52.18, segSocial: 12.5, parafiscales: 9, activo: true },
+  { id: "modelador_3d",   nombre: "Modelador 3D / BIM",     salarioBruto: 3500000, prestaciones: 52.18, segSocial: 12.5, parafiscales: 9, activo: true },
+  { id: "dibujante",      nombre: "Dibujante Técnico",       salarioBruto: 2500000, prestaciones: 52.18, segSocial: 12.5, parafiscales: 9, activo: true },
+  { id: "residente",      nombre: "Residente de Obra",       salarioBruto: 4200000, prestaciones: 52.18, segSocial: 12.5, parafiscales: 9, activo: true },
+  { id: "aux_admin",      nombre: "Auxiliar Administrativo",  salarioBruto: 1800000, prestaciones: 52.18, segSocial: 12.5, parafiscales: 9, activo: true },
+];
+
+const TEST_RRHH_ACTIVOS = [
+  { id: "macbook_pro",  nombre: "MacBook Pro 14\"",    valorCompra: 12000000, vidaUtilAnios: 5, usoAnual: 1760, activo: true },
+  { id: "monitor_4k",   nombre: "Monitor 4K 27\"",     valorCompra: 2500000,  vidaUtilAnios: 5, usoAnual: 1760, activo: true },
+  { id: "ipad_pro",     nombre: "iPad Pro + Pencil",    valorCompra: 5000000,  vidaUtilAnios: 4, usoAnual: 1760, activo: true },
+  { id: "impresora_a3", nombre: "Plotter / Impresora A3", valorCompra: 8000000, vidaUtilAnios: 7, usoAnual: 1760, activo: true },
+  { id: "disco_ext",    nombre: "Disco SSD externo 2TB", valorCompra: 600000,  vidaUtilAnios: 4, usoAnual: 1760, activo: true },
+];
+
+const TEST_RRHH_LICENCIAS = [
+  { id: "autocad",       nombre: "AutoCAD",              costoAnual: 3600000,  activo: true },
+  { id: "revit",         nombre: "Revit",                costoAnual: 4800000,  activo: true },
+  { id: "sketchup_pro",  nombre: "SketchUp Pro",         costoAnual: 1200000,  activo: true },
+  { id: "adobe_suite",   nombre: "Adobe Creative Suite", costoAnual: 1800000,  activo: true },
+  { id: "lumion",        nombre: "Lumion",                costoAnual: 7200000,  activo: true },
+  { id: "enscape",       nombre: "Enscape",              costoAnual: 2400000,  activo: true },
+  { id: "office365",     nombre: "Microsoft 365",        costoAnual: 480000,   activo: true },
+  { id: "canva_pro",     nombre: "Canva Pro",            costoAnual: 360000,   activo: true },
+];
+
+const TEST_RRHH_JORNADA = {
+  hDia: 8, diasSemana: 5, semanasAnio: 50, pctProductivas: 75, diasFestivos: 18, diasAusencias: 5
+};
+
+const TEST_LOGISTICA_ITEMS = [
+  { id: "epp_casco",     nombre: "Casco de seguridad",     familia: "epp",      precio: 45000,  vidaUtil: 12, activo: true, asociadoACargo: true, cargosAsociados: ["residente"] },
+  { id: "epp_chaleco",   nombre: "Chaleco reflectivo",     familia: "epp",      precio: 25000,  vidaUtil: 6,  activo: true, asociadoACargo: true, cargosAsociados: ["residente"] },
+  { id: "epp_botas",     nombre: "Botas de seguridad",     familia: "epp",      precio: 180000, vidaUtil: 12, activo: true, asociadoACargo: true, cargosAsociados: ["residente"] },
+  { id: "epp_gafas",     nombre: "Gafas de seguridad",     familia: "epp",      precio: 15000,  vidaUtil: 6,  activo: true, asociadoACargo: true, cargosAsociados: ["residente"] },
+  { id: "epp_guantes",   nombre: "Guantes de trabajo",     familia: "epp",      precio: 12000,  vidaUtil: 3,  activo: true, asociadoACargo: true, cargosAsociados: ["residente"] },
+  { id: "dot_camisa",    nombre: "Camisa corporativa",     familia: "dotacion", precio: 85000,  vidaUtil: 12, activo: true, asociadoACargo: false, cargosAsociados: [] },
+  { id: "herr_flexo",    nombre: "Flexómetro 5m",          familia: "herr_menor", precio: 35000, vidaUtil: 24, activo: true },
+  { id: "herr_nivel",    nombre: "Nivel láser",            familia: "herr_menor", precio: 350000, vidaUtil: 36, activo: true },
+  { id: "herr_distanc",  nombre: "Distanciómetro láser",   familia: "herr_menor", precio: 280000, vidaUtil: 36, activo: true },
+];
+
+const TEST_CUADRILLA_DISENO = {
+  id: "cuad_diseno_std",
+  nombre: "Equipo Diseño Estándar",
+  cargos: [
+    { id: "cd1", cargoId: "dir_creativo",  cantidad: 1 },
+    { id: "cd2", cargoId: "arq_senior",    cantidad: 1 },
+    { id: "cd3", cargoId: "modelador_3d",  cantidad: 1 },
+  ],
+  activosUsados: [
+    { id: "ad1", activoId: "macbook_pro",  cantidad: 3 },
+    { id: "ad2", activoId: "monitor_4k",   cantidad: 3 },
+  ],
+  licenciasUsadas: [
+    { id: "ld1", licId: "autocad",     cantidad: 2 },
+    { id: "ld2", licId: "sketchup_pro", cantidad: 1 },
+    { id: "ld3", licId: "lumion",      cantidad: 1 },
+    { id: "ld4", licId: "adobe_suite", cantidad: 3 },
+  ],
+  logItemsUsados: [],
+  rendimiento: 1,
+  notas: "Cuadrilla estándar para proyectos de diseño arquitectónico e interiores.",
+};
+
+const TEST_CUADRILLA_OBRA = {
+  id: "cuad_obra_std",
+  nombre: "Equipo Supervisión Obra",
+  cargos: [
+    { id: "co1", cargoId: "residente",   cantidad: 1 },
+    { id: "co2", cargoId: "aux_admin",   cantidad: 1 },
+  ],
+  activosUsados: [
+    { id: "ao1", activoId: "macbook_pro", cantidad: 1 },
+    { id: "ao2", activoId: "ipad_pro",    cantidad: 1 },
+  ],
+  licenciasUsadas: [
+    { id: "lo1", licId: "office365",   cantidad: 2 },
+  ],
+  logItemsUsados: [
+    { id: "lio1", itemId: "herr_flexo",    cantidad: 1 },
+    { id: "lio2", itemId: "herr_nivel",    cantidad: 1 },
+    { id: "lio3", itemId: "herr_distanc",  cantidad: 1 },
+  ],
+  rendimiento: 1,
+  notas: "Cuadrilla estándar para supervisión y dirección de obra.",
+};
+
+const seedTestData = async () => {
+  try {
+    await Promise.all([
+      window.storage?.set?.("hab:rrhh:cargos",    JSON.stringify(TEST_RRHH_CARGOS)),
+      window.storage?.set?.("hab:rrhh:activos",    JSON.stringify(TEST_RRHH_ACTIVOS)),
+      window.storage?.set?.("hab:rrhh:licencias",  JSON.stringify(TEST_RRHH_LICENCIAS)),
+      window.storage?.set?.("hab:rrhh:jornada",    JSON.stringify(TEST_RRHH_JORNADA)),
+      window.storage?.set?.("hab:logistica:items",  JSON.stringify(TEST_LOGISTICA_ITEMS)),
+      window.storage?.set?.("hab:crm:equipos",      JSON.stringify([TEST_CUADRILLA_DISENO, TEST_CUADRILLA_OBRA])),
+    ]);
+    return true;
+  } catch(e) { console.error("Seed error:", e); return false; }
+};
+
+const clearTestData = async () => {
+  try {
+    await Promise.all([
+      window.storage?.set?.("hab:rrhh:cargos",    JSON.stringify([])),
+      window.storage?.set?.("hab:rrhh:activos",    JSON.stringify([])),
+      window.storage?.set?.("hab:rrhh:licencias",  JSON.stringify([])),
+      window.storage?.set?.("hab:logistica:items",  JSON.stringify([])),
+      window.storage?.set?.("hab:crm:equipos",      JSON.stringify([])),
+    ]);
+    return true;
+  } catch(e) { console.error("Clear error:", e); return false; }
+};
+
 const TARIFAS_MO = {
   CO: {
     categorias: [
@@ -6567,7 +6688,12 @@ function TGG({ d, set, r }) {
 
     // 2) From ofertaEquipos cuadrillas → operational roles under director/residente
     const operParent = orgNodes.find(n => n.cargo.toLowerCase().includes("residente")) || orgNodes.find(n => n.parentId === rootId) || orgNodes[0];
-    const equipos = d.ofertaEquipos || [];
+    // ── Connection with Alcances tab ──
+  const entregablesActivos = (d.entregablesOferta || []).filter(e => e.incluir);
+  const horasAlcances = entregablesActivos.reduce((s, e) => s + (e.horas || 0), 0);
+  const servicioActual = typeof SERVICIOS !== "undefined" ? SERVICIOS.find(s => s.id === d.servicioId) : null;
+
+  const equipos = d.ofertaEquipos || [];
     const seenCargos = new Set();
     equipos.forEach(eq => {
       (eq.cargos || []).forEach(c => {
@@ -7579,6 +7705,11 @@ function TEqu({ d, set }) {
   };
 
   // ── Equipos de la oferta ──
+  // ── Connection with Alcances tab ──
+  const entregablesActivos = (d.entregablesOferta || []).filter(e => e.incluir);
+  const horasAlcances = entregablesActivos.reduce((s, e) => s + (e.horas || 0), 0);
+  const servicioActual = typeof SERVICIOS !== "undefined" ? SERVICIOS.find(s => s.id === d.servicioId) : null;
+
   const equipos = d.ofertaEquipos || [];
   const setEquipos = (v) => set("ofertaEquipos", typeof v === "function" ? v(equipos) : v);
   const [editId, setEditId] = useState(null);
@@ -7657,6 +7788,9 @@ function TEqu({ d, set }) {
   };
 
   const inp = { border:`1px solid ${C.border}`, borderRadius:3, padding:"4px 6px", fontSize:11, fontFamily:"'DM Sans',sans-serif", background:"#fff" };
+
+  // ── Seed data banner ──
+  const hasRrhhData = rrhhCargos.filter(c => c.activo !== false).length > 0;
 
   // ── PDF export ──
   const printEquipos = () => {
