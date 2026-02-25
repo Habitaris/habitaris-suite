@@ -237,7 +237,7 @@ function calc(o) {
   const {
     tarifaIVA, margen, tipoProyecto, subtipoDiseno,
     medioPago, aplicar4x1000, pctRCE, pctTRC, pctAdm, pctICA,
-    pctReteFuente, pctReteICA, pctReteIVA, costosDirectos,
+    pctReteFuente, pctReteICA, pctReteIVA, costosDirectos = [],
     apuSalarioAnual, apuPrestaciones, apuHDia, apuDiasSem, apuSemanas, apuPctProductivas,
     apuLicencias, apuEquipos, apuAccesorios, apuIndirectos,
     apuModoHora, apuCostoHoraManual, planos = [],
