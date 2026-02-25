@@ -10,7 +10,7 @@ import { getConfig, resolveTemplate } from "./Configuracion.jsx";
    ═══════════════════════════════════════════════════════════════ */
 
 const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;background:#F5F4F1}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}input,select,textarea,button{font-family:'DM Sans',sans-serif;outline:none}button{cursor:pointer}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fade-up{animation:fadeUp .22s ease both}`}</style>;
-const T = { bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E0E0E0",accent:"#EDEBE7",green:"#111111",greenBg:"#E8F4EE",red:"#B91C1C",redBg:"#FAE8E8",amber:"#8C6A00",amberBg:"#FAF0E0",blue:"#3B3B3B",blueBg:"#F0F0F0",purple:"#5B3A8C",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
+const T = { bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E0E0E0",accent:"#EDEBE7",green:"#111111",greenBg:"#E8F4EE",red:"#B91C1C",redBg:"#FAE8E8",amber:"#8C6A00",amberBg:"#FAF0E0",blue:"#3B3B3B",blueBg:"#F0F0F0",purple:"#111111",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
 const uid = () => Math.random().toString(36).slice(2,10);
 const today = () => new Date().toISOString().split("T")[0];
 const F = { fontFamily:"'DM Sans',sans-serif" };
@@ -915,19 +915,19 @@ render();
             </div>
 
             {/* Link config: limits & expiry */}
-            <div style={{background:"#F5F0FF",borderRadius:6,padding:"12px 14px",marginBottom:14,border:"1px solid #5B3A8C22"}}>
-              <div style={{fontSize:8,fontWeight:700,color:"#5B3A8C",textTransform:"uppercase",marginBottom:8}}>🌍 País del proyecto</div>
+            <div style={{background:"#F5F0FF",borderRadius:6,padding:"12px 14px",marginBottom:14,border:"1px solid #11111122"}}>
+              <div style={{fontSize:8,fontWeight:700,color:"#111111",textTransform:"uppercase",marginBottom:8}}>🌍 País del proyecto</div>
               <select value={sharePais} onChange={e=>{setSharePais(e.target.value);setShareGenerated("");}}
                 style={{...inp,width:"100%",fontSize:11,marginBottom:8}}>
                 {["Colombia","España","México","Chile","Perú","Ecuador","Argentina","Panamá","Estados Unidos","Otro"].map(p=><option key={p} value={p}>{p}</option>)}
               </select>
-              <div style={{fontSize:8,color:"#5B3A8C",lineHeight:1.4}}>
+              <div style={{fontSize:8,color:"#111111",lineHeight:1.4}}>
                 📌 Define la divisa, departamentos/comunidades, tipo de documento y código telefónico del formulario
               </div>
             </div>
 
-            <div style={{background:"#F5F0FF",borderRadius:6,padding:"12px 14px",marginBottom:14,border:"1px solid #5B3A8C22"}}>
-              <div style={{fontSize:8,fontWeight:700,color:"#5B3A8C",textTransform:"uppercase",marginBottom:8}}>🔒 Control del enlace</div>
+            <div style={{background:"#F5F0FF",borderRadius:6,padding:"12px 14px",marginBottom:14,border:"1px solid #11111122"}}>
+              <div style={{fontSize:8,fontWeight:700,color:"#111111",textTransform:"uppercase",marginBottom:8}}>🔒 Control del enlace</div>
               <div style={{display:"flex",gap:8}}>
                 <div style={{flex:1}}>
                   <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Máximo de envíos</label>
@@ -948,7 +948,7 @@ render();
                     style={{...inp,width:"100%",fontSize:11}}/>
                 </div>
               </div>
-              <div style={{fontSize:8,color:"#5B3A8C",marginTop:6,lineHeight:1.4}}>
+              <div style={{fontSize:8,color:"#111111",marginTop:6,lineHeight:1.4}}>
                 {linkMaxUsos>0 ? `⚡ El cliente podrá enviar máximo ${linkMaxUsos} ${linkMaxUsos===1?"vez":"veces"}` : "♾️ Sin límite de envíos"}
                 {linkExpiry ? ` · ⏰ Caduca el ${new Date(linkExpiry+"T23:59:59").toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"})}` : " · Sin caducidad"}
               </div>
@@ -1114,92 +1114,96 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
 
   const isProcesado = (r) => r.processed || procesados.includes(r.id);
 
-  /* Procesar: crear cliente + borrador oferta en CRM */
-  const procesarRespuesta = (r) => {
-    // 1. Create client in CRM
-    const crmData = JSON.parse(localStorage.getItem("habitaris_crm")||"{}");
-    const clientes = (() => {
-      try {
-        const raw = localStorage.getItem("hab:crm:clientes2:local");
-        return raw ? JSON.parse(raw) : [];
-      } catch { return []; }
-    })();
+  /* Procesar: crear cliente + borrador oferta en CRM — CLOUD */
+  const procesarRespuesta = async (r) => {
+    try {
+      // 1. Leer clientes desde cloud
+      let clientes = [];
+      try { const cr = await window.storage?.get?.("hab:crm:clientes2"); if(cr) clientes = JSON.parse(cr.value)||[]; } catch {}
 
-    // Check if client already exists by email
-    const existingClient = clientes.find(c => c.email && c.email === r.clienteEmail);
-    let clienteId;
+      // Check duplicado por email
+      const existingClient = clientes.find(c => c.email && c.email === r.clienteEmail);
+      let clienteId;
 
-    if (!existingClient) {
-      const newClient = {
-        id: Math.random().toString(36).slice(2,9),
-        nombre: r.razonSocial || r.clienteNombre || "",
-        tipo: r.razonSocial ? "Empresa" : "Persona natural",
-        nit: r.documento || "",
+      if (!existingClient) {
+        const newClient = {
+          id: Math.random().toString(36).slice(2,9),
+          nombre: r.razonSocial || r.clienteNombre || "",
+          tipo: r.razonSocial ? "Empresa" : "Persona natural",
+          nit: r.documento || "",
+          email: r.clienteEmail || "",
+          telMovil: r.clienteTel || r.telefono || "",
+          prefijoMovil: "+57",
+          ciudad: r.ciudad || "",
+          pais: "CO",
+          notas: [
+            r.edificio ? `Proyecto: ${r.edificio}` : "",
+            r.tipoProyecto ? `Tipo: ${r.tipoProyecto}` : "",
+            r.area ? `Área: ${r.area} m²` : "",
+            r.presupuesto ? `Presupuesto: ${Number(r.presupuesto).toLocaleString("es-CO")}` : "",
+          ].filter(Boolean).join(" | "),
+          emailFactura: r.emailFactura || r.clienteEmail || "",
+          dirFacturacion: r.dirFacturacion || "",
+          briefingId: r.id,
+          fechaAlta: new Date().toISOString().split("T")[0],
+        };
+        clientes.push(newClient);
+        clienteId = newClient.id;
+        await window.storage?.set?.("hab:crm:clientes2", JSON.stringify(clientes));
+      } else {
+        clienteId = existingClient.id;
+      }
+
+      // 2. Leer ofertas desde cloud y crear borrador
+      let ofertas = [];
+      try { const or2 = await window.storage?.get?.("hab:v4"); if(or2) ofertas = JSON.parse(or2.value)||[]; } catch {}
+
+      const newOffer = {
+        id: Math.random().toString(36).slice(2,9) + Date.now().toString(36),
+        nombre: [r.edificio, r.clienteNombre?.split(" ").slice(-1)[0]].filter(Boolean).join(" · ") || "Nuevo proyecto",
+        cliente: r.clienteNombre || r.razonSocial || "",
+        clienteId,
         email: r.clienteEmail || "",
-        telMovil: r.clienteTel || r.telefono || "",
-        prefijoMovil: "+57",
-        ciudad: r.ciudad || "",
-        pais: "CO",
+        telefono: r.clienteTel || r.telefono || "",
+        direccion: [r.ciudad, r.edificio].filter(Boolean).join(" · "),
+        tipoProyecto: r.tipoProyecto || "",
+        estado: "borrador",
+        fechaOferta: new Date().toISOString().split("T")[0],
+        presupuestoCliente: r.presupuesto ? Number(String(r.presupuesto).replace(/[^0-9]/g,"")) : 0,
+        m2: r.area || "",
         notas: [
-          r.edificio ? `Proyecto: ${r.edificio}` : "",
-          r.tipoProyecto ? `Tipo: ${r.tipoProyecto}` : "",
-          r.area ? `Área: ${r.area} m²` : "",
-          r.presupuesto ? `Presupuesto: $${Number(r.presupuesto).toLocaleString("es-CO")}` : "",
-        ].filter(Boolean).join(" | "),
+          r.servicios?.length ? `Servicios: ${Array.isArray(r.servicios)?r.servicios.join(", "):r.servicios}` : "",
+          r.estilo?.length ? `Estilo: ${Array.isArray(r.estilo)?r.estilo.join(", "):r.estilo}` : "",
+          r.espacios?.length ? `Espacios: ${Array.isArray(r.espacios)?r.espacios.join(", "):r.espacios}` : "",
+          r.colores ? `Materiales: ${r.colores}` : "",
+          r.expectativas?.length ? `Expectativas: ${Array.isArray(r.expectativas)?r.expectativas.join("; "):r.expectativas}` : "",
+          r.linksReferentes ? `Referencias: ${r.linksReferentes}` : "",
+        ].filter(Boolean).join("\n"),
+        razonSocial: r.razonSocial || "",
+        documento: r.documento || "",
         emailFactura: r.emailFactura || r.clienteEmail || "",
         dirFacturacion: r.dirFacturacion || "",
+        retencion: r.retenciones === "Sí",
+        detalleRet: r.detalleRetenciones || "",
+        anticipoAcept: r.anticipo || "",
+        formaPago: r.formaPago || "",
         briefingId: r.id,
-        fechaAlta: new Date().toISOString().split("T")[0],
+        lineas: [],
+        capitulos: [],
+        cronograma: [],
       };
-      clientes.push(newClient);
-      clienteId = newClient.id;
-      // Save via localStorage for sync
-      localStorage.setItem("hab:crm:clientes2:local", JSON.stringify(clientes));
-      try { window.storage?.set?.("hab:crm:clientes2", JSON.stringify(clientes)); } catch {}
-    } else {
-      clienteId = existingClient.id;
+
+      ofertas.push(newOffer);
+      await window.storage?.set?.("hab:v4", JSON.stringify(ofertas));
+
+      // 3. Marcar como procesado
+      markProcesado(r.id, r._sbId);
+
+      alert(`✅ Procesado:\n\n👤 Cliente: ${existingClient ? "ya existía" : "creado"} — ${r.clienteNombre||r.clienteEmail}\n📋 Oferta borrador creada en CRM (hab:v4)\n\nVe a CRM → Ofertas para continuar.`);
+    } catch(err) {
+      console.error("procesarRespuesta error:", err);
+      alert("Error procesando respuesta: " + err.message);
     }
-
-    // 2. Create draft offer in CRM
-    const deals = crmData.deals || [];
-    const newDeal = {
-      id: Math.random().toString(36).slice(2,9) + Date.now().toString(36),
-      cliente: r.clienteNombre || r.razonSocial || "",
-      email: r.clienteEmail || "",
-      telefono: r.clienteTel || r.telefono || "",
-      ubicacion: [r.ciudad, r.edificio].filter(Boolean).join(" · "),
-      proyecto: [r.edificio, r.clienteNombre?.split(" ").slice(-1)[0]].filter(Boolean).join(" · ") || "Nuevo proyecto",
-      estado: "Prospecto",
-      notas: [
-        r.servicios?.length ? `Servicios: ${Array.isArray(r.servicios)?r.servicios.join(", "):r.servicios}` : "",
-        r.estilo?.length ? `Estilo: ${Array.isArray(r.estilo)?r.estilo.join(", "):r.estilo}` : "",
-        r.espacios?.length ? `Espacios: ${Array.isArray(r.espacios)?r.espacios.join(", "):r.espacios}` : "",
-        r.colores ? `Materiales: ${r.colores}` : "",
-        r.expectativas?.length ? `Expectativas: ${Array.isArray(r.expectativas)?r.expectativas.join("; "):r.expectativas}` : "",
-        r.linksReferentes ? `Referencias: ${r.linksReferentes}` : "",
-      ].filter(Boolean).join("\n"),
-      razonSocial: r.razonSocial || "",
-      documento: r.documento || "",
-      emailFactura: r.emailFactura || r.clienteEmail || "",
-      dirFacturacion: r.dirFacturacion || "",
-      retencion: r.retenciones === "Sí",
-      detalleRet: r.detalleRetenciones || "",
-      anticipoAcept: r.anticipo || "",
-      formaPago: r.formaPago || "",
-      presupuesto: r.presupuesto ? Number(String(r.presupuesto).replace(/[^0-9]/g,"")) : 0,
-      fecha: new Date().toISOString().split("T")[0],
-      briefingId: r.id,
-      clienteId,
-    };
-
-    deals.push(newDeal);
-    crmData.deals = deals;
-    localStorage.setItem("habitaris_crm", JSON.stringify(crmData));
-
-    // 3. Mark as processed
-    markProcesado(r.id, r._sbId);
-
-    alert(`✅ Procesado:\n\n👤 Cliente: ${existingClient ? "ya existía" : "creado"} — ${r.clienteNombre||r.clienteEmail}\n📋 Oferta borrador creada en CRM\n\nVe a CRM → Ofertas para continuar.`);
   };
 
   let filtered = selFormId ? respuestas.filter(r=>r.formularioId===selFormId) : respuestas;
@@ -1418,13 +1422,13 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
     <div className="fade-up">
       {/* Banner sin procesar */}
       {sinProcesar.length > 0 && (
-        <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",background:"#F3EEFF",border:"1px solid #5B3A8C33",borderRadius:8,marginBottom:14}}>
-          <div style={{width:36,height:36,borderRadius:"50%",background:"#5B3A8C",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:700,flexShrink:0}}>{sinProcesar.length}</div>
+        <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",background:"#F3EEFF",border:"1px solid #11111133",borderRadius:8,marginBottom:14}}>
+          <div style={{width:36,height:36,borderRadius:"50%",background:"#111111",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:700,flexShrink:0}}>{sinProcesar.length}</div>
           <div style={{flex:1}}>
-            <div style={{fontSize:12,fontWeight:700,color:"#5B3A8C"}}>📋 Tienes {sinProcesar.length} formulario{sinProcesar.length>1?"s":""} sin asignar</div>
-            <div style={{fontSize:9,color:"#7A5AAA",marginTop:2}}>Haz clic en "Procesar" para crear cliente y borrador de oferta en CRM automáticamente</div>
+            <div style={{fontSize:12,fontWeight:700,color:"#111111"}}>📋 Tienes {sinProcesar.length} formulario{sinProcesar.length>1?"s":""} sin asignar</div>
+            <div style={{fontSize:9,color:"#555555",marginTop:2}}>Haz clic en "Procesar" para crear cliente y borrador de oferta en CRM automáticamente</div>
           </div>
-          <button onClick={()=>setFiltroEstado("pendiente")} style={{padding:"6px 14px",fontSize:10,fontWeight:700,background:"#5B3A8C",color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Ver pendientes</button>
+          <button onClick={()=>setFiltroEstado("pendiente")} style={{padding:"6px 14px",fontSize:10,fontWeight:700,background:"#111111",color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Ver pendientes</button>
         </div>
       )}
 
@@ -1527,7 +1531,7 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
                 <td style={tds}>
                   {proc
                     ? <span style={{fontSize:8,fontWeight:700,padding:"2px 8px",borderRadius:10,background:T.greenBg,color:T.green}}>✅ Procesado</span>
-                    : <span style={{fontSize:8,fontWeight:700,padding:"2px 8px",borderRadius:10,background:"#F3EEFF",color:"#5B3A8C"}}>⏳ Pendiente</span>
+                    : <span style={{fontSize:8,fontWeight:700,padding:"2px 8px",borderRadius:10,background:"#F3EEFF",color:"#111111"}}>⏳ Pendiente</span>
                   }
                 </td>
                 <td style={{...tds,whiteSpace:"nowrap"}}>
@@ -1537,7 +1541,7 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
                   <button onClick={e=>{e.stopPropagation();generarInforme(r)}} style={{background:"none",border:"none",cursor:"pointer",marginRight:4}} title="Generar informe"><FileText size={11} color={T.ink}/></button>
                   {!proc && (
                     <button onClick={e=>{e.stopPropagation();procesarRespuesta(r)}}
-                      style={{padding:"3px 10px",fontSize:8,fontWeight:700,background:"#5B3A8C",color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}
+                      style={{padding:"3px 10px",fontSize:8,fontWeight:700,background:"#111111",color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}
                       title="Crear cliente + oferta en CRM">⚡ Procesar</button>
                   )}
                   {proc && (
@@ -1817,7 +1821,7 @@ function TabEstadisticas({ forms }) {
         {[
           ["👁️ Aperturas",opens.length,"#3B3B3B"],
           ["✅ Envíos",submits.length,"#111111"],
-          ["📊 Conversión",`${convRate}%`,"#5B3A8C"],
+          ["📊 Conversión",`${convRate}%`,"#111111"],
           ["⏱️ Tiempo promedio",fmtTime(avgDuration),"#8C6A00"],
         ].map(([l,v,c])=>(
           <Card key={l} style={{padding:"14px 16px"}}>
@@ -1848,7 +1852,7 @@ function TabEstadisticas({ forms }) {
             {[
               ["Aperturas",formStats.totalOpens,"#3B3B3B"],
               ["Envíos",formStats.totalSubmits,"#111111"],
-              ["Conversión",formStats.conversionRate+"%","#5B3A8C"],
+              ["Conversión",formStats.conversionRate+"%","#111111"],
               ["Tiempo prom.",fmtTime(formStats.avgDurationSec),"#8C6A00"],
             ].map(([l,v,c])=>(
               <div key={l} style={{padding:"10px 12px",background:T.bg,borderRadius:6,border:`1px solid ${T.border}`}}>
@@ -2332,7 +2336,7 @@ export default function Formularios() {
                   ["📋 Formularios",forms.length,"#111"],
                   ["📤 Enviados",envios.length,"#3B3B3B"],
                   ["📥 Respuestas",respuestas.length,"#111111"],
-                  ["⏳ Sin asignar",sinProc,sinProc>0?"#5B3A8C":"#111111"]
+                  ["⏳ Sin asignar",sinProc,sinProc>0?"#111111":"#111111"]
                 ];
               })().map(([l,v,c])=>(
                 <Card key={l} style={{padding:"14px 16px",cursor:l.includes("Sin asignar")&&v>0?"pointer":undefined}} onClick={l.includes("Sin asignar")&&v>0?()=>changeTab("respuestas"):undefined}><div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div><div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:c}}>{v}</div></Card>
@@ -2344,12 +2348,12 @@ export default function Formularios() {
               const sinProc = respuestas.filter(r => !proc.includes(r.id)).length;
               if (sinProc === 0) return null;
               return (
-                <Card style={{padding:"12px 16px",marginBottom:16,background:"#F3EEFF",border:"1px solid #5B3A8C33",cursor:"pointer"}} onClick={()=>changeTab("respuestas")}>
+                <Card style={{padding:"12px 16px",marginBottom:16,background:"#F3EEFF",border:"1px solid #11111133",cursor:"pointer"}} onClick={()=>changeTab("respuestas")}>
                   <div style={{display:"flex",alignItems:"center",gap:10}}>
-                    <div style={{width:32,height:32,borderRadius:"50%",background:"#5B3A8C",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700}}>{sinProc}</div>
+                    <div style={{width:32,height:32,borderRadius:"50%",background:"#111111",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700}}>{sinProc}</div>
                     <div>
-                      <div style={{fontSize:12,fontWeight:700,color:"#5B3A8C"}}>📋 Tienes {sinProc} formulario{sinProc>1?"s":""} sin asignar</div>
-                      <div style={{fontSize:9,color:"#7A5AAA",marginTop:1}}>Haz clic para ir a Respuestas y procesarlos → crear cliente + borrador oferta</div>
+                      <div style={{fontSize:12,fontWeight:700,color:"#111111"}}>📋 Tienes {sinProc} formulario{sinProc>1?"s":""} sin asignar</div>
+                      <div style={{fontSize:9,color:"#555555",marginTop:1}}>Haz clic para ir a Respuestas y procesarlos → crear cliente + borrador oferta</div>
                     </div>
                   </div>
                 </Card>
