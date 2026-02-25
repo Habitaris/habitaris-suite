@@ -556,21 +556,10 @@ render();
     const appUrl = (cfg.app?.url || "").replace(/\/$/,"");
     if (appUrl) {
       const linkConfig = { linkId, maxUsos: linkMaxUsos||0, fechaCaducidad: linkExpiry||"" };
-      const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre,paisProyecto:sharePais}, cliente:client||null, linkConfig, modulo, marca:{ logo:cfg.apariencia?.logo||"", colorPrimario:cfg.apariencia?.colorPrimario||"#111", colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B", colorAcento:cfg.apariencia?.colorAcento||"#C9A84C", tipografia:cfg.apariencia?.tipografia||"DM Sans", slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"", empresa:cfg.empresa?.nombre||"Habitaris", razonSocial:cfg.empresa?.razonSocial||"", domicilio:cfg.empresa?.domicilio||"" } };
+      const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre,paisProyecto:sharePais}, cliente:client||null, linkConfig, modulo, marca:{ logo:cfg.apariencia?.logo||"", colorPrimario:cfg.apariencia?.colorPrimario||"#111", colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B", colorAcento:cfg.apariencia?.colorAcento||"#111111", tipografia:cfg.apariencia?.tipografia||"DM Sans", slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"", empresa:cfg.empresa?.nombre||"Habitaris", razonSocial:cfg.empresa?.razonSocial||"", domicilio:cfg.empresa?.domicilio||"" } };
       const encoded = encodeFormDef(def);
       setSharePublicUrl(`${appUrl}/form#${encoded}`);
-      // Register link in Supabase
-      if (SB.isConfigured()) {
-//        //SB.createLink({
-//          form_id: existing?.id || "form",
-//          form_name: nombre,
-//          link_id: linkId,
-//          client_name: shareClient.nombre || null,
-//          client_email: shareClient.email || null,
-//          max_uses: linkMaxUsos || 0,
-//          expires_at: linkExpiry ? new Date(linkExpiry).toISOString() : null,
-//        }).catch(()=>{});
-      }
+      // Link se guarda en Supabase via addEnvio
     }
     // Track envio
     addEnvio({
@@ -684,9 +673,9 @@ render();
         <div style={{minWidth:100}}>
           <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Color del botón</label>
           <div style={{display:"flex",gap:4,marginTop:3,alignItems:"center"}}>
-            {["#111111","#3B3B3B","#C9A84C","#111111","#8B2252"].map(c=>(
+            {["#111111","#3B3B3B","#111111","#111111","#8B2252"].map(c=>(
               <button key={c} type="button" onClick={()=>setConfig({...config,colorAccent:c})}
-                style={{width:20,height:20,borderRadius:"50%",background:c,border:(config.colorAccent||"#111111")===c?"3px solid #C9A84C":"2px solid #ddd",cursor:"pointer",padding:0}}/>
+                style={{width:20,height:20,borderRadius:"50%",background:c,border:(config.colorAccent||"#111111")===c?"3px solid #111111":"2px solid #ddd",cursor:"pointer",padding:0}}/>
             ))}
             <input type="color" value={config.colorAccent||"#111111"} onChange={e=>setConfig({...config,colorAccent:e.target.value})}
               style={{width:20,height:20,border:"none",padding:0,cursor:"pointer",borderRadius:4}}/>
@@ -851,7 +840,7 @@ render();
                     <input type="checkbox" checked={!!sel.scoring?.enabled} onChange={e=>{
                       const sc = sel.scoring ? {...sel.scoring, enabled:e.target.checked} : {enabled:e.target.checked, weight:1, rules:{}};
                       updCampo(selIdx,"scoring",sc);
-                    }} style={{accentColor:"#C9A84C"}}/>
+                    }} style={{accentColor:"#111111"}}/>
                     🚩 Regla de scoring
                   </label>
                   {sel.scoring?.enabled && (
@@ -1277,7 +1266,7 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
 .header-right div{font-size:8px;color:rgba(255,255,255,.5);letter-spacing:1px}
 
 /* Gold bar */
-.gold-bar{height:3px;background:linear-gradient(90deg,#C9A84C,#E8D48B,#C9A84C)}
+.gold-bar{height:3px;background:linear-gradient(90deg,#111111,#E8D48B,#111111)}
 
 /* Title block */
 .title-block{padding:28px 36px 20px;border-bottom:1px solid #E0E0E0}
@@ -1304,11 +1293,11 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
 .field{margin-bottom:10px;display:flex;border-bottom:1px solid #F0EEEA;padding-bottom:8px}
 .field-label{width:180px;flex-shrink:0;font-size:9px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:.5px;padding-top:2px}
 .field-value{flex:1;font-size:12px;font-weight:500;color:#111}
-.field-rating{color:#C9A84C;font-size:14px;letter-spacing:2px}
+.field-rating{color:#111111;font-size:14px;letter-spacing:2px}
 
 /* Footer */
 .footer{position:fixed;bottom:0;left:0;right:0;background:#111;color:#fff;padding:12px 36px;display:flex;justify-content:space-between;align-items:center;font-size:7px;letter-spacing:2px}
-.footer-gold{height:2px;background:linear-gradient(90deg,#C9A84C,#E8D48B,#C9A84C)}
+.footer-gold{height:2px;background:linear-gradient(90deg,#111111,#E8D48B,#111111)}
 
 /* Print */
 @media print{
@@ -1386,7 +1375,7 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
   <!-- Sections -->
   ${sections.map((sec,si) => `
   <div class="section">
-    <div class="section-title"><span style="color:#C9A84C">■</span> ${sec.title}</div>
+    <div class="section-title"><span style="color:#111111">■</span> ${sec.title}</div>
     ${sec.desc ? `<div class="section-desc">${sec.desc}</div>` : ""}
     ${sec.fields.map(f => `
     <div class="field">
@@ -1400,7 +1389,7 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
   </div>`).join("")}
 
   <!-- Confidentiality -->
-  <div style="margin:30px 36px;padding:12px 16px;background:#F5F4F1;border-radius:4px;border-left:3px solid #C9A84C">
+  <div style="margin:30px 36px;padding:12px 16px;background:#F5F4F1;border-radius:4px;border-left:3px solid #111111">
     <div style="font-size:7px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#909090;margin-bottom:4px">CONFIDENCIALIDAD</div>
     <div style="font-size:8px;color:#555;line-height:1.6">Este documento contiene información confidencial de ${cfgG.empresa.nombre} y su cliente. Queda prohibida su reproducción o distribución sin autorización expresa.</div>
   </div>
@@ -1499,7 +1488,7 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
       <Card style={{padding:0,overflow:"hidden"}}>
         <table style={{borderCollapse:"collapse",width:"100%"}}>
           <thead>
-            <tr style={{background:"#EDEBE7"}}>
+            <tr style={{background:"#F0F0F0"}}>
               <th style={{...ths,width:30}}><input type="checkbox" checked={filtered.length>0&&selectedIds.size===filtered.length} onChange={()=>toggleAll(filtered.map(r=>r.id))} style={{cursor:"pointer"}}/></th>
               {["Fecha","Hora","Formulario","Cliente","Email","Score","Estado","Acciones"].map(h=>
                 <th key={h} style={ths}>{h}</th>
@@ -1940,7 +1929,7 @@ function TabEstadisticas({ forms }) {
 /* ═══════════════════════════════════════════════════════════════
    ENVIADOS TAB — with checkboxes + password delete
    ═══════════════════════════════════════════════════════════════ */
-function EnviadosTab({ envios, save, respuestas }) {
+function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [showDelPass, setShowDelPass] = useState(false);
   const [delPassInput, setDelPassInput] = useState("");
@@ -1962,10 +1951,10 @@ function EnviadosTab({ envios, save, respuestas }) {
     }
     if (delPass) { setDelAction(action); setDelPassInput(""); setShowDelPass(true); }
   };
-  const executeDelete = (action) => {
-    if (action.type === "single") { save("envios", envios.filter(x=>x.id!==action.target.id)); }
-    else if (action.type === "selected") { save("envios", envios.filter(x=>!selectedIds.has(x.id))); setSelectedIds(new Set()); }
-    else if (action.type === "all") { save("envios", []); setSelectedIds(new Set()); }
+  const executeDelete = async (action) => {
+    if (action.type === "single") { await onDelete(action.target.linkId||action.target.id); }
+    else if (action.type === "selected") { for (const sid of selectedIds) { const ev=envios.find(x=>x.id===sid); if(ev) await onDelete(ev.linkId||ev.id); } setSelectedIds(new Set()); }
+    else if (action.type === "all") { for (const ev of envios) await onDelete(ev.linkId||ev.id); setSelectedIds(new Set()); }
     setShowDelPass(false); setDelAction(null);
   };
   const checkPassAndDelete = () => {
@@ -1990,7 +1979,7 @@ function EnviadosTab({ envios, save, respuestas }) {
       </div>
       <Card style={{padding:0,overflow:"hidden"}}>
         <table style={{borderCollapse:"collapse",width:"100%"}}>
-          <thead><tr style={{background:"#EDEBE7"}}>
+          <thead><tr style={{background:"#F0F0F0"}}>
             <th style={{...ths,width:30}}><input type="checkbox" checked={envios.length>0&&selectedIds.size===envios.length} onChange={toggleAll} style={{cursor:"pointer"}}/></th>
             {["Fecha","Hora","Formulario","Cliente","Email","Teléfono","Estado","Acciones"].map(h=><th key={h} style={ths}>{h}</th>)}
           </tr></thead>
@@ -2018,14 +2007,12 @@ function EnviadosTab({ envios, save, respuestas }) {
                   <td style={{...tds,whiteSpace:"nowrap"}}>
                     {isBlocked ? (
                       <button onClick={()=>{
-                        save("envios", envios.map(x => x.id===e.id ? {...x, blocked:false} : x));
-                        // SB disabled
+                        onBlock(e.linkId||e.id, false)
                       }} style={{padding:"3px 10px",fontSize:8,fontWeight:700,background:T.green,color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>🔓 Desbloquear</button>
                     ) : (
                       <button onClick={()=>{
                         if (!confirm("¿Bloquear este enlace?")) return;
-                        save("envios", envios.map(x => x.id===e.id ? {...x, blocked:true} : x));
-                        // SB disabled
+                        onBlock(e.linkId||e.id, true)
                       }} style={{padding:"3px 10px",fontSize:8,fontWeight:700,background:T.red,color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>🚫 Bloquear</button>
                     )}
                     <button onClick={()=>confirmDelete({type:"single",target:e})}
@@ -2150,8 +2137,65 @@ export default function Formularios() {
     });
     if (changed) save("forms", updated);
   }, []); // eslint-disable-line
-  const envios = data.envios || [];
-  const addEnvio = (e) => save("envios", [...envios, e]);
+  // === ENVIOS: cloud-first (Supabase form_links) ===
+  const [envios, setEnvios] = useState([]);
+  const [enviosLoading, setEnviosLoading] = useState(true);
+  const loadEnvios = async () => {
+    setEnviosLoading(true);
+    try {
+      if (SB.isConfigured()) {
+        const links = await SB.getAllLinks();
+        if (links) {
+          setEnvios(links.map(l => ({
+            id: l.link_id || l.id,
+            formId: l.form_id,
+            formNombre: l.form_name || "\u2014",
+            cliente: { nombre: l.client_name||"", email: l.client_email||"", tel: "" },
+            fecha: l.created_at ? new Date(l.created_at).toLocaleDateString("es-CO") : "\u2014",
+            hora: l.created_at ? new Date(l.created_at).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}) : "\u2014",
+            linkId: l.link_id,
+            maxUsos: l.max_uses||0,
+            expiry: l.expires_at||"",
+            blocked: !l.active,
+          })));
+          setEnviosLoading(false); return;
+        }
+      }
+    } catch(err) { console.warn("loadEnvios error:", err); }
+    setEnvios(data.envios || []);
+    setEnviosLoading(false);
+  };
+  useEffect(() => { loadEnvios(); }, []); // eslint-disable-line
+  const addEnvio = async (e) => {
+    if (SB.isConfigured()) {
+      try {
+        await SB.createLink({ form_id: e.formId, form_name: e.formNombre, link_id: e.linkId, client_name: e.cliente?.nombre||null, client_email: e.cliente?.email||null, max_uses: e.maxUsos||0, expires_at: e.expiry ? new Date(e.expiry).toISOString() : null });
+        await loadEnvios();
+      } catch(err) { console.warn("addEnvio SB error:", err); }
+    } else { save("envios", [...(data.envios||[]), e]); }
+  };
+  const blockEnvio = async (linkId, block) => {
+    if (SB.isConfigured()) {
+      try {
+        if (block) await SB.deactivateLink(linkId); else await SB.activateLink(linkId);
+        await loadEnvios();
+      } catch(err) { console.warn("blockEnvio error:", err); }
+    }
+  };
+  const deleteEnvio = async (linkId) => {
+    try {
+      const cfg = getConfig();
+      const sbUrl = cfg?.supabase?.url;
+      const sbKey = cfg?.supabase?.anonKey;
+      if (sbUrl && sbKey) {
+        await fetch(sbUrl + "/rest/v1/form_links?link_id=eq." + encodeURIComponent(linkId), {
+          method: "DELETE",
+          headers: { apikey: sbKey, Authorization: "Bearer " + sbKey, Prefer: "return=minimal" }
+        });
+      }
+      await loadEnvios();
+    } catch(err) { console.warn("deleteEnvio error:", err); }
+  };
 
   // Load responses from Supabase + localStorage fallback
   const [respuestas, setRespuestas] = useState([]);
@@ -2318,7 +2362,7 @@ export default function Formularios() {
         {tab === "mis_forms"   && <ListaForms forms={forms} setForms={setForms} onEdit={goConstructor} onNew={goNew}/>}
         {tab === "constructor" && <Constructor forms={forms} setForms={setForms} editId={editId} setEditId={setEditId} onSaved={onSaved} envios={envios} addEnvio={addEnvio}/>}
         {tab === "enviados"    && (
-          <EnviadosTab envios={envios} save={save} respuestas={respuestas}/>
+          <EnviadosTab envios={envios} onBlock={blockEnvio} onDelete={deleteEnvio} respuestas={respuestas}/>
         )}
         {tab === "respuestas"   && <TabRespuestas forms={forms} respuestas={respuestas} onReload={loadResponses} loading={respLoading} onDelete={deleteResponse} onClearAll={clearAllResponses}/>}
         {tab === "estadisticas" && <TabEstadisticas forms={forms}/>}

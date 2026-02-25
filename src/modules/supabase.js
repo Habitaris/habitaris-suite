@@ -362,6 +362,14 @@ export async function deactivateLink(linkId) {
 }
 
 /* ── STATS ── */
+export async function activateLink(linkId) {
+  return update("form_links", `link_id=eq.${linkId}`, { active: true });
+}
+
+export async function getAllLinks() {
+  return query("form_links", "order=created_at.desc");
+}
+
 export async function getFormStats(formId) {
   const events = await query("form_events", `form_id=eq.${formId}&order=created_at.desc&limit=1000`);
   const responses = await query("form_responses", `form_id=eq.${formId}&order=created_at.desc`);
