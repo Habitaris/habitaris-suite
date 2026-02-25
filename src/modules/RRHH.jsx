@@ -1297,7 +1297,7 @@ function TabPartes({ partes, setPartes, equipo, cargos, currentUser, pais }) {
   useEffect(()=>{ (async () => {
     const all = {};
     try {
-      const listed = store.listSync("hab:proj:actividades:");
+      const listed = store.listSync("hab:proj:actividades:").items;
       if (listed?.keys) {
         for (const k of listed.keys) {
           try {

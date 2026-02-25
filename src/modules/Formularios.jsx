@@ -2251,7 +2251,7 @@ export default function Formularios() {
       } catch(e) { console.warn("Error loading Supabase responses:", e); }
     }
     // 2. Also check cloud store (migrated from cloud store)
-    const __cloudResp = store.listSync("hab:form:resp:");
+    const __cloudResp = store.listSync("hab:form:resp:").items;
     __cloudResp.forEach(__cr => { try { const r = JSON.parse(__cr.value); if(r) all.push(r); } catch {} });
     setRespuestas(arr);
     setRespLoading(false);
@@ -2264,7 +2264,7 @@ export default function Formularios() {
       try {} catch {}
     }
     // Remove from cloud store
-    const __bDel = store.listSync("hab:briefing:");
+    const __bDel = store.listSync("hab:briefing:").items;
     for (const __bd of __bDel) { try { const d = JSON.parse(__bd.value); if (d?.id === r.id) { store.delete(__bd.key); break; } } catch {} }
     setRespuestas(prev => prev.filter(x => x.id !== r.id));
   };
@@ -2274,7 +2274,7 @@ export default function Formularios() {
       try {} catch {}
     }
     // Remove all from cloud store
-    const __bPurge = store.listSync("hab:briefing:");
+    const __bPurge = store.listSync("hab:briefing:").items;
     for (const __bp of __bPurge) { store.delete(__bp.key); }
     setRespuestas([]);
   };

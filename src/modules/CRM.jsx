@@ -340,7 +340,7 @@ async function saveData(d) { try { store.set("hab:v4", JSON.stringify(d)); } cat
 /* ─── BRIEFING STORAGE ───────────────────────────────────────── */
 async function loadBriefings() {
   try {
-    const items = store.listSync("hab:briefing:");
+    const items = store.listSync("hab:briefing:").items;
     return items
       .map(r => { try { return JSON.parse(r); } catch { return null; } })
       .filter(Boolean)
@@ -583,7 +583,7 @@ function BriefingDetalle({ b, onClose, onCreateOffer, onCreateClient }) {
 /* ─── FORM STORAGE ────────────────────────────────────────────── */
 async function loadForms() {
   try {
-    const items = store.listSync("hab:forms:");
+    const items = store.listSync("hab:forms:").items;
     return items
       .map(r => { try { return JSON.parse(r); } catch { return null; } })
       .filter(Boolean)

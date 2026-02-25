@@ -131,7 +131,7 @@ function useAllData() {
     const formStore = getStore("habitaris_formularios");
     const formsList = formStore.forms || [];
     const formResp = [];
-    const __dbResp = store.listSync("hab:briefing:");
+    const __dbResp = store.listSync("hab:briefing:").items;
     __dbResp.forEach(__r => { try { formResp.push(JSON.parse(__r.value)); } catch {} });
     const procesados = [];
     const sinProcesar = formResp.filter(r => !procesados.includes(r.id));
