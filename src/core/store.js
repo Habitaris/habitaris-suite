@@ -51,7 +51,7 @@ const store = {
 
   /* ── Sync read from RAM (like localStorage.getItem) ── */
   getSync(key) {
-    return _cache[key] ?? null;
+    const v = _cache[key] ?? null; return (v !== null && typeof v !== "string") ? JSON.stringify(v) : v;
   },
 
   /* ── Async read from Supabase (fallback/refresh) ── */
