@@ -25,11 +25,11 @@ import FormularioPublico from './modules/FormularioPublico.jsx'
 import LoginScreen, { isLoggedIn, login as doLogin, logout, isAuthConfigured } from './modules/Login.jsx'
 
 export const C = {
-  ink:"#111111", inkMid:"#444444", inkLight:"#888888",
-  bg:"#F0EEE9", surface:"#FAFAF8", border:"#E4E1DB",
-  accent:"#1E6B42", accentBg:"#EEF6F2",
-  info:"#1E4F8C", infoBg:"#E6EFF9",
-  warning:"#7A5218", success:"#1E6B42", danger:"#AE2C2C",
+  ink:"#111111", inkMid:"#555555", inkLight:"#999999",
+  bg:"#F5F5F5", surface:"#FFFFFF", border:"#E0E0E0",
+  accent:"#111111", accentBg:"#EBEBEB",
+  info:"#3B3B3B", infoBg:"#F0F0F0",
+  warning:"#8C6A00", success:"#2D6A2E", danger:"#B91C1C",
   shadow:"0 1px 4px rgba(0,0,0,.06)", shadowMd:"0 4px 16px rgba(0,0,0,.10)",
 }
 
@@ -57,7 +57,7 @@ const MODULES = [
   { id:"config",       label:"Configuración",           icon:"⚙️", desc:"Empresa, correo, WhatsApp, legal, apariencia — ajustes globales",    color:"#555555", component:Configuracion,  ready:true  },
 ]
 
-const F = { fontFamily:"'Outfit',sans-serif" }
+const F = { fontFamily:"'DM Sans',sans-serif" }
 
 function Spinner() {
   return (
@@ -92,7 +92,7 @@ function Home({ onSelect, lang, setLang, onLogout }) {
   const brand = useMemo(() => getConfig(), [])
   const ap = brand.apariencia || {}
   const cp = ap.colorPrimario || "#111"
-  const bf = ap.tipografia || "Outfit"
+  const bf = ap.tipografia || "DM Sans"
   return (
     <div style={{ minHeight:"100vh", background:"#F0EEE9" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=${bf.replace(/ /g,"+")}:wght@300;400;500;600;700;800&display=swap');`}</style>
@@ -128,7 +128,7 @@ function Home({ onSelect, lang, setLang, onLogout }) {
             <button key={m.id} onClick={() => onSelect(m.id)}
               style={{ background:"#fff", border:"1px solid #E4E1DB", borderRadius:10,
                 padding:22, textAlign:"left", cursor:"pointer", transition:"all .15s",
-                boxShadow:"0 1px 4px rgba(0,0,0,.06)", fontFamily:"'Outfit',sans-serif" }}
+                boxShadow:"0 1px 4px rgba(0,0,0,.06)", fontFamily:"'DM Sans',sans-serif" }}
               onMouseEnter={e => { e.currentTarget.style.boxShadow="0 4px 16px rgba(0,0,0,.10)"; e.currentTarget.style.borderColor=m.color }}
               onMouseLeave={e => { e.currentTarget.style.boxShadow="0 1px 4px rgba(0,0,0,.06)"; e.currentTarget.style.borderColor="#E4E1DB" }}>
               <div style={{ fontSize:26, marginBottom:10 }}>{m.icon}</div>
@@ -143,7 +143,7 @@ function Home({ onSelect, lang, setLang, onLogout }) {
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(190px,1fr))", gap:10 }}>
           {coming.map(m => (
             <div key={m.id} style={{ background:"#FAFAF8", border:"1px solid #E4E1DB",
-              borderRadius:8, padding:"13px 15px", opacity:0.6, fontFamily:"'Outfit',sans-serif" }}>
+              borderRadius:8, padding:"13px 15px", opacity:0.6, fontFamily:"'DM Sans',sans-serif" }}>
               <div style={{ display:"flex", alignItems:"center", gap:7, marginBottom:4 }}>
                 <span style={{ fontSize:17 }}>{m.icon}</span>
                 <span style={{ fontSize:12, fontWeight:600, color:"#555" }}>{m.label}</span>
@@ -165,7 +165,7 @@ function ModuleBar({ mod, onBack, lang, setLang, onLogout }) {
   const brand = useMemo(() => getConfig(), [])
   const ap = brand.apariencia || {}
   const cp = ap.colorPrimario || "#111"
-  const bf = ap.tipografia || "Outfit"
+  const bf = ap.tipografia || "DM Sans"
   return (
     <div style={{ position:"fixed", top:0, left:0, right:0, height:48, background:cp,
       zIndex:1000, display:"flex", alignItems:"center", padding:"0 18px", gap:14,
