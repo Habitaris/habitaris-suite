@@ -4295,6 +4295,7 @@ function Form({ offers, editId, prefillData, onSave, onBack, lang }) {
     planos: base?.planos || planosDefault(),
   }));
   const [tab, setTab] = useState("general");
+  useEffect(() => { if (!editId && prefillData?.lugarNombre && !d.proyecto) { const n = genNombreProyecto(d.tipoInmueble, d.lugarNombre, d.lugarReferencia); if (n) setD(prev => ({ ...prev, proyecto: n })); } }, []);
   const [saved, setSaved] = useState(false);
   const set = (k, v) => setD(x => ({ ...x, [k]: v, updatedAt: today() }));
   const r = useMemo(() => calc(d), [d]);
