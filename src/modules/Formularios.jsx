@@ -1092,6 +1092,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
     try { return JSON.parse(store.getSync("hab:form:procesados")||"[]"); } catch { return []; }
   });
   const [filtroEstado, setFiltroEstado] = useState("pendiente");
+  const [sortDesc, setSortDesc] = useState(true);
 
   useEffect(() => { Promise.resolve(false).then(setBioAvailable); }, []);
 
@@ -1971,10 +1972,12 @@ function TabEstadisticas({ forms }) {
    ═══════════════════════════════════════════════════════════════ */
 function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
   const [filtro, setFiltro] = useState("pendiente");
+  const [sortDesc, setSortDesc] = useState(true);
   const getStatus = (e) => e.blocked ? "bloqueado" : respuestas.some(r=>(r.link_id||r.linkId)===e.linkId) ? "respondido" : "pendiente";
   const counts = { todos:envios.length, pendiente:0, respondido:0, bloqueado:0 };
   envios.forEach(e => { counts[getStatus(e)]++; });
-  const filtered = filtro==="todos" ? envios : envios.filter(e => getStatus(e)===filtro);
+  const filtered = (filtro==="todos" ? envios : envios.filter(e => getStatus(e)===filtro))
+    .sort((a,b) => sortDesc ? new Date(b.fecha.split("/").reverse().join("-")+" "+b.hora) - new Date(a.fecha.split("/").reverse().join("-")+" "+a.hora) : new Date(a.fecha.split("/").reverse().join("-")+" "+a.hora) - new Date(b.fecha.split("/").reverse().join("-")+" "+b.hora));
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [showDelPass, setShowDelPass] = useState(false);
   const [delPassInput, setDelPassInput] = useState("");
