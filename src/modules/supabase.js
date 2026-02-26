@@ -318,6 +318,13 @@ export async function getResponses(formId) {
   return query("form_responses", params);
 }
 
+export async function getAllEvents() {
+  return query("form_events", "order=created_at.desc&limit=500");
+}
+export async function getEventsForForm(formId) {
+  return query("form_events", `form_id=eq.${formId}&order=created_at.desc&limit=200`);
+}
+
 export async function getAllResponses() {
   return query("form_responses", "order=created_at.desc&limit=500");
 }

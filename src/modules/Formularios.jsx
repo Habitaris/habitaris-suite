@@ -1784,7 +1784,7 @@ function TabEstadisticas({ forms }) {
     if (!SB.isConfigured()) { setLoading(false); return; }
     (async () => {
       try {
-        const events = []; // TODO: add getEvents to supabase.js
+        const events = await SB.getAllEvents() || [];
         const responses = await SB.getAllResponses() || [];
         setStats({ events: events || [], responses: responses || [] });
       } catch(e) { console.warn("stats load error:", e); setStats({ events: [], responses: [] }); }
@@ -1796,7 +1796,7 @@ function TabEstadisticas({ forms }) {
     if (selectedForm === "all" || !SB.isConfigured()) { setFormStats(null); return; }
     (async () => {
       try {
-        const events = []; // TODO
+        const events = await SB.getEventsForForm(selectedForm) || [];
         const responses = await SB.getResponses(selectedForm) || [];
         setFormStats({ events: events || [], responses: responses || [] });
       } catch(e) { setFormStats(null); }
