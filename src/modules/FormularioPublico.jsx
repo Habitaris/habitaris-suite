@@ -189,7 +189,7 @@ export default function FormularioPublico() {
             if (data.expires_at && new Date(data.expires_at) < new Date()) { setDef({ _expired: true }); return; }
             if (data.max_uses > 0 && (data.current_uses||0) >= data.max_uses) { setDef({ _expired: true }); return; }
             // Increment uses
-            sb.from("form_links").update({ uses: (data.current_uses || 0) + 1 }).eq("link_id", linkId);
+            sb.from("form_links").update({ current_uses: (data.current_uses || 0) + 1 }).eq("link_id", linkId);
             // Build form object
             setDef({ ...data.form_def, cliente: { nombre: data.client_name, email: data.client_email, tel: data.client_tel }, marca: data.marca || {}, modulo: data.modulo || "crm" });
           } else { setDef(null); }
