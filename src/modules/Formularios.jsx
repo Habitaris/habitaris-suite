@@ -1232,6 +1232,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
 
   let filtered = selFormId ? respuestas.filter(r=>r.formularioId===selFormId) : respuestas;
   if (filtroEstado === "pendiente") filtered = filtered.filter(r => !isProcesado(r));
+  filtered = filtered.slice().sort((a,b) => { const da = a.fecha||"", db = b.fecha||""; return sortDesc ? (db>da?1:-1) : (da>db?1:-1); });
   if (filtroEstado === "procesado") filtered = filtered.filter(r => isProcesado(r));
 
   const sinProcesar = respuestas.filter(r => !isProcesado(r));
