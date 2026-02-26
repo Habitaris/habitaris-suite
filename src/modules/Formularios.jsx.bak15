@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import { store } from "../core/store.js";
 
 import * as SB from "./supabase.js";
-import { sb } from "../core/supabase.js";
 import { Plus, Trash2, Check, X, Search, Edit3, Copy, Send, Eye, ChevronDown, ChevronUp, GripVertical, ToggleLeft, ToggleRight, Share2, Mail, MessageCircle, Link2, FileText, Star, TrendingUp, Layers, Settings, AlertTriangle } from "lucide-react";
 import { encodeFormDef } from "./FormularioPublico.jsx";
 import { getConfig, resolveTemplate } from "./Configuracion.jsx";
@@ -543,7 +542,7 @@ render();
 
   const [sharePublicUrl, setSharePublicUrl] = useState("");
 
-  const generateLink = async () => {
+  const generateLink = () => {
     if (!shareClient.email && !shareClient.nombre) return;
     const client = {nombre:shareClient.nombre, email:shareClient.email, tel:((shareClient.codTel||"+57").replace(/[^0-9+]/g,"")+" "+shareClient.tel).trim()};
     // Generate standalone HTML file (for download/WhatsApp)
@@ -560,22 +559,8 @@ render();
     if (appUrl) {
       const linkConfig = { linkId, maxUsos: linkMaxUsos||0, fechaCaducidad: linkExpiry||"" };
       const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre,paisProyecto:sharePais}, cliente:client||null, linkConfig, modulo, marca:{ logo:cfg.apariencia?.logo||"", colorPrimario:cfg.apariencia?.colorPrimario||"#111", colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B", colorAcento:cfg.apariencia?.colorAcento||"#111111", tipografia:cfg.apariencia?.tipografia||"DM Sans", slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"", empresa:cfg.empresa?.nombre||"Habitaris", razonSocial:cfg.empresa?.razonSocial||"", domicilio:cfg.empresa?.domicilio||"" } };
-      // Save to Supabase → short URL
-      try {
-        const { error } = await sb.from("form_links").upsert({
-          id: linkId,
-          tenant_id: "habitaris",
-          form_def: { id: def.id, nombre: def.nombre, campos: def.campos, config: def.config },
-          cliente: def.cliente || {},
-          link_config: def.linkConfig || {},
-          marca: def.marca || {},
-          modulo: def.modulo || "crm",
-          max_uses: linkMaxUsos || 0,
-          expires_at: linkExpiry ? new Date(linkExpiry).toISOString() : null,
-        }, { onConflict: "id" });
-        if (!error) setSharePublicUrl(`${appUrl}/form?id=${linkId}`);
-        else { console.error("form_links upsert:", error); setSharePublicUrl(""); }
-      } catch(e) { console.error("form_links save:", e); setSharePublicUrl(""); }
+      const encoded = encodeFormDef(def);
+      setSharePublicUrl(`${appUrl}/form#${encoded}`);
       // Link se guarda en Supabase via addEnvio
     }
     // Track envio
