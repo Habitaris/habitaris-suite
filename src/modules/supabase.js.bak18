@@ -345,14 +345,14 @@ export async function markUnprocessed(id) {
 
 /* ── LINKS ── */
 export async function createLink(data) {
-  const { url, key } = getSupaConfig();
-  const res = await fetch(url + "/rest/v1/form_links", {
-    method: "POST",
-    headers: { ...headers(key), "Prefer": "resolution=merge-duplicates" },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok && res.status !== 409) console.warn("createLink:", res.status);
-  return { error: null };
+  try {
+    const r = await insert("form_links", data);
+    return r;
+  } catch(e) {
+    // If conflict (already exists from upsert), just refresh
+    if (e?.code === "23505" || e?.status === 409) return { error: null };
+    return { error: e };
+  }
 }
 
 export async function getLink(linkId) {
