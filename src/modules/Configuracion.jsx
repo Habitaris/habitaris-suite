@@ -25,7 +25,7 @@ const DEFAULT_CONFIG = {
     emailjs_publicKey: "64nk2FHknwpLqc1p4",
   },
   app: {
-    url: "https://habitaris-suite.vercel.app",
+    url: "https://suite.habitaris.co",
   },
   whatsapp: {
     numero: "573505661545",
