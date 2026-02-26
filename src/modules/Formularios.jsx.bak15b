@@ -562,22 +562,17 @@ render();
       const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre,paisProyecto:sharePais}, cliente:client||null, linkConfig, modulo, marca:{ logo:cfg.apariencia?.logo||"", colorPrimario:cfg.apariencia?.colorPrimario||"#111", colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B", colorAcento:cfg.apariencia?.colorAcento||"#111111", tipografia:cfg.apariencia?.tipografia||"DM Sans", slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"", empresa:cfg.empresa?.nombre||"Habitaris", razonSocial:cfg.empresa?.razonSocial||"", domicilio:cfg.empresa?.domicilio||"" } };
       // Save to Supabase → short URL
       try {
-        const client = def.cliente || {};
         const { error } = await sb.from("form_links").upsert({
-          link_id: linkId,
-          form_id: def.id || "form",
-          form_name: def.nombre || "Formulario",
+          id: linkId,
+          tenant_id: "habitaris",
           form_def: { id: def.id, nombre: def.nombre, campos: def.campos, config: def.config },
-          client_name: client.nombre || null,
-          client_email: client.email || null,
-          client_tel: client.tel || null,
+          cliente: def.cliente || {},
+          link_config: def.linkConfig || {},
           marca: def.marca || {},
           modulo: def.modulo || "crm",
           max_uses: linkMaxUsos || 0,
-          current_uses: 0,
           expires_at: linkExpiry ? new Date(linkExpiry).toISOString() : null,
-          active: true,
-        }, { onConflict: "link_id" });
+        }, { onConflict: "id" });
         if (!error) setSharePublicUrl(`${appUrl}/form?id=${linkId}`);
         else { console.error("form_links upsert:", error); setSharePublicUrl(""); }
       } catch(e) { console.error("form_links save:", e); setSharePublicUrl(""); }

@@ -914,22 +914,17 @@ function FormBuilder() {
   const getFormUrl = async (f) => {
     const linkId = f.linkConfig?.linkId || (Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,10));
     try {
-      const cl = f.cliente || {};
       const { error } = await sb.from("form_links").upsert({
-        link_id: linkId,
-        form_id: f.id || "form",
-        form_name: f.nombre || "Formulario",
+        id: linkId,
+        tenant_id: "habitaris",
         form_def: { id: f.id, nombre: f.nombre, campos: f.campos, config: f.config },
-        client_name: cl.nombre || null,
-        client_email: cl.email || null,
-        client_tel: cl.tel || null,
+        cliente: f.cliente || {},
+        link_config: f.linkConfig || {},
         marca: f.marca || {},
         modulo: f.modulo || "crm",
         max_uses: f.linkConfig?.maxUsos || 1,
-        current_uses: 0,
         expires_at: f.linkConfig?.fechaCaducidad ? new Date(f.linkConfig.fechaCaducidad).toISOString() : null,
-        active: true,
-      }, { onConflict: "link_id" });
+      }, { onConflict: "id" });
       if (error) { console.error("form_links upsert error:", error); return null; }
     } catch (e) { console.error("form_links save failed:", e); return null; }
     return `${window.location.origin}/form?id=${linkId}`;
