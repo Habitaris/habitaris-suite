@@ -966,7 +966,7 @@ render();
                 </div>
                 <div style={{flex:1}}>
                   <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Fecha de caducidad</label>
-                  <input type="date" value={linkExpiry} onChange={e=>{setLinkExpiry(e.target.value);setShareGenerated("");}}
+                  <input type="date" value={linkExpiry} onChange={e=>{setLinkExpiry(e.target.value);setShareGenerated("");e.target.blur();}}
                     min={new Date().toISOString().split("T")[0]}
                     style={{...inp,width:"100%",fontSize:11}}/>
                 </div>
@@ -1013,7 +1013,7 @@ render();
               3️⃣ <strong>Descargar</strong> → archivo .html de respaldo (funciona sin internet)
             </div>
 
-            <Btn v="sec" on={()=>setShowShare(false)} style={{width:"100%",marginTop:10,justifyContent:"center"}}>Cerrar</Btn>
+            <Btn v={shareGenerated?"pri":"sec"} on={()=>setShowShare(false)} style={{width:"100%",marginTop:10,justifyContent:"center"}}>Cerrar</Btn>
           </div>
         </div>
       )}
