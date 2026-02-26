@@ -689,7 +689,7 @@ render();
                 style={{...F,padding:"4px 10px",fontSize:9,fontWeight:(config.vista||"pasos")===o.v?700:400,borderRadius:4,
                   border:(config.vista||"pasos")===o.v?`2px solid ${T.ink}`:`1px solid ${T.border}`,
                   background:(config.vista||"pasos")===o.v?T.ink:"#fff",color:(config.vista||"pasos")===o.v?"#fff":T.inkMid,
-                  cursor:"pointer"}}>{o.l}</button>
+                  cursor:"pointer"}}>{o.l} ({o.c})</button>
             ))}
           </div>
         </div>
@@ -1445,17 +1445,7 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
 
   return (
     <div className="fade-up">
-      {/* Banner sin procesar */}
-      {sinProcesar.length > 0 && (
-        <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",background:"#F3EEFF",border:"1px solid #11111133",borderRadius:8,marginBottom:14}}>
-          <div style={{width:36,height:36,borderRadius:"50%",background:"#111111",color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:700,flexShrink:0}}>{sinProcesar.length}</div>
-          <div style={{flex:1}}>
-            <div style={{fontSize:12,fontWeight:700,color:"#111111"}}>📋 Tienes {sinProcesar.length} formulario{sinProcesar.length>1?"s":""} sin asignar</div>
-            <div style={{fontSize:9,color:"#555555",marginTop:2}}>Haz clic en "Procesar" para crear cliente y borrador de oferta en CRM automáticamente</div>
-          </div>
-          <button onClick={()=>setFiltroEstado("pendiente")} style={{padding:"6px 14px",fontSize:10,fontWeight:700,background:"#111111",color:"#fff",border:"none",borderRadius:4,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Ver pendientes</button>
-        </div>
-      )}
+
 
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -1499,7 +1489,7 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
         </div>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
           <div style={{display:"flex",gap:0}}>
-            {[{v:"todos",l:"Todos"},{v:"pendiente",l:"⏳ Pendientes"},{v:"procesado",l:"✅ Procesados"}].map((o,i)=>(
+            {[{v:"todos",l:"Todos",c:respuestas.length},{v:"pendiente",l:"⏳ Pendientes",c:sinProcesar.length},{v:"procesado",l:"✅ Procesados",c:respuestas.length-sinProcesar.length}].map((o,i)=>(
               <button key={o.v} onClick={()=>setFiltroEstado(o.v)}
                 style={{padding:"5px 12px",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",
                   border:`1px solid ${T.border}`,borderLeft:i>0?"none":undefined,
