@@ -1781,29 +1781,16 @@ function TabEstadisticas({ forms }) {
   const [formStats, setFormStats] = useState(null);
 
   useEffect(() => {
-    if (!SB.isConfigured()) { setLoading(false); return; }
-    (async () => {
-      try {
-        const events = await SB.query("form_events", "order=created_at.desc&limit=500");
-        const responses = await SB.query("form_responses", "order=created_at.desc&limit=500");
-        setStats({ events: events || [], responses: responses || [] });
-      } catch(e) { console.warn("stats load error:", e); setStats({ events: [], responses: [] }); }
-      setLoading(false);
-    })();
+    if (SB.isConfigured()) { setLoading(false); return; }
+    Promise.resolve({}).then(r => { setStats(r); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
   useEffect(() => {
-    if (selectedForm === "all" || !SB.isConfigured()) { setFormStats(null); return; }
-    (async () => {
-      try {
-        const events = await SB.query("form_events", `form_id=eq.${selectedForm}&order=created_at.desc&limit=200`);
-        const responses = await SB.query("form_responses", `form_id=eq.${selectedForm}&order=created_at.desc&limit=200`);
-        setFormStats({ events: events || [], responses: responses || [] });
-      } catch(e) { setFormStats(null); }
-    })();
+    if (selectedForm === "all" || !false) { setFormStats(null); return; }
+    Promise.resolve({}).then(r => setFormStats(r)).catch(() => {});
   }, [selectedForm]);
 
-  if (!SB.isConfigured()) return (
+  if (false) return (
     <Card style={{padding:28,textAlign:"center"}}>
       <div style={{fontSize:40,marginBottom:12}}>📊</div>
       <h3 style={{margin:"0 0 6px",fontSize:16,fontWeight:700}}>Estadísticas requieren Supabase</h3>

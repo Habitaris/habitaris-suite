@@ -860,14 +860,6 @@ function FormBuilder() {
   const [editing, setEditing] = useState(null);      // form being edited
   const [preview, setPreview] = useState(false);
   const [sharing, setSharing] = useState(null);       // form being shared
-  const [sharingUrl, setSharingUrl] = useState("");
-  useEffect(() => {
-    if (!sharing) { setSharingUrl(""); return; }
-    (async () => {
-      const url = await getFormUrl(sharing);
-      setSharingUrl(url || "Error generando URL");
-    })();
-  }, [sharing]);
   const [shareTel, setShareTel] = useState("");
   const [shareEmail, setShareEmail] = useState("");
   const [shareNombre, setShareNombre] = useState("");
@@ -1167,7 +1159,7 @@ function FormBuilder() {
           <label style={lblS}>Link del formulario</label>
           <div style={{ display:"flex", gap:6 }}>
             <div style={{ flex:1, padding:"8px 10px", background:C.bg, border:`1px solid ${C.border}`, borderRadius:4, fontSize:10, color:C.inkMid, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", fontFamily:"'DM Mono',monospace" }}>
-              {sharingUrl || "Generando..."}
+              {getFormUrl(sharing)}
             </div>
             <button onClick={() => copyUrl(sharing)}
               style={{ padding:"8px 14px", border:`1px solid ${C.border}`, borderRadius:4, fontSize:11, fontWeight:600,
@@ -1180,7 +1172,7 @@ function FormBuilder() {
 
         {/* Preview link */}
         <div style={{ marginBottom:16, textAlign:"center" }}>
-          <a href={sharingUrl || "Generando..."} target="_blank" rel="noreferrer"
+          <a href={getFormUrl(sharing)} target="_blank" rel="noreferrer"
             style={{ fontSize:11, color:C.info }}>
             👁 Ver preview en nueva pestaña
           </a>
