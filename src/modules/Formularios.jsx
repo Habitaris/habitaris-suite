@@ -1784,8 +1784,8 @@ function TabEstadisticas({ forms }) {
     if (!SB.isConfigured()) { setLoading(false); return; }
     (async () => {
       try {
-        const events = await SB.query("form_events", "order=created_at.desc&limit=500");
-        const responses = await SB.query("form_responses", "order=created_at.desc&limit=500");
+        const events = []; // TODO: add getEvents to supabase.js
+        const responses = await SB.getAllResponses() || [];
         setStats({ events: events || [], responses: responses || [] });
       } catch(e) { console.warn("stats load error:", e); setStats({ events: [], responses: [] }); }
       setLoading(false);
@@ -1796,8 +1796,8 @@ function TabEstadisticas({ forms }) {
     if (selectedForm === "all" || !SB.isConfigured()) { setFormStats(null); return; }
     (async () => {
       try {
-        const events = await SB.query("form_events", `form_id=eq.${selectedForm}&order=created_at.desc&limit=200`);
-        const responses = await SB.query("form_responses", `form_id=eq.${selectedForm}&order=created_at.desc&limit=200`);
+        const events = []; // TODO
+        const responses = await SB.getResponses(selectedForm) || [];
         setFormStats({ events: events || [], responses: responses || [] });
       } catch(e) { setFormStats(null); }
     })();
