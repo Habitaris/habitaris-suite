@@ -2225,8 +2225,9 @@ export default function Formularios() {
     if (SB.isConfigured()) {
       try {
         await SB.createLink({ form_id: e.formId, form_name: e.formNombre, link_id: e.linkId, client_name: e.cliente?.nombre||null, client_email: e.cliente?.email||null, client_tel: e.cliente?.tel||null, max_uses: e.maxUsos||0, expires_at: e.expiry ? new Date(e.expiry).toISOString() : null });
-        await loadEnvios();
       } catch(err) { console.warn("addEnvio SB error:", err); }
+      // Always refresh list, even if createLink had conflict
+      await loadEnvios();
     } else { save("envios", [...(data.envios||[]), e]); }
   };
   const blockEnvio = async (linkId, block) => {
