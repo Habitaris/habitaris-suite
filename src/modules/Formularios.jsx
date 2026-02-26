@@ -2195,7 +2195,7 @@ export default function Formularios() {
   // === ENVIOS: cloud-first (Supabase form_links) ===
   const [envios, setEnvios] = useState([]);
   const [enviosLoading, setEnviosLoading] = useState(true);
-  const loadEnvios = async () => {
+  const loadEnvios = async () => { console.log("loadEnvios called");
     setEnviosLoading(true);
     try {
       if (SB.isConfigured()) {
@@ -2213,7 +2213,7 @@ export default function Formularios() {
             expiry: l.expires_at||"",
             blocked: !l.active,
           })));
-          setEnviosLoading(false); return;
+          console.log("loadEnvios got",links.length,"links"); setEnviosLoading(false); return;
         }
       }
     } catch(err) { console.warn("loadEnvios error:", err); }
