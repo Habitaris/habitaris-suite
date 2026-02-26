@@ -15,7 +15,7 @@ const F = { fontFamily:"'DM Sans',sans-serif" };
 
 function decode() {
   try {
-    const h = (new URLSearchParams(window.location.search).get("id") ? "" : window.location.hash) /* prefer ?id= param */.slice(1);
+    const h = window.location.hash.slice(1);
     if (!h) return null;
     return JSON.parse(decodeURIComponent(atob(h)));
   } catch { return null; }
@@ -176,7 +176,30 @@ export default function FormularioPublico() {
   const openTimeRef = useRef(Date.now());
 
   /* ALL hooks BEFORE any conditional return */
-  useEffect(() => { setDef(decode()); }, []);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const linkId = params.get("id");
+    if (linkId) {
+      // New approach: fetch from Supabase
+      (async () => {
+        try {
+          const { data, error } = await sb.from("form_links").select("*").eq("id", linkId).single();
+          if (!error && data) {
+            // Check expiration
+            if (data.expires_at && new Date(data.expires_at) < new Date()) { setDef({ _expired: true }); return; }
+            if (data.max_uses > 0 && data.uses >= data.max_uses) { setDef({ _expired: true }); return; }
+            // Increment uses
+            sb.from("form_links").update({ uses: (data.uses || 0) + 1 }).eq("id", linkId);
+            // Build form object
+            setDef({ ...data.form_def, cliente: data.cliente, linkConfig: data.link_config, marca: data.marca, modulo: data.modulo });
+          } else { setDef(null); }
+        } catch (e) { console.error("form_links fetch error:", e); setDef(null); }
+      })();
+    } else {
+      // Legacy: decode from hash
+      setDef(decode());
+    }
+  }, []);
 
   useEffect(() => {
     if (!def) return;
