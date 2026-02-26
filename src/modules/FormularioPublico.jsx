@@ -191,7 +191,7 @@ export default function FormularioPublico() {
             // Increment uses
             await sb.from("form_links").update({ current_uses: (data.current_uses || 0) + 1 }).eq("link_id", linkId);
             // Build form object
-            setDef({ ...data.form_def, cliente: { nombre: data.client_name, email: data.client_email, tel: data.client_tel }, marca: data.marca || {}, modulo: data.modulo || "crm" });
+            setDef({ ...data.form_def, cliente: { nombre: data.client_name, email: data.client_email, tel: data.client_tel }, linkConfig: { linkId: data.link_id }, marca: data.marca || {}, modulo: data.modulo || "crm" });
           } else { setDef(null); }
         } catch (e) { console.error("form_links fetch error:", e); setDef(null); }
       })();
