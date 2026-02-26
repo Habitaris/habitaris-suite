@@ -1971,7 +1971,7 @@ function TabEstadisticas({ forms }) {
    ═══════════════════════════════════════════════════════════════ */
 function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
   const [filtro, setFiltro] = useState("pendiente");
-  const getStatus = (e) => e.blocked ? "bloqueado" : respuestas.some(r=>r.clienteEmail===e.cliente?.email && r.formularioId===e.formId) ? "respondido" : "pendiente";
+  const getStatus = (e) => e.blocked ? "bloqueado" : respuestas.some(r=>(r.link_id||r.linkId)===e.linkId) ? "respondido" : "pendiente";
   const counts = { todos:envios.length, pendiente:0, respondido:0, bloqueado:0 };
   envios.forEach(e => { counts[getStatus(e)]++; });
   const filtered = filtro==="todos" ? envios : envios.filter(e => getStatus(e)===filtro);
@@ -2042,7 +2042,7 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
             {filtered.length===0 ? (
               <tr><td colSpan={9} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>{filtro==="todos"?"No has enviado formularios aún":"Sin resultados para este filtro"}</td></tr>
             ) : [...filtered].reverse().map(e => {
-              const hasResp = respuestas.some(r=>r.clienteEmail===e.cliente?.email && r.formularioId===e.formId);
+              const hasResp = respuestas.some(r=>(r.link_id||r.linkId)===e.linkId);
               const isBlocked = e.blocked;
               return (
                 <tr key={e.id} style={{background:selectedIds.has(e.id)?"#FDF5F5":isBlocked?"#FDF5F5":""}}>
