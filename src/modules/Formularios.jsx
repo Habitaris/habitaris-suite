@@ -2026,8 +2026,7 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
             🗑 Limpiar todo
           </button>}
         </div>
-      </div>
-      <div style={{display:"flex",gap:8,alignItems:"center",justifyContent:"flex-end",marginBottom:10}}>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
         <div style={{display:"flex",gap:0}}>
           {[["pendiente","⏳ Pendientes"],["respondido","✅ Respondidos"],["bloqueado","🚫 Bloqueados"],["todos","Todos"]].map(([id,lbl],i,arr)=>(
             <button key={id} onClick={()=>{setFiltro(id);setSelectedIds(new Set());}}
