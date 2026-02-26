@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import API, { USUARIOS_INTERNOS, getAprobador, aprobaciones, portal, notificaciones } from "../api.js";
 import { createPortal as createOfferPortal } from "./offerPortal.js";
-import { encodeFormDef } from "./FormularioPublico.jsx";
+import { sb } from "../core/supabase.js";
 
 /* ─── TIPOGRAFÍA (Manual de Marca: una sola sans-serif) ─────── */
 const FontLink = () => (
@@ -910,29 +910,46 @@ function FormBuilder() {
     setForms(f => f.filter(x => x.id !== id));
   };
 
-  /* Generate URL */
-  const getFormUrl = (f) => {
-    const hash = encodeFormDef(f);
-    return `${window.location.origin}/form#${hash}`;
+  /* Generate URL — saves form to Supabase, returns short link */
+  const getFormUrl = async (f) => {
+    const linkId = f.linkConfig?.linkId || (Math.random().toString(36).slice(2,10) + Math.random().toString(36).slice(2,10));
+    try {
+      const { error } = await sb.from("form_links").upsert({
+        id: linkId,
+        tenant_id: "habitaris",
+        form_def: { id: f.id, nombre: f.nombre, campos: f.campos, config: f.config },
+        cliente: f.cliente || {},
+        link_config: f.linkConfig || {},
+        marca: f.marca || {},
+        modulo: f.modulo || "crm",
+        max_uses: f.linkConfig?.maxUsos || 1,
+        expires_at: f.linkConfig?.fechaCaducidad ? new Date(f.linkConfig.fechaCaducidad).toISOString() : null,
+      }, { onConflict: "id" });
+      if (error) { console.error("form_links upsert error:", error); return null; }
+    } catch (e) { console.error("form_links save failed:", e); return null; }
+    return `${window.location.origin}/form?id=${linkId}`;
   };
 
-  const copyUrl = (f) => {
+  const copyUrl = async (f) => {
     try {
-      const url = getFormUrl(f);
+      const url = await getFormUrl(f);
+      if (!url) { alert("Error generando link. Verifica la conexión."); return; }
       navigator.clipboard?.writeText(url);
       setCopied(true); setTimeout(() => setCopied(false), 2000);
-    } catch {}
+    } catch (e) { console.error("copyUrl error:", e); }
   };
 
-  const shareWA = (f) => {
-    const url = getFormUrl(f);
+  const shareWA = async (f) => {
+    const url = await getFormUrl(f);
+    if (!url) { alert("Error generando link."); return; }
     const msg = `Hola${shareNombre?` ${shareNombre}`:""}! 👋 Te invitamos a completar este formulario:\n\n📋 ${f.config?.titulo || f.nombre}\n${url}\n\n¡Gracias!`;
     const num = shareTel.replace(/\D/g,"");
     window.open(num ? `https://wa.me/57${num}?text=${encodeURIComponent(msg)}` : `https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
-  const shareEmailFn = (f) => {
-    const url = getFormUrl(f);
+  const shareEmailFn = async (f) => {
+    const url = await getFormUrl(f);
+    if (!url) { alert("Error generando link."); return; }
     const subj = encodeURIComponent(f.config?.titulo || f.nombre);
     const body = encodeURIComponent(`Hola${shareNombre?` ${shareNombre}`:""},\n\nTe invitamos a completar este formulario:\n\n${f.config?.titulo || f.nombre}\n${url}\n\n¡Gracias!\nEquipo Habitaris`);
     window.open(`mailto:${shareEmail}?subject=${subj}&body=${body}`, "_blank");

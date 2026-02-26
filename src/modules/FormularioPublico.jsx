@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { sb } from "../core/supabase.js";
 import { store } from "../core/store.js";
 
 import * as SB from "./supabase.js";
@@ -14,7 +15,7 @@ const F = { fontFamily:"'DM Sans',sans-serif" };
 
 function decode() {
   try {
-    const h = window.location.hash.slice(1);
+    const h = (new URLSearchParams(window.location.search).get("id") ? "" : window.location.hash) /* prefer ?id= param */.slice(1);
     if (!h) return null;
     return JSON.parse(decodeURIComponent(atob(h)));
   } catch { return null; }
