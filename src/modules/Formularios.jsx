@@ -1091,7 +1091,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
   const [procesados, setProcesados] = useState(() => {
     try { return JSON.parse(store.getSync("hab:form:procesados")||"[]"); } catch { return []; }
   });
-  const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [filtroEstado, setFiltroEstado] = useState("pendiente");
 
   useEffect(() => { Promise.resolve(false).then(setBioAvailable); }, []);
 
