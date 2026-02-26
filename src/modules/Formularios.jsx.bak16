@@ -247,8 +247,8 @@ const PLANTILLAS = [
       {id:"f_email_fact",tipo:"email",label:"Email para envío de factura",placeholder:"name@example.com",required:true,opciones:[],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"emailFactura"},
       {id:"f_dir_fact",tipo:"text",label:"Dirección de facturación",placeholder:"",required:true,opciones:[],logica:{fieldId:"f_mismos_datos",value:"No"},mapKey:"dirFacturacion"},
       /* Forma de pago por país */
-      {id:"f_forma_pago_co",tipo:"select",label:"Forma de pago preferida",placeholder:"",required:true,opciones:["Enlace PSE","Tarjeta de Crédito/Débito"],logica:{fieldId:"f_pais",value:"Colombia"},mapKey:"formaPago"},
-      {id:"f_forma_pago_es",tipo:"select",label:"Forma de pago preferida",placeholder:"",required:true,opciones:["Tarjeta de Crédito/Débito","Transferencia bancaria","PayPal"],logica:{fieldId:"f_pais",value:"España"},mapKey:"formaPago"},
+      {id:"f_forma_pago_co",tipo:"select",label:"Forma de pago preferida",placeholder:"",required:true,opciones:["Enlace PSE","Tarjeta de Crédito/Débito","Transferencia bancaria","Nequi / Daviplata"],logica:{fieldId:"f_pais",value:"Colombia"},mapKey:"formaPago"},
+      {id:"f_forma_pago_es",tipo:"select",label:"Forma de pago preferida",placeholder:"",required:true,opciones:["Bizum","Tarjeta de Crédito/Débito","Transferencia bancaria","PayPal"],logica:{fieldId:"f_pais",value:"España"},mapKey:"formaPago"},
       {id:"f_forma_pago_otro",tipo:"select",label:"Forma de pago preferida",placeholder:"",required:true,opciones:["Tarjeta de Crédito/Débito","Transferencia bancaria","PayPal"],logica:{fieldId:"f_pais",notValues:["Colombia","España"]},mapKey:"formaPago"},
       {id:"f_retenciones",tipo:"yesno",label:"¿Aplican retenciones especiales?",placeholder:"",required:true,opciones:["Sí","No"],logica:null,mapKey:"retenciones"},
       {id:"f_det_ret",tipo:"textarea",label:"Detalle de retenciones",placeholder:"Escribe tu respuesta aquí...",required:true,opciones:[],logica:{fieldId:"f_retenciones",value:"Sí"},mapKey:"detalleRetenciones"},
@@ -584,18 +584,7 @@ render();
       // Link se guarda en Supabase via addEnvio
     }
     // Refresh envios list (data already saved in upsert above)
-    // Track envio (addEnvio handles Supabase insert + list refresh)
-    addEnvio({
-      id: uid(),
-      formId: existing?.id || "nuevo",
-      formNombre: nombre || "(sin nombre)",
-      cliente: client,
-      fecha: today(),
-      hora: new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}),
-      linkId,
-      maxUsos: linkMaxUsos||0,
-      expiry: linkExpiry||"",
-    })
+    // envios refresh on tab change
   };
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);

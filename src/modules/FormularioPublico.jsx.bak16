@@ -189,7 +189,7 @@ export default function FormularioPublico() {
             if (data.expires_at && new Date(data.expires_at) < new Date()) { setDef({ _expired: true }); return; }
             if (data.max_uses > 0 && (data.current_uses||0) >= data.max_uses) { setDef({ _expired: true }); return; }
             // Increment uses
-            await sb.from("form_links").update({ current_uses: (data.current_uses || 0) + 1 }).eq("link_id", linkId);
+            sb.from("form_links").update({ current_uses: (data.current_uses || 0) + 1 }).eq("link_id", linkId);
             // Build form object
             setDef({ ...data.form_def, cliente: { nombre: data.client_name, email: data.client_email, tel: data.client_tel }, marca: data.marca || {}, modulo: data.modulo || "crm" });
           } else { setDef(null); }
@@ -212,7 +212,7 @@ export default function FormularioPublico() {
       campos.forEach(c => {
         if (cliente.email && c.mapKey==="email") prefill[c.id] = cliente.email;
         if (cliente.nombre && c.mapKey==="nombre") prefill[c.id] = cliente.nombre;
-        if (cliente.tel && cliente.tel.replace(/[^0-9]/g,"").length > 4 && c.mapKey==="telefono") prefill[c.id] = cliente.tel;
+        if (cliente.tel && c.mapKey==="telefono") prefill[c.id] = cliente.tel;
       });
       setVals(prev => ({...prefill, ...prev}));
     }
@@ -344,7 +344,7 @@ export default function FormularioPublico() {
     if (!cliente) return c.mapKey==="pais";
     if (cliente.email && c.mapKey==="email") return true;
     if (cliente.nombre && c.mapKey==="nombre") return true;
-    if (cliente.tel && cliente.tel.trim() && cliente.tel.replace(/[^0-9]/g,"").length > 4 && (c.mapKey==="telefono" || c.tipo==="tel_combo")) return true;
+    if (cliente.tel && cliente.tel.trim() && (c.mapKey==="telefono" || c.tipo==="tel_combo")) return true;
     if (c.mapKey==="pais") return true;
     return false;
   };
