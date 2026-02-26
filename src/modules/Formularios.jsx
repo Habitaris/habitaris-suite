@@ -584,7 +584,7 @@ render();
       // Link se guarda en Supabase via addEnvio
     }
     // Refresh envios list (data already saved in upsert above)
-    loadEnvios();
+    // envios refresh on tab change
   };
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
