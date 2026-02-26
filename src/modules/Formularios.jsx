@@ -1507,6 +1507,7 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
                   background:filtroEstado===o.v?"#111":"#fff",color:filtroEstado===o.v?"#fff":T.inkMid}}>{o.l}</button>
             ))}
           </div>
+          <button onClick={()=>setSortDesc(!sortDesc)} style={{padding:"5px 12px",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",border:"1px solid #E0E0E0",borderRadius:4,background:"#fff",color:"#555"}}>Fecha {sortDesc?"▼":"▲"}</button>
           <select value={selFormId} onChange={e=>setSelFormId(e.target.value)} style={{...inp,width:200}}>
             <option value="">Todos los formularios</option>
             {forms.map(f=><option key={f.id} value={f.id}>{f.nombre}</option>)}
@@ -1527,7 +1528,7 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
           <tbody>
             {filtered.length===0 ? (
               <tr><td colSpan={9} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin respuestas{filtroEstado!=="todos"?" con este filtro":""}</td></tr>
-            ) : filtered.sort((a,b)=>(b.fecha||"").localeCompare(a.fecha||"")).map(r => {
+            ) : filtered.map(r => {
               const proc = isProcesado(r);
               const dt = r.created_at ? new Date(r.created_at) : null;
               const fechaStr = dt ? dt.toISOString().split("T")[0] : r.fecha || "—";
@@ -2027,14 +2028,20 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
         </div>
       </div>
       <div style={{display:"flex",gap:6,marginBottom:10}}>
-        {[["pendiente","⏳ Pendientes"],["respondido","✅ Respondidos"],["bloqueado","🚫 Bloqueados"],["todos","Todos"]].map(([id,lbl])=>(
-          <button key={id} onClick={()=>{setFiltro(id);setSelectedIds(new Set());}}
-            style={{padding:"5px 12px",fontSize:10,fontWeight:filtro===id?700:500,
-              background:filtro===id?"#111":"#fff",color:filtro===id?"#fff":"#555",
-              border:filtro===id?"1px solid #111":"1px solid #E0E0E0",borderRadius:4,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
-            {lbl} ({counts[id]})
-          </button>
-        ))}
+        <div style={{display:"flex",gap:0}}>
+          {[["pendiente","⏳ Pendientes"],["respondido","✅ Respondidos"],["bloqueado","🚫 Bloqueados"],["todos","Todos"]].map(([id,lbl],i,arr)=>(
+            <button key={id} onClick={()=>{setFiltro(id);setSelectedIds(new Set());}}
+              style={{padding:"5px 12px",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",
+                border:`1px solid ${filtro===id?"#111":"#E0E0E0"}`,borderLeft:i>0?"none":undefined,
+                borderRadius:i===0?"4px 0 0 4px":i===arr.length-1?"0 4px 4px 0":"0",
+                background:filtro===id?"#111":"#fff",color:filtro===id?"#fff":"#555"}}>
+              {lbl} ({counts[id]})
+            </button>
+          ))}
+        </div>
+        <button onClick={()=>setSortDesc(!sortDesc)} style={{padding:"5px 12px",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",border:"1px solid #E0E0E0",borderRadius:4,background:"#fff",color:"#555"}}>
+          Fecha {sortDesc?"▼":"▲"}
+        </button>
       </div>
       <Card style={{padding:0,overflow:"hidden"}}>
         <table style={{borderCollapse:"collapse",width:"100%"}}>
@@ -2045,7 +2052,7 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
           <tbody>
             {filtered.length===0 ? (
               <tr><td colSpan={9} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>{filtro==="todos"?"No has enviado formularios aún":"Sin resultados para este filtro"}</td></tr>
-            ) : [...filtered].reverse().map(e => {
+            ) : filtered.map(e => {
               const hasResp = respuestas.some(r=>(r.link_id||r.linkId)===e.linkId);
               const isBlocked = e.blocked;
               return (
