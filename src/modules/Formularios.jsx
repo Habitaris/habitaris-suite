@@ -2041,6 +2041,7 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
         <button onClick={()=>setSortDesc(!sortDesc)} style={{padding:"5px 12px",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",border:"1px solid #E0E0E0",borderRadius:4,background:"#fff",color:"#555"}}>
           Fecha {sortDesc?"▼":"▲"}
         </button>
+        </div>
       </div>
       <Card style={{padding:0,overflow:"hidden"}}>
         <table style={{borderCollapse:"collapse",width:"100%"}}>
