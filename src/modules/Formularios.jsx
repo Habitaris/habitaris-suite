@@ -626,7 +626,7 @@ render();
       alert("Error al enviar. Revisa Configuración → Correo / EmailJS.");
     }
   };
-  const openShare = () => { setShareClient({nombre:"",email:"",tel:"",codTel:""}); setShareGenerated(""); setShareFileName(""); setSharePublicUrl(""); setSharePais("Colombia"); setShowShare(true); };
+  const openShare = () => { setShareClient({nombre:"",email:"",tel:"",codTel:""}); setShareGenerated(""); setShareFileName(""); setSharePublicUrl(""); setSharePais("Colombia"); setLinkMaxUsos(0); setLinkExpiry(""); setShowShare(true); };
 
   const sel = selIdx!==null ? campos[selIdx] : null;
 
