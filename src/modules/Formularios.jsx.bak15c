@@ -583,8 +583,18 @@ render();
       } catch(e) { console.error("form_links save:", e); setSharePublicUrl(""); }
       // Link se guarda en Supabase via addEnvio
     }
-    // Refresh envios list (data already saved in upsert above)
-    loadEnvios();
+    // Track envio
+    addEnvio({
+      id: uid(),
+      formId: existing?.id || "nuevo",
+      formNombre: nombre || "(sin nombre)",
+      cliente: client,
+      fecha: today(),
+      hora: new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}),
+      linkId,
+      maxUsos: linkMaxUsos||0,
+      expiry: linkExpiry||"",
+    });
   };
   const [emailSending, setEmailSending] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
