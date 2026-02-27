@@ -160,7 +160,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
         active:true,
       });
       if(error)throw error;
-      const publicUrl=appUrl?appUrl+"/form/"+linkId:"";
+      const publicUrl=appUrl?appUrl+"/form?id="+linkId:"";
       setShareResult({linkId,url:publicUrl,client});
       SB.registerOpen(shareForm.id,shareForm.nombre,linkId,client.nombre,client.email).catch(()=>{});
       setTimeout(loadData,500);
