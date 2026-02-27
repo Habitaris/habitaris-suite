@@ -207,7 +207,8 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
   };
 
   /* ── Status helpers ── */
-  const getStatus=(e)=>{if(e.blocked)return"bloqueado";return respuestas.some(r=>(r.link_id||r.linkId)===e.linkId)?"respondido":"pendiente";};
+  const getStatus=(e)=>{if(e.blocked)return"bloqueado";if(e.expiresAt&&new Date(e.expiresAt)<new Date())return"caducado";if(e.maxUsos>0&&e.currentUsos>=e.maxUsos)return"bloqueado";return respuestas.some(r=>(r.link_id||r.linkId)===e.linkId)?"respondido":"pendiente";};
+  const getLinkUrl=(linkId)=>{const cfg=getConfig();const appUrl=(cfg.app?.url||"").replace(/\/$/,"");return appUrl?appUrl+"/form?id="+linkId:"";};
 
   /* ── Filtering ── */
   const q=search.toLowerCase();
@@ -229,7 +230,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
   },[envios,search,filtroEnvio,respuestas]);
   const respPendientes=respuestas.filter(r=>!isProcesado(r));
   const respProcesadas=respuestas.filter(r=>isProcesado(r));
-  const envCounts=useMemo(()=>{const c={pendiente:0,respondido:0,bloqueado:0,todos:envios.length};envios.forEach(e=>{const s=getStatus(e);c[s]=(c[s]||0)+1;});return c;},[envios,respuestas]);
+  const envCounts=useMemo(()=>{const c={pendiente:0,respondido:0,bloqueado:0,caducado:0,todos:envios.length};envios.forEach(e=>{const s=getStatus(e);c[s]=(c[s]||0)+1;});return c;},[envios,respuestas]);
 
   /* ── Styles ── */
   const inp={padding:"7px 10px",fontSize:11,border:"1px solid "+T.border,borderRadius:4,fontFamily:"'DM Sans',sans-serif",outline:"none",background:T.bg,color:T.ink,boxSizing:"border-box"};
@@ -402,7 +403,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
         <div>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
             <div style={{display:"flex",gap:0}}>
-              {[["todos","Todos ("+envCounts.todos+")"],["pendiente","Pendientes ("+envCounts.pendiente+")"],["respondido","Respondidos ("+envCounts.respondido+")"],["bloqueado","Bloqueados ("+envCounts.bloqueado+")"]].map(([id,lbl],i,arr)=>(
+              {[["todos","Todos ("+envCounts.todos+")"],["pendiente","Pendientes ("+envCounts.pendiente+")"],["respondido","Respondidos ("+envCounts.respondido+")"],["caducado","Caducados ("+(envCounts.caducado||0)+")"],["bloqueado","Bloqueados ("+envCounts.bloqueado+")"]].map(([id,lbl],i,arr)=>(
                 <button key={id} onClick={()=>setFiltroEnvio(id)} style={{padding:"5px 12px",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",border:"1px solid "+(filtroEnvio===id?"#111":T.border),borderLeft:i>0?"none":undefined,borderRadius:i===0?"4px 0 0 4px":i===arr.length-1?"0 4px 4px 0":"0",background:filtroEnvio===id?"#111":"#fff",color:filtroEnvio===id?"#fff":T.inkMid}}>{lbl}</button>
               ))}
             </div>
@@ -410,9 +411,9 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
           </div>
           <Card style={{padding:0,overflow:"hidden"}}>
             <table style={{borderCollapse:"collapse",width:"100%"}}>
-              <thead><tr style={{background:"#F0F0F0"}}>{["Fecha","Formulario","Cliente","Email","Telefono","Estado"].map(h=><th key={h} style={ths}>{h}</th>)}</tr></thead>
+              <thead><tr style={{background:"#F0F0F0"}}>{["Fecha","Formulario","Cliente","Email","Telefono","Estado",""].map(h=><th key={h} style={ths}>{h}</th>)}</tr></thead>
               <tbody>
-                {envFiltered.length===0?<tr><td colSpan={6} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin resultados</td></tr>
+                {envFiltered.length===0?<tr><td colSpan={7} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin resultados</td></tr>
                 :envFiltered.map(e=>{const s=getStatus(e);return(
                   <tr key={e.id}>
                     <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>{e.fecha} {e.hora}</td>
@@ -420,7 +421,8 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
                     <td style={{...tds,fontWeight:600}}>{e.cliente?.nombre||"—"}</td>
                     <td style={{...tds,fontSize:9,color:T.blue}}>{e.cliente?.email||"—"}</td>
                     <td style={{...tds,fontSize:9}}>{e.cliente?.tel||"—"}</td>
-                    <td style={tds}>{s==="bloqueado"?<Badge color={T.red}>🚫 Bloqueado</Badge>:s==="respondido"?<Badge color={T.green} bg={T.greenBg}>✅ Respondido</Badge>:<Badge color={T.amber} bg={T.amberBg}>⏳ Pendiente</Badge>}</td>
+                    <td style={tds}>{s==="bloqueado"?<Badge color={T.red}>🚫 Bloqueado</Badge>:s==="caducado"?<Badge color={T.red} bg={T.redBg}>⏰ Caducado</Badge>:s==="respondido"?<Badge color={T.green} bg={T.greenBg}>✅ Respondido</Badge>:<Badge color={T.amber} bg={T.amberBg}>⏳ Pendiente</Badge>}</td>
+                    <td style={tds}>{s==="pendiente"&&<Btn on={()=>{const u=getLinkUrl(e.linkId);if(u){navigator.clipboard.writeText(u);alert("Link copiado al portapapeles");}}} style={{fontSize:8}}><Copy size={9}/> Link</Btn>}</td>
                   </tr>
                 );})}
               </tbody>
