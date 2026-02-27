@@ -2237,27 +2237,20 @@ const NAV = [
   { id: "formularios",  lbl: "Formularios",     en: "Forms",          I: FileText },
 ];
 
-function TopBar({ view, sv, lang, setLang }) {
+function TopBar({ view, sv, lang }) {
   return (
     <div className="no-print" style={{
-      background: C.sidebar, padding: "0 28px", display: "flex", alignItems: "center",
-      gap: 0, position: "sticky", top: 0, zIndex: 1001, height: 52,
+      background: C.sidebar, padding: "0 20px", display: "flex", alignItems: "center",
+      position: "sticky", top: 0, zIndex: 1001, height: 44,
     }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 10, marginRight: 32 }}>
-        <LogoMark size={26} color="#fff" />
-        <div>
-          <div style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: 4, color: "#fff", textTransform: "uppercase" }}>HABITARIS</div>
-          <div style={{ fontSize: 7, letterSpacing: 2, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", fontWeight: 400 }}>{lang==="en"?"CRM · Offers":"CRM · Ofertas"}</div>
-        </div>
-      </div>
       <nav style={{ display: "flex", gap: 0, flex: 1 }}>
         {NAV.map(it => {
           const act = view === it.id || (view.startsWith("offer-") && it.id === "offers");
           return (
             <button key={it.id} onClick={() => sv(it.id)} style={{
-              display: "flex", alignItems: "center", gap: 7, padding: "0 18px", height: 52,
+              display: "flex", alignItems: "center", gap: 7, padding: "0 18px", height: 44,
               border: "none", cursor: "pointer", background: "transparent",
-              color: act ? "#fff" : "rgba(255,255,255,0.35)",
+              color: act ? "#fff" : "rgba(255,255,255,0.4)",
               fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: act ? 700 : 400,
               letterSpacing: 1.2, textTransform: "uppercase",
               borderBottom: act ? "2px solid #fff" : "2px solid transparent",
@@ -2268,23 +2261,6 @@ function TopBar({ view, sv, lang, setLang }) {
           );
         })}
       </nav>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ display:"flex", gap:0 }}>
-          {[["es","🇪🇸 Español"],["en","🇬🇧 English"]].map(([code,lbl])=>(
-            <button key={code} onClick={()=>setLang(code)}
-              style={{ padding:"5px 10px", fontSize:9, fontWeight:600, cursor:"pointer",
-                border:"1px solid rgba(255,255,255,0.15)", fontFamily:"'DM Sans',sans-serif",
-                borderRadius:code==="es"?"4px 0 0 4px":"0 4px 4px 0",
-                background:lang===code?"#fff":"transparent",
-                color:lang===code?"#111":"rgba(255,255,255,0.4)" }}>{lbl}</button>
-          ))}
-        </div>
-        <button onClick={() => { if(window.confirm("¿Salir del CRM?")) window.location.hash=""; }} style={{
-          background:"rgba(255,255,255,0.08)", border:"none", color:"rgba(255,255,255,0.5)",
-          padding:"5px 10px", borderRadius:3, cursor:"pointer", fontSize:9, fontWeight:600,
-          fontFamily:"'DM Sans',sans-serif", letterSpacing:0.5
-        }}>🔒 Salir</button>
-      </div>
     </div>
   );
 }
@@ -11297,7 +11273,7 @@ export default function CRMModule({ lang: langProp }) {
     <>
       <FontLink />
       <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: C.bg, minWidth: 0 }}>
-        <TopBar view={view} sv={setView} lang={lang} setLang={setLang} />
+        <TopBar view={view} sv={setView} lang={lang} />
         <main style={{ flex: 1, padding: "32px 36px", maxWidth: "100vw", overflowX: "auto" }}>
           {view === "dashboard"                              && <Dashboard offers={offers} sv={setView} sei={setEditId} lang={lang} />}
           {view === "offers"                                 && <Lista offers={offers} sv={setView} sei={setEditId} onDel={delOffer} onDup={dupOffer} />}
