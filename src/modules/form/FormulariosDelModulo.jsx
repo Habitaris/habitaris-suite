@@ -3,7 +3,7 @@ import { store } from "../../core/store.js";
 import { sb } from "../../core/supabase.js";
 import * as SB from "../supabase.js";
 import { procesarRespuesta as routeProcesar } from "./FormProcessor.js";
-import { getConfig } from "../../core/config.js";
+import { getConfig } from "../Configuracion.jsx";
 import { Send, ChevronDown, ChevronUp, Copy, Mail } from "lucide-react";
 
 const T = { ink:"#111", inkMid:"#555", inkLight:"#999", blue:"#2563EB", green:"#16a34a", greenBg:"#ECFDF5", red:"#DC2626", border:"#E8E8E8" };
