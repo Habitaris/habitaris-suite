@@ -4,12 +4,45 @@ import { sb } from "../../core/supabase.js";
 import * as SB from "../supabase.js";
 import { procesarRespuesta as routeProcesar } from "./FormProcessor.js";
 import { getConfig } from "../Configuracion.jsx";
-import { Send, ChevronDown, ChevronUp, Copy, Mail, Search, RefreshCw } from "lucide-react";
+import { Send, ChevronDown, ChevronUp, Copy, Mail, Search, RefreshCw, FileText, MessageCircle, Download } from "lucide-react";
 
-const T={ink:"#111",inkMid:"#555",inkLight:"#999",blue:"#2563EB",blueBg:"#EFF6FF",green:"#16a34a",greenBg:"#ECFDF5",red:"#DC2626",redBg:"#FEF2F2",amber:"#D97706",amberBg:"#FFFBEB",border:"#E8E8E8",bg:"#FAFAFA",surface:"#fff"};
+const T={ink:"#111",inkMid:"#555",inkLight:"#999",blue:"#2563EB",blueBg:"#EFF6FF",green:"#16a34a",greenBg:"#ECFDF5",red:"#DC2626",redBg:"#FEF2F2",amber:"#D97706",amberBg:"#FFFBEB",border:"#E8E8E8",bg:"#FAFAFA",surface:"#fff",accent:"#F5F4F1"};
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36);
+const today=()=>new Date().toISOString().split("T")[0];
 
-/* ── Scoring engine (same as Formularios.jsx) ── */
+const PAISES=[
+  {nombre:"Colombia",cod:"+57",divisa:"COP"},
+  {nombre:"España",cod:"+34",divisa:"EUR"},
+  {nombre:"México",cod:"+52",divisa:"MXN"},
+  {nombre:"Chile",cod:"+56",divisa:"CLP"},
+  {nombre:"Perú",cod:"+51",divisa:"PEN"},
+  {nombre:"Ecuador",cod:"+593",divisa:"USD"},
+  {nombre:"Argentina",cod:"+54",divisa:"ARS"},
+  {nombre:"Panamá",cod:"+507",divisa:"USD"},
+  {nombre:"Estados Unidos",cod:"+1",divisa:"USD"},
+  {nombre:"Otro",cod:"+1",divisa:"USD"},
+];
+
+/* ── EmailJS ── */
+const sendEmailJS = async (params) => {
+  try {
+    const cfg = getConfig();
+    if (!cfg.correo?.emailjs_serviceId) return false;
+    const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        service_id: cfg.correo.emailjs_serviceId,
+        template_id: cfg.correo.emailjs_templateId,
+        user_id: cfg.correo.emailjs_publicKey,
+        template_params: params,
+      })
+    });
+    return res.ok;
+  } catch { return false; }
+};
+
+/* ── Scoring engine ── */
 function calculateScore(resp, form) {
   if(!form?.campos)return null;
   const campos=form.campos.filter(c=>c.scoring?.enabled);
@@ -39,6 +72,9 @@ const Card=({children,style})=><div style={{background:T.surface,border:"1px sol
 const Badge=({color,bg,children})=><span style={{fontSize:8,fontWeight:700,padding:"2px 8px",borderRadius:10,background:bg||(color+"15"),color}}>{children}</span>;
 const Btn=({v,on,children,disabled,style})=><button onClick={on} disabled={disabled} style={{padding:"4px 12px",fontSize:9,fontWeight:600,borderRadius:3,cursor:disabled?"default":"pointer",border:v==="pri"?"none":"1px solid "+T.border,background:v==="pri"?"#111":"#fff",color:v==="pri"?"#fff":T.inkMid,opacity:disabled?.4:1,fontFamily:"'DM Sans',sans-serif",...style}}>{children}</button>;
 
+/* ══════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+   ══════════════════════════════════════════════════════════════ */
 export default function FormulariosDelModulo({modulo,moduloLabel}){
   const [subTab,setSubTab]=useState("formularios");
   const [forms,setForms]=useState([]);
@@ -47,12 +83,19 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
   const [envios,setEnvios]=useState([]);
   const [procesados,setProcesados]=useState([]);
   const [loading,setLoading]=useState(true);
+
+  // Share state
   const [shareForm,setShareForm]=useState(null);
   const [shareClient,setShareClient]=useState({nombre:"",email:"",tel:"",codTel:"+57"});
+  const [sharePais,setSharePais]=useState("Colombia");
   const [shareLinkMaxUsos,setShareLinkMaxUsos]=useState(0);
   const [shareLinkExpiry,setShareLinkExpiry]=useState("");
   const [shareResult,setShareResult]=useState(null);
   const [sending,setSending]=useState(false);
+  const [emailSending,setEmailSending]=useState(false);
+  const [emailSent,setEmailSent]=useState(false);
+
+  // UI state
   const [expandedId,setExpandedId]=useState(null);
   const [search,setSearch]=useState("");
   const [filtroResp,setFiltroResp]=useState("todos");
@@ -81,6 +124,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
     setLoading(false);
   };
 
+  /* ── Process helpers ── */
   const isProcesado=(r)=>r.processed||procesados.includes(r.id);
   const markProcesado=useCallback((id,sbId)=>{const next=[...procesados,id];setProcesados(next);store.set("hab:form:procesados",JSON.stringify(next));if(sbId)SB.markProcessed(sbId).catch(()=>{});},[procesados]);
   const markPendiente=useCallback((id,sbId)=>{const next=procesados.filter(x=>x!==id);setProcesados(next);store.set("hab:form:procesados",JSON.stringify(next));if(sbId)SB.markUnprocessed(sbId).catch(()=>{});},[procesados]);
@@ -92,22 +136,77 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
     }catch(err){alert("Error: "+err.message);}
   };
 
+  /* ── Send form ── */
   const handleSend=async()=>{
-    if(!shareForm||!shareClient.email)return;
+    if(!shareForm||!shareClient.nombre)return;
     setSending(true);
     try{
       const cfg=getConfig();const appUrl=(cfg.app?.url||"").replace(/\/$/,"");const linkId=uid();
-      const client={nombre:shareClient.nombre,email:shareClient.email,tel:((shareClient.codTel||"+57").replace(/[^0-9+]/g,"")+" "+shareClient.tel).trim()};
-      const{error}=await sb.from("form_links").upsert({link_id:linkId,form_id:shareForm.id||"form",form_name:shareForm.nombre||"Formulario",form_def:{id:shareForm.id,nombre:shareForm.nombre,campos:shareForm.campos,config:shareForm.config},client_name:client.nombre||null,client_email:client.email||null,client_tel:client.tel||null,marca:{logo:cfg.apariencia?.logo||"",colorPrimario:cfg.apariencia?.colorPrimario||"#111",tipografia:cfg.apariencia?.tipografia||"DM Sans",empresa:cfg.empresa?.nombre||"Habitaris"},modulo,max_uses:shareLinkMaxUsos||0,current_uses:0,expires_at:shareLinkExpiry?new Date(shareLinkExpiry).toISOString():null,active:true});
+      const codTel=shareClient.codTel||(PAISES.find(p=>p.nombre===sharePais)?.cod||"+57");
+      const client={nombre:shareClient.nombre,email:shareClient.email,tel:(codTel.replace(/[^0-9+]/g,"")+" "+shareClient.tel).trim()};
+      const{error}=await sb.from("form_links").upsert({
+        link_id:linkId,
+        form_id:shareForm.id||"form",
+        form_name:shareForm.nombre||"Formulario",
+        form_def:{id:shareForm.id,nombre:shareForm.nombre,campos:shareForm.campos,config:{...shareForm.config,paisProyecto:sharePais}},
+        client_name:client.nombre||null,
+        client_email:client.email||null,
+        client_tel:client.tel||null,
+        marca:{logo:cfg.apariencia?.logo||"",colorPrimario:cfg.apariencia?.colorPrimario||"#111",colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B",colorAcento:cfg.apariencia?.colorAcento||"#111",tipografia:cfg.apariencia?.tipografia||"DM Sans",slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"",empresa:cfg.empresa?.nombre||"Habitaris",razonSocial:cfg.empresa?.razonSocial||"",domicilio:cfg.empresa?.domicilio||""},
+        modulo,
+        max_uses:shareLinkMaxUsos||0,
+        current_uses:0,
+        expires_at:shareLinkExpiry?new Date(shareLinkExpiry).toISOString():null,
+        active:true,
+      });
       if(error)throw error;
       const publicUrl=appUrl?appUrl+"/form/"+linkId:"";
       setShareResult({linkId,url:publicUrl,client});
       SB.registerEvent(shareForm.id,linkId,"send",{client_name:client.nombre}).catch(()=>{});
       setTimeout(loadData,500);
-    }catch(e){alert("Error enviando: "+e.message);}
+    }catch(e){alert("Error generando formulario: "+e.message);}
     setSending(false);
   };
 
+  /* ── Share actions ── */
+  const shareWhatsApp=()=>{
+    if(!shareResult)return;
+    const cfg=getConfig();
+    const clientName=shareResult.client.nombre||"cliente";
+    const linkText=shareResult.url?"\n\n🔗 "+shareResult.url:"";
+    const plantilla=cfg.whatsapp?.mensajePlantilla||"Hola {{nombre}}, te enviamos el formulario {{formulario}} de {{empresa}}.";
+    const msg=plantilla.replace(/\{\{nombre\}\}/g,clientName).replace(/\{\{formulario\}\}/g,shareForm?.nombre||"Formulario").replace(/\{\{empresa\}\}/g,cfg.empresa?.nombre||"Habitaris")+linkText;
+    const tel=shareResult.client.tel?(shareResult.client.tel).replace(/[^0-9]/g,""):"";
+    window.open("https://wa.me/"+tel+"?text="+encodeURIComponent(msg),"_blank");
+  };
+
+  const shareEmail=async()=>{
+    if(!shareResult?.client?.email){alert("No hay email del cliente");return;}
+    const cfg=getConfig();
+    setEmailSending(true);
+    const ok=await sendEmailJS({
+      client_name:shareResult.client.nombre||"Cliente",
+      client_email:shareResult.client.email,
+      form_name:shareForm?.nombre||"Formulario",
+      from_name:cfg.empresa?.nombre||"Habitaris",
+      form_link:shareResult.url||"En breve recibiras el formulario por WhatsApp.",
+    });
+    setEmailSending(false);
+    if(ok){setEmailSent(true);setTimeout(()=>setEmailSent(false),5000);}
+    else{alert("Error al enviar email. Revisa Configuracion → Correo / EmailJS.");}
+  };
+
+  const downloadLink=()=>{
+    if(!shareResult?.url)return;
+    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=${shareResult.url}"><title>Formulario - ${shareForm?.nombre||""}</title></head><body style="font-family:sans-serif;text-align:center;padding:40px"><h2>Redirigiendo al formulario...</h2><p><a href="${shareResult.url}">Click aqui si no redirige automaticamente</a></p></body></html>`;
+    const blob=new Blob([html],{type:"text/html"});
+    const a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download="formulario-"+(shareForm?.nombre||"form").replace(/\s+/g,"-").toLowerCase()+"-"+(shareResult.client.nombre||"cliente").replace(/\s+/g,"-").toLowerCase()+".html";
+    a.click();
+  };
+
+  /* ── Status helpers ── */
   const getStatus=(e)=>{if(e.blocked)return"bloqueado";return respuestas.some(r=>(r.link_id||r.linkId)===e.linkId||(!r.link_id&&!r.linkId&&r.clienteEmail&&r.clienteEmail===e.cliente?.email))?"respondido":"pendiente";};
 
   /* ── Filtering ── */
@@ -117,25 +216,24 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
     const fields=[item.clienteNombre,item.clienteEmail,item.formularioNombre,item.cliente?.nombre,item.cliente?.email,item.formNombre,item.fecha].filter(Boolean);
     return fields.some(f=>f.toLowerCase().includes(q));
   };
-
   const respFiltered=useMemo(()=>{
     let r=respuestas.filter(matchSearch);
     if(filtroResp==="pendiente")r=r.filter(x=>!isProcesado(x));
     if(filtroResp==="procesado")r=r.filter(x=>isProcesado(x));
     return r;
   },[respuestas,search,filtroResp,procesados]);
-
   const envFiltered=useMemo(()=>{
     let e=envios.filter(matchSearch);
     if(filtroEnvio!=="todos")e=e.filter(x=>getStatus(x)===filtroEnvio);
     return e;
   },[envios,search,filtroEnvio,respuestas]);
-
   const respPendientes=respuestas.filter(r=>!isProcesado(r));
   const respProcesadas=respuestas.filter(r=>isProcesado(r));
   const envCounts=useMemo(()=>{const c={pendiente:0,respondido:0,bloqueado:0,todos:envios.length};envios.forEach(e=>{const s=getStatus(e);c[s]=(c[s]||0)+1;});return c;},[envios,respuestas]);
 
+  /* ── Styles ── */
   const inp={padding:"7px 10px",fontSize:11,border:"1px solid "+T.border,borderRadius:4,fontFamily:"'DM Sans',sans-serif",outline:"none",background:T.bg,color:T.ink,boxSizing:"border-box"};
+  const lblS={fontSize:9,fontWeight:600,color:T.inkLight,textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:4};
   const ths={padding:"6px 10px",fontSize:8,fontWeight:700,textTransform:"uppercase",letterSpacing:.5,color:T.inkMid,textAlign:"left",borderBottom:"1px solid "+T.border};
   const tds={padding:"7px 10px",fontSize:10,borderBottom:"1px solid "+T.border,color:T.ink};
 
@@ -143,7 +241,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
 
   return(
     <div>
-      {/* Search bar + Sub-tabs */}
+      {/* ── Header: Sub-tabs + Search ── */}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,gap:12,flexWrap:"wrap"}}>
         <div style={{display:"flex",gap:0}}>
           {[{id:"formularios",lbl:"Formularios ("+forms.length+")"},{id:"envios",lbl:"Enviados ("+envios.length+")"},{id:"respuestas",lbl:"Respuestas ("+respuestas.length+")"}].map((t,i,arr)=>(
@@ -164,8 +262,16 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
           ):forms.map(f=>(
             <Card key={f.id} style={{padding:"14px 18px",marginBottom:10}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <div><div style={{fontSize:13,fontWeight:700}}>{f.nombre}</div><div style={{fontSize:9,color:T.inkLight,marginTop:2}}>{f.campos?.length||0} campos · {f.modulo} · Creado: {f.createdAt||"—"}</div></div>
-                <Btn v="pri" on={()=>{setShareForm(f);setShareClient({nombre:"",email:"",tel:"",codTel:"+57"});setShareResult(null);setSubTab("enviar");}}><Send size={10}/> Enviar</Btn>
+                <div>
+                  <div style={{fontSize:13,fontWeight:700}}>{f.nombre}</div>
+                  <div style={{fontSize:9,color:T.inkLight,marginTop:2}}>{f.campos?.length||0} campos · {moduloLabel} · Creado: {f.createdAt||"—"}</div>
+                </div>
+                <Btn v="pri" on={()=>{
+                  const paisDefault=PAISES[0].nombre;
+                  setShareForm(f);setShareClient({nombre:"",email:"",tel:"",codTel:PAISES[0].cod});
+                  setSharePais(paisDefault);setShareLinkMaxUsos(0);setShareLinkExpiry("");
+                  setShareResult(null);setEmailSent(false);setSubTab("enviar");
+                }}><Send size={10}/> Enviar</Btn>
               </div>
             </Card>
           ))}
@@ -174,41 +280,118 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
 
       {/* ═══ ENVIAR ═══ */}
       {subTab==="enviar"&&shareForm&&(
-        <Card style={{padding:24}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
-            <h3 style={{fontSize:14,fontWeight:700,margin:0}}>Enviar: {shareForm.nombre}</h3>
-            <Btn on={()=>{setSubTab("formularios");setShareResult(null);}}>Volver</Btn>
+        <Card style={{padding:28}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+            <h3 style={{fontSize:16,fontWeight:700,margin:0}}>📤 Enviar formulario a cliente</h3>
+            <Btn on={()=>{setSubTab("formularios");setShareResult(null);}}>← Volver</Btn>
           </div>
+          <p style={{margin:"0 0 18px",fontSize:10,color:T.inkMid}}>{shareForm.nombre} · Se genera un enlace que el cliente abre en su navegador</p>
+
           {!shareResult?(
-            <div style={{display:"flex",flexDirection:"column",gap:14,maxWidth:420}}>
-              <div><label style={{fontSize:9,fontWeight:600,color:T.inkLight,textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:4}}>Nombre del destinatario *</label><input value={shareClient.nombre} onChange={e=>setShareClient({...shareClient,nombre:e.target.value})} style={{...inp,width:"100%"}} placeholder="Nombre completo"/></div>
-              <div><label style={{fontSize:9,fontWeight:600,color:T.inkLight,textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:4}}>Email *</label><input type="email" value={shareClient.email} onChange={e=>setShareClient({...shareClient,email:e.target.value})} style={{...inp,width:"100%"}} placeholder="email@ejemplo.com"/></div>
-              <div style={{display:"flex",gap:10}}>
-                <div style={{width:80}}><label style={{fontSize:9,fontWeight:600,color:T.inkLight,textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:4}}>Codigo</label><input value={shareClient.codTel} onChange={e=>setShareClient({...shareClient,codTel:e.target.value})} style={{...inp,width:"100%"}}/></div>
-                <div style={{flex:1}}><label style={{fontSize:9,fontWeight:600,color:T.inkLight,textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:4}}>Telefono</label><input value={shareClient.tel} onChange={e=>setShareClient({...shareClient,tel:e.target.value})} style={{...inp,width:"100%"}} placeholder="300 123 4567"/></div>
+            <div>
+              {/* 👤 Datos del cliente */}
+              <div style={{background:T.accent,borderRadius:6,padding:"14px 16px",marginBottom:14}}>
+                <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",marginBottom:10}}>👤 Datos del cliente</div>
+                <div style={{display:"flex",gap:10,marginBottom:8}}>
+                  <div style={{flex:1}}><label style={lblS}>Nombre *</label><input value={shareClient.nombre} onChange={e=>setShareClient({...shareClient,nombre:e.target.value})} placeholder="Juan Pérez" style={{...inp,width:"100%"}}/></div>
+                  <div style={{flex:1}}><label style={lblS}>Email</label><input type="email" value={shareClient.email} onChange={e=>setShareClient({...shareClient,email:e.target.value})} placeholder="juan@empresa.com" style={{...inp,width:"100%"}}/></div>
+                </div>
+                <div>
+                  <label style={lblS}>WhatsApp</label>
+                  <div style={{display:"flex",gap:0}}>
+                    <select value={shareClient.codTel} onChange={e=>setShareClient({...shareClient,codTel:e.target.value})}
+                      style={{...inp,width:80,flexShrink:0,borderRadius:"4px 0 0 4px",borderRight:"none",fontWeight:700}}>
+                      {PAISES.map(p=><option key={p.cod+p.nombre} value={p.cod}>{p.cod}</option>)}
+                    </select>
+                    <input value={shareClient.tel} onChange={e=>setShareClient({...shareClient,tel:e.target.value})} placeholder="3001234567" style={{...inp,flex:1,borderRadius:"0 4px 4px 0"}}/>
+                  </div>
+                </div>
               </div>
-              <div style={{display:"flex",gap:10}}>
-                <div style={{flex:1}}><label style={{fontSize:9,fontWeight:600,color:T.inkLight,textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:4}}>Max usos (0 = ilimitado)</label><input type="number" value={shareLinkMaxUsos} onChange={e=>setShareLinkMaxUsos(Number(e.target.value))} style={{...inp,width:"100%"}} min={0}/></div>
-                <div style={{flex:1}}><label style={{fontSize:9,fontWeight:600,color:T.inkLight,textTransform:"uppercase",letterSpacing:1,display:"block",marginBottom:4}}>Fecha caducidad</label><input type="date" value={shareLinkExpiry} onChange={e=>setShareLinkExpiry(e.target.value)} style={{...inp,width:"100%"}}/></div>
+
+              {/* 🌍 País del proyecto */}
+              <div style={{background:"#F5F0FF",borderRadius:6,padding:"14px 16px",marginBottom:14,border:"1px solid #11111122"}}>
+                <div style={{fontSize:8,fontWeight:700,color:T.ink,textTransform:"uppercase",marginBottom:8}}>🌍 País del proyecto</div>
+                <select value={sharePais} onChange={e=>{setSharePais(e.target.value);const p=PAISES.find(x=>x.nombre===e.target.value);if(p)setShareClient(c=>({...c,codTel:p.cod}));}}
+                  style={{...inp,width:"100%",marginBottom:6}}>
+                  {PAISES.map(p=><option key={p.nombre} value={p.nombre}>{p.nombre}</option>)}
+                </select>
+                <div style={{fontSize:8,color:T.ink,lineHeight:1.4}}>📌 Define la divisa, departamentos/comunidades, tipo de documento y código telefónico del formulario</div>
               </div>
-              <button onClick={handleSend} disabled={!shareClient.email||!shareClient.nombre||sending} style={{marginTop:4,padding:"10px 20px",fontSize:12,fontWeight:700,borderRadius:4,cursor:sending?"default":"pointer",border:"none",background:(!shareClient.email||!shareClient.nombre)?"#ccc":"#111",color:"#fff",fontFamily:"'DM Sans',sans-serif",opacity:sending?.6:1}}>{sending?"Enviando...":"Generar link de envio"}</button>
+
+              {/* 🔒 Control del enlace */}
+              <div style={{background:"#F5F0FF",borderRadius:6,padding:"14px 16px",marginBottom:18,border:"1px solid #11111122"}}>
+                <div style={{fontSize:8,fontWeight:700,color:T.ink,textTransform:"uppercase",marginBottom:8}}>🔒 Control del enlace</div>
+                <div style={{display:"flex",gap:10}}>
+                  <div style={{flex:1}}>
+                    <label style={lblS}>Máximo de envíos</label>
+                    <select value={shareLinkMaxUsos} onChange={e=>setShareLinkMaxUsos(parseInt(e.target.value))} style={{...inp,width:"100%"}}>
+                      <option value={0}>♾️ Ilimitado</option>
+                      <option value={1}>1 vez</option>
+                      <option value={2}>2 veces</option>
+                      <option value={3}>3 veces</option>
+                      <option value={5}>5 veces</option>
+                      <option value={10}>10 veces</option>
+                    </select>
+                  </div>
+                  <div style={{flex:1}}>
+                    <label style={lblS}>Fecha de caducidad</label>
+                    <input type="date" value={shareLinkExpiry} onChange={e=>setShareLinkExpiry(e.target.value)} min={today()} style={{...inp,width:"100%"}}/>
+                  </div>
+                </div>
+                <div style={{fontSize:8,color:T.ink,marginTop:6,lineHeight:1.4}}>
+                  {shareLinkMaxUsos>0?`⚡ El cliente podra enviar maximo ${shareLinkMaxUsos} ${shareLinkMaxUsos===1?"vez":"veces"}`:"♾️ Sin limite de envios"}
+                  {shareLinkExpiry?` · ⏰ Caduca el ${new Date(shareLinkExpiry+"T23:59:59").toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"})}`:" · Sin caducidad"}
+                </div>
+              </div>
+
+              {/* Generate button */}
+              <button onClick={handleSend} disabled={!shareClient.nombre||sending} style={{width:"100%",padding:"12px 20px",fontSize:13,fontWeight:700,borderRadius:5,cursor:sending||!shareClient.nombre?"default":"pointer",border:"none",background:!shareClient.nombre?"#ccc":"#111",color:"#fff",fontFamily:"'DM Sans',sans-serif",opacity:sending?.6:1,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                📄 {sending?"Generando...":"Generar formulario personalizado"}
+              </button>
             </div>
           ):(
             <div>
-              <div style={{background:T.greenBg,border:"1px solid "+T.green+"33",borderRadius:6,padding:16,marginBottom:14}}>
-                <p style={{fontSize:12,fontWeight:700,color:T.green,margin:0}}>✅ Link generado para {shareResult.client.nombre}</p>
+              {/* Success */}
+              <div style={{marginBottom:14,padding:"10px 12px",background:T.greenBg,borderRadius:6,border:"1px solid "+T.green+"33",fontSize:10,color:T.green,fontWeight:600}}>
+                ✅ Formulario listo para {shareResult.client.nombre||shareResult.client.email}
+                {shareResult.url&&<div style={{marginTop:4,fontSize:8,color:T.inkMid,fontWeight:400}}>🔗 Link publico generado — comparte por email, WhatsApp o copia el enlace</div>}
               </div>
-              {shareResult.url&&<div style={{display:"flex",gap:8,alignItems:"center",marginBottom:14}}>
-                <input value={shareResult.url} readOnly style={{...inp,flex:1,fontSize:10}}/>
-                <Btn on={()=>navigator.clipboard.writeText(shareResult.url)}><Copy size={10}/> Copiar</Btn>
-              </div>}
-              <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                {shareResult.url&&<>
-                  <Btn on={()=>window.open("mailto:"+shareResult.client.email+"?subject=Formulario - "+shareForm.nombre+"&body=Hola "+shareResult.client.nombre+",%0A%0APor favor completa este formulario:%0A"+shareResult.url+"%0A%0AGracias.","_blank")}><Mail size={10}/> Email</Btn>
-                  <Btn on={()=>window.open("https://wa.me/"+(shareResult.client.tel||"").replace(/[^0-9]/g,"")+"?text="+encodeURIComponent("Hola "+shareResult.client.nombre+", por favor completa este formulario:\n"+shareResult.url),"_blank")}>📱 WhatsApp</Btn>
-                </>}
-                <Btn on={()=>{setShareResult(null);setShareClient({nombre:"",email:"",tel:"",codTel:"+57"});}}>+ Enviar otro</Btn>
+
+              {/* Share actions */}
+              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+                <button onClick={downloadLink} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:"1px solid "+T.border,borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left"}}>
+                  <div style={{width:32,height:32,borderRadius:6,background:T.greenBg,display:"flex",alignItems:"center",justifyContent:"center"}}><Download size={14} color={T.green}/></div>
+                  <div><div style={{fontSize:11,fontWeight:700}}>⬇ Descargar formulario (.html)</div><div style={{fontSize:8,color:T.inkMid}}>Archivo que puedes adjuntar por WhatsApp o email</div></div>
+                </button>
+
+                <button onClick={shareWhatsApp} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:"1px solid "+T.border,borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left"}}>
+                  <div style={{width:32,height:32,borderRadius:6,background:"#E8F8E8",display:"flex",alignItems:"center",justifyContent:"center"}}><MessageCircle size={14} color="#25D366"/></div>
+                  <div><div style={{fontSize:11,fontWeight:700}}>Abrir WhatsApp</div><div style={{fontSize:8,color:T.inkMid}}>{shareResult.client.tel?"Mensaje al "+shareResult.client.tel:"Adjunta el archivo descargado"}</div></div>
+                </button>
+
+                <button onClick={shareEmail} disabled={emailSending||!shareResult.client.email} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:"1px solid "+(emailSent?T.green:T.border),borderRadius:6,background:emailSent?T.greenBg:"#fff",cursor:emailSending?"wait":"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left",opacity:emailSending||!shareResult.client.email?.6:1}}>
+                  <div style={{width:32,height:32,borderRadius:6,background:emailSent?T.greenBg:T.amberBg,display:"flex",alignItems:"center",justifyContent:"center"}}><Mail size={14} color={emailSent?T.green:T.amber}/></div>
+                  <div><div style={{fontSize:11,fontWeight:700}}>{emailSending?"Enviando...":emailSent?"✅ Email enviado con link":"📧 Enviar email con link"}</div><div style={{fontSize:8,color:T.inkMid}}>{emailSent?"Enviado a "+shareResult.client.email:shareResult.client.email?"El cliente recibe email con link al formulario":"Sin email — ingresa email del cliente"}</div></div>
+                </button>
+
+                {shareResult.url&&(
+                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                    <input value={shareResult.url} readOnly style={{...inp,flex:1,fontSize:10}}/>
+                    <Btn on={()=>{navigator.clipboard.writeText(shareResult.url);}}><Copy size={10}/> Copiar</Btn>
+                  </div>
+                )}
               </div>
+
+              {/* Flujo recomendado */}
+              <div style={{padding:"8px 10px",background:T.accent,borderRadius:4,fontSize:8,color:T.inkMid,lineHeight:1.5,marginBottom:14}}>
+                💡 <strong>Flujo recomendado:</strong><br/>
+                1️⃣ <strong>Email</strong> → el cliente recibe un link directo al formulario<br/>
+                2️⃣ <strong>WhatsApp</strong> → tambien incluye el link al formulario<br/>
+                3️⃣ <strong>Descargar</strong> → archivo .html de respaldo (funciona sin internet)
+              </div>
+
+              <Btn on={()=>{setShareResult(null);setShareClient({nombre:"",email:"",tel:"",codTel:PAISES.find(p=>p.nombre===sharePais)?.cod||"+57"});setEmailSent(false);}} style={{marginRight:8}}>+ Enviar a otro cliente</Btn>
+              <Btn on={()=>{setSubTab("formularios");setShareResult(null);}}>← Volver a formularios</Btn>
             </div>
           )}
         </Card>
@@ -285,7 +468,6 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
                     </tr>
                     {exp&&<tr><td colSpan={7} style={{padding:0,borderBottom:"2px solid "+T.blue+"33"}}>
                       <div style={{padding:"16px 18px",background:"#FAFAFE"}}>
-                        {/* Scoring card */}
                         {sc&&(()=>{
                           const colors={green:{bg:"#E8F4EE",border:"#111",text:"#111"},yellow:{bg:"#FAF0E0",border:"#8C6A00",text:"#8C6A00"},red:{bg:"#FAE8E8",border:"#B91C1C",text:"#B91C1C"}};
                           const col=colors[sc.level];
@@ -308,14 +490,12 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
                             </div>
                           );
                         })()}
-                        {/* Client card */}
                         {(r.clienteNombre||r.clienteEmail)&&(
                           <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",background:T.blueBg,borderRadius:6,border:"1px solid "+T.blue+"22",marginBottom:12}}>
                             <div style={{width:32,height:32,borderRadius:"50%",background:T.blue,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700}}>{(r.clienteNombre||r.clienteEmail||"?")[0].toUpperCase()}</div>
-                            <div><div style={{fontSize:11,fontWeight:700}}>{r.clienteNombre||"—"}</div><div style={{fontSize:9,color:T.blue}}>{r.clienteEmail||""} {r.clienteTel?" · "+r.clienteTel:""}</div></div>
+                            <div><div style={{fontSize:11,fontWeight:700}}>{r.clienteNombre||"—"}</div><div style={{fontSize:9,color:T.blue}}>{r.clienteEmail||""}{r.clienteTel?" · "+r.clienteTel:""}</div></div>
                           </div>
                         )}
-                        {/* All fields */}
                         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
                           {Object.entries(r).filter(([k])=>!["_sbId","id","processed","link_id","formularioId","formularioNombre","fecha","hora","linkId","clienteNombre","clienteEmail","clienteTel"].includes(k)&&!k.startsWith("_")).map(([k,v])=>(
                             <div key={k} style={{padding:"4px 8px",background:"#fff",borderRadius:4,border:"1px solid "+T.border}}>
@@ -324,7 +504,6 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
                             </div>
                           ))}
                         </div>
-                        {/* Action buttons */}
                         <div style={{marginTop:12,display:"flex",gap:6}}>
                           {!proc&&<Btn v="pri" on={()=>handleProcesar(r)}>⚡ Procesar a {moduloLabel}</Btn>}
                           {proc&&<Badge color={T.green} bg={T.greenBg}>✅ Ya procesado</Badge>}
