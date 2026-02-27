@@ -110,7 +110,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
   useEffect(()=>{loadData();},[forms]);
 
   const loadData=async()=>{
-    if(!SB.isConfigured()){setLoading(false);return;}
+    
     setLoading(true);
     try{
       const fids=forms.map(f=>f.id);
@@ -162,7 +162,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
       if(error)throw error;
       const publicUrl=appUrl?appUrl+"/form/"+linkId:"";
       setShareResult({linkId,url:publicUrl,client});
-      SB.registerEvent(shareForm.id,linkId,"send",{client_name:client.nombre}).catch(()=>{});
+      SB.registerOpen(shareForm.id,shareForm.nombre,linkId,client.nombre,client.email).catch(()=>{});
       setTimeout(loadData,500);
     }catch(e){alert("Error generando formulario: "+e.message);}
     setSending(false);
