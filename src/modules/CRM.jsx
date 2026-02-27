@@ -2237,68 +2237,55 @@ const NAV = [
   { id: "formularios",  lbl: "Formularios",     en: "Forms",          I: FileText },
 ];
 
-function Sidebar({ view, sv, lang, setLang, open, toggle }) {
+function TopBar({ view, sv, lang, setLang }) {
   return (
-    <>
-      {/* Toggle button — always visible */}
-      <button onClick={toggle} className="no-print" style={{
-        position:"fixed", top:10, left:open?208:10, zIndex:1002, width:28, height:28,
-        background:open?"rgba(255,255,255,0.1)":"#111", color:open?"rgba(255,255,255,0.5)":"#fff",
-        border:"none", borderRadius:4, cursor:"pointer", fontSize:14, display:"flex",
-        alignItems:"center", justifyContent:"center", transition:"left .2s ease",
-      }}>
-        {open ? "◀" : "▶"}
-      </button>
-      {/* Sidebar panel */}
-      <div className="no-print" style={{
-        width:200, background:C.sidebar, height:"100vh", position:"fixed", left:open?0:-200, top:0,
-        display:"flex", flexDirection:"column", transition:"left .2s ease", zIndex:1001,
-      }}>
-      {/* Logo */}
-      <div style={{ padding: "22px 18px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <LogoMark size={32} color="#fff" />
-          <div>
-            <div style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 14, letterSpacing: 4, color: "#fff", textTransform: "uppercase" }}>HABITARIS</div>
-            <div style={{ fontSize: 9, letterSpacing: 2, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", fontWeight: 400 }}>{lang==="en"?"CRM · Offers":"CRM · Ofertas"}</div>
-          </div>
+    <div className="no-print" style={{
+      background: C.sidebar, padding: "0 28px", display: "flex", alignItems: "center",
+      gap: 0, position: "sticky", top: 0, zIndex: 1001, height: 52,
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginRight: 32 }}>
+        <LogoMark size={26} color="#fff" />
+        <div>
+          <div style={{ fontFamily: "'DM Sans', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: 4, color: "#fff", textTransform: "uppercase" }}>HABITARIS</div>
+          <div style={{ fontSize: 7, letterSpacing: 2, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", fontWeight: 400 }}>{lang==="en"?"CRM · Offers":"CRM · Ofertas"}</div>
         </div>
       </div>
-      {/* Nav */}
-      <nav style={{ padding: "12px 8px", flex: 1 }}>
+      <nav style={{ display: "flex", gap: 0, flex: 1 }}>
         {NAV.map(it => {
           const act = view === it.id || (view.startsWith("offer-") && it.id === "offers");
           return (
             <button key={it.id} onClick={() => sv(it.id)} style={{
-              display: "flex", alignItems: "center", gap: 10, width: "100%",
-              padding: "10px 12px", borderRadius: 2, border: "none", cursor: "pointer",
-              background: act ? C.sidebarAct : "transparent",
+              display: "flex", alignItems: "center", gap: 7, padding: "0 18px", height: 52,
+              border: "none", cursor: "pointer", background: "transparent",
               color: act ? "#fff" : "rgba(255,255,255,0.35)",
-              fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: act ? 600 : 400,
-              letterSpacing: 1.2, textTransform: "uppercase", marginBottom: 1,
+              fontFamily: "'DM Sans', sans-serif", fontSize: 11, fontWeight: act ? 700 : 400,
+              letterSpacing: 1.2, textTransform: "uppercase",
+              borderBottom: act ? "2px solid #fff" : "2px solid transparent",
               transition: "all .15s",
-              borderLeft: act ? "2px solid rgba(255,255,255,0.6)" : "2px solid transparent",
             }}>
               <it.I size={13} />{lang==="en" && it.en ? it.en : it.lbl}
             </button>
           );
         })}
       </nav>
-      <div style={{ padding: "14px 18px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-        <div style={{ display:"flex", gap:0, marginBottom:8 }}>
-          {[["es","🇪🇸 ES"],["en","🇬🇧 EN"]].map(([code,lbl])=>(
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ display:"flex", gap:0 }}>
+          {[["es","🇪🇸 Español"],["en","🇬🇧 English"]].map(([code,lbl])=>(
             <button key={code} onClick={()=>setLang(code)}
-              style={{ flex:1, padding:"5px 0", fontSize:10, fontWeight:600, cursor:"pointer",
+              style={{ padding:"5px 10px", fontSize:9, fontWeight:600, cursor:"pointer",
                 border:"1px solid rgba(255,255,255,0.15)", fontFamily:"'DM Sans',sans-serif",
                 borderRadius:code==="es"?"4px 0 0 4px":"0 4px 4px 0",
                 background:lang===code?"#fff":"transparent",
                 color:lang===code?"#111":"rgba(255,255,255,0.4)" }}>{lbl}</button>
           ))}
         </div>
-        <p style={{ fontSize: 9, color: "rgba(255,255,255,0.15)", margin: 0, letterSpacing: 1, textTransform: "uppercase" }}>v3.0 · Fase 2 · 2025</p>
+        <button onClick={() => { if(window.confirm("¿Salir del CRM?")) window.location.hash=""; }} style={{
+          background:"rgba(255,255,255,0.08)", border:"none", color:"rgba(255,255,255,0.5)",
+          padding:"5px 10px", borderRadius:3, cursor:"pointer", fontSize:9, fontWeight:600,
+          fontFamily:"'DM Sans',sans-serif", letterSpacing:0.5
+        }}>🔒 Salir</button>
       </div>
     </div>
-    </>
   );
 }
 
@@ -2343,6 +2330,31 @@ function Dashboard({ offers, sv, sei, lang }) {
             </div>
           );
         })}
+      </div>
+
+      {/* Navigation cards */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 22, flexWrap: "wrap" }}>
+        <div onClick={() => sv("offers")} style={{ flex: "1 1 200px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: "16px 20px", cursor: "pointer", transition: "box-shadow .15s", display: "flex", alignItems: "center", gap: 14 }}
+          onMouseEnter={e => e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)"}
+          onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}>
+          <div style={{ width: 40, height: 40, borderRadius: 8, background: C.accentBg, display: "flex", alignItems: "center", justifyContent: "center" }}><FileText size={18} color={C.ink} /></div>
+          <div><div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{lang==="en"?"Offers":"Ofertas"}</div><div style={{ fontSize: 10, color: C.inkLight }}>{offers.length} total · {st.act.length} {lang==="en"?"active":"activas"}</div></div>
+          <ChevronRight size={16} color={C.inkLight} style={{ marginLeft: "auto" }} />
+        </div>
+        <div onClick={() => sv("clientes")} style={{ flex: "1 1 200px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: "16px 20px", cursor: "pointer", transition: "box-shadow .15s", display: "flex", alignItems: "center", gap: 14 }}
+          onMouseEnter={e => e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)"}
+          onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}>
+          <div style={{ width: 40, height: 40, borderRadius: 8, background: "#EFF6FF", display: "flex", alignItems: "center", justifyContent: "center" }}><User size={18} color="#2563EB" /></div>
+          <div><div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{lang==="en"?"Clients":"Clientes"}</div><div style={{ fontSize: 10, color: C.inkLight }}>{lang==="en"?"Client database":"Base de datos de clientes"}</div></div>
+          <ChevronRight size={16} color={C.inkLight} style={{ marginLeft: "auto" }} />
+        </div>
+        <div onClick={() => sv("formularios")} style={{ flex: "1 1 200px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 6, padding: "16px 20px", cursor: "pointer", transition: "box-shadow .15s", display: "flex", alignItems: "center", gap: 14 }}
+          onMouseEnter={e => e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)"}
+          onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}>
+          <div style={{ width: 40, height: 40, borderRadius: 8, background: "#F5F0FF", display: "flex", alignItems: "center", justifyContent: "center" }}><FileText size={18} color="#7C3AED" /></div>
+          <div><div style={{ fontSize: 14, fontWeight: 700, color: C.ink }}>{lang==="en"?"Forms":"Formularios"}</div><div style={{ fontSize: 10, color: C.inkLight }}>{lang==="en"?"Send and manage forms":"Enviar y gestionar formularios"}</div></div>
+          <ChevronRight size={16} color={C.inkLight} style={{ marginLeft: "auto" }} />
+        </div>
       </div>
 
       <Card style={{ padding: 0, overflow: "hidden" }}>
@@ -11217,7 +11229,6 @@ export default function CRMModule({ lang: langProp }) {
   // Sync with parent prop changes
   useEffect(() => { if (langProp) setLang(langProp); }, [langProp]);
   const [view, setView]   = useState("dashboard");
-  const [sideOpen, setSideOpen] = useState(false);
   const [offers, setOffers] = useState([]);
   const [editId, setEditId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -11285,9 +11296,9 @@ export default function CRMModule({ lang: langProp }) {
   return (
     <>
       <FontLink />
-      <div style={{ display: "flex", minHeight: "100vh", background: C.bg, minWidth: 0 }}>
-        <Sidebar view={view} sv={setView} lang={lang} setLang={setLang} open={sideOpen} toggle={()=>setSideOpen(!sideOpen)} />
-        <main style={{ marginLeft: sideOpen?200:0, flex: 1, padding: "32px 36px", maxWidth: sideOpen?"calc(100vw - 200px)":"100vw", overflowX: "auto", transition:"margin-left .2s ease, max-width .2s ease" }}>
+      <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh", background: C.bg, minWidth: 0 }}>
+        <TopBar view={view} sv={setView} lang={lang} setLang={setLang} />
+        <main style={{ flex: 1, padding: "32px 36px", maxWidth: "100vw", overflowX: "auto" }}>
           {view === "dashboard"                              && <Dashboard offers={offers} sv={setView} sei={setEditId} lang={lang} />}
           {view === "offers"                                 && <Lista offers={offers} sv={setView} sei={setEditId} onDel={delOffer} onDup={dupOffer} />}
           {(view === "offer-new" || view === "offer-edit")  && <Form lang={lang} offers={offers} editId={view === "offer-edit" ? editId : null} prefillData={view === "offer-new" ? prefill : null} onSave={async o => { setPrefill(null); await saveOffer(o); }} onBack={() => { setPrefill(null); setView("offers"); }} />}
