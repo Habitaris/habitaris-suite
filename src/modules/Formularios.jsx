@@ -1965,7 +1965,7 @@ function TabEstadisticas({ forms }) {
 function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
   const [filtro, setFiltro] = useState("pendiente");
   const [sortDesc, setSortDesc] = useState(true);
-  const getStatus = (e) => e.blocked ? "bloqueado" : respuestas.some(r=>(r.link_id||r.linkId)===e.linkId) ? "respondido" : "pendiente";
+  const getStatus = (e) => { if (e.blocked) return "bloqueado"; return respuestas.some(r => (r.link_id||r.linkId)===e.linkId || (r.clienteEmail && r.clienteEmail===e.cliente?.email)) ? "respondido" : "pendiente"; };
   const counts = { todos:envios.length, pendiente:0, respondido:0, bloqueado:0 };
   envios.forEach(e => { counts[getStatus(e)]++; });
   const filtered = (filtro==="todos" ? envios : envios.filter(e => getStatus(e)===filtro))
@@ -2280,6 +2280,7 @@ export default function Formularios() {
               fecha: respData.fecha || (r.created_at ? r.created_at.split("T")[0] : ""),
               created_at: r.created_at || null,
               processed: r.processed || false,
+              link_id: r.link_id || respData.link_id || respData.linkId || null,
             };
             if (!seen.has(merged.id)) { seen.add(merged.id); arr.push(merged); }
           });
