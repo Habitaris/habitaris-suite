@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 
+import FormulariosDelModulo from "./form/FormulariosDelModulo.jsx";
 /* ─── CLOUD STORE (Supabase multi-tenant) ──────────────────── */
 import { store } from "../core/store.js";
 
@@ -2233,6 +2234,7 @@ const NAV = [
   { id: "dashboard",    lbl: "Dashboard",      en: "Dashboard",      I: LayoutDashboard },
   { id: "offers",       lbl: "Ofertas",         en: "Offers",         I: FileText },
   { id: "clientes",     lbl: "Clientes",        en: "Clients",        I: User },
+  { id: "formularios",  lbl: "Formularios",     en: "Forms",          I: FileText },
 ];
 
 function Sidebar({ view, sv, lang, setLang, open, toggle }) {
@@ -11289,7 +11291,7 @@ export default function CRMModule({ lang: langProp }) {
           {view === "dashboard"                              && <Dashboard offers={offers} sv={setView} sei={setEditId} lang={lang} />}
           {view === "offers"                                 && <Lista offers={offers} sv={setView} sei={setEditId} onDel={delOffer} onDup={dupOffer} />}
           {(view === "offer-new" || view === "offer-edit")  && <Form lang={lang} offers={offers} editId={view === "offer-edit" ? editId : null} prefillData={view === "offer-new" ? prefill : null} onSave={async o => { setPrefill(null); await saveOffer(o); }} onBack={() => { setPrefill(null); setView("offers"); }} />}
-          {view === "formularios"                            && <Formularios sv={setView} onCreateOfferFromBriefing={createOfferFromBriefing} onCreateClientFromBriefing={createClientFromBriefing} />}
+          {view === "formularios"                            && <FormulariosDelModulo modulo="crm" moduloLabel="CRM / Ofertas" />}
           {view === "clientes"                              && <TabClientesCRM />}
           {view === "proveedores"                           && <TabProveedores />}
           {view === "encuestas"                             && <TabEncuestas offers={offers} />}
