@@ -426,3 +426,24 @@ export async function getAllStats() {
 export function isConfigured() {
   return getSupaConfig() !== null;
 }
+
+/* ── DELETE helper ── */
+async function remove(table, match) {
+  const c = getSupaConfig();
+  if (!c) return null;
+  try {
+    const res = await fetch(`${c.url}/rest/v1/${table}?${match}`, {
+      method: "DELETE",
+      headers: { ...headers(c.key), "Prefer": "return=minimal" },
+    });
+    return res.ok;
+  } catch { return false; }
+}
+
+export async function deleteResponse(id) {
+  return remove("form_responses", `id=eq.${id}`);
+}
+
+export async function deleteAllResponses() {
+  return remove("form_responses", "id=not.is.null");
+}

@@ -1094,7 +1094,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
   const [filtroEstado, setFiltroEstado] = useState("pendiente");
   const [sortDesc, setSortDesc] = useState(true);
 
-  useEffect(() => { Promise.resolve(false).then(setBioAvailable); }, []);
+  useEffect(() => { // bio auth removed; }, []);
 
   const toggleSel = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
   const toggleAll = (ids) => setSelectedIds(prev => prev.size===ids.length ? new Set() : new Set(ids));
@@ -1126,14 +1126,14 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
     const next = [...procesados, id];
     setProcesados(next);
     store.set("hab:form:procesados", JSON.stringify(next));
-    // SB disabled;
+    if (sbId) SB.markProcessed(sbId).catch(e => console.warn("markProcessed SB:", e));
   };
 
   const markPendiente = (id, sbId) => {
     const next = procesados.filter(x=>x!==id);
     setProcesados(next);
     store.set("hab:form:procesados", JSON.stringify(next));
-    // SB disabled;
+    if (sbId) SB.markUnprocessed(sbId).catch(e => console.warn("markUnprocessed SB:", e));
   };
 
   const isProcesado = (r) => r.processed || procesados.includes(r.id);
@@ -2288,7 +2288,7 @@ export default function Formularios() {
     }
     // 2. Also check cloud store (migrated from cloud store)
     const __cloudResp = store.listSync("hab:form:resp:").items;
-    __cloudResp.forEach(__cr => { try { const r = JSON.parse(__cr.value); if(r) all.push(r); } catch {} });
+    __cloudResp.forEach(__cr => { try { const r = JSON.parse(__cr.value); if(r) arr.push(r); } catch {} });
     setRespuestas(arr);
     setRespLoading(false);
   };
@@ -2296,8 +2296,8 @@ export default function Formularios() {
 
   const deleteResponse = async (r) => {
     // Remove from Supabase
-    if (r._sbId && false) {
-      try {} catch {}
+    if (r._sbId) {
+      try { await SB.deleteResponse(r._sbId); } catch(e) { console.warn("delete SB error:", e); }
     }
     // Remove from cloud store
     const __bDel = store.listSync("hab:briefing:").items;
@@ -2307,7 +2307,7 @@ export default function Formularios() {
   const clearAllResponses = async () => {
     // Remove all from Supabase
     if (SB.isConfigured()) {
-      try {} catch {}
+      try { await SB.deleteAllResponses(); } catch(e) { console.warn("clearAll SB error:", e); }
     }
     // Remove all from cloud store
     const __bPurge = store.listSync("hab:briefing:").items;
