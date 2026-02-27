@@ -29,7 +29,7 @@ const DEFAULT_CONFIG = {
   },
   whatsapp: {
     numero: "573505661545",
-    mensajePlantilla: "Hola {{nombre}},\n\n📋 *{{formulario}}*\n\nTe adjunto el formulario para que lo completes. Ábrelo en tu navegador.\n\nGracias.\n\n— {{empresa}}",
+    mensajePlantilla: "Hola {{nombre}} 👋\n\nSoy de *{{empresa}}*. Estamos emocionados de trabajar contigo.\n\nPara conocer mejor tu proyecto, necesitamos que completes un breve formulario:\n\n📋 *{{formulario}}*\n\nEs rápido y sencillo. Si tienes alguna duda, no dudes en escribirnos.\n\n¡Gracias por confiar en nosotros!\n— {{empresa}}",
   },
   legal: {
     avisoPrivacidad: "En {{razonSocial}} (NIT {{nit}}, domicilio {{domicilio}}, email: {{email}}, tel: {{telefono}}), tratamos tus datos personales para procesar tu solicitud de briefing, enviar cotizaciones y gestionar proyectos. Cumplimos con la Ley 1581/2012 y Régimen de Protección de Datos. Derechos (acceso, rectificación, supresión, revocación): vía {{email}}.",
@@ -148,7 +148,7 @@ const FIELDS = {
     { key:"emailjs_publicKey", label:"EmailJS Public Key",          placeholder:"xxxxxxxxxxxxxxxxx" },
   ],
   app: [
-    { key:"url", label:"URL de la app (Vercel)", placeholder:"https://habitaris-suite.vercel.app" },
+    { key:"url", label:"URL de la app", placeholder:"https://suite.habitaris.co" },
   ],
   whatsapp: [
     { key:"numero",           label:"Número WhatsApp (con código país)", placeholder:"573505661545" },

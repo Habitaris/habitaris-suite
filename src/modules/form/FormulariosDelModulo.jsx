@@ -355,7 +355,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
                 {shareResult.url&&(
                   <button onClick={()=>{navigator.clipboard.writeText(shareResult.url);alert("\u2705 Link copiado al portapapeles");}} style={{display:"flex",alignItems:"center",gap:10,padding:"14px 18px",border:"none",borderRadius:6,background:"#111",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left",color:"#fff"}}>
                     <div style={{width:36,height:36,borderRadius:8,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><Copy size={16} color="#fff"/></div>
-                    <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700}}>\ud83d\udccb Copiar link del formulario</div><div style={{fontSize:9,color:"rgba(255,255,255,0.5)",marginTop:2}}>{shareResult.url}</div></div>
+                    <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700}}>📋 Copiar link del formulario</div><div style={{fontSize:9,color:"rgba(255,255,255,0.5)",marginTop:2}}>{shareResult.url}</div></div>
                   </button>
                 )}
 
