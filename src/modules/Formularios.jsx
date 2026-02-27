@@ -1965,7 +1965,7 @@ function TabEstadisticas({ forms }) {
 function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
   const [filtro, setFiltro] = useState("pendiente");
   const [sortDesc, setSortDesc] = useState(true);
-  const getStatus = (e) => { if (e.blocked) return "bloqueado"; return respuestas.some(r => (r.link_id||r.linkId)===e.linkId || (r.clienteEmail && r.clienteEmail===e.cliente?.email)) ? "respondido" : "pendiente"; };
+  const getStatus = (e) => { if (e.blocked) return "bloqueado"; return respuestas.some(r => (r.link_id||r.linkId)===e.linkId || (!r.link_id && !r.linkId && r.clienteEmail && r.clienteEmail===e.cliente?.email)) ? "respondido" : "pendiente"; };
   const counts = { todos:envios.length, pendiente:0, respondido:0, bloqueado:0 };
   envios.forEach(e => { counts[getStatus(e)]++; });
   const filtered = (filtro==="todos" ? envios : envios.filter(e => getStatus(e)===filtro))
