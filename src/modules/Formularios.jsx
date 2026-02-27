@@ -1094,7 +1094,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
   const [filtroEstado, setFiltroEstado] = useState("pendiente");
   const [sortDesc, setSortDesc] = useState(true);
 
-  useEffect(() => { // bio auth removed; }, []);
+  useEffect(() => { /* bio auth removed */ }, []);
 
   const toggleSel = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
   const toggleAll = (ids) => setSelectedIds(prev => prev.size===ids.length ? new Set() : new Set(ids));
