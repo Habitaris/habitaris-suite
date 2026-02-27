@@ -29,7 +29,7 @@ export default function FormulariosDelModulo({ modulo, moduloLabel }) {
   const [expandedId, setExpandedId] = useState(null);
 
   useEffect(() => {
-    try { const raw = store.getSync("hab:form:forms"); if(raw) { const all = JSON.parse(raw)||[]; setForms(all.filter(f=>f.modulo===modulo)); } } catch{}
+    try { const raw = store.getSync("habitaris_formularios"); if(raw) { const obj = JSON.parse(raw)||{}; const all = obj.forms||[]; setForms(all.filter(f=>f.modulo===modulo)); } } catch{}
     try { const raw = store.getSync("hab:form:procesados"); if(raw) setProcesados(JSON.parse(raw)||[]); } catch{}
   }, [modulo]);
 
@@ -56,7 +56,7 @@ export default function FormulariosDelModulo({ modulo, moduloLabel }) {
 
   const handleProcesar = async (r) => {
     try {
-      let allForms=[]; try{const raw=store.getSync("hab:form:forms");if(raw)allForms=JSON.parse(raw)||[];}catch{}
+      let allForms=[]; try{const raw=store.getSync("habitaris_formularios");if(raw){const obj=JSON.parse(raw)||{};allForms=obj.forms||[];}}catch{}
       const result = await routeProcesar(r, allForms, markProcesado);
       if(result?.ok) alert(result.msg); else alert("Error procesando respuesta");
     } catch(err){alert("Error: "+err.message);}
