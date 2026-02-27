@@ -69,8 +69,8 @@ export function getConfig() {
     // Ensure supabase credentials always have fallback
     if (!merged.supabase?.url) merged.supabase = { ...merged.supabase, url: DEFAULT_CONFIG.supabase.url };
     if (!merged.supabase?.anonKey) merged.supabase = { ...merged.supabase, anonKey: DEFAULT_CONFIG.supabase.anonKey };
-    // Auto-update cloud store with merged config (picks up new default fields)
-    store.set(STORAGE_KEY, JSON.stringify(merged));
+
+
     return merged;
   } catch { return DEFAULT_CONFIG; }
 }
