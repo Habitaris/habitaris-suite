@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { store } from "../core/store.js";
+import { procesarRespuesta as routeProcesar } from "./form/FormProcessor.js";
 
 import * as SB from "./supabase.js";
 import { sb } from "../core/supabase.js";
@@ -1138,8 +1139,18 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
 
   const isProcesado = (r) => r.processed || procesados.includes(r.id);
 
-  /* Procesar: crear cliente + borrador oferta en CRM — CLOUD */
+  /* Procesar: router por modulo */
   const procesarRespuesta = async (r) => {
+    try {
+      const result = await routeProcesar(r, forms, markProcesado);
+      if (result?.ok) alert(result.msg);
+      else alert("Error procesando respuesta");
+    } catch(err) {
+      console.error("procesarRespuesta error:", err);
+      alert("Error procesando respuesta: " + err.message);
+    }
+  };
+  const _procesarRespuesta_OLD = async (r) => {
     try {
       // 1. Leer clientes desde cloud
       let clientes = [];
