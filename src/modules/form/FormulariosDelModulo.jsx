@@ -116,9 +116,9 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
       const fids=forms.map(f=>f.id);
       if(fids.length>0){
         const{data:rd}=await sb.from("form_responses").select("*").in("form_id",fids).order("created_at",{ascending:false});
-        if(rd)setRespuestas(rd.map(r=>({...((r.data&&typeof r.data==="object")?r.data:{}),_sbId:r.id,id:r.data?.id||r.id,formularioId:r.form_id,formularioNombre:r.form_name||"",fecha:r.created_at?.split("T")[0]||"",hora:r.created_at?.split("T")[1]?.slice(0,5)||"",processed:r.processed||false,link_id:r.link_id||r.data?.linkId||null})));
+        if(rd)setRespuestas(rd.map(r=>({...((r.data&&typeof r.data==="object")?r.data:{}),_sbId:r.id,id:r.data?.id||r.id,formularioId:r.form_id,formularioNombre:r.form_name||"",fecha:r.created_at?new Date(r.created_at).toLocaleDateString("es-CO",{year:"numeric",month:"2-digit",day:"2-digit"}):"",hora:r.created_at?new Date(r.created_at).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}):"",processed:r.processed||false,link_id:r.link_id||r.data?.linkId||null})));
         const{data:ld}=await sb.from("form_links").select("*").in("form_id",fids).order("created_at",{ascending:false});
-        if(ld)setEnvios(ld.map(l=>({id:l.link_id,linkId:l.link_id,formId:l.form_id,formNombre:l.form_name||"",cliente:{nombre:l.client_name,email:l.client_email,tel:l.client_tel},fecha:l.created_at?.split("T")[0]||"",hora:l.created_at?.split("T")[1]?.slice(0,5)||"",maxUsos:l.max_uses,currentUsos:l.current_uses,blocked:!l.active,expiresAt:l.expires_at})));
+        if(ld)setEnvios(ld.map(l=>({id:l.link_id,linkId:l.link_id,formId:l.form_id,formNombre:l.form_name||"",cliente:{nombre:l.client_name,email:l.client_email,tel:l.client_tel},fecha:l.created_at?new Date(l.created_at).toLocaleDateString("es-CO",{year:"numeric",month:"2-digit",day:"2-digit"}):"",hora:l.created_at?new Date(l.created_at).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}):"",maxUsos:l.max_uses,currentUsos:l.current_uses,blocked:!l.active,expiresAt:l.expires_at})));
       }
     }catch(e){console.warn("FormulariosDelModulo load:",e);}
     setLoading(false);
@@ -207,7 +207,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
   };
 
   /* ── Status helpers ── */
-  const getStatus=(e)=>{if(e.blocked)return"bloqueado";return respuestas.some(r=>(r.link_id||r.linkId)===e.linkId||(!r.link_id&&!r.linkId&&r.clienteEmail&&r.clienteEmail===e.cliente?.email))?"respondido":"pendiente";};
+  const getStatus=(e)=>{if(e.blocked)return"bloqueado";return respuestas.some(r=>(r.link_id||r.linkId)===e.linkId)?"respondido":"pendiente";};
 
   /* ── Filtering ── */
   const q=search.toLowerCase();
