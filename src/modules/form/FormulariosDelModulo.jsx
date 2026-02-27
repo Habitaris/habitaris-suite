@@ -4,7 +4,7 @@ import { sb } from "../../core/supabase.js";
 import * as SB from "../supabase.js";
 import { procesarRespuesta as routeProcesar } from "./FormProcessor.js";
 import { getConfig } from "../Configuracion.jsx";
-import { Send, ChevronDown, ChevronUp, Copy, Mail, Search, RefreshCw, FileText, MessageCircle, Download } from "lucide-react";
+import { Send, ChevronDown, ChevronUp, Copy, Mail, Search, RefreshCw, FileText, MessageCircle } from "lucide-react";
 
 const T={ink:"#111",inkMid:"#555",inkLight:"#999",blue:"#2563EB",blueBg:"#EFF6FF",green:"#16a34a",greenBg:"#ECFDF5",red:"#DC2626",redBg:"#FEF2F2",amber:"#D97706",amberBg:"#FFFBEB",border:"#E8E8E8",bg:"#FAFAFA",surface:"#fff",accent:"#F5F4F1"};
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36);
@@ -196,15 +196,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
     else{alert("Error al enviar email. Revisa Configuracion → Correo / EmailJS.");}
   };
 
-  const downloadLink=()=>{
-    if(!shareResult?.url)return;
-    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=${shareResult.url}"><title>Formulario - ${shareForm?.nombre||""}</title></head><body style="font-family:sans-serif;text-align:center;padding:40px"><h2>Redirigiendo al formulario...</h2><p><a href="${shareResult.url}">Click aqui si no redirige automaticamente</a></p></body></html>`;
-    const blob=new Blob([html],{type:"text/html"});
-    const a=document.createElement("a");
-    a.href=URL.createObjectURL(blob);
-    a.download="formulario-"+(shareForm?.nombre||"form").replace(/\s+/g,"-").toLowerCase()+"-"+(shareResult.client.nombre||"cliente").replace(/\s+/g,"-").toLowerCase()+".html";
-    a.click();
-  };
+
 
   /* ── Status helpers ── */
   const getStatus=(e)=>{if(e.blocked)return"bloqueado";if(e.expiresAt&&new Date(e.expiresAt)<new Date())return"caducado";if(e.maxUsos>0&&e.currentUsos>=e.maxUsos)return"bloqueado";return respuestas.some(r=>(r.link_id||r.linkId)===e.linkId)?"respondido":"pendiente";};
@@ -360,35 +352,30 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
 
               {/* Share actions */}
               <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
-                <button onClick={downloadLink} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:"1px solid "+T.border,borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left"}}>
-                  <div style={{width:32,height:32,borderRadius:6,background:T.greenBg,display:"flex",alignItems:"center",justifyContent:"center"}}><Download size={14} color={T.green}/></div>
-                  <div><div style={{fontSize:11,fontWeight:700}}>⬇ Descargar formulario (.html)</div><div style={{fontSize:8,color:T.inkMid}}>Archivo que puedes adjuntar por WhatsApp o email</div></div>
-                </button>
-
-                <button onClick={shareWhatsApp} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:"1px solid "+T.border,borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left"}}>
-                  <div style={{width:32,height:32,borderRadius:6,background:"#E8F8E8",display:"flex",alignItems:"center",justifyContent:"center"}}><MessageCircle size={14} color="#25D366"/></div>
-                  <div><div style={{fontSize:11,fontWeight:700}}>Abrir WhatsApp</div><div style={{fontSize:8,color:T.inkMid}}>{shareResult.client.tel?"Mensaje al "+shareResult.client.tel:"Adjunta el archivo descargado"}</div></div>
-                </button>
-
-                <button onClick={shareEmail} disabled={emailSending||!shareResult.client.email} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:"1px solid "+(emailSent?T.green:T.border),borderRadius:6,background:emailSent?T.greenBg:"#fff",cursor:emailSending?"wait":"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left",opacity:(emailSending||!shareResult.client.email)?.6:1}}>
-                  <div style={{width:32,height:32,borderRadius:6,background:emailSent?T.greenBg:T.amberBg,display:"flex",alignItems:"center",justifyContent:"center"}}><Mail size={14} color={emailSent?T.green:T.amber}/></div>
-                  <div><div style={{fontSize:11,fontWeight:700}}>{emailSending?"Enviando...":emailSent?"✅ Email enviado con link":"📧 Enviar email con link"}</div><div style={{fontSize:8,color:T.inkMid}}>{emailSent?"Enviado a "+shareResult.client.email:shareResult.client.email?"El cliente recibe email con link al formulario":"Sin email — ingresa email del cliente"}</div></div>
-                </button>
-
                 {shareResult.url&&(
-                  <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                    <input value={shareResult.url} readOnly style={{...inp,flex:1,fontSize:10}}/>
-                    <Btn on={()=>{navigator.clipboard.writeText(shareResult.url);}}><Copy size={10}/> Copiar</Btn>
-                  </div>
+                  <button onClick={()=>{navigator.clipboard.writeText(shareResult.url);alert("\u2705 Link copiado al portapapeles");}} style={{display:"flex",alignItems:"center",gap:10,padding:"14px 18px",border:"none",borderRadius:6,background:"#111",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left",color:"#fff"}}>
+                    <div style={{width:36,height:36,borderRadius:8,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><Copy size={16} color="#fff"/></div>
+                    <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700}}>\ud83d\udccb Copiar link del formulario</div><div style={{fontSize:9,color:"rgba(255,255,255,0.5)",marginTop:2}}>{shareResult.url}</div></div>
+                  </button>
                 )}
+
+                <button onClick={shareWhatsApp} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",border:"2px solid #25D366",borderRadius:6,background:"#F0FFF0",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left"}}>
+                  <div style={{width:32,height:32,borderRadius:6,background:"#25D366",display:"flex",alignItems:"center",justifyContent:"center"}}><MessageCircle size={14} color="#fff"/></div>
+                  <div><div style={{fontSize:12,fontWeight:700,color:"#111"}}>Enviar por WhatsApp</div><div style={{fontSize:9,color:T.inkMid}}>{shareResult.client.tel?"Mensaje directo al "+shareResult.client.tel:"Se abre WhatsApp con el link incluido"}</div></div>
+                </button>
+
+                <button onClick={shareEmail} disabled={emailSending||!shareResult.client.email} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:"1px solid "+T.border,borderRadius:6,background:emailSent?T.greenBg:"#FAFAFA",cursor:emailSending?"wait":"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left",opacity:(emailSending||!shareResult.client.email)?.5:1}}>
+                  <div style={{width:32,height:32,borderRadius:6,background:emailSent?T.greenBg:"#F0F0F0",display:"flex",alignItems:"center",justifyContent:"center"}}><Mail size={14} color={emailSent?T.green:"#999"}/></div>
+                  <div><div style={{fontSize:11,fontWeight:600,color:emailSent?"#111":"#888"}}>{emailSending?"Enviando...":emailSent?"\u2705 Email enviado":"\ud83d\udce7 Enviar por email"}</div><div style={{fontSize:8,color:"#AAA"}}>{emailSent?"Enviado a "+shareResult.client.email:shareResult.client.email?"Funciona con Gmail \u00b7 Limitado con Outlook":"Sin email del cliente"}</div></div>
+                </button>
               </div>
 
               {/* Flujo recomendado */}
               <div style={{padding:"8px 10px",background:T.accent,borderRadius:4,fontSize:8,color:T.inkMid,lineHeight:1.5,marginBottom:14}}>
-                💡 <strong>Flujo recomendado:</strong><br/>
-                1️⃣ <strong>Email</strong> → el cliente recibe un link directo al formulario<br/>
-                2️⃣ <strong>WhatsApp</strong> → tambien incluye el link al formulario<br/>
-                3️⃣ <strong>Descargar</strong> → archivo .html de respaldo (funciona sin internet)
+                💡 <strong>Flujo recomendado:</strong><br/>1️⃣ <strong>Copiar link</strong> → pega en cualquier canal de comunicación<br/>2️⃣ <strong>WhatsApp</strong> → envía mensaje directo con link incluido
+
+
+
               </div>
 
               <Btn on={()=>{setShareResult(null);setShareClient({nombre:"",email:"",tel:"",codTel:PAISES.find(p=>p.nombre===sharePais)?.cod||"+57"});setEmailSent(false);}} style={{marginRight:8}}>+ Enviar a otro cliente</Btn>
