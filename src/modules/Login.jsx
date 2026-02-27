@@ -24,7 +24,7 @@ function genToken(){return Array.from(crypto.getRandomValues(new Uint8Array(16))
 const ROLES={superadmin:{label:"Super Admin",color:T.gold},admin:{label:"Administrador",color:T.blue},gerente:{label:"Gerente",color:T.green},disenador:{label:"Diseñador",color:"#5B3A8C"},ingeniero:{label:"Ingeniero",color:"#0D5E6E"},comercial:{label:"Comercial",color:T.amber},contable:{label:"Contable",color:T.red},auxiliar:{label:"Auxiliar",color:T.inkLight}};
 
 function getSession(){try{const r=sessionStorage.getItem(SESSION_KEY);if(!r)return null;const s=JSON.parse(r);if(Date.now()-s.ts>24*60*60*1000){sessionStorage.removeItem(SESSION_KEY);return null}return s}catch{return null}}
-function setSession(u){sessionStorage.setItem(SESSION_KEY,JSON.stringify({id:u.id,email:u.email,nombre:u.nombre,rol:u.rol,ts:Date.now()}))}
+function setSession(u){sessionStorage.setItem(SESSION_KEY,JSON.stringify({id:u.id,email:u.email,nombre:u.nombre,rol:u.rol,tenant_id:u.tenant_id||"habitaris",ts:Date.now()}))}
 
 export function isLoggedIn(){return !!getSession()}
 export function login(){return true}
