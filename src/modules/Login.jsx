@@ -113,7 +113,7 @@ export default function LoginScreen({onSuccess}){
       <style>{`*{box-sizing:border-box}@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&display=swap');.li:focus{outline:none;border-color:${T.green}!important;box-shadow:0 0 0 3px ${T.green}18}`}</style>
       <div style={{width:"100%",maxWidth:400,background:"#fff",borderRadius:16,boxShadow:"0 4px 24px rgba(0,0,0,.08)",padding:"36px 32px"}}>
         <div style={{textAlign:"center",marginBottom:28}}>
-          <div style={{marginBottom:14}}><img src="/logo-h-negro.svg" alt="Habitaris" style={{height:80,width:"auto"}} /></div>
+          <div style={{marginBottom:14}}><img src="/logo-h-negro.svg" alt="Habitaris" style={{height:110,width:"auto"}} /></div>
           <h1 style={{margin:0,fontSize:20,fontWeight:700,color:T.ink}}>{brand} <span style={{fontWeight:300,color:T.inkLight}}>Suite</span></h1>
           <p style={{margin:"4px 0 0",fontSize:11,color:T.inkLight}}>
             {mode==="setup"?"Configura tu acceso de administrador":mode==="invite"?`Bienvenid@, ${invUser?.nombre}. Configura tu contraseña`:"Acceso exclusivo para usuarios autorizados"}
