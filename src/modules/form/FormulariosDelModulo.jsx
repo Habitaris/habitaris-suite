@@ -23,22 +23,16 @@ const PAISES=[
   {nombre:"Otro",cod:"+1",divisa:"USD"},
 ];
 
-/* ── EmailJS ── */
-const sendEmailJS = async (params) => {
+/* ── Email via Resend API ── */
+const sendEmail = async (params) => {
   try {
-    const cfg = getConfig();
-    if (!cfg.correo?.emailjs_serviceId) return false;
-    const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
+    const res = await fetch("/api/send-email", {
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        service_id: cfg.correo.emailjs_serviceId,
-        template_id: cfg.correo.emailjs_templateId,
-        user_id: cfg.correo.emailjs_publicKey,
-        template_params: params,
-      })
+      body: JSON.stringify(params),
     });
-    return res.ok;
+    const data = await res.json();
+    return data.ok || res.ok;
   } catch { return false; }
 };
 
@@ -198,7 +192,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
     const cfg=getConfig();
     setEmailSending(true);
     const linkInfoEmail=buildLinkInfo().replace(/\n/g,"").trim();
-    const ok=await sendEmailJS({
+    const ok=await sendEmail({
       client_name:shareResult.client.nombre||"Cliente",
       client_email:shareResult.client.email,
       form_name:shareForm?.nombre||"Formulario",
@@ -208,7 +202,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
     });
     setEmailSending(false);
     if(ok){setEmailSent(true);setTimeout(()=>setEmailSent(false),5000);}
-    else{alert("Error al enviar email. Revisa Configuracion → Correo / EmailJS.");}
+    else{alert("Error al enviar email. Verifica la configuración de correo.");}
   };
 
 
