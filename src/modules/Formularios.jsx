@@ -1886,8 +1886,8 @@ function TabEstadisticas({ forms }) {
 function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
   const [filtro, setFiltro] = useState("pendiente");
   const [sortDesc, setSortDesc] = useState(true);
-  const getStatus = (e) => { if (e.blocked) return "bloqueado"; return respuestas.some(r => (r.link_id||r.linkId)===e.linkId || (!r.link_id && !r.linkId && r.clienteEmail && r.clienteEmail===e.cliente?.email)) ? "respondido" : "pendiente"; };
-  const counts = { todos:envios.length, pendiente:0, respondido:0, bloqueado:0 };
+  const getStatus = (e) => { if (e.blocked) return "bloqueado"; if (e.expiry && new Date(e.expiry) < new Date()) return "caducado"; if (e.maxUsos > 0 && (e.currentUsos||0) >= e.maxUsos) return "bloqueado"; return respuestas.some(r => (r.link_id||r.linkId)===e.linkId || (!r.link_id && !r.linkId && r.clienteEmail && r.clienteEmail===e.cliente?.email)) ? "respondido" : "pendiente"; };
+  const counts = { todos:envios.length, pendiente:0, respondido:0, bloqueado:0, caducado:0 };
   envios.forEach(e => { counts[getStatus(e)]++; });
   const filtered = (filtro==="todos" ? envios : envios.filter(e => getStatus(e)===filtro))
     .sort((a,b) => sortDesc ? new Date(b.fecha.split("/").reverse().join("-")+" "+b.hora) - new Date(a.fecha.split("/").reverse().join("-")+" "+a.hora) : new Date(a.fecha.split("/").reverse().join("-")+" "+a.hora) - new Date(b.fecha.split("/").reverse().join("-")+" "+b.hora));
@@ -1939,7 +1939,7 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
         </div>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
         <div style={{display:"flex",gap:0}}>
-          {[["pendiente","⏳ Pendientes"],["respondido","✅ Respondidos"],["bloqueado","🚫 Bloqueados"],["todos","Todos"]].map(([id,lbl],i,arr)=>(
+          {[["pendiente","⏳ Pendientes"],["respondido","✅ Respondidos"],["caducado","⏰ Caducados"],["bloqueado","🚫 Bloqueados"],["todos","Todos"]].map(([id,lbl],i,arr)=>(
             <button key={id} onClick={()=>{setFiltro(id);setSelectedIds(new Set());}}
               style={{padding:"5px 12px",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",
                 border:`1px solid ${filtro===id?"#111":"#E0E0E0"}`,borderLeft:i>0?"none":undefined,
@@ -1978,7 +1978,7 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
                   <td style={tds}>
                     {isBlocked
                       ? <Badge color={T.red}>🚫 Bloqueado</Badge>
-                      : hasResp ? <Badge color={T.green}>✅ Respondido</Badge> : <Badge color={T.amber}>⏳ Pendiente</Badge>
+                      : (e.expiry && new Date(e.expiry) < new Date()) ? <Badge color={T.red}>⏰ Caducado</Badge> : hasResp ? <Badge color={T.green}>✅ Respondido</Badge> : <Badge color={T.amber}>⏳ Pendiente</Badge>
                     }
                   </td>
                   <td style={{...tds,whiteSpace:"nowrap"}}>
@@ -2279,7 +2279,7 @@ export default function Formularios() {
                 const sinProc = respuestas.filter(r => !proc.includes(r.id)).length;
                 return [
                   ["📋 Formularios",forms.length,"#111"],
-                  ["📤 Enviados",envios.length,"#3B3B3B"],
+                  ["📤 Pendientes",(()=>{let p=0;envios.forEach(e=>{if(!(e.blocked||(e.expiry&&new Date(e.expiry)<new Date())||(e.maxUsos>0&&(e.currentUsos||0)>=e.maxUsos))&&!respuestas.some(r=>(r.link_id||r.linkId)===e.linkId))p++;});return p;})(),"#3B3B3B"],
                   ["📥 Respuestas",respuestas.length,"#111111"],
                   ["⏳ Sin asignar",sinProc,sinProc>0?"#111111":"#111111"]
                 ];
