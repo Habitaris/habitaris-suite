@@ -168,6 +168,18 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
     setSending(false);
   };
 
+  /* ── Link info helper ── */
+  const buildLinkInfo=()=>{
+    const parts=[];
+    if(shareLinkMaxUsos>0)parts.push(shareLinkMaxUsos+" uso"+(shareLinkMaxUsos>1?"s":"")+" disponible"+(shareLinkMaxUsos>1?"s":""));
+    if(shareLinkExpiry){
+      const d=new Date(shareLinkExpiry);
+      parts.push("válido hasta el "+d.toLocaleDateString("es-CO",{day:"2-digit",month:"2-digit",year:"numeric"}));
+    }
+    if(parts.length===0)return"\n\n✅ Este enlace no tiene límite de usos.";
+    return"\n\n⏳ Este enlace tiene "+parts.join(" y es ")+".";
+  };
+
   /* ── Share actions ── */
   const shareWhatsApp=()=>{
     if(!shareResult)return;
@@ -175,7 +187,8 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
     const clientName=shareResult.client.nombre||"cliente";
     const linkText=shareResult.url?"\n\n🔗 "+shareResult.url:"";
     const plantilla=cfg.whatsapp?.mensajePlantilla||"Hola {{nombre}}, te enviamos el formulario {{formulario}} de {{empresa}}.";
-    const msg=plantilla.replace(/\{\{nombre\}\}/g,clientName).replace(/\{\{formulario\}\}/g,shareForm?.nombre||"Formulario").replace(/\{\{empresa\}\}/g,cfg.empresa?.nombre||"Habitaris")+linkText;
+    const linkInfo=buildLinkInfo();
+    const msg=plantilla.replace(/\{\{nombre\}\}/g,clientName).replace(/\{\{formulario\}\}/g,shareForm?.nombre||"Formulario").replace(/\{\{empresa\}\}/g,cfg.empresa?.nombre||"Habitaris")+linkText+linkInfo;
     const tel=shareResult.client.tel?(shareResult.client.tel).replace(/[^0-9]/g,""):"";
     window.open("https://wa.me/"+tel+"?text="+encodeURIComponent(msg),"_blank");
   };
@@ -184,12 +197,14 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
     if(!shareResult?.client?.email){alert("No hay email del cliente");return;}
     const cfg=getConfig();
     setEmailSending(true);
+    const linkInfoEmail=buildLinkInfo().replace(/\n/g,"").trim();
     const ok=await sendEmailJS({
       client_name:shareResult.client.nombre||"Cliente",
       client_email:shareResult.client.email,
       form_name:shareForm?.nombre||"Formulario",
       from_name:cfg.empresa?.nombre||"Habitaris",
       form_link:shareResult.url||"En breve recibiras el formulario por WhatsApp.",
+      link_info:linkInfoEmail,
     });
     setEmailSending(false);
     if(ok){setEmailSent(true);setTimeout(()=>setEmailSent(false),5000);}
