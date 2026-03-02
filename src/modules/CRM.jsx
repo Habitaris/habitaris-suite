@@ -2315,7 +2315,7 @@ function Dashboard({ offers, sv, sei, lang }) {
       {/* Form KPIs */}
       <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
         <KPI lbl={lang==="en"?"Pending forms":"Formularios pendientes"} val={formKpis.pendientes} icon={ClipboardList} col="#7C3AED" sub={lang==="en"?"Sent, awaiting response":"Enviados sin respuesta"} />
-        <KPI lbl={lang==="en"?"Responses":"Respuestas recibidas"} val={formKpis.respuestas} icon={Inbox} col={C.info} />
+        
         <KPI lbl={lang==="en"?"Unprocessed":"Sin procesar"} val={formKpis.sinProcesar} icon={AlertCircle} col={formKpis.sinProcesar > 0 ? C.warning : C.ink} sub={formKpis.sinProcesar > 0 ? (lang==="en"?"Require attention":"Requieren atención") : ""} />
       </div>
 
