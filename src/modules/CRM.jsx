@@ -2281,6 +2281,23 @@ function Dashboard({ offers, sv, sei, lang }) {
 
   const rec = [...offers].sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).slice(0, 6);
 
+  /* ── Form KPIs ── */
+  const [formKpis, setFormKpis] = useState({ pendientes: 0, respuestas: 0, sinProcesar: 0 });
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data: links } = await sb.from("form_links").select("link_id, active, expires_at, max_uses, current_uses").order("created_at", { ascending: false });
+        const { data: resps } = await sb.from("form_responses").select("id, link_id, processed");
+        if (!links || !resps) return;
+        const respLinkIds = new Set(resps.map(r => r.link_id));
+        const now = new Date();
+        const pendientes = links.filter(l => l.active && !(l.expires_at && new Date(l.expires_at) < now) && !(l.max_uses > 0 && (l.current_uses || 0) >= l.max_uses) && !respLinkIds.has(l.link_id)).length;
+        const sinProcesar = resps.filter(r => !r.processed).length;
+        setFormKpis({ pendientes, respuestas: resps.length, sinProcesar });
+      } catch (e) { console.warn("form kpis:", e); }
+    })();
+  }, []);
+
   return (
     <div className="fade">
       <div style={{ marginBottom: 28 }}>
@@ -2293,6 +2310,13 @@ function Dashboard({ offers, sv, sei, lang }) {
         <KPI lbl={lang==="en"?"Active pipeline":"Pipeline activo"} val={fmt(st.pip)}   icon={TrendingUp}   col={C.info}    sub={`${st.act.length} ${lang==="en"?"offer(s)":"oferta(s)"}`} />
         <KPI lbl={lang==="en"?"Total won":"Total ganado"}        val={fmt(st.ganado)}   icon={CheckCircle2} col={C.success} sub={`${st.gan.length} ${lang==="en"?"won":"ganada(s)"}`} />
         <KPI lbl={lang==="en"?"Win rate":"% Adjudicación"}       val={`${st.tasa}%`}   icon={BarChart3}    col={C.warning} sub={`${st.per.length} ${lang==="en"?"lost":"perdida(s)"}`} />
+      </div>
+
+      {/* Form KPIs */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+        <KPI lbl={lang==="en"?"Pending forms":"Formularios pendientes"} val={formKpis.pendientes} icon={ClipboardList} col="#7C3AED" sub={lang==="en"?"Sent, awaiting response":"Enviados sin respuesta"} />
+        <KPI lbl={lang==="en"?"Responses":"Respuestas recibidas"} val={formKpis.respuestas} icon={Inbox} col={C.info} />
+        <KPI lbl={lang==="en"?"Unprocessed":"Sin procesar"} val={formKpis.sinProcesar} icon={AlertCircle} col={formKpis.sinProcesar > 0 ? C.warning : C.ink} sub={formKpis.sinProcesar > 0 ? (lang==="en"?"Require attention":"Requieren atención") : ""} />
       </div>
 
       {/* Estado chips */}
