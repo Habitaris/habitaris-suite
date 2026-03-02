@@ -99,13 +99,7 @@ const C = {
 
 /* ─── LOGO SVG (fiel al manual: H en cuadrado doble) ────────── */
 const LogoMark = ({ size = 34, color = "#fff" }) => (
-  <svg width={size} height={size} viewBox="0 0 34 34" fill="none">
-    <rect x="4.5" y="2.5" width="25" height="25" stroke={color} strokeWidth="0.7" opacity="0.4"/>
-    <rect x="2.5" y="4.5" width="25" height="25" stroke={color} strokeWidth="1.1"/>
-    <rect x="7.5"  y="10" width="4"   height="13" fill={color}/>
-    <rect x="7.5"  y="15.5" width="13" height="3" fill={color}/>
-    <rect x="16.5" y="10" width="4"   height="13" fill={color}/>
-  </svg>
+  <img src={color==="#fff"||color==="white"?"/logo-habitaris-blanco.png":"/logo-h-negro.svg"} alt="H" style={{height:size,width:"auto",filter:color!=="#fff"&&color!=="white"&&color!=="#000"&&color!=="#111"?`brightness(0) saturate(100%)`:undefined}} />
 );
 
 
