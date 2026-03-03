@@ -146,7 +146,7 @@ export async function sendEmail(tipo, params = {}) {
     const res = await fetch("/api/send-email", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to: params.to, subject, message, link: params.link || "", link_info: params.link_info || "", brand }),
+      body: JSON.stringify({ to: params.to, subject, message, link: params.link || "", link_info: params.link_info || "", brand, type: tipo, extra: params.extra || null }),
     });
 
     if (!res.ok) {
@@ -173,7 +173,10 @@ export const enviarFormulario = (to, nombre, formName, link, link_info) =>
   sendEmail("form_enviado", { to, nombre, formName, link, link_info });
 
 export const notificarRespuesta = (to, formName, clienteNombre, clienteEmail, clienteTel, contenido) =>
-  sendEmail("form_recibido", { to, formName, clienteNombre, clienteEmail, clienteTel, contenido });
+  sendEmail("form_recibido", { to, formName, clienteNombre, clienteEmail, clienteTel, contenido,
+    extra: { form_name: formName, client_name: clienteNombre, client_email: clienteEmail, client_tel: clienteTel, contenido,
+      fecha: new Date().toLocaleDateString("es-CO", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit", hour12:false }) }
+  });
 
 export const enviarOferta = (to, nombre, refOferta, proyecto, valor, link) =>
   sendEmail("oferta_enviada", { to, nombre, refOferta, proyecto, valor, link });
