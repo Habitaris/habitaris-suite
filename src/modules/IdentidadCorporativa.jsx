@@ -65,7 +65,7 @@ function getBrand() {
       telefono: cfg.empresa?.telefono || "+57 350 566 1545",
       email: cfg.empresa?.email || "info@habitaris.co",
       web: cfg.empresa?.web || "www.habitaris.co",
-      logo: cfg.apariencia?.logo || "/logo-habitaris-blanco.png",
+      logo: (cfg.apariencia?.logo && cfg.apariencia.logo !== "") ? cfg.apariencia.logo : "/logo-habitaris-blanco.png",
       colorPrimario: cfg.apariencia?.colorPrimario || "#111111",
       colorAcento: cfg.apariencia?.colorAcento || "#111111",
       tipografia: cfg.apariencia?.tipografia || "DM Sans",
@@ -656,7 +656,7 @@ export default function IdentidadCorporativa() {
             <label style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",display:"block",marginBottom:4}}>URL del logo</label>
             <input style={inp} value={apariencia.logo||""} onChange={e=>updateApariencia("logo",e.target.value)} placeholder="https://..." />
           </div>
-          {apariencia.logo && <img src={apariencia.logo} alt="Logo" style={{height:40,objectFit:"contain",marginBottom:8}} />}
+          <img src={apariencia.logo || "/logo-habitaris-blanco.png"} alt="Logo" style={{height:40,objectFit:"contain",marginBottom:8,background:apariencia.logo?"transparent":"#333",padding:apariencia.logo?0:4,borderRadius:4}} />
         </div>
 
         <div style={{background:"#fff",borderRadius:12,border:"1px solid #E4E1DB",padding:24,marginBottom:16}}>
@@ -693,7 +693,7 @@ export default function IdentidadCorporativa() {
         <div style={{background:"#fff",borderRadius:12,border:"1px solid #E4E1DB",padding:24}}>
           <h3 style={{margin:"0 0 12px",fontSize:16,fontWeight:700}}>Vista previa</h3>
           <div style={{padding:16,borderRadius:8,background:apariencia.colorPrimario||"#111",color:"#fff",fontFamily:apariencia.tipografia||"DM Sans"}}>
-            {apariencia.logo && <img src={apariencia.logo} alt="" style={{height:28,objectFit:"contain",marginBottom:8,display:"block"}} />}
+            <img src={apariencia.logo || "/logo-habitaris-blanco.png"} alt="" style={{height:28,objectFit:"contain",marginBottom:8,display:"block"}} />
             <div style={{fontSize:14,fontWeight:700,letterSpacing:1}}>{cfg.empresa?.nombre||"HABITARIS"}</div>
             <div style={{fontSize:10,opacity:0.6,marginTop:2}}>{apariencia.slogan||"Tu slogan"}</div>
           </div>
