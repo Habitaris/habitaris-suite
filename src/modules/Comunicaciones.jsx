@@ -226,7 +226,7 @@ function TabPlantillas({ plantillas, onSave, customList }) {
             style={{...inp,paddingLeft:30}}/>
         </div>
         <select value={filterMod} onChange={e=>setFilterMod(e.target.value)}
-          style={{...inp,width:180,cursor:"pointer"}}>
+          style={{...inp,width:180,minWidth:180,flexShrink:0,cursor:"pointer"}}>
           <option value="">Todos los módulos</option>
           {MODULOS.map(m => <option key={m.id} value={m.id}>{m.lbl}</option>)}
         </select>
