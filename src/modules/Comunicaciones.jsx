@@ -90,7 +90,7 @@ export default function Comunicaciones({ lang }) {
     (async () => {
       try {
         const p = await store.get(KEYS.plantillas);
-      try { const em = await store.get("hab:comunicaciones:emailModulos"); if (em) { const parsed = JSON.parse(em); setEmailModulos(parsed); localStorage.setItem("hab:comunicaciones:emailModulos", JSON.stringify(parsed)); } } catch {} if (p) try { localStorage.setItem(KEYS.plantillas, p); } catch {}
+       if (p) try { localStorage.setItem(KEYS.plantillas, p); } catch {}
         if (p) setPlantillas(JSON.parse(p));
       } catch {}
       try {
@@ -498,6 +498,7 @@ function TabNotificaciones({ rules, onSave }) {
 function TabConfig() {
   const cfg = getConfig();
   const [emailModulos, setEmailModulos] = useState({});
+  useEffect(() => { (async () => { try { const em = await store.get("hab:comunicaciones:emailModulos"); if (em) { const parsed = JSON.parse(em); setEmailModulos(parsed); } } catch {} })(); }, []);
   const [testTo, setTestTo] = useState("");
   const [status, setStatus] = useState("");
   const [sending, setSending] = useState(false);
