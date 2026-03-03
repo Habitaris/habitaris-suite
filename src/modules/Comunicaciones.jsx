@@ -591,27 +591,6 @@ function TabConfig() {
               ))}
             </div>
 
-
-        <div style={{background:"#f9f8f6",borderRadius:8,border:"1px solid #E4E1DB",padding:16,marginBottom:16}}>
-          <div style={{fontSize:12,fontWeight:700,color:"#111",marginBottom:10}}>💬 WhatsApp Business</div>
-          <div style={{marginBottom:10}}>
-            <label style={{fontSize:9,fontWeight:700,color:"#666",textTransform:"uppercase",display:"block",marginBottom:4}}>Teléfono WhatsApp</label>
-            <input style={{width:"100%",boxSizing:"border-box",padding:"8px 12px",borderRadius:6,border:"1px solid #ddd",fontSize:13,fontFamily:"monospace",background:"#fff"}}
-              value={waConfig.telefono||""} onChange={e=>{const next={...waConfig,telefono:e.target.value};setWaConfig(next);saveWaConfig(next);}} placeholder="573505661545" />
-          </div>
-          <div style={{marginBottom:10}}>
-            <label style={{fontSize:9,fontWeight:700,color:"#666",textTransform:"uppercase",display:"block",marginBottom:4}}>Mensaje plantilla</label>
-            <textarea style={{width:"100%",boxSizing:"border-box",padding:"8px 12px",borderRadius:6,border:"1px solid #ddd",fontSize:12,fontFamily:"monospace",background:"#fff",minHeight:70,resize:"vertical"}}
-              value={waConfig.mensajePlantilla||""} onChange={e=>{const next={...waConfig,mensajePlantilla:e.target.value};setWaConfig(next);saveWaConfig(next);}} placeholder="Hola {{nombre}}, te enviamos..." />
-          </div>
-          <div style={{marginBottom:10}}>
-            <label style={{fontSize:9,fontWeight:700,color:"#666",textTransform:"uppercase",display:"block",marginBottom:4}}>Prefijo país</label>
-            <input style={{width:"100%",boxSizing:"border-box",padding:"8px 12px",borderRadius:6,border:"1px solid #ddd",fontSize:13,fontFamily:"monospace",background:"#fff"}}
-              value={waConfig.prefijoPais||""} onChange={e=>{const next={...waConfig,prefijoPais:e.target.value};setWaConfig(next);saveWaConfig(next);}} placeholder="+57" />
-          </div>
-        </div>
-
-        <div style={{fontSize:13,fontWeight:700,color:T.ink,marginBottom:12}}>🧪 Enviar email de prueba</div>
         <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
           <div style={{flex:1}}>
             <input value={testTo} onChange={e=>setTestTo(e.target.value)} placeholder="tu@email.com" style={inp}/>
