@@ -92,7 +92,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
   // UI state
   const [expandedId,setExpandedId]=useState(null);
   const [search,setSearch]=useState("");
-  const [filtroResp,setFiltroResp]=useState("todos");
+  const [filtroResp,setFiltroResp]=useState("pendiente");
   const [filtroEnvio,setFiltroEnvio]=useState("todos");
 
   /* ── Load forms ── */
