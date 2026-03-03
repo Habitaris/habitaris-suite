@@ -159,7 +159,7 @@ function Home({ onSelect, lang, setLang, onLogout }) {
           ))}
         </div>
         <p style={{ ...F, marginTop:40, fontSize:11, color:"#AAA", textAlign:"center" }}>
-          v1.0 · Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C.
+          v1.0 · {brand.empresa?.razonSocial||"Habitaris S.A.S"} · NIT {brand.empresa?.nit||"901.922.136-8"} · {brand.empresa?.domicilio||"Bogotá D.C."}
         </p>
       </div>
     </div>

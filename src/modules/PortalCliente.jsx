@@ -25,7 +25,7 @@ function Badge({ children, color, bg, style }) {
 /* ─────── BRAND ─────── */
 function getBrand() {
   try {
-    const cfg = JSON.parse(store.getSync("hab:config")) || {}
+    const cfg = JSON.parse(store.getSync("habitaris_config")) || {}
     return {
       nombre: cfg.empresa?.nombre || "Habitaris",
       logo: cfg.apariencia?.logo || null,

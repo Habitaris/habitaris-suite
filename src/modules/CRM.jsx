@@ -98,9 +98,12 @@ const C = {
 };
 
 /* ─── LOGO SVG (fiel al manual: H en cuadrado doble) ────────── */
-const LogoMark = ({ size = 34, color = "#fff" }) => (
-  <img src={color==="#fff"||color==="white"?"/logo-habitaris-blanco.png":"/logo-h-negro.svg"} alt="H" style={{height:size,width:"auto",filter:color!=="#fff"&&color!=="white"&&color!=="#000"&&color!=="#111"?`brightness(0) saturate(100%)`:undefined}} />
-);
+const LogoMark = ({ size = 34, color = "#fff" }) => {
+  const cfg = (() => { try { return JSON.parse(store.getSync("habitaris_config")) || {}; } catch { return {}; } })();
+  const logoBlanco = cfg.apariencia?.logo || "/logo-habitaris-blanco.png";
+  const logoNegro = cfg.apariencia?.logo || "/logo-h-negro.svg";
+  return <img src={color==="#fff"||color==="white"?logoBlanco:logoNegro} alt="H" style={{height:size,width:"auto",filter:color!=="#fff"&&color!=="white"&&color!=="#000"&&color!=="#111"?`brightness(0) saturate(100%)`:undefined}} />;
+};
 
 
 /* ─── SERVICIOS, ALCANCES Y ENTREGABLES PREDEFINIDOS ─────────── */
