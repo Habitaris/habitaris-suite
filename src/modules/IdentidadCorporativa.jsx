@@ -548,7 +548,24 @@ export default function IdentidadCorporativa() {
   }), [cfg]);
 
 
-  const [empleados, setEmpleados] = useState(() => load("empleados") || SAMPLE_EMPLOYEES)
+  const [empleados, setEmpleados] = useState(() => {
+    // Leer de RRHH primero, fallback a datos propios
+    try {
+      const rrhh = JSON.parse(store.getSync("hab:rrhh:empleados"));
+      const cargos = (() => { try { return JSON.parse(store.getSync("hab:rrhh:cargos")) || []; } catch { return []; } })();
+      if (rrhh && rrhh.length > 0) {
+        return rrhh.filter(e => e.activo !== false).map(e => ({
+          ...e,
+          cargo: cargos.find(c => c.id === e.cargo)?.nombre || e.cargo || "",
+          departamento: cargos.find(c => c.id === e.cargo)?.departamento || "",
+          rh: e.rh || "", eps: e.eps || "", arl: e.arl || "",
+          fechaIngreso: e.fechaIngreso || "",
+          tipoDoc: e.tipoDoc || "CC",
+        }));
+      }
+    } catch {}
+    return load("empleados") || SAMPLE_EMPLOYEES;
+  })
   const [selEmp, setSelEmp] = useState(null)
   const [carnetTpl, setCarnetTpl] = useState("classic")
   const [tarjetaTpl, setTarjetaTpl] = useState("corporate")
