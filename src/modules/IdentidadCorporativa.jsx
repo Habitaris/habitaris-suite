@@ -445,7 +445,7 @@ function VirtualCardPreview({ emp, brand }) {
       <div style={{ height:80, background:`linear-gradient(135deg, ${brand.colorPrimario}, ${brand.colorAcento})`,
         position:"relative", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
         <div style={{ position:"absolute", top:12, left:16 }}>
-          {brand.logo ? <img src={brand.logo} alt="" style={{ height:16, objectFit:"contain", opacity:0.6 }} /> :
+          {brand.logoBlanco ? <img src={brand.logoBlanco} alt="" style={{ height:16, objectFit:"contain", opacity:0.6 }} /> :
             <span style={{ fontSize:9, fontWeight:700, color:"rgba(255,255,255,.5)", letterSpacing:1.5 }}>{brand.nombre.toUpperCase()}</span>}
         </div>
         <div style={{ width:72, height:72, borderRadius:"50%", background:"#fff", border:"3px solid #fff",
@@ -530,8 +530,7 @@ function BatchPrintPreview({ empleados, brand, tipo, template }) {
    MAIN MODULE EXPORT
    ═══════════════════════════════════════════════════ */
 export default function IdentidadCorporativa() {
-  const brand = useMemo(() => getBrand(), [])
-  const [tab, setTab] = useState("marca")
+    const [tab, setTab] = useState("marca")
 
   const [cfg, setCfg] = useState(() => {
     try { return JSON.parse(store.getSync("habitaris_config")) || {}; } catch { return {}; }
@@ -542,6 +541,22 @@ export default function IdentidadCorporativa() {
     setCfg(next);
     store.set("habitaris_config", JSON.stringify(next));
   };
+  const brand = useMemo(() => ({
+    nombre: cfg.empresa?.nombre || "Habitaris",
+    nit: cfg.empresa?.nit || "901.922.136-8",
+    direccion: cfg.empresa?.direccion || "Bogotá D.C., Colombia",
+    telefono: cfg.empresa?.telefono || "+57 350 566 1545",
+    email: cfg.empresa?.email || "info@habitaris.co",
+    web: cfg.empresa?.web || "www.habitaris.co",
+    logo: cfg.apariencia?.logo || "/logo-habitaris-negro.svg",
+    logoBlanco: cfg.apariencia?.logoBlanco || "/logo-habitaris-blanco.png",
+    logoNegro: cfg.apariencia?.logoNegro || "/logo-habitaris-negro.svg",
+    colorPrimario: cfg.apariencia?.colorPrimario || "#111111",
+    colorAcento: cfg.apariencia?.colorAcento || "#111111",
+    tipografia: cfg.apariencia?.tipografia || "DM Sans",
+    slogan: cfg.apariencia?.slogan || "Arquitectura · Interiorismo",
+  }), [cfg]);
+
 
   const [empleados, setEmpleados] = useState(() => load("empleados") || SAMPLE_EMPLOYEES)
   const [selEmp, setSelEmp] = useState(null)
