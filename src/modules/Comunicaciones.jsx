@@ -261,7 +261,12 @@ function TabPlantillas({ plantillas, onSave, customList }) {
                   <label style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase"}}>Mensaje</label>
                   <textarea value={editData.message} onChange={e=>setEditData({...editData,message:e.target.value})}
                     style={{...inp,minHeight:120,resize:"vertical"}}/>
-                  <div style={{display:"flex",gap:6,marginTop:8}}>
+                                    {p.id === "form_recibido" && (
+                    <div style={{marginTop:8,padding:"8px 10px",background:"#FFF8E1",borderRadius:6,fontSize:10,color:"#8C6A00",lineHeight:1.5}}>
+                      <strong>Nota:</strong> Solo el subject y texto son editables. Datos del cliente, banderas y scoring se generan al enviar.
+                    </div>
+                  )}
+<div style={{display:"flex",gap:6,marginTop:8}}>
                     <Btn on={saveEdit}><Save size={10}/> Guardar</Btn>
                     <Btn v="sec" on={cancelEdit}>Cancelar</Btn>
                   </div>
