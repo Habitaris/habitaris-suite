@@ -18,9 +18,11 @@ const PLANTILLAS = {
   },
 
   form_recibido: {
-    subject: "✅ Nueva respuesta: {{formName}}",
-    message: "Se ha recibido una nueva respuesta al formulario «{{formName}}».\n\nCliente: {{clienteNombre}}\nEmail: {{clienteEmail}}\nTeléfono: {{clienteTel}}\nFecha: {{fecha}}\n\n{{contenido}}",
+    subject: "\u2705 Nueva respuesta: {{formName}}",
+    message: "Se ha recibido una nueva respuesta al formulario \u00AB{{formName}}\u00BB.",
+    intro: "Nueva respuesta recibida",
     requiere: ["formName", "clienteNombre"],
+    nota: "Incluye autom\u00E1ticamente: datos del cliente, respuestas con banderas \u{1F7E2}\u{1F7E1}\u{1F534} y scoring",
   },
 
   oferta_enviada: {

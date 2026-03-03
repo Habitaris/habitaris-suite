@@ -279,6 +279,14 @@ function TabPlantillas({ plantillas, onSave, customList }) {
                     </div>
                   )}
 
+                  
+
+                  {(TIPO_LABELS[p.id] || TIPO_LABELS[p.clonedFrom] || {}).lbl && p.id === "form_recibido" && (
+                    <div style={{marginTop:6,padding:"6px 8px",background:"#FFF8E1",borderRadius:4,fontSize:9,color:"#8C6A00"}}>
+                      📋 Incluye: datos del cliente, respuestas con banderas 🟢🟡🔴 y scoring automático
+                    </div>
+                  )}
+
                   <div style={{display:"flex",gap:6,marginTop:10,borderTop:`1px solid ${T.border}`,paddingTop:8}}>
                     <Btn v="sec" on={() => startEdit(p)} style={{fontSize:10,padding:"5px 10px"}}><Edit3 size={10}/> Editar</Btn>
                     <Btn v="sec" on={() => clonePlantilla(p)} style={{fontSize:10,padding:"5px 10px"}}><Copy size={10}/> Duplicar</Btn>
