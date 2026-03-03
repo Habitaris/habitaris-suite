@@ -57,7 +57,7 @@ function generateQRSvg(text, size=120, darkColor="#111", lightColor="transparent
 /* ─────── Brand config helper ─────── */
 function getBrand() {
   try {
-    const cfg = JSON.parse(store.getSync("hab:config")) || {}
+    const cfg = JSON.parse(store.getSync("habitaris_config")) || {}
     return {
       nombre: cfg.empresa?.nombre || "Habitaris",
       nit: cfg.empresa?.nit || "901.922.136-8",
@@ -69,9 +69,9 @@ function getBrand() {
       colorPrimario: cfg.apariencia?.colorPrimario || "#111111",
       colorAcento: cfg.apariencia?.colorAcento || "#111111",
       tipografia: cfg.apariencia?.tipografia || "DM Sans",
-      slogan: cfg.apariencia?.slogan || "Diseño · Arquitectura · Remodelación",
+      slogan: cfg.apariencia?.slogan || "Arquitectura · Interiorismo",
     }
-  } catch { return { nombre:"Habitaris", colorPrimario:"#111", colorAcento:"#111111", tipografia:"DM Sans", slogan:"Diseño · Arquitectura · Remodelación" } }
+  } catch { return { nombre:"Habitaris", colorPrimario:"#111", colorAcento:"#111111", tipografia:"DM Sans", slogan:"Arquitectura · Interiorismo" } }
 }
 
 /* ─────── SAMPLE EMPLOYEES ─────── */
