@@ -127,9 +127,7 @@ function CarnetClassic({ emp, brand, side }) {
     <div style={{ width:320, height:200, background:"#fff", borderRadius:10, overflow:"hidden",
       border:`1px solid ${C.border}`, position:"relative", fontFamily:`'${bf}',sans-serif` }}>
       <div style={{ height:56, background:brand.colorPrimario, display:"flex", alignItems:"center", padding:"0 20px", gap:10 }}>
-        {brand.logoBlanco ? <img src={brand.logoBlanco} alt="" style={{ height:24, objectFit:"contain" }} /> :
-          <span style={{ fontSize:14, fontWeight:700, color:"#fff", letterSpacing:1.5 }}>{brand.nombre.toUpperCase()}</span>
-        }
+        <img src={brand.logoBlanco} alt="" style={{ height:24, objectFit:"contain" }} />
       </div>
       <div style={{ padding:"14px 20px", display:"flex", gap:14 }}>
         <div style={{ width:64, height:76, borderRadius:8, background:C.bg, border:`2px solid ${brand.colorAcento}`,
@@ -190,8 +188,7 @@ function CarnetModern({ emp, brand, side }) {
         </div>
       </div>
       <div style={{ position:"absolute", top:14, right:16 }}>
-        {brand.logoBlanco ? <img src={brand.logoBlanco} alt="" style={{ height:18, objectFit:"contain", opacity:0.8 }} /> :
-          <span style={{ fontSize:10, fontWeight:700, color:"rgba(255,255,255,.4)", letterSpacing:1.5, textTransform:"uppercase" }}>{brand.nombre}</span>}
+        <img src={brand.logoBlanco} alt="" style={{ height:18, objectFit:"contain", opacity:0.8 }} />
       </div>
     </div>
   )
@@ -275,8 +272,7 @@ function CarnetObra({ emp, brand, side }) {
     <div style={{ width:320, height:200, background:"#fff", borderRadius:10, overflow:"hidden",
       border:`1px solid ${C.border}`, position:"relative", fontFamily:`'${bf}',sans-serif` }}>
       <div style={{ height:44, background:brand.colorPrimario, display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px" }}>
-        {brand.logoBlanco ? <img src={brand.logoBlanco} alt="" style={{ height:20, objectFit:"contain" }} /> :
-          <span style={{ fontSize:12, fontWeight:700, color:"#fff", letterSpacing:1 }}>{brand.nombre.toUpperCase()}</span>}
+        <img src={brand.logoBlanco} alt="" style={{ height:20, objectFit:"contain" }} />
         <span style={{ fontSize:8, fontWeight:600, color:"rgba(255,255,255,.5)", background:"rgba(255,255,255,.1)", padding:"2px 8px", borderRadius:3 }}>PERSONAL DE OBRA</span>
       </div>
       <div style={{ padding:"10px 16px", display:"flex", gap:12 }}>
@@ -317,8 +313,7 @@ function TarjetaCorporate({ emp, brand, side }) {
         background:brand.colorPrimario, display:"flex", alignItems:"center", justifyContent:"center",
         fontFamily:`'${bf}',sans-serif` }}>
         <div style={{ textAlign:"center" }}>
-          {brand.logoBlanco ? <img src={brand.logoBlanco} alt="" style={{ height:32, objectFit:"contain", marginBottom:10 }} /> :
-            <div style={{ fontSize:18, fontWeight:800, color:"#fff", letterSpacing:2, marginBottom:6 }}>{brand.nombre.toUpperCase()}</div>}
+          <img src={brand.logoBlanco} alt="" style={{ height:32, objectFit:"contain", marginBottom:10 }} />
           <div style={{ fontSize:8, color:"rgba(255,255,255,.45)", letterSpacing:2, textTransform:"uppercase" }}>{brand.slogan}</div>
         </div>
       </div>
@@ -339,8 +334,7 @@ function TarjetaCorporate({ emp, brand, side }) {
         </div>
       </div>
       <div style={{ position:"absolute", bottom:12, right:16 }}>
-        {brand.logoNegro ? <img src={brand.logoNegro} alt="" style={{ height:16, objectFit:"contain", opacity:0.3 }} /> :
-          <span style={{ fontSize:8, fontWeight:700, color:C.inkLight, letterSpacing:1.5, textTransform:"uppercase", opacity:0.3 }}>{brand.nombre}</span>}
+        <img src={brand.logoNegro} alt="" style={{ height:16, objectFit:"contain", opacity:0.3 }} />
       </div>
     </div>
   )
@@ -356,8 +350,7 @@ function TarjetaCreative({ emp, brand, side }) {
         fontFamily:`'${bf}',sans-serif`, display:"flex", alignItems:"center", justifyContent:"center", gap:24, padding:"0 30px" }}>
         <div dangerouslySetInnerHTML={{ __html:qrSvg }} />
         <div style={{ textAlign:"left" }}>
-          {brand.logoBlanco ? <img src={brand.logoBlanco} alt="" style={{ height:22, objectFit:"contain", marginBottom:8 }} /> :
-            <div style={{ fontSize:14, fontWeight:800, color:"#fff", letterSpacing:1.5, marginBottom:6 }}>{brand.nombre}</div>}
+          <img src={brand.logoBlanco} alt="" style={{ height:22, objectFit:"contain", marginBottom:8 }} />
           <div style={{ fontSize:7, color:"rgba(255,255,255,.5)", letterSpacing:1.5, textTransform:"uppercase", lineHeight:1.6 }}>
             {brand.slogan}<br/>{brand.web}
           </div>
@@ -397,8 +390,7 @@ function TarjetaMinimal({ emp, brand, side }) {
         border:`1px solid ${C.border}`, fontFamily:`'${bf}',sans-serif`,
         display:"flex", alignItems:"center", justifyContent:"center" }}>
         <div style={{ textAlign:"center" }}>
-          {brand.logoNegro ? <img src={brand.logoNegro} alt="" style={{ height:28, objectFit:"contain", opacity:0.2 }} /> :
-            <div style={{ fontSize:16, fontWeight:800, color:C.ink, letterSpacing:3, opacity:0.12 }}>{brand.nombre.toUpperCase()}</div>}
+          <img src={brand.logoNegro} alt="" style={{ height:28, objectFit:"contain", opacity:0.2 }} />
           <div style={{ fontSize:7, color:C.inkLight, letterSpacing:2, textTransform:"uppercase", marginTop:8 }}>
             {brand.slogan}
           </div>
@@ -411,8 +403,7 @@ function TarjetaMinimal({ emp, brand, side }) {
       border:`1px solid ${C.border}`, fontFamily:`'${bf}',sans-serif`, position:"relative", padding:24, boxSizing:"border-box",
       display:"flex", flexDirection:"column", justifyContent:"flex-end" }}>
       <div style={{ position:"absolute", top:20, right:20 }}>
-        {brand.logoNegro ? <img src={brand.logoNegro} alt="" style={{ height:14, objectFit:"contain", opacity:0.25 }} /> :
-          <span style={{ fontSize:8, fontWeight:700, color:C.inkLight, letterSpacing:1.5, textTransform:"uppercase", opacity:0.3 }}>{brand.nombre}</span>}
+        <img src={brand.logoNegro} alt="" style={{ height:14, objectFit:"contain", opacity:0.25 }} />
       </div>
       <div>
         <div style={{ fontSize:16, fontWeight:700, color:C.ink, marginBottom:1, letterSpacing:-0.5 }}>{emp.nombre}</div>
@@ -445,8 +436,7 @@ function VirtualCardPreview({ emp, brand }) {
       <div style={{ height:80, background:`linear-gradient(135deg, ${brand.colorPrimario}, ${brand.colorAcento})`,
         position:"relative", display:"flex", alignItems:"flex-end", justifyContent:"center" }}>
         <div style={{ position:"absolute", top:12, left:16 }}>
-          {brand.logoBlanco ? <img src={brand.logoBlanco} alt="" style={{ height:16, objectFit:"contain", opacity:0.6 }} /> :
-            <span style={{ fontSize:9, fontWeight:700, color:"rgba(255,255,255,.5)", letterSpacing:1.5 }}>{brand.nombre.toUpperCase()}</span>}
+          <img src={brand.logoBlanco} alt="" style={{ height:16, objectFit:"contain", opacity:0.6 }} />
         </div>
         <div style={{ width:72, height:72, borderRadius:"50%", background:"#fff", border:"3px solid #fff",
           display:"flex", alignItems:"center", justifyContent:"center", transform:"translateY(36px)", boxShadow:"0 4px 12px rgba(0,0,0,.1)" }}>
