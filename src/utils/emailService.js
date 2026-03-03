@@ -86,6 +86,26 @@ const PLANTILLAS = {
   },
 };
 
+// ─── EMAIL POR MÓDULO ──────────────────────────────────────
+function getEmailModulo(tipo) {
+  try {
+    const raw = localStorage.getItem("hab:comunicaciones:emailModulos");
+    if (!raw) return null;
+    const map = JSON.parse(raw);
+    // Mapear tipo de plantilla a modulo
+    const tipoToModulo = {
+      form_recibido: "formularios", form_confirmacion: "formularios",
+      crm_bienvenida: "crm", crm_seguimiento: "crm",
+      oferta_nueva: "ofertas", oferta_aprobada: "ofertas", oferta_rechazada: "ofertas",
+      proyecto_inicio: "proyectos", proyecto_avance: "proyectos",
+      rrhh_bienvenida: "rrhh", rrhh_docs: "rrhh",
+      generico: null,
+    };
+    const modulo = tipoToModulo[tipo];
+    return modulo && map[modulo] ? map[modulo] : null;
+  } catch { return null; }
+}
+
 // ─── LEER PLANTILLAS PERSONALIZADAS DESDE STORAGE ────────────
 const CUSTOM_KEY = "hab:comunicaciones:plantillas";
 function getCustomPlantillas() {
@@ -175,7 +195,7 @@ export async function sendEmail(tipo, params = {}) {
     const res = await fetch("/api/send-email", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to: params.to, subject, message, link: params.link || "", link_info: params.link_info || "", brand, type: tipo, extra: params.extra || null }),
+      body: JSON.stringify({ to: params.to, subject, message, link: params.link || "", link_info: params.link_info || "", brand, type: tipo, fromEmail: getEmailModulo(tipo), extra: params.extra || null }),
     });
 
     if (!res.ok) {

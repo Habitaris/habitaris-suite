@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    const { client_name, client_email, form_name, form_link, link_info, from_name , type, extra} = req.body || {};
+    const { client_name, client_email, form_name, form_link, link_info, from_name , type, extra, fromEmail} = req.body || {};
     if (!client_email) return res.status(400).json({ ok: false, error: "client_email required" });
 
     const RESEND_KEY = process.env.RESEND_API_KEY;
@@ -46,7 +46,7 @@ export default async function handler(req, res) {
 </body></html>`;
 
     const { data: d2, error: e2 } = await resend.emails.send({
-      from: `${empresa} <${emailPrincipal}>`,
+      from: `${empresa} <${fromEmail || emailPrincipal}>`,
       to, subject, html: formHtml,
     });
     if (e2) return res.status(400).json({ error: e2.message });

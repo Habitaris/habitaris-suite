@@ -89,7 +89,8 @@ export default function Comunicaciones({ lang }) {
   useEffect(() => {
     (async () => {
       try {
-        const p = await store.get(KEYS.plantillas); if (p) try { localStorage.setItem(KEYS.plantillas, p); } catch {}
+        const p = await store.get(KEYS.plantillas);
+      try { const em = await store.get("hab:comunicaciones:emailModulos"); if (em) { const parsed = JSON.parse(em); setEmailModulos(parsed); localStorage.setItem("hab:comunicaciones:emailModulos", JSON.stringify(parsed)); } } catch {} if (p) try { localStorage.setItem(KEYS.plantillas, p); } catch {}
         if (p) setPlantillas(JSON.parse(p));
       } catch {}
       try {
@@ -496,6 +497,7 @@ function TabNotificaciones({ rules, onSave }) {
    ══════════════════════════════════════════════════════════════ */
 function TabConfig() {
   const cfg = getConfig();
+  const [emailModulos, setEmailModulos] = useState({});
   const [testTo, setTestTo] = useState("");
   const [status, setStatus] = useState("");
   const [sending, setSending] = useState(false);
@@ -548,7 +550,41 @@ function TabConfig() {
       </Card>
 
       <Card>
-        <div style={{fontSize:13,fontWeight:700,color:T.ink,marginBottom:12}}>🧪 Enviar email de prueba</div>
+        
+            {/* Correo por módulo */}
+            <div style={{background:"#fff",borderRadius:12,border:"1px solid #E4E1DB",padding:24,marginBottom:20}}>
+              <h3 style={{margin:"0 0 16px",fontSize:16,fontWeight:700}}>📬 Remitente por módulo</h3>
+              <p style={{fontSize:12,color:"#888",margin:"0 0 16px"}}>Configura un correo remitente diferente para cada módulo. Si está vacío, se usa el general ({config?.correo?.emailPrincipal || "comercial@habitaris.co"}).</p>
+              <div style={{fontSize:11,color:"#8C6A00",background:"#FFF8E1",padding:"8px 12px",borderRadius:6,marginBottom:16}}>
+                ⚠️ Solo correos @habitaris.co (dominio verificado en Resend)
+              </div>
+              {[
+                {id:"formularios",label:"Formularios",icon:"📋",placeholder:"comercial@habitaris.co"},
+                {id:"crm",label:"CRM",icon:"👥",placeholder:"comercial@habitaris.co"},
+                {id:"ofertas",label:"Ofertas",icon:"📄",placeholder:"comercial@habitaris.co"},
+                {id:"rrhh",label:"RRHH",icon:"🧑‍💼",placeholder:"rrhh@habitaris.co"},
+                {id:"contabilidad",label:"Contabilidad",icon:"💰",placeholder:"contabilidad@habitaris.co"},
+                {id:"proyectos",label:"Proyectos",icon:"📐",placeholder:"proyectos@habitaris.co"},
+              ].map(m => (
+                <div key={m.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,paddingBottom:10,borderBottom:"1px solid #f0f0f0"}}>
+                  <span style={{fontSize:16,width:24}}>{m.icon}</span>
+                  <span style={{fontSize:12,fontWeight:600,width:100}}>{m.label}</span>
+                  <input
+                    style={{flex:1,padding:"8px 12px",borderRadius:6,border:"1px solid #ddd",fontSize:13,fontFamily:"monospace"}}
+                    placeholder={m.placeholder}
+                    value={emailModulos[m.id] || ""}
+                    onChange={e => {
+                      const next = {...emailModulos, [m.id]: e.target.value};
+                      setEmailModulos(next);
+                      try { localStorage.setItem("hab:comunicaciones:emailModulos", JSON.stringify(next)); } catch {}
+                      store.set("hab:comunicaciones:emailModulos", JSON.stringify(next));
+                    }}
+                  />
+                </div>
+              ))}
+            </div>
+
+<div style={{fontSize:13,fontWeight:700,color:T.ink,marginBottom:12}}>🧪 Enviar email de prueba</div>
         <div style={{display:"flex",gap:8,alignItems:"flex-end"}}>
           <div style={{flex:1}}>
             <input value={testTo} onChange={e=>setTestTo(e.target.value)} placeholder="tu@email.com" style={inp}/>
