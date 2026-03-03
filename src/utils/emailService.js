@@ -4,6 +4,7 @@
 // Cualquier módulo importa: import { sendEmail } from '../utils/emailService'
 // ═══════════════════════════════════════════════════════════════
 
+import { store } from "../core/store.js";
 import { getConfig } from "../modules/Configuracion.jsx";
 
 // ─── PLANTILLAS DE EMAIL ──────────────────────────────────────
@@ -106,6 +107,19 @@ function getBrandParams() {
   };
 }
 
+
+// ─── LOG DE HISTORIAL ─────────────────────────────────────────
+async function logEmail(tipo, to, subject, ok, error) {
+  try {
+    const KEY = "hab:comunicaciones:historial";
+    let hist = [];
+    try { const raw = await store.get(KEY); if (raw) hist = JSON.parse(raw); } catch {}
+    hist.push({ tipo, to, subject, ok, error: error || "", fecha: new Date().toISOString() });
+    if (hist.length > 500) hist = hist.slice(-500); // max 500
+    await store.set(KEY, JSON.stringify(hist));
+  } catch(e) { console.warn("[emailService] Log error:", e); }
+}
+
 // ─── FUNCIÓN PRINCIPAL ────────────────────────────────────────
 export async function sendEmail(tipo, params = {}) {
   try {
@@ -138,15 +152,18 @@ export async function sendEmail(tipo, params = {}) {
     if (!res.ok) {
       const errText = await res.text().catch(() => res.statusText);
       console.error("[emailService] API error:", res.status, errText);
+      await logEmail(tipo, params.to, subject, false, `Error ${res.status}`);
       return { ok: false, error: `Error ${res.status}: ${errText}` };
     }
 
     const data = await res.json().catch(() => ({}));
     console.log(`[emailService] ✅ Email "${tipo}" enviado a ${params.to}`);
+    await logEmail(tipo, params.to, subject, true);
     return { ok: true, data };
 
   } catch (err) {
     console.error("[emailService] Error:", err);
+    await logEmail(tipo, params?.to || "?", "?", false, err.message);
     return { ok: false, error: err.message };
   }
 }

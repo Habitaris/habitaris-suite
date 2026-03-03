@@ -23,6 +23,7 @@ import Compras from './modules/Compras.jsx'
 import Dashboard from './modules/Dashboard.jsx'
 import Formularios from './modules/Formularios.jsx'
 import Configuracion, { getConfig } from './modules/Configuracion.jsx'
+import Comunicaciones from './modules/Comunicaciones.jsx'
 import PortalCliente from './modules/PortalCliente.jsx'
 import FormularioPublico from './modules/FormularioPublico.jsx'
 import LoginScreen, { isLoggedIn, login as doLogin, logout, isAuthConfigured } from './modules/Login.jsx'
@@ -57,6 +58,7 @@ const MODULES = [
   { id:"postventa",    label:"Postventa",               icon:"🏡", desc:"Garantías, incidencias y atención al cliente post-entrega",           color:"#111111", component:Postventa,    ready:true  },
   { id:"admin",        label:"Administración",          icon:"💼", desc:"Caja chica, tarjeta corporativa, viáticos, flujo empresa, CxC/CxP",  color:"#111111", component:Administracion, ready:true  },
   { id:"flotas",       label:"Control de Flotas",       icon:"🚗", desc:"Vehículos, kilómetros, combustible, documentación, mantenimiento",   color:"#111111", component:Flotas,         ready:true  },
+  { id:"comunicaciones", label:"Comunicaciones",       icon:"📧", desc:"Plantillas de correo, historial de envíos, notificaciones automáticas", color:"#111111", component:Comunicaciones, ready:true  },
   { id:"config",       label:"Configuración",           icon:"⚙️", desc:"Empresa, correo, WhatsApp, legal, apariencia — ajustes globales",    color:"#555555", component:Configuracion,  ready:true  },
 ]
 

@@ -21,9 +21,6 @@ const DEFAULT_CONFIG = {
   },
   correo: {
     emailPrincipal: "comercial@habitaris.co",
-    emailjs_serviceId: "service_6x3478l",
-    emailjs_templateId: "template_lzgrxc6",
-    emailjs_publicKey: "64nk2FHknwpLqc1p4",
   },
   app: {
     url: "https://suite.habitaris.co",
@@ -122,7 +119,7 @@ const inp = { border:`1px solid ${T.border}`, borderRadius:4, padding:"6px 8px",
 /* ── Sections ── */
 const SECTIONS = [
   { id:"empresa",      label:"Empresa",           icon:Building2, color:T.ink },
-  { id:"correo",       label:"Correo / EmailJS",  icon:Mail,      color:T.blue },
+  { id:"correo",       label:"Correo",  icon:Mail,      color:T.blue },
   { id:"app",          label:"App / Deploy",       icon:Link2,     color:T.green },
   { id:"whatsapp",     label:"WhatsApp",           icon:MessageCircle, color:"#25D366" },
   { id:"legal",        label:"Textos legales",     icon:Shield,    color:T.red },
@@ -144,9 +141,6 @@ const FIELDS = {
   ],
   correo: [
     { key:"emailPrincipal",    label:"Email principal (remitente)",  placeholder:"comercial@habitaris.co" },
-    { key:"emailjs_serviceId", label:"EmailJS Service ID",          placeholder:"service_xxxxxxx" },
-    { key:"emailjs_templateId",label:"EmailJS Template ID",         placeholder:"template_xxxxxxx" },
-    { key:"emailjs_publicKey", label:"EmailJS Public Key",          placeholder:"xxxxxxxxxxxxxxxxx" },
   ],
   app: [
     { key:"url", label:"URL de la app", placeholder:"https://suite.habitaris.co" },
