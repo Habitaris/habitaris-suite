@@ -996,9 +996,9 @@ export default function IdentidadCorporativa() {
                 <td style={{ ...F, padding:"8px 12px", color:C.inkMid, fontSize:11 }}>{e.eps||"—"}</td>
                 <td style={{ ...F, padding:"8px 12px", color:C.inkMid, fontSize:11 }}>{e.arl||"—"}</td>
                 <td style={{ ...F, padding:"8px 12px", textAlign:"center" }}>
-                  {e.carnetGenerado
-                    ? <span style={{fontSize:11,color:"#16a34a",fontWeight:600}}>✅</span>
-                    : <span style={{fontSize:11,color:"#dc2626",fontWeight:600}}>❌</span>}
+                  <button onClick={()=>{const next=empleados.map(x=>x.id===e.id?{...x,carnetGenerado:!x.carnetGenerado}:x);setEmpleados(next);save("empleados",next);}} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,padding:0}}>
+                      {e.carnetGenerado ? "✅" : "❌"}
+                    </button>
                 </td>
                 <td style={{ padding:"8px 12px" }}>
                   <button onClick={()=>setEditEmp({...e})}
