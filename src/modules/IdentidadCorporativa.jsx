@@ -65,7 +65,7 @@ function getBrand() {
       telefono: cfg.empresa?.telefono || "+57 350 566 1545",
       email: cfg.empresa?.email || "info@habitaris.co",
       web: cfg.empresa?.web || "www.habitaris.co",
-      logo: cfg.apariencia?.logo || "/logo-habitaris-negro.svg",
+      logo: cfg.apariencia?.logo || "/logo-habitaris-blanco.png",
       colorPrimario: cfg.apariencia?.colorPrimario || "#111111",
       colorAcento: cfg.apariencia?.colorAcento || "#111111",
       tipografia: cfg.apariencia?.tipografia || "DM Sans",
