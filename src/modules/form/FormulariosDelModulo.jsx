@@ -208,7 +208,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
 
 
   /* ── Status helpers ── */
-  const getStatus=(e)=>{if(e.blocked)return"bloqueado";if(e.expiresAt&&new Date(e.expiresAt)<new Date())return"caducado";if(e.maxUsos>0&&e.currentUsos>=e.maxUsos)return"bloqueado";return respuestas.some(r=>(r.link_id||r.linkId)===e.linkId)?"respondido":"pendiente";};
+  const getStatus=(e)=>{const hasResp=respuestas.some(r=>(r.link_id||r.linkId)===e.linkId);if(hasResp)return"respondido";if(e.blocked)return"bloqueado";if(e.expiresAt&&new Date(e.expiresAt)<new Date())return"caducado";if(e.maxUsos>0&&e.currentUsos>=e.maxUsos)return"bloqueado";return"pendiente";};
   const getLinkUrl=(linkId)=>{const cfg=getConfig();const appUrl=(cfg.app?.url||"").replace(/\/$/,"");return appUrl?appUrl+"/form?id="+linkId:"";};
 
   /* ── Filtering ── */
