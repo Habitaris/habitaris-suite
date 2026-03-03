@@ -220,10 +220,10 @@ function TabPlantillas({ plantillas, onSave, customList }) {
     <div>
       {/* Filters */}
       <div style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap"}}>
-        <div style={{position:"relative",flex:1,minWidth:120}}>
+        <div style={{position:"relative",flex:1,minWidth:0,overflow:"hidden"}}>
           <Search size={13} style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:T.inkLight}}/>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar plantilla..."
-            style={{...inp,paddingLeft:30}}/>
+            style={{width:"100%",boxSizing:"border-box",padding:"8px 10px 8px 30px",borderRadius:6,border:"1px solid #ddd",fontSize:12,background:"#fff"}}/>
         </div>
         <select value={filterMod} onChange={e=>setFilterMod(e.target.value)}
           style={{padding:"8px 10px",borderRadius:6,border:"1px solid #ddd",fontSize:12,background:"#fff",width:200,minWidth:200,flexShrink:0,cursor:"pointer"}}>
