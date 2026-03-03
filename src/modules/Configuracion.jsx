@@ -39,7 +39,7 @@ const DEFAULT_CONFIG = {
     firmaEmail: "{{razonSocial}}\n{{eslogan}}",
   },
   apariencia: {
-    logo: "",
+    logo: "/logo-habitaris-negro.svg",
     colorPrimario: "#111111",
     colorSecundario: "#3B3B3B",
     colorAcento: "#111111",
