@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
+import { getConfig } from "./Configuracion.jsx";
 import { store } from "../core/store.js";
 
 
@@ -528,7 +529,18 @@ function BatchPrintPreview({ empleados, brand, tipo, template }) {
    ═══════════════════════════════════════════════════ */
 export default function IdentidadCorporativa() {
   const brand = useMemo(() => getBrand(), [])
-  const [tab, setTab] = useState("carnets")
+  const [tab, setTab] = useState("marca")
+
+  const [cfg, setCfg] = useState(() => {
+    try { return JSON.parse(store.getSync("habitaris_config")) || {}; } catch { return {}; }
+  });
+  const apariencia = cfg.apariencia || {};
+  const updateApariencia = (key, val) => {
+    const next = {...cfg, apariencia: {...(cfg.apariencia||{}), [key]: val}};
+    setCfg(next);
+    store.set("habitaris_config", JSON.stringify(next));
+  };
+
   const [empleados, setEmpleados] = useState(() => load("empleados") || SAMPLE_EMPLOYEES)
   const [selEmp, setSelEmp] = useState(null)
   const [carnetTpl, setCarnetTpl] = useState("classic")
@@ -555,6 +567,8 @@ export default function IdentidadCorporativa() {
 
   /* ── Tabs ── */
   const tabs = [
+    {id:"marca", label:"Marca / Apariencia"},
+   
     { id:"carnets",   icon:"🪪", label:"Carnets Corporativos" },
     { id:"tarjetas",  icon:"💳", label:"Tarjetas de Visita" },
     { id:"virtual",   icon:"📱", label:"Tarjeta Virtual" },
@@ -631,6 +645,63 @@ export default function IdentidadCorporativa() {
   }
 
   /* ═══ CARNETS TAB ═══ */
+  const renderMarca = () => {
+    const T = {ink:"#111",inkMid:"#666",inkLight:"#999",border:"#E4E1DB",green:"#2D6A2E",surfaceAlt:"#F9F8F6"};
+    const inp = {width:"100%",padding:"10px 12px",borderRadius:6,border:"1px solid #ddd",fontSize:13,fontFamily:"'DM Sans',sans-serif",background:"#fff"};
+    return (
+      <div style={{maxWidth:600}}>
+        <div style={{background:"#fff",borderRadius:12,border:"1px solid #E4E1DB",padding:24,marginBottom:16}}>
+          <h3 style={{margin:"0 0 16px",fontSize:16,fontWeight:700}}>Logo</h3>
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",display:"block",marginBottom:4}}>URL del logo</label>
+            <input style={inp} value={apariencia.logo||""} onChange={e=>updateApariencia("logo",e.target.value)} placeholder="https://..." />
+          </div>
+          {apariencia.logo && <img src={apariencia.logo} alt="Logo" style={{height:40,objectFit:"contain",marginBottom:8}} />}
+        </div>
+
+        <div style={{background:"#fff",borderRadius:12,border:"1px solid #E4E1DB",padding:24,marginBottom:16}}>
+          <h3 style={{margin:"0 0 16px",fontSize:16,fontWeight:700}}>Colores</h3>
+          {[
+            {key:"colorPrimario",label:"Color primario",def:"#111111"},
+            {key:"colorSecundario",label:"Color secundario",def:"#3B3B3B"},
+            {key:"colorAcento",label:"Color acento",def:"#111111"},
+          ].map(c => (
+            <div key={c.key} style={{marginBottom:12,display:"flex",alignItems:"center",gap:12}}>
+              <input type="color" value={apariencia[c.key]||c.def} onChange={e=>updateApariencia(c.key,e.target.value)} style={{width:36,height:36,border:"1px solid #ddd",borderRadius:6,cursor:"pointer",padding:2}} />
+              <div style={{flex:1}}>
+                <label style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase"}}>{c.label}</label>
+                <input style={{...inp,marginTop:4}} value={apariencia[c.key]||c.def} onChange={e=>updateApariencia(c.key,e.target.value)} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{background:"#fff",borderRadius:12,border:"1px solid #E4E1DB",padding:24,marginBottom:16}}>
+          <h3 style={{margin:"0 0 16px",fontSize:16,fontWeight:700}}>Tipografia y slogan</h3>
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",display:"block",marginBottom:4}}>Tipografia</label>
+            <select style={{...inp,cursor:"pointer"}} value={apariencia.tipografia||"DM Sans"} onChange={e=>updateApariencia("tipografia",e.target.value)}>
+              {["DM Sans","Inter","Poppins","Roboto","Montserrat","Lato","Open Sans","Raleway","Playfair Display"].map(f=><option key={f} value={f}>{f}</option>)}
+            </select>
+          </div>
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase",display:"block",marginBottom:4}}>Slogan</label>
+            <input style={inp} value={apariencia.slogan||""} onChange={e=>updateApariencia("slogan",e.target.value)} placeholder="Tu slogan aqui..." />
+          </div>
+        </div>
+
+        <div style={{background:"#fff",borderRadius:12,border:"1px solid #E4E1DB",padding:24}}>
+          <h3 style={{margin:"0 0 12px",fontSize:16,fontWeight:700}}>Vista previa</h3>
+          <div style={{padding:16,borderRadius:8,background:apariencia.colorPrimario||"#111",color:"#fff",fontFamily:apariencia.tipografia||"DM Sans"}}>
+            {apariencia.logo && <img src={apariencia.logo} alt="" style={{height:28,objectFit:"contain",marginBottom:8,display:"block"}} />}
+            <div style={{fontSize:14,fontWeight:700,letterSpacing:1}}>{cfg.empresa?.nombre||"HABITARIS"}</div>
+            <div style={{fontSize:10,opacity:0.6,marginTop:2}}>{apariencia.slogan||"Tu slogan"}</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderCarnets = () => {
     const Renderer = CARNET_RENDERERS[carnetTpl]
     return (
@@ -937,6 +1008,7 @@ export default function IdentidadCorporativa() {
         ))}
       </div>
 
+      {tab === "marca" && renderMarca()}
       {tab === "carnets" && renderCarnets()}
       {tab === "tarjetas" && renderTarjetas()}
       {tab === "virtual" && renderVirtual()}
