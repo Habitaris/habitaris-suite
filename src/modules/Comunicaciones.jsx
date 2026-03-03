@@ -89,7 +89,7 @@ export default function Comunicaciones({ lang }) {
   useEffect(() => {
     (async () => {
       try {
-        const p = await store.get(KEYS.plantillas);
+        const p = await store.get(KEYS.plantillas); if (p) try { localStorage.setItem(KEYS.plantillas, p); } catch {}
         if (p) setPlantillas(JSON.parse(p));
       } catch {}
       try {
@@ -104,7 +104,7 @@ export default function Comunicaciones({ lang }) {
   }, []);
 
   // Save helpers
-  const savePlantillas = (data) => { setPlantillas(data); store.set(KEYS.plantillas, JSON.stringify(data)); };
+  const savePlantillas = (data) => { setPlantillas(data); store.set(KEYS.plantillas, JSON.stringify(data)); try { localStorage.setItem(KEYS.plantillas, JSON.stringify(data)); } catch {} };
   const saveHistorial = (data) => { setHistorial(data); store.set(KEYS.historial, JSON.stringify(data)); };
   const saveNotifRules = (data) => { setNotifRules(data); store.set(KEYS.notificaciones, JSON.stringify(data)); };
 

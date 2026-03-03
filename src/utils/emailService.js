@@ -84,6 +84,33 @@ const PLANTILLAS = {
   },
 };
 
+// ─── LEER PLANTILLAS PERSONALIZADAS DESDE STORAGE ────────────
+const CUSTOM_KEY = "hab:comunicaciones:plantillas";
+function getCustomPlantillas() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_KEY);
+    if (!raw) return {};
+    const arr = JSON.parse(raw);
+    const map = {};
+    arr.forEach(p => { map[p.id] = p; });
+    return map;
+  } catch { return {}; }
+}
+
+// ─── OBTENER PLANTILLA (custom > default) ─────────────────────
+function getPlantilla(tipo) {
+  const custom = getCustomPlantillas();
+  const base = PLANTILLAS[tipo] || PLANTILLAS.generico;
+  if (custom[tipo]) {
+    return {
+      subject: custom[tipo].subject || base.subject,
+      message: custom[tipo].message || base.message,
+      requiere: base.requiere,
+    };
+  }
+  return base;
+}
+
 // ─── INTERPOLADOR ─────────────────────────────────────────────
 function interpolar(template, vars = {}) {
   return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
@@ -123,7 +150,7 @@ async function logEmail(tipo, to, subject, ok, error) {
 // ─── FUNCIÓN PRINCIPAL ────────────────────────────────────────
 export async function sendEmail(tipo, params = {}) {
   try {
-    const plantilla = PLANTILLAS[tipo] || PLANTILLAS.generico;
+    const plantilla = getPlantilla(tipo);
     const brand = getBrandParams();
 
     const vars = {
@@ -196,9 +223,17 @@ export const notificar = (to, asunto, mensaje, link) =>
   sendEmail("notificacion", { to, asunto, mensaje, link });
 
 export function getPlantillas() {
-  return Object.entries(PLANTILLAS).map(([key, val]) => ({
-    id: key, subject: val.subject, message: val.message, requiere: val.requiere,
-  }));
+  const custom = getCustomPlantillas();
+  return Object.entries(PLANTILLAS).map(([key, val]) => {
+    const c = custom[key];
+    return {
+      id: key,
+      subject: c?.subject || val.subject,
+      message: c?.message || val.message,
+      requiere: val.requiere,
+      isCustom: !!c,
+    };
+  });
 }
 
 export const EMAIL_TIPOS = Object.keys(PLANTILLAS);
