@@ -503,10 +503,6 @@ function TabNotificaciones({ rules, onSave }) {
 function TabConfig() {
   const cfg = getConfig();
   const [emailModulos, setEmailModulos] = useState({});
-  const [correoConfig, setCorreoConfig] = useState(() => { try { const c = JSON.parse(store.getSync("habitaris_config")); return c?.correo || {}; } catch { return {}; } });
-  const [waConfig, setWaConfig] = useState(() => { try { const c = JSON.parse(store.getSync("habitaris_config")); return c?.whatsapp || {}; } catch { return {}; } });
-  const saveCorreoConfig = (val) => { try { const c = JSON.parse(store.getSync("habitaris_config") || "{}"); c.correo = val; store.set("habitaris_config", JSON.stringify(c)); } catch {} };
-  const saveWaConfig = (val) => { try { const c = JSON.parse(store.getSync("habitaris_config") || "{}"); c.whatsapp = val; store.set("habitaris_config", JSON.stringify(c)); } catch {} };
 
   useEffect(() => { (async () => { try { const em = await store.get("hab:comunicaciones:emailModulos"); if (em) { const parsed = JSON.parse(em); setEmailModulos(parsed); } } catch {} })(); }, []);
   const [testTo, setTestTo] = useState("");
@@ -595,18 +591,7 @@ function TabConfig() {
               ))}
             </div>
 
-{/* Correo principal */}
-        <div style={{background:"#f9f8f6",borderRadius:8,border:"1px solid #E4E1DB",padding:16,marginBottom:16}}>
-          <div style={{fontSize:12,fontWeight:700,color:"#111",marginBottom:10}}>✉️ Correo electrónico</div>
-          <div style={{marginBottom:10}}>
-            <label style={{fontSize:9,fontWeight:700,color:"#666",textTransform:"uppercase",display:"block",marginBottom:4}}>Email principal (remitente)</label>
-            <input style={{width:"100%",boxSizing:"border-box",padding:"8px 12px",borderRadius:6,border:"1px solid #ddd",fontSize:13,fontFamily:"monospace",background:"#fff"}}
-              value={correoConfig.emailPrincipal||""} onChange={e=>{const next={...correoConfig,emailPrincipal:e.target.value};setCorreoConfig(next);saveCorreoConfig(next);}} placeholder="comercial@habitaris.co" />
-            <div style={{fontSize:9,color:"#999",marginTop:4}}>Debe ser @habitaris.co (dominio verificado en Resend)</div>
-          </div>
-        </div>
 
-        {/* WhatsApp */}
         <div style={{background:"#f9f8f6",borderRadius:8,border:"1px solid #E4E1DB",padding:16,marginBottom:16}}>
           <div style={{fontSize:12,fontWeight:700,color:"#111",marginBottom:10}}>💬 WhatsApp Business</div>
           <div style={{marginBottom:10}}>
