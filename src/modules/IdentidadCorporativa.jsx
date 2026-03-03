@@ -621,6 +621,8 @@ export default function IdentidadCorporativa() {
       ["rh","Grupo sanguíneo","text"],
       ["eps","EPS","text"],
       ["arl","ARL","text"],
+      ["contactoEmergencia","Contacto emergencia","text"],
+      ["telEmergencia","Tel. emergencia","text"],
       ["fechaIngreso","Fecha ingreso","date"],
     ]
 
@@ -957,7 +959,7 @@ export default function IdentidadCorporativa() {
             style={{ ...F, width:"100%", padding:"8px 12px", fontSize:12, border:`1px solid ${C.border}`, borderRadius:6, boxSizing:"border-box" }} />
         </div>
         <button onClick={()=>setEditEmp({ id:genId(), nombre:"", cargo:"", departamento:"", email:"", telefono:"",
-          tipoDoc:"CC", documento:"", rh:"O+", eps:"", arl:"", fechaIngreso:new Date().toISOString().slice(0,10), foto:null })}
+          tipoDoc:"CC", documento:"", rh:"O+", eps:"", arl:"", contactoEmergencia:"", telEmergencia:"", fechaIngreso:new Date().toISOString().slice(0,10), foto:null })}
           style={{ ...F, padding:"8px 18px", fontSize:11, fontWeight:700, color:"#fff",
             background:C.accent, border:"none", borderRadius:6, cursor:"pointer" }}>
           + Nuevo empleado
@@ -968,7 +970,7 @@ export default function IdentidadCorporativa() {
         <table style={{ width:"100%", borderCollapse:"collapse", fontSize:12 }}>
           <thead>
             <tr style={{ background:C.surface }}>
-              {["","Nombre","Cargo","Departamento","Email","Doc","RH",""].map((h,i) => (
+              {["","Nombre","Cargo","Depto","Email","Doc","RH","EPS","ARL",""].map((h,i) => (
                 <th key={i} style={{ ...F, padding:"10px 12px", textAlign:"left", fontSize:10, fontWeight:600,
                   color:C.inkLight, borderBottom:`1px solid ${C.border}` }}>{h}</th>
               ))}
@@ -993,6 +995,8 @@ export default function IdentidadCorporativa() {
                 <td style={{ ...F, padding:"8px 12px" }}>
                   <span style={{ fontWeight:700, color:"#B91C1C", fontSize:13 }}>{e.rh}</span>
                 </td>
+                <td style={{ ...F, padding:"8px 12px", color:C.inkMid, fontSize:11 }}>{e.eps||"—"}</td>
+                <td style={{ ...F, padding:"8px 12px", color:C.inkMid, fontSize:11 }}>{e.arl||"—"}</td>
                 <td style={{ padding:"8px 12px" }}>
                   <button onClick={()=>setEditEmp({...e})}
                     style={{ ...F, padding:"4px 10px", fontSize:10, color:C.accent, background:C.accentBg,
@@ -1006,7 +1010,7 @@ export default function IdentidadCorporativa() {
         </table>
       </div>
       <p style={{ ...F, fontSize:10, color:C.inkLight, marginTop:12 }}>
-        💡 Tip: En producción, los empleados se vincularán automáticamente desde el módulo de RRHH.
+        💡 Tip: Los empleados se sincronizan automáticamente desde el módulo de RRHH.
       </p>
     </div>
   )
