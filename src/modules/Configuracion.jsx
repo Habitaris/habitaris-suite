@@ -119,12 +119,12 @@ const inp = { border:`1px solid ${T.border}`, borderRadius:4, padding:"6px 8px",
 /* ── Sections ── */
 const SECTIONS = [
   { id:"empresa",      label:"Empresa",           icon:Building2, color:T.ink },
-  { id:"correo",       label:"Correo",  icon:Mail,      color:T.blue },
+  { id:"correo",       hidden:true,       label:"Correo",  icon:Mail,      color:T.blue },
   { id:"app",          label:"App / Deploy",       icon:Link2,     color:T.green },
-  { id:"whatsapp",     label:"WhatsApp",           icon:MessageCircle, color:"#25D366" },
+  { id:"whatsapp",     hidden:true,     label:"WhatsApp",           icon:MessageCircle, color:"#25D366" },
   { id:"legal",        label:"Textos legales",     icon:Shield,    color:T.red },
   { id:"formularios",  label:"Formularios",        icon:FileText,  color:T.purple },
-  { id:"apariencia",   label:"Marca / Apariencia", icon:Palette,   color:T.gold },
+  { id:"apariencia",   hidden:true,   label:"Marca / Apariencia", icon:Palette,   color:T.gold },
   { id:"supabase",     label:"Base de datos",      icon:Database,  color:"#3ECF8E" },
 ];
 
@@ -228,7 +228,7 @@ export default function Configuracion() {
         {/* Sidebar */}
         <div style={{width:200,flexShrink:0}}>
           <Card style={{padding:8}}>
-            {SECTIONS.map(s => {
+            {SECTIONS.filter(s=>!s.hidden).map(s => {
               const Icon = s.icon;
               const active = section === s.id;
               return (
