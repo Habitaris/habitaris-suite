@@ -555,7 +555,7 @@ function TabConfig() {
             {/* Correo por módulo */}
             <div style={{background:"#fff",borderRadius:12,border:"1px solid #E4E1DB",padding:24,marginBottom:20}}>
               <h3 style={{margin:"0 0 16px",fontSize:16,fontWeight:700}}>📬 Remitente por módulo</h3>
-              <p style={{fontSize:12,color:"#888",margin:"0 0 16px"}}>Configura un correo remitente diferente para cada módulo. Si está vacío, se usa el general ({config?.correo?.emailPrincipal || "comercial@habitaris.co"}).</p>
+              <p style={{fontSize:12,color:"#888",margin:"0 0 16px"}}>Configura un correo remitente diferente para cada módulo. Si está vacío, se usa el general ({cfg?.correo?.emailPrincipal || "comercial@habitaris.co"}).</p>
               <div style={{fontSize:11,color:"#8C6A00",background:"#FFF8E1",padding:"8px 12px",borderRadius:6,marginBottom:16}}>
                 ⚠️ Solo correos @habitaris.co (dominio verificado en Resend)
               </div>
