@@ -233,8 +233,8 @@ function CarnetMinimal({ emp, brand, side }) {
           </div>
         </div>
       </div>
-      <div style={{ position:"absolute", bottom:10, right:16, fontSize:8, fontWeight:600, color:C.inkLight, letterSpacing:1.5, textTransform:"uppercase" }}>
-        {brand.nombre}
+      <div style={{ position:"absolute", bottom:10, right:16 }}>
+        <img src={brand.logoNegro} alt="" style={{ height:14, objectFit:"contain", opacity:0.25 }} />
       </div>
     </div>
   )
