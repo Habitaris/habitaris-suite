@@ -220,7 +220,7 @@ function TabPlantillas({ plantillas, onSave, customList }) {
     <div>
       {/* Filters */}
       <div style={{display:"flex",gap:10,marginBottom:14,flexWrap:"wrap"}}>
-        <div style={{position:"relative",flex:1,minWidth:200}}>
+        <div style={{position:"relative",flex:1,minWidth:120}}>
           <Search size={13} style={{position:"absolute",left:9,top:"50%",transform:"translateY(-50%)",color:T.inkLight}}/>
           <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar plantilla..."
             style={{...inp,paddingLeft:30}}/>
@@ -233,7 +233,7 @@ function TabPlantillas({ plantillas, onSave, customList }) {
       </div>
 
       {/* Grid */}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(340,1fr))",gap:12}}>
+      <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(300,1fr))",gap:12}}>
         {filtered.map(p => {
           const info = TIPO_LABELS[p.id] || TIPO_LABELS[p.clonedFrom] || { lbl:p.id, icon:"✉️", color:T.ink, bg:"#F0F0F0", mod:"general" };
           const isEditing = editing === p.id;
