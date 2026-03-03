@@ -1,3 +1,4 @@
+import { notificarRespuesta } from "../utils/emailService";
 import { useState, useEffect, useRef } from "react";
 import { sb } from "../core/supabase.js";
 import { store } from "../core/store.js";
@@ -499,93 +500,12 @@ export default function FormularioPublico() {
 
     // Send email notification to comercial@habitaris.co with full report
     try {
-      // Calculate scoring
-      const scoringCampos = campos.filter(c => c.scoring?.enabled);
-      let scoreHtml = "";
-      if (scoringCampos.length > 0) {
-        let totalPts = 0, maxPts = 0, greens = 0, reds = 0, yellows = 0;
-        const scoreRows = [];
-        scoringCampos.forEach(c => {
-          const w = c.scoring.weight || 1;
-          const key = c.mapKey || c.id;
-          let val = vals[c.id];
-          if (val === undefined) return;
-          maxPts += w;
-          const rules = c.scoring.rules || {};
-          let flag = "neutral";
-          if (Array.isArray(val)) {
-            const flags = val.map(v => rules[v] || "neutral");
-            if (flags.includes("red")) flag = "red";
-            else if (flags.every(f => f === "green")) flag = "green";
-            else flag = "neutral";
-          } else { flag = rules[String(val)] || "neutral"; }
-          let pts = flag === "green" ? w : flag === "neutral" ? w * 0.5 : 0;
-          totalPts += pts;
-          if (flag === "green") greens++; else if (flag === "red") reds++; else yellows++;
-          const icon = flag === "green" ? "🟢" : flag === "red" ? "🔴" : "🟡";
-          const fc = flag === "green" ? "#111111" : flag === "red" ? "#B91C1C" : "#8C6A00";
-          const display = Array.isArray(val) ? val.join(", ") : val;
-          scoreRows.push(`<tr><td style="padding:5px 10px;font-size:11px;font-weight:600;">${c.label}</td><td style="padding:5px 10px;font-size:11px;">${display}</td><td style="padding:5px 10px;text-align:center;font-weight:700;color:${fc};">${pts}/${w}</td><td style="padding:5px 10px;text-align:center;">${icon}</td></tr>`);
-        });
-        const score = maxPts > 0 ? Math.round((totalPts / maxPts) * 100) / 10 : 0;
-        const level = score >= 7 ? "green" : score >= 4 ? "yellow" : "red";
-        const colors = {green:{bg:"#E8F4EE",text:"#111111"},yellow:{bg:"#FAF0E0",text:"#8C6A00"},red:{bg:"#FAE8E8",text:"#B91C1C"}};
-        const col = colors[level];
-        const lbl = level === "green" ? "🟢 Cliente potencial" : level === "yellow" ? "🟡 Revisar" : "🔴 No califica";
-        const concl = level === "green" ? "Contactar en las próximas 24h." : level === "yellow" ? "Agendar llamada exploratoria." : "Responder cortésmente y archivar.";
-        scoreHtml = `<div style="margin:16px 0;border:1px solid ${col.text}33;border-radius:8px;overflow:hidden;">
-          <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;background:${col.bg};">
-            <div style="font-size:24px;font-weight:800;color:${col.text};">${score.toFixed(1)}/10</div>
-            <div><div style="font-size:13px;font-weight:700;color:${col.text};">${lbl}</div><div style="font-size:9px;color:${col.text};">${concl}</div></div>
-            <div style="margin-left:auto;display:flex;gap:8px;"><span>🟢${greens}</span><span>🟡${yellows}</span><span>🔴${reds}</span></div>
-          </div>
-          <table style="width:100%;border-collapse:collapse;">${scoreRows.join("")}</table>
-        </div>`;
-      }
-
-      // Build HTML content grouped by sections
-      let html = scoreHtml;
-      let currentSection = "";
-      campos.forEach(c => {
-        if (c.tipo === "seccion") {
-          currentSection = c.label;
-          html += `<div style="margin-top:16px;padding:10px 14px;background:#F5F5F5;border-radius:6px;border-left:3px solid #C9A84C;">
-            <p style="margin:0;font-size:12px;font-weight:bold;color:#111;">${c.label}</p>
-            ${c.desc ? `<p style="margin:2px 0 0;font-size:10px;color:#888;">${c.desc}</p>` : ""}
-          </div>`;
-          return;
-        }
-        if (c.tipo === "info") return;
-        const val = vals[c.id];
-        if (val === undefined || val === "" || (Array.isArray(val) && val.length === 0)) return;
-        const display = Array.isArray(val) ? val.join(", ") : val;
-        html += `<div style="padding:8px 14px;border-bottom:1px solid #f0f0f0;">
-          <p style="margin:0;font-size:10px;color:#888;font-weight:600;">${c.label}</p>
-          <p style="margin:3px 0 0;font-size:13px;color:#111;">${display}</p>
-        </div>`;
-      });
-
+      const cfg = getConfig();
+      const adminEmail = cfg.correo?.emailPrincipal || "comercial@habitaris.co";
       const clientName = cliente?.nombre || response.clienteNombre || response.nombre || "Sin nombre";
       const clientEmail = cliente?.email || response.clienteEmail || response.email || "";
       const clientTel = cliente?.tel || response.clienteTel || response.telefono || "";
-
-      await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          service_id: "service_6x3478l",
-          template_id: "template_6lla2i8",
-          user_id: "64nk2FHknwpLqc1p4",
-          template_params: {
-            form_name: def.nombre || "Formulario",
-            client_name: clientName,
-            client_email: clientEmail,
-            client_tel: clientTel,
-            fecha: response.fecha + " · " + new Date().toLocaleTimeString("es-CO", { hour:"2-digit", minute:"2-digit", hour12:false }),
-            contenido: html,
-          }
-        })
-      });
+      await notificarRespuesta(adminEmail, def.nombre || "Formulario", clientName, clientEmail, clientTel, "Respuesta recibida desde formulario público");
     } catch(e) { console.warn("Email notification error:", e); }
   };
 

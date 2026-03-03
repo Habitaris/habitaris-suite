@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { enviarInvitacion } from "../utils/emailService";
 import { store } from "../core/store.js";
 
 import { Mail, Lock, Eye, EyeOff, Shield, UserPlus, Trash2, Send, Check, X, Copy } from "lucide-react";
@@ -32,17 +33,12 @@ export function logout(){sessionStorage.removeItem(SESSION_KEY)}
 export function isAuthConfigured(){return true}
 export function getCurrentUser(){return getSession()}
 
-async function sendInviteEmail(nombre,email,token){
-  try{
-    const cfg=JSON.parse(store.getSync("habitaris_config")||"{}");
-    const sId=cfg.correo?.emailjs_serviceId||"service_6x3478l";
-    const tId=cfg.correo?.emailjs_templateId||"template_lzgrxc6";
-    const pKey=cfg.correo?.emailjs_publicKey||"64nk2FHknwpLqc1p4";
-    const emp=cfg.empresa?.nombre||"Habitaris";
-    const url=`${window.location.origin}?invite=${token}`;
-    const res=await fetch("https://api.emailjs.com/api/v1.0/email/send",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({service_id:sId,template_id:tId,user_id:pKey,template_params:{client_name:nombre,client_email:email,form_name:`Invitación a ${emp} Suite`,from_name:emp,form_link:url}})});
-    return res.ok;
-  }catch{return false}
+async function sendInviteEmail(nombre, email, token) {
+  try {
+    const url = `${window.location.origin}?invite=${token}`;
+    const result = await enviarInvitacion(email, nombre, url);
+    return result.ok;
+  } catch { return false; }
 }
 
 export default function LoginScreen({onSuccess}){

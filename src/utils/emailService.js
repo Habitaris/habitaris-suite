@@ -1,0 +1,184 @@
+// ═══════════════════════════════════════════════════════════════
+// src/utils/emailService.js
+// Helper centralizado de email — Habitaris Suite
+// Cualquier módulo importa: import { sendEmail } from '../utils/emailService'
+// ═══════════════════════════════════════════════════════════════
+
+import { getConfig } from "../modules/Configuracion.jsx";
+
+// ─── PLANTILLAS DE EMAIL ──────────────────────────────────────
+
+const PLANTILLAS = {
+
+  form_enviado: {
+    subject: "📋 {{formName}} — {{empresa}}",
+    message: "Hola {{nombre}},\n\nTe compartimos el siguiente formulario para que lo completes a tu conveniencia.\n\nFormulario: {{formName}}\n\nHaz clic en el botón de abajo para acceder.",
+    requiere: ["nombre", "formName"],
+  },
+
+  form_recibido: {
+    subject: "✅ Nueva respuesta: {{formName}}",
+    message: "Se ha recibido una nueva respuesta al formulario «{{formName}}».\n\nCliente: {{clienteNombre}}\nEmail: {{clienteEmail}}\nTeléfono: {{clienteTel}}\nFecha: {{fecha}}\n\n{{contenido}}",
+    requiere: ["formName", "clienteNombre"],
+  },
+
+  oferta_enviada: {
+    subject: "📄 Propuesta {{refOferta}} — {{empresa}}",
+    message: "Hola {{nombre}},\n\nAdjunto encontrarás nuestra propuesta comercial para el proyecto «{{proyecto}}».\n\nReferencia: {{refOferta}}\nValor: {{valor}}\n\nHaz clic en el botón para revisar y aprobar.",
+    requiere: ["nombre", "refOferta", "proyecto"],
+  },
+
+  oferta_aprobada: {
+    subject: "🎉 Oferta aprobada — {{refOferta}}",
+    message: "La oferta «{{refOferta}}» para el proyecto «{{proyecto}}» ha sido APROBADA por el cliente.\n\nCliente: {{nombre}}\nFecha: {{fecha}}\n\nComentario: {{comentario}}",
+    requiere: ["refOferta", "proyecto"],
+  },
+
+  oferta_rechazada: {
+    subject: "❌ Oferta rechazada — {{refOferta}}",
+    message: "La oferta «{{refOferta}}» para el proyecto «{{proyecto}}» ha sido RECHAZADA.\n\nCliente: {{nombre}}\nFecha: {{fecha}}\nMotivo: {{comentario}}",
+    requiere: ["refOferta", "proyecto"],
+  },
+
+  oferta_revision: {
+    subject: "🔄 Oferta en revisión — {{refOferta}}",
+    message: "El cliente ha solicitado revisión de la oferta «{{refOferta}}» para «{{proyecto}}».\n\nCliente: {{nombre}}\nFecha: {{fecha}}\nComentario: {{comentario}}",
+    requiere: ["refOferta", "proyecto"],
+  },
+
+  notificacion: {
+    subject: "🔔 {{asunto}} — {{empresa}}",
+    message: "{{mensaje}}",
+    requiere: ["asunto", "mensaje"],
+  },
+
+  rrhh_novedad: {
+    subject: "📝 Nueva novedad RRHH: {{tipo}} — {{empleado}}",
+    message: "Se ha registrado una novedad de tipo «{{tipo}}» para el empleado {{empleado}}.\n\nPeríodo: {{periodo}}\nEstado: {{estado}}\nFecha: {{fecha}}",
+    requiere: ["tipo", "empleado"],
+  },
+
+  invitacion: {
+    subject: "👋 Invitación a {{empresa}} Suite",
+    message: "Hola {{nombre}},\n\nHas sido invitado/a a la plataforma de {{empresa}}.\n\nHaz clic en el botón de abajo para configurar tu cuenta y acceder.",
+    requiere: ["nombre"],
+  },
+
+  bienvenida: {
+    subject: "👋 Bienvenido a {{empresa}}",
+    message: "Hola {{nombre}},\n\nBienvenido/a a {{empresa}}. Tu cuenta ha sido creada exitosamente.\n\nAccede a la plataforma con el botón de abajo.",
+    requiere: ["nombre"],
+  },
+
+  test: {
+    subject: "🧪 Email de prueba — {{empresa}}",
+    message: "Este es un email de prueba enviado desde la suite {{empresa}}.\n\nSi recibes este mensaje, la configuración de correo está funcionando correctamente.\n\nFecha: {{fecha}}",
+    requiere: [],
+  },
+
+  generico: {
+    subject: "{{asunto}}",
+    message: "{{mensaje}}",
+    requiere: ["asunto", "mensaje"],
+  },
+};
+
+// ─── INTERPOLADOR ─────────────────────────────────────────────
+function interpolar(template, vars = {}) {
+  return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+    return vars[key] !== undefined && vars[key] !== null ? String(vars[key]) : "";
+  });
+}
+
+// ─── BRAND PARAMS DESDE CONFIG ────────────────────────────────
+function getBrandParams() {
+  const cfg = getConfig();
+  return {
+    empresa:        cfg.empresa?.nombre        || "Habitaris",
+    razonSocial:    cfg.empresa?.razonSocial    || "",
+    domicilio:      cfg.empresa?.domicilio       || "Bogotá D.C.",
+    emailPrincipal: cfg.correo?.emailPrincipal   || "comercial@habitaris.co",
+    colorPrimario:  cfg.apariencia?.colorPrimario  || "#111111",
+    colorSecundario:cfg.apariencia?.colorSecundario || "#3B3B3B",
+    colorAcento:    cfg.apariencia?.colorAcento     || "#111111",
+    logo:           cfg.apariencia?.logo            || "",
+    slogan:         cfg.apariencia?.slogan || cfg.empresa?.eslogan || "",
+  };
+}
+
+// ─── FUNCIÓN PRINCIPAL ────────────────────────────────────────
+export async function sendEmail(tipo, params = {}) {
+  try {
+    const plantilla = PLANTILLAS[tipo] || PLANTILLAS.generico;
+    const brand = getBrandParams();
+
+    const vars = {
+      empresa: brand.empresa,
+      fecha: new Date().toLocaleDateString("es-CO", {
+        day: "2-digit", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit", hour12: false,
+      }),
+      ...params,
+    };
+
+    const subject = params.subject || interpolar(plantilla.subject, vars);
+    const message = params.message || interpolar(plantilla.message, vars);
+
+    if (!params.to) {
+      console.warn("[emailService] Falta 'to' (destinatario)");
+      return { ok: false, error: "Falta destinatario (to)" };
+    }
+
+    const res = await fetch("/api/send-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: params.to, subject, message, link: params.link || "", link_info: params.link_info || "", brand }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => res.statusText);
+      console.error("[emailService] API error:", res.status, errText);
+      return { ok: false, error: `Error ${res.status}: ${errText}` };
+    }
+
+    const data = await res.json().catch(() => ({}));
+    console.log(`[emailService] ✅ Email "${tipo}" enviado a ${params.to}`);
+    return { ok: true, data };
+
+  } catch (err) {
+    console.error("[emailService] Error:", err);
+    return { ok: false, error: err.message };
+  }
+}
+
+// ─── HELPERS DE CONVENIENCIA ──────────────────────────────────
+export const enviarFormulario = (to, nombre, formName, link, link_info) =>
+  sendEmail("form_enviado", { to, nombre, formName, link, link_info });
+
+export const notificarRespuesta = (to, formName, clienteNombre, clienteEmail, clienteTel, contenido) =>
+  sendEmail("form_recibido", { to, formName, clienteNombre, clienteEmail, clienteTel, contenido });
+
+export const enviarOferta = (to, nombre, refOferta, proyecto, valor, link) =>
+  sendEmail("oferta_enviada", { to, nombre, refOferta, proyecto, valor, link });
+
+export const notificarEstadoOferta = (to, estado, refOferta, proyecto, nombre, comentario) => {
+  const tipos = { aprobada: "oferta_aprobada", rechazada: "oferta_rechazada", revision: "oferta_revision" };
+  return sendEmail(tipos[estado] || "notificacion", { to, refOferta, proyecto, nombre, comentario });
+};
+
+export const enviarInvitacion = (to, nombre, link) =>
+  sendEmail("invitacion", { to, nombre, link });
+
+export const enviarTest = (to) =>
+  sendEmail("test", { to });
+
+export const notificar = (to, asunto, mensaje, link) =>
+  sendEmail("notificacion", { to, asunto, mensaje, link });
+
+export function getPlantillas() {
+  return Object.entries(PLANTILLAS).map(([key, val]) => ({
+    id: key, subject: val.subject, message: val.message, requiere: val.requiere,
+  }));
+}
+
+export const EMAIL_TIPOS = Object.keys(PLANTILLAS);

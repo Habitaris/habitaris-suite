@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 512 377.95">
+  <!-- Generator: Adobe Illustrator 29.8.1, SVG Export Plug-In . SVG Version: 2.1.1 Build 2)  -->
+  <defs>
+    <style>
+      .st0 {
+        isolation: isolate;
+      }
+
+      .st1 {
+        fill: #070707;
+      }
+
+      .st2 {
+        fill: none;
+        stroke: #070707;
+        stroke-miterlimit: 100;
+      }
+    </style>
+  </defs>
+  <g id="H">
+    <path class="st1" d="M200.78,250.3v-108.45h21.83v43.5h47.48v-43.5h21.9v108.45h-21.9v-46.58h-47.48v46.58h-21.83Z"/>
+  </g>
+  <g id="Rectángulo_1" class="st0">
+    <g id="Rectángulo_11" data-name="Rectángulo_1">
+      <rect class="st2" x="171.81" y="125.01" width="145.51" height="146.93"/>
+    </g>
+  </g>
+  <g id="Línea_1" class="st0">
+    <g id="Línea_11" data-name="Línea_1">
+      <rect class="st2" x="188.96" y="88" width=".08" height="52.64" transform="translate(74.08 302.95) rotate(-89.82)"/>
+    </g>
+  </g>
+  <g id="Línea_1_copia_2" class="st0">
+    <g id="Línea_1_copia_21" data-name="Línea_1_copia_2">
+      <rect class="st2" x="162.7" y="114.47" width=".08" height="46.02"/>
+    </g>
+  </g>
+  <g id="Línea_1_copia_3" class="st0">
+    <g id="Línea_1_copia_31" data-name="Línea_1_copia_3">
+      <rect class="st2" x="307.26" y="218.17" width=".08" height="42.4"/>
+    </g>
+  </g>
+  <g id="Línea_1_copia_4" class="st0">
+    <g id="Línea_1_copia_41" data-name="Línea_1_copia_4">
+      <rect class="st2" x="279.48" y="232.81" width=".08" height="55.52" transform="translate(15.61 536.93) rotate(-89.31)"/>
+    </g>
+  </g>
+</svg>

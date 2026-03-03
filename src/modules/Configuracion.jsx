@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { store } from "../core/store.js";
 
 import { Check, Save, Building2, Mail, MessageCircle, Shield, FileText, Users, Palette, RefreshCw, Link2, Database } from "lucide-react";
+import { enviarTest } from "../utils/emailService";
 import { testConnection, createTables, getCreateSQL } from "./supabase.js";
 
 /* ── Storage key ── */

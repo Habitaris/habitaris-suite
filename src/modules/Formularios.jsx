@@ -1,3 +1,4 @@
+import { notificarRespuesta } from "../utils/emailService";
 import React, { useState, useMemo, useEffect } from "react";
 import { store } from "../core/store.js";
 import { procesarRespuesta as routeProcesar } from "./form/FormProcessor.js";
@@ -74,19 +75,13 @@ function calculateScore(resp, form) {
 /* ── EmailJS — reads from centralized config ── */
 const sendEmailJS = async (params) => {
   try {
-    const cfg = getConfig();
-    const res = await fetch("https://api.emailjs.com/api/v1.0/email/send", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        service_id: cfg.correo.emailjs_serviceId,
-        template_id: cfg.correo.emailjs_templateId,
-        user_id: cfg.correo.emailjs_publicKey,
-        template_params: params,
-      })
-    });
-    return res.ok;
-  } catch { return false; }
+      const cfg = getConfig();
+      const adminEmail = cfg.correo?.emailPrincipal || "comercial@habitaris.co";
+      const clientName = cliente?.nombre || response.clienteNombre || response.nombre || "Sin nombre";
+      const clientEmail = cliente?.email || response.clienteEmail || response.email || "";
+      const clientTel = cliente?.tel || response.clienteTel || response.telefono || "";
+      await notificarRespuesta(adminEmail, def.nombre || "Formulario", clientName, clientEmail, clientTel, "Respuesta recibida");
+    } catch(e) { console.warn("Email notification error:", e); }
 };
 const Card = ({children,style,...p}) => <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:8,padding:16,boxShadow:T.shadow,...style}} {...p}>{children}</div>;
 const Btn = ({children,on,v,style,...p}) => <button onClick={on} style={{padding:"7px 16px",borderRadius:5,border:v==="sec"?`1px solid ${T.border}`:"none",background:v==="sec"?"#fff":v==="danger"?"#B91C1C":"#111",color:v==="sec"?T.inkMid:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"inline-flex",alignItems:"center",gap:5,...style}} {...p}>{children}</button>;
