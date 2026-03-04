@@ -33,12 +33,11 @@ const DEF_DISP = {
 
 const DEF_CONFIG = {
   servicios: [
-    { id:"s1", nombre:"Consultoría inicial", duracion:20, descripcion:"Primera toma de contacto para conocer tu proyecto", precio:0, tipo:"virtual", color:"#111111", activo:true },
-    { id:"s2", nombre:"Diseño de interiores", duracion:20, descripcion:"Concepto creativo, moodboard, mobiliario, iluminación y acabados", precio:0, tipo:"virtual", color:"#2563eb", activo:true },
-    { id:"s3", nombre:"Arquitectura", duracion:20, descripcion:"Reforma, redistribución, planos técnicos y modelado 3D", precio:0, tipo:"virtual", color:"#16a34a", activo:true },
-    { id:"s4", nombre:"Obra integral", duracion:20, descripcion:"Gestión y ejecución completa de tu proyecto", precio:0, tipo:"presencial", color:"#d97706", activo:true },
-    { id:"s5", nombre:"Obra parcial", duracion:20, descripcion:"Ejecución de partidas específicas según presupuesto", precio:0, tipo:"presencial", color:"#9333ea", activo:true },
-    { id:"s6", nombre:"Visita técnica", duracion:20, descripcion:"Inspección en sitio, mediciones y diagnóstico", precio:0, tipo:"presencial", color:"#059669", activo:true },
+    { id:"DAN", nombre:"Diseño arquitectónico obra nueva", duracion:20, descripcion:"Proyecto desde cero: conceptualización, planos técnicos y modelado 3D", precio:0, tipo:"virtual", color:"#111111", activo:true },
+    { id:"DAR", nombre:"Diseño arquitectónico reforma", duracion:20, descripcion:"Intervención de espacios existentes: redistribución, iluminación y materialidad", precio:0, tipo:"virtual", color:"#2563eb", activo:true },
+    { id:"DIN", nombre:"Diseño de interiores", duracion:20, descripcion:"Concepto creativo, moodboard, mobiliario, iluminación y acabados", precio:0, tipo:"virtual", color:"#16a34a", activo:true },
+    { id:"OBR", nombre:"Obra integral", duracion:20, descripcion:"Gestión y ejecución completa del proyecto, desde diseño hasta entrega", precio:0, tipo:"presencial", color:"#d97706", activo:true },
+    { id:"OBP", nombre:"Obra parcial", duracion:20, descripcion:"Ejecución de partidas específicas según presupuesto", precio:0, tipo:"presencial", color:"#9333ea", activo:true },
   ],
   slotsPublicos: [],
   disponibilidad: {...DEF_DISP},
