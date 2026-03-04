@@ -362,7 +362,8 @@ export function CalendarioPublico() {
    ═══════════════════════════════════════════════════ */
 export default function Calendario() {
   const brand = useMemo(getBrand,[]);
-  const [tab, setTab] = useState("agenda");
+  const [tab, setTab] = useState("calendario");
+  const [calMonth, setCalMonth] = useState(()=>{const n=new Date();return n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0");});
   const [config, setConfig] = useState(()=>load(KEYS.config)||DEF_CONFIG);
   const [citas, setCitas] = useState(()=>load(KEYS.citas)||[]);
   const [filtroEstado, setFiltroEstado] = useState("todas");
@@ -548,6 +549,57 @@ export default function Calendario() {
   };
 
   /* ─── RENDER: Agenda general ─── */
+  const renderCalendario = () => {
+    const [y,m] = calMonth.split("-").map(Number);
+    const firstDay = new Date(y,m-1,1).getDay(); // 0=Sun
+    const daysInMonth = new Date(y,m,0).getDate();
+    const today2 = new Date(); const isThisMonth = today2.getFullYear()===y && today2.getMonth()===m-1;
+    const todayDate = today2.getDate();
+    const dias = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+    const meses = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+    const cells = [];
+    for(let i=0;i<firstDay;i++) cells.push(null);
+    for(let d=1;d<=daysInMonth;d++) cells.push(d);
+    const prevM = () => { let nm=m-1,ny=y; if(nm<1){nm=12;ny--;} setCalMonth(ny+"-"+String(nm).padStart(2,"0")); };
+    const nextM = () => { let nm=m+1,ny=y; if(nm>13){nm=1;ny++;} setCalMonth(ny+"-"+String(nm).padStart(2,"0")); };
+    const todayM = () => { const n=new Date(); setCalMonth(n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")); };
+    return (
+      <div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <button onClick={prevM} style={{...F,background:"none",border:"1px solid "+T.border,borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:14,color:T.ink}}>‹</button>
+            <h3 style={{...F,fontSize:16,fontWeight:700,margin:0,minWidth:180,textAlign:"center"}}>{meses[m-1]} {y}</h3>
+            <button onClick={nextM} style={{...F,background:"none",border:"1px solid "+T.border,borderRadius:6,padding:"4px 10px",cursor:"pointer",fontSize:14,color:T.ink}}>›</button>
+            <button onClick={todayM} style={{...F,background:T.ink,color:"#fff",border:"none",borderRadius:6,padding:"5px 12px",cursor:"pointer",fontSize:11,fontWeight:600}}>Hoy</button>
+          </div>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:1,background:T.border,borderRadius:10,overflow:"hidden",border:"1px solid "+T.border}}>
+          {dias.map(d=><div key={d} style={{...F,background:T.surfaceAlt,padding:"8px 4px",textAlign:"center",fontSize:10,fontWeight:700,color:T.inkMid,letterSpacing:1}}>{d.toUpperCase()}</div>)}
+          {cells.map((day,i)=>{
+            if(!day) return <div key={"e"+i} style={{background:T.surface,minHeight:90}} />;
+            const dateStr = calMonth+"-"+String(day).padStart(2,"0");
+            const dayCitas = citas.filter(ci=>ci.fecha===dateStr).sort((a,b)=>a.hora.localeCompare(b.hora));
+            const isToday2 = isThisMonth && day===todayDate;
+            const isWeekend = (firstDay+day-1)%7===0 || (firstDay+day-1)%7===6;
+            return (
+              <div key={day} style={{background:isToday2?"#EFF6FF":isWeekend?T.surfaceAlt:T.surface,minHeight:90,padding:4,cursor:"pointer",position:"relative"}} onClick={()=>{setNuevaReunion(p=>({...p,fecha:dateStr}));setTab("nueva");}}>
+                <div style={{...F,fontSize:11,fontWeight:isToday2?800:500,color:isToday2?"#1D4ED8":T.ink,width:22,height:22,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",background:isToday2?"#1D4ED8":"transparent",color:isToday2?"#fff":T.ink,marginBottom:2}}>{day}</div>
+                {dayCitas.slice(0,3).map(ci=>{
+                  const serv = config.servicios.find(s=>s.id===ci.servicioId);
+                  const col = ci.tipo==="publica"?(ci.estado==="pendiente"?"#D97706":ci.estado==="confirmada"?"#059669":"#6B7280"):"#1D4ED8";
+                  return <div key={ci.id} style={{...F,fontSize:9,background:col+"18",color:col,borderLeft:"2px solid "+col,padding:"1px 4px",marginBottom:1,borderRadius:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",cursor:"pointer"}} onClick={e=>{e.stopPropagation();}} title={ci.asunto||serv?.nombre||"Cita"}>
+                    <span style={{fontWeight:700}}>{ci.hora}</span> {ci.asunto||serv?.nombre||"Cita"}
+                  </div>;
+                })}
+                {dayCitas.length>3&&<div style={{...F,fontSize:8,color:T.inkLight,textAlign:"center"}}>+{dayCitas.length-3} más</div>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   const renderAgenda = () => (
     <div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:20}}>
@@ -890,6 +942,7 @@ export default function Calendario() {
           </button>
         ))}
       </div>
+      {tab==="calendario"&&renderCalendario()}
       {tab==="agenda"&&renderAgenda()}
       {tab==="solicitudes"&&renderSolicitudes()}
       {tab==="nueva"&&renderNueva()}
