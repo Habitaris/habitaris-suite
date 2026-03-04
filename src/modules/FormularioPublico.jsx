@@ -373,6 +373,19 @@ export default function FormularioPublico() {
 
   const visibleSteps = steps.filter(s => s.isPrivacy || s.fields.some(f => isVisible(f)));
 
+  /* Empty form guard */
+  if (campos.length === 0) return (
+    <div style={{ minHeight:"100vh", background:BASE.bg, display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ background:BASE.surface, borderRadius:12, padding:40, maxWidth:400, textAlign:"center", boxShadow:"0 4px 20px rgba(0,0,0,.08)" }}>
+        {marca.logo && <img src={marca.logo} alt="Logo" style={{ height:32, objectFit:"contain", marginBottom:12 }}/>}
+        <div style={{ fontSize:48, marginBottom:12 }}>⚠️</div>
+        <h2 style={{ ...BF, fontSize:18, fontWeight:700, color:BASE.ink }}>Formulario sin contenido</h2>
+        <p style={{ ...BF, fontSize:13, color:BASE.inkMid, marginTop:8, lineHeight:1.6 }}>Hubo un error al cargar este formulario. Intenta recargar la página o solicita un nuevo enlace.</p>
+        <button onClick={()=>window.location.reload()} style={{ marginTop:16, padding:"10px 24px", borderRadius:8, border:"none", background:"#111", color:"#fff", cursor:"pointer", fontSize:13, fontWeight:600 }}>Recargar</button>
+      </div>
+    </div>
+  );
+
   /* Privacy */
   if (privField && vals[privField.id] === "No") {
     return (
