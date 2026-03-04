@@ -650,7 +650,7 @@ export default function Calendario() {
               <div>
                 <label style={{fontSize:10,fontWeight:600,color:T.inkMid,textTransform:"uppercase"}}>Hora</label>
                 <select value={r.hora} onChange={e=>upd("hora",e.target.value)} style={{...inp2,background:T.surface}}>
-                  {(()=>{const horas=[];for(let h=9;h<17;h++){horas.push(String(h).padStart(2,"0")+":00");horas.push(String(h).padStart(2,"0")+":30");}return horas;})()
+                  {(()=>{const horas=[];for(let h=0;h<24;h++){horas.push(String(h).padStart(2,"0")+":00");horas.push(String(h).padStart(2,"0")+":30");}return horas;})()
                     .map(h=><option key={h} value={h}>{h}</option>)}
                 </select>
               </div>
@@ -890,13 +890,14 @@ export default function Calendario() {
       {/* ── Jitsi Embedded Modal ── */}
       {jitsiRoom && (()=>{
         const roomName = jitsiRoom.replace("https://meet.jit.si/","");
+        const brand = getBrand();
         return (
           <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,.85)",display:"flex",flexDirection:"column"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 20px",background:"#111"}}>
               <div style={{display:"flex",alignItems:"center",gap:12}}>
-                <span style={{fontSize:16}}>📹</span>
-                <span style={{...F,fontSize:14,fontWeight:600,color:"#fff"}}>Videollamada Habitaris</span>
-                <span style={{...F,fontSize:10,color:"rgba(255,255,255,.4)",marginLeft:8}}>{roomName}</span>
+                {brand.logo ? <img src={brand.logo} alt="Logo" style={{height:24,objectFit:"contain"}}/> : <span style={{...F,fontSize:14,fontWeight:700,color:"#fff",letterSpacing:3}}>{(brand.nombre||"HABITARIS").toUpperCase()}</span>}
+                {brand.slogan && <span style={{...F,fontSize:7,color:"rgba(255,255,255,.35)",letterSpacing:1.5,textTransform:"uppercase"}}>{brand.slogan}</span>}
+                <span style={{...F,fontSize:9,color:"rgba(255,255,255,.3)",marginLeft:8,background:"rgba(255,255,255,.08)",padding:"3px 8px",borderRadius:4}}>🌐 COT · UTC−5</span>
               </div>
               <div style={{display:"flex",gap:8,alignItems:"center"}}>
                 <button onClick={()=>{navigator.clipboard.writeText(jitsiRoom);}} title="Copiar link"
