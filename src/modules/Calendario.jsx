@@ -610,7 +610,7 @@ export default function Calendario() {
                           <button onClick={()=>cambiarEstado(c.id,"completada")} title="Completar" style={{...F,background:T.greenBg,border:"none",borderRadius:4,padding:"3px 6px",cursor:"pointer",fontSize:11}}>✓</button>
                           <button onClick={()=>cambiarEstado(c.id,"cancelada")} title="Cancelar" style={{...F,background:T.redBg,border:"none",borderRadius:4,padding:"3px 6px",cursor:"pointer",fontSize:11}}>✕</button>
                         </>}
-                        {c.jitsiLink&&<button onClick={()=>setJitsiRoom(c.jitsiLink)} title="Videollamada" style={{...F,background:T.blueBg,border:"none",borderRadius:4,padding:"3px 6px",fontSize:11,cursor:"pointer"}}>📹</button>}
+                        {c.jitsiLink&&<button onClick={()=>window.open(c.jitsiLink,"_blank")} title="Videollamada" style={{...F,background:T.blueBg,border:"none",borderRadius:4,padding:"3px 6px",fontSize:11,cursor:"pointer"}}>📹</button>}
                         <button onClick={()=>descargarICS(c,brand)} title="Descargar .ics" style={{...F,background:T.amberBg,border:"none",borderRadius:4,padding:"3px 6px",cursor:"pointer",fontSize:11}}>📅</button>
                       </div>
                     </td>
