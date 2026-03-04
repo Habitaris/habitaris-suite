@@ -417,7 +417,7 @@ export default function Calendario() {
       if (estado==="aprobada" && c.tipo==="publica" && config.crearJitsi) {
         const serv = config.servicios.find(s=>s.id===c.servicioId);
         if (serv?.tipo==="virtual" && !c.jitsiLink) {
-          upd.jitsiLink = "https://meet.jit.si/habitaris-"+uid();
+          upd.jitsiLink = "https://8x8.vc/vpaas-magic-cookie-3cfaa45d1fd143f4818e2959871dfb07/habitaris-"+uid();
         }
       }
       return upd;
@@ -438,7 +438,7 @@ export default function Calendario() {
   });
 
   const crearReunion = () => {
-    const jitsi = nuevaReunion.conJitsi ? "https://meet.jit.si/habitaris-"+uid() : null;
+    const jitsi = nuevaReunion.conJitsi ? "https://8x8.vc/vpaas-magic-cookie-3cfaa45d1fd143f4818e2959871dfb07/habitaris-"+uid() : null;
     const nueva = {
       id:uid(), tipo:"interna", fecha:nuevaReunion.fecha, hora:nuevaReunion.hora,
       duracionMin:nuevaReunion.duracionMin, asunto:nuevaReunion.asunto,
@@ -892,7 +892,7 @@ export default function Calendario() {
 
       {/* ── Jitsi Embedded Modal ── */}
       {jitsiRoom && (()=>{
-        const roomName = jitsiRoom.replace("https://meet.jit.si/","");
+        const roomName = jitsiRoom.replace(/https:\/\/(meet\.jit\.si|8x8\.vc)\//,"");
         const brand = getBrand();
         return (
           <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,.85)",display:"flex",flexDirection:"column"}}>
@@ -921,9 +921,9 @@ export default function Calendario() {
               if(!el||el.dataset.loaded) return;
               el.dataset.loaded="1";
               const s=document.createElement("script");
-              s.src="https://meet.jit.si/external_api.js";
+              s.src="https://8x8.vc/external_api.js";
               s.onload=()=>{
-                new window.JitsiMeetExternalAPI("meet.jit.si",{
+                const api=new window.JitsiMeetExternalAPI("8x8.vc",{
                   roomName:roomName,
                   parentNode:el,
                   width:"100%",height:"100%",
