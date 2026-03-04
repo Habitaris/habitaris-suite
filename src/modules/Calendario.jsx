@@ -33,12 +33,12 @@ const DEF_DISP = {
 
 const DEF_CONFIG = {
   servicios: [
-    { id:"s1", nombre:"Consultoría inicial", duracion:20, descripcion:"Primera toma de contacto para conocer tu proyecto", precio:0, tipo:"virtual", color:"#111111" },
-    { id:"s2", nombre:"Diseño de interiores", duracion:20, descripcion:"Concepto creativo, moodboard, mobiliario, iluminación y acabados", precio:0, tipo:"virtual", color:"#2563eb" },
-    { id:"s3", nombre:"Arquitectura", duracion:20, descripcion:"Reforma, redistribución, planos técnicos y modelado 3D", precio:0, tipo:"virtual", color:"#16a34a" },
-    { id:"s4", nombre:"Obra integral", duracion:20, descripcion:"Gestión y ejecución completa de tu proyecto", precio:0, tipo:"presencial", color:"#d97706" },
-    { id:"s5", nombre:"Obra parcial", duracion:20, descripcion:"Ejecución de partidas específicas según presupuesto", precio:0, tipo:"presencial", color:"#9333ea" },
-    { id:"s6", nombre:"Visita técnica", duracion:20, descripcion:"Inspección en sitio, mediciones y diagnóstico", precio:0, tipo:"presencial", color:"#059669" },
+    { id:"s1", nombre:"Consultoría inicial", duracion:20, descripcion:"Primera toma de contacto para conocer tu proyecto", precio:0, tipo:"virtual", color:"#111111", activo:true },
+    { id:"s2", nombre:"Diseño de interiores", duracion:20, descripcion:"Concepto creativo, moodboard, mobiliario, iluminación y acabados", precio:0, tipo:"virtual", color:"#2563eb", activo:true },
+    { id:"s3", nombre:"Arquitectura", duracion:20, descripcion:"Reforma, redistribución, planos técnicos y modelado 3D", precio:0, tipo:"virtual", color:"#16a34a", activo:true },
+    { id:"s4", nombre:"Obra integral", duracion:20, descripcion:"Gestión y ejecución completa de tu proyecto", precio:0, tipo:"presencial", color:"#d97706", activo:true },
+    { id:"s5", nombre:"Obra parcial", duracion:20, descripcion:"Ejecución de partidas específicas según presupuesto", precio:0, tipo:"presencial", color:"#9333ea", activo:true },
+    { id:"s6", nombre:"Visita técnica", duracion:20, descripcion:"Inspección en sitio, mediciones y diagnóstico", precio:0, tipo:"presencial", color:"#059669", activo:true },
   ],
   slotsPublicos: [],
   disponibilidad: {...DEF_DISP},
@@ -217,7 +217,7 @@ export function CalendarioPublico() {
           <div>
             <h3 style={{fontSize:14,fontWeight:600,color:T.ink,marginBottom:12}}>1. Selecciona el servicio</h3>
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              {config.servicios.map(s=>(
+              {config.servicios.filter(s=>s.activo!==false).map(s=>(
                 <button key={s.id} onClick={()=>{setSelServicio(s.id);setPaso(2);}}
                   style={{...cs,background:T.surface,border:"1px solid "+T.border,borderRadius:10,padding:"14px 16px",cursor:"pointer",textAlign:"left",transition:"all .15s"}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
@@ -393,6 +393,18 @@ export default function Calendario() {
   const [filtroTipo, setFiltroTipo] = useState("todas");
   const [showNueva, setShowNueva] = useState(false);
   const [showReprogram, setShowReprogram] = useState(null);
+
+  // Load projects from CRM
+  const proyectos = useMemo(()=>{
+    try {
+      const ofertas = JSON.parse(store.getSync("hab:crm:ofertas")) || [];
+      return ofertas.filter(o=>o.estado!=="perdida").map(o=>({
+        id:o.id, codigo:o.codigo||o.id, nombre:o.nombre||o.proyecto||"Sin nombre",
+        cliente:o.contacto?.nombre||o.contacto?.email||"", estado:o.estado,
+        miembros:o.miembros||[], clienteEmail:o.contacto?.email||"",
+      }));
+    } catch { return []; }
+  },[]);
 
   const saveConfig = n => { setConfig(n); save(KEYS.config,n); };
   const saveCitas = n => { setCitas(n); save(KEYS.citas,n); };
@@ -676,8 +688,24 @@ export default function Calendario() {
               <input value={r.clienteEmail} onChange={e=>upd("clienteEmail",e.target.value)} style={inp2} placeholder="cliente@email.com" />
             </div>
             <div>
-              <label style={{fontSize:10,fontWeight:600,color:T.inkMid,textTransform:"uppercase"}}>ID de proyecto (opcional)</label>
-              <input value={r.proyectoId} onChange={e=>upd("proyectoId",e.target.value)} style={inp2} placeholder="PRY-001" />
+              <label style={{fontSize:10,fontWeight:600,color:T.inkMid,textTransform:"uppercase"}}>Proyecto / OT (opcional)</label>
+              <select value={r.proyectoId} onChange={e=>{
+                upd("proyectoId",e.target.value);
+                const pry=proyectos.find(p=>p.id===e.target.value);
+                if(pry){ upd("clienteEmail",pry.clienteEmail); upd("participantes",pry.miembros?.join?.(", ")||""); }
+              }} style={{...inp2,background:T.surface}}>
+                <option value="">Sin proyecto</option>
+                {proyectos.map(p=><option key={p.id} value={p.id}>{p.codigo} — {p.nombre} ({p.cliente})</option>)}
+              </select>
+              {r.proyectoId&&(()=>{
+                const pry=proyectos.find(p=>p.id===r.proyectoId);
+                return pry?(
+                  <div style={{marginTop:6,background:T.blueBg,borderRadius:6,padding:8,fontSize:10,color:T.blue}}>
+                    📁 {pry.codigo} · Cliente: {pry.cliente||"—"} · Estado: {pry.estado}
+                    {pry.miembros?.length>0&&<span> · Miembros: {pry.miembros.join(", ")}</span>}
+                  </div>
+                ):null;
+              })()}
             </div>
             <label style={{display:"flex",alignItems:"center",gap:8,fontSize:12,cursor:"pointer"}}>
               <input type="checkbox" checked={r.conExterno} onChange={e=>upd("conExterno",e.target.checked)} />
@@ -718,7 +746,9 @@ export default function Calendario() {
       </div>
       {config.servicios.map((s,i)=>(
         <div key={s.id} style={{background:T.surface,borderRadius:10,border:"1px solid "+T.border,padding:16,marginBottom:8}}>
-          <div style={{display:"grid",gridTemplateColumns:"2fr 80px 100px 90px 40px",gap:8,alignItems:"center"}}>
+          <div style={{display:"grid",gridTemplateColumns:"32px 2fr 80px 100px 90px 40px",gap:8,alignItems:"center"}}>
+            <input type="checkbox" checked={s.activo!==false} onChange={e=>{const n=[...config.servicios];n[i]={...s,activo:e.target.checked};saveConfig({...config,servicios:n});}}
+              title={s.activo!==false?"Visible en web — click para ocultar":"Oculto — click para mostrar"} style={{width:16,height:16,cursor:"pointer"}} />
             <input value={s.nombre} onChange={e=>{const n=[...config.servicios];n[i]={...s,nombre:e.target.value};saveConfig({...config,servicios:n});}}
               style={{...F,padding:"8px",borderRadius:4,border:"1px solid "+T.border,fontSize:12}} placeholder="Nombre" />
             <input type="number" value={s.duracion} onChange={e=>{const n=[...config.servicios];n[i]={...s,duracion:+e.target.value};saveConfig({...config,servicios:n});}}
