@@ -44,7 +44,7 @@ const DEF_CONFIG = {
   bufferMinutos:15, anticipacionMaxDias:60,
   mensajeBienvenida:"Agenda tu cita con nuestro equipo de Habitaris.",
   formularioIntake:true, crearJitsi:true, notificarEmail:true, notificarWhatsApp:false,
-  modulos: ["General","CRM","Proyectos","RRHH","Legal","Postventa","Externo"],
+  modulos: ["General","CRM","Proyectos","RRHH","Legal","Postventa"],
 };
 
 function getBrand() {
