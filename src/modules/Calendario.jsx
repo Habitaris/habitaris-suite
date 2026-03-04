@@ -417,7 +417,7 @@ export default function Calendario() {
       if (estado==="aprobada" && c.tipo==="publica" && config.crearJitsi) {
         const serv = config.servicios.find(s=>s.id===c.servicioId);
         if (serv?.tipo==="virtual" && !c.jitsiLink) {
-          upd.jitsiLink = "https://8x8.vc/vpaas-magic-cookie-3cfaa45d1fd143f4818e2959871dfb07/habitaris-"+uid();
+          upd.jitsiLink = "/sala/habitaris-"+uid();
         }
       }
       return upd;
@@ -438,7 +438,7 @@ export default function Calendario() {
   });
 
   const crearReunion = () => {
-    const jitsi = nuevaReunion.conJitsi ? "https://8x8.vc/vpaas-magic-cookie-3cfaa45d1fd143f4818e2959871dfb07/habitaris-"+uid() : null;
+    const jitsi = nuevaReunion.conJitsi ? "/sala/habitaris-"+uid() : null;
     const nueva = {
       id:uid(), tipo:"interna", fecha:nuevaReunion.fecha, hora:nuevaReunion.hora,
       duracionMin:nuevaReunion.duracionMin, asunto:nuevaReunion.asunto,

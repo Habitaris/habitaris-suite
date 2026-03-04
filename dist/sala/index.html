@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Videollamada · Habitaris</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',Arial,sans-serif;background:#111;color:#fff;height:100vh;display:flex;flex-direction:column}
+  .header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:#111;border-bottom:1px solid rgba(255,255,255,.08)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .brand img{height:24px;object-fit:contain}
+  .brand-name{font-size:13px;font-weight:700;letter-spacing:3px}
+  .brand-slogan{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:1.5px;text-transform:uppercase;margin-left:10px}
+  .tz{font-size:9px;color:rgba(255,255,255,.3);background:rgba(255,255,255,.08);padding:3px 8px;border-radius:4px}
+  .actions{display:flex;gap:8px}
+  .btn{padding:6px 14px;border-radius:6px;font-size:11px;cursor:pointer;border:none;font-weight:600}
+  .btn-copy{background:rgba(255,255,255,.1);color:#fff}
+  .btn-copy:hover{background:rgba(255,255,255,.2)}
+  .btn-exit{background:#B91C1C;color:#fff}
+  .btn-exit:hover{background:#991B1B}
+  #jitsi-container{flex:1;width:100%}
+  .loading{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+  .loading .spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.1);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="brand">
+    <img src="/logo-habitaris-blanco.png" alt="Habitaris"/>
+    <span class="brand-name">HABITARIS</span>
+    <span class="brand-slogan">ARQUITECTURA · INTERIORISMO</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:16px">
+    <span class="tz" id="tz"></span>
+    <div class="actions">
+      <button class="btn btn-copy" onclick="copyLink()">📋 Copiar link</button>
+      <button class="btn btn-exit" onclick="window.close()">✕ Salir</button>
+    </div>
+  </div>
+</div>
+<div id="jitsi-container">
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div style="font-size:13px;color:rgba(255,255,255,.5)">Conectando videollamada...</div>
+  </div>
+</div>
+<script>
+  const APPID = "vpaas-magic-cookie-3cfaa45d1fd143f4818e2959871dfb07";
+  // Get room from URL path: /sala/habitaris-xxx or /sala/?room=xxx
+  const path = window.location.pathname.replace("/sala/","").replace("/sala","");
+  const params = new URLSearchParams(window.location.search);
+  const room = path || params.get("room") || "habitaris-general";
+  
+  document.getElementById("tz").textContent = "🌐 " + Intl.DateTimeFormat().resolvedOptions().timeZone.replace("_"," ");
+  
+  function copyLink() {
+    navigator.clipboard.writeText(window.location.href);
+    const btn = document.querySelector(".btn-copy");
+    btn.textContent = "✅ Copiado";
+    setTimeout(()=> btn.textContent = "📋 Copiar link", 2000);
+  }
+  
+  async function init() {
+    // Fetch JWT
+    let jwt = "";
+    try {
+      const r = await fetch("/api/jaas-token", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({room: APPID+"/"+room, userName:"Habitaris", userEmail:"comercial@habitaris.co", isModerator:true})
+      });
+      const d = await r.json();
+      jwt = d.token || "";
+    } catch(e) { console.warn("JWT failed:", e); }
+    
+    // Load Jitsi
+    const s = document.createElement("script");
+    s.src = "https://8x8.vc/external_api.js";
+    s.onload = () => {
+      document.getElementById("loading").style.display = "none";
+      const api = new JitsiMeetExternalAPI("8x8.vc", {
+        roomName: APPID+"/"+room,
+        jwt: jwt || undefined,
+        parentNode: document.getElementById("jitsi-container"),
+        width: "100%",
+        height: "100%",
+        userInfo: {displayName: "Habitaris", email: "comercial@habitaris.co"},
+        configOverwrite: {
+          prejoinPageEnabled: false,
+          startWithAudioMuted: false,
+          startWithVideoMuted: false,
+          disableDeepLinking: true,
+          subject: "Habitaris · Videollamada",
+          recordingService: {enabled:true, sharingEnabled:true},
+          transcription: {enabled:true, autoTranscribeOnRecord:true},
+        },
+        interfaceConfigOverwrite: {
+          SHOW_JITSI_WATERMARK: false,
+          SHOW_WATERMARK_FOR_GUESTS: false,
+          SHOW_BRAND_WATERMARK: false,
+          SHOW_POWERED_BY: false,
+          SHOW_PROMOTIONAL_CLOSE_PAGE: false,
+          TOOLBAR_BUTTONS: ["microphone","camera","desktop","chat","raisehand","tileview","fullscreen","hangup","recording","closedcaptions","select-background","settings"],
+          DEFAULT_BACKGROUND: "#111111",
+          DEFAULT_LOCAL_DISPLAY_NAME: "Habitaris",
+          DEFAULT_REMOTE_DISPLAY_NAME: "Participante",
+          APP_NAME: "Habitaris",
+          PROVIDER_NAME: "Habitaris",
+          DEFAULT_LANGUAGE: "es",
+        },
+      });
+      api.addEventListener("readyToClose", () => window.close());
+    };
+    document.head.appendChild(s);
+  }
+  init();
+</script>
+</body>
+</html>
