@@ -700,7 +700,7 @@ export default function Calendario() {
               </div>
             )}
               <div style={{fontSize:10,color:T.inkLight,marginBottom:12,display:"flex",alignItems:"center",gap:6}}>
-                🌐 <span style={{fontWeight:600}}>Zona horaria:</span> América/Bogotá (COT · UTC−5)
+                🌐 <span style={{fontWeight:600}}>Zona horaria:</span> {Intl.DateTimeFormat().resolvedOptions().timeZone} ({new Date().toLocaleTimeString("es",{timeZoneName:"short"}).split(" ").pop()})
               </div>
             <label style={{display:"flex",alignItems:"center",gap:8,fontSize:12,cursor:"pointer"}}>
               <input type="checkbox" checked={r.conJitsi} onChange={e=>upd("conJitsi",e.target.checked)} />
@@ -900,7 +900,7 @@ export default function Calendario() {
               <div style={{display:"flex",alignItems:"center",gap:12}}>
                 {brand.logo ? <img src={brand.logo} alt="Logo" style={{height:24,objectFit:"contain"}}/> : <span style={{...F,fontSize:14,fontWeight:700,color:"#fff",letterSpacing:3}}>{(brand.nombre||"HABITARIS").toUpperCase()}</span>}
                 {brand.slogan && <span style={{...F,fontSize:7,color:"rgba(255,255,255,.35)",letterSpacing:1.5,textTransform:"uppercase"}}>{brand.slogan}</span>}
-                <span style={{...F,fontSize:9,color:"rgba(255,255,255,.3)",marginLeft:8,background:"rgba(255,255,255,.08)",padding:"3px 8px",borderRadius:4}}>🌐 COT · UTC−5</span>
+                <span style={{...F,fontSize:9,color:"rgba(255,255,255,.3)",marginLeft:8,background:"rgba(255,255,255,.08)",padding:"3px 8px",borderRadius:4}}>🌐 {Intl.DateTimeFormat().resolvedOptions().timeZone}</span>
               </div>
               <div style={{display:"flex",gap:8,alignItems:"center"}}>
                 <button onClick={()=>{navigator.clipboard.writeText(jitsiRoom);}} title="Copiar link"
