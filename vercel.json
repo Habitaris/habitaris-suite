@@ -1,19 +1,48 @@
 {
   "rewrites": [
-    { "source": "/portal", "destination": "/index.html" },
-    { "source": "/portal/(.*)", "destination": "/index.html" },
-    { "source": "/form", "destination": "/index.html" },
-    { "source": "/form/(.*)", "destination": "/index.html" },
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
+    {
+      "source": "/portal",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/portal/(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/form",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/form/(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/sala/(.*)",
+      "destination": "/sala/index.html"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
+    }
   ],
   "headers": [
     {
       "source": "/sw.js",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
     },
     {
       "source": "/manifest.json",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
     }
   ]
 }
