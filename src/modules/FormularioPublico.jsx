@@ -513,8 +513,7 @@ export default function FormularioPublico() {
 
     // Send email notification to comercial@habitaris.co with full report
     try {
-      const cfg = getConfig();
-      const adminEmail = cfg.correo?.emailPrincipal || "comercial@habitaris.co";
+      const adminEmail = marca.adminEmail || "comercial@habitaris.co";
       const clientName = cliente?.nombre || response.clienteNombre || response.nombre || "Sin nombre";
       const clientEmail = cliente?.email || response.clienteEmail || response.email || "";
       const clientTel = cliente?.tel || response.clienteTel || response.telefono || "";
@@ -577,7 +576,7 @@ export default function FormularioPublico() {
           '</div>';
       }
 
-      await notificarRespuesta(adminEmail, def.nombre || "Formulario", clientName, clientEmail, clientTel, htmlContent + scoringHtml);
+      try { const brandM={empresa:marca.empresa||"Habitaris",colorPrimario:marca.colorPrimario||"#111",colorSecundario:marca.colorSecundario||"#3B3B3B",colorAcento:marca.colorAcento||"#111111",logo:marca.logo||"",slogan:marca.slogan||"",razonSocial:marca.razonSocial||"",domicilio:marca.domicilio||""}; await fetch("/api/send-email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:adminEmail,subject:"✅ Nueva respuesta: "+(def.nombre||"Formulario"),message:"Se ha recibido una nueva respuesta al formulario «"+(def.nombre||"Formulario")+"».\nCliente: "+clientName+"\nEmail: "+clientEmail+"\nTel: "+clientTel,brand:brandM,extra:{contenido:htmlContent+scoringHtml,form_name:def.nombre,client_name:clientName,client_email:clientEmail,client_tel:clientTel}})}); console.log("[FormPublico] Email sent to "+adminEmail); } catch(emailErr){ console.warn("Email send failed:",emailErr); }
     } catch(e) { console.warn("Email notification error:", e); }
   };
 

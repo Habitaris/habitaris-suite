@@ -421,7 +421,7 @@ function Constructor({ forms, setForms, editId, setEditId, onSaved, envios, addE
   /* Generate standalone HTML form file */
   const generateFormHTML = (client, paisProyecto) => {
     const cfg = getConfig();
-    const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre,paisProyecto:paisProyecto||"Colombia"}, cliente:client||null, marca:{ logo:cfg.apariencia?.logo||"", colorPrimario:cfg.apariencia?.colorPrimario||"#111", colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B", colorAcento:cfg.apariencia?.colorAcento||"#111111", tipografia:cfg.apariencia?.tipografia||"DM Sans", slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"", empresa:cfg.empresa?.nombre||"Habitaris" } };
+    const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre,paisProyecto:paisProyecto||"Colombia"}, cliente:client||null, marca:{ logo:(cfg.apariencia?.logo||"").startsWith("/")?(cfg.app?.url||"https://suite.habitaris.co")+cfg.apariencia.logo:(cfg.apariencia?.logo||""), colorPrimario:cfg.apariencia?.colorPrimario||"#111", colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B", colorAcento:cfg.apariencia?.colorAcento||"#111111", tipografia:cfg.apariencia?.tipografia||"DM Sans", slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"", empresa:cfg.empresa?.nombre||"Habitaris", adminEmail:cfg.correo?.emailPrincipal||"comercial@habitaris.co" } };
     const defJSON = JSON.stringify(def);
     const telWA = (config.telRespuesta||cfg.whatsapp.numero||"").replace(/[^0-9]/g,"");
     const empresaNombre = cfg.empresa.nombre.toUpperCase();
@@ -614,7 +614,7 @@ render();
     const appUrl = (cfg.app?.url || "").replace(/\/$/,"");
     if (appUrl) {
       const linkConfig = { linkId, maxUsos: linkMaxUsos||0, fechaCaducidad: linkExpiry||"" };
-      const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre,paisProyecto:sharePais}, cliente:client||null, linkConfig, modulo, marca:{ logo:cfg.apariencia?.logo||"", colorPrimario:cfg.apariencia?.colorPrimario||"#111", colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B", colorAcento:cfg.apariencia?.colorAcento||"#111111", tipografia:cfg.apariencia?.tipografia||"DM Sans", slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"", empresa:cfg.empresa?.nombre||"Habitaris", razonSocial:cfg.empresa?.razonSocial||"", domicilio:cfg.empresa?.domicilio||"" } };
+      const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre,paisProyecto:sharePais}, cliente:client||null, linkConfig, modulo, marca:{ logo:(cfg.apariencia?.logo||"").startsWith("/")?(cfg.app?.url||"https://suite.habitaris.co")+cfg.apariencia.logo:(cfg.apariencia?.logo||""), colorPrimario:cfg.apariencia?.colorPrimario||"#111", colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B", colorAcento:cfg.apariencia?.colorAcento||"#111111", tipografia:cfg.apariencia?.tipografia||"DM Sans", slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"", empresa:cfg.empresa?.nombre||"Habitaris", adminEmail:cfg.correo?.emailPrincipal||"comercial@habitaris.co", razonSocial:cfg.empresa?.razonSocial||"", domicilio:cfg.empresa?.domicilio||"" } };
       // Save to Supabase → short URL
       try {
         const client = def.cliente || {};
