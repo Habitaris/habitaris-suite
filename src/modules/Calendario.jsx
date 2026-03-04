@@ -369,6 +369,7 @@ export default function Calendario() {
   const [filtroTipo, setFiltroTipo] = useState("todas");
   const [showNueva, setShowNueva] = useState(false);
   const [showReprogram, setShowReprogram] = useState(null);
+  const [jitsiRoom, setJitsiRoom] = useState(null);
 
   const proyectos = useMemo(()=>{
     try {
@@ -607,7 +608,7 @@ export default function Calendario() {
                           <button onClick={()=>cambiarEstado(c.id,"completada")} title="Completar" style={{...F,background:T.greenBg,border:"none",borderRadius:4,padding:"3px 6px",cursor:"pointer",fontSize:11}}>✓</button>
                           <button onClick={()=>cambiarEstado(c.id,"cancelada")} title="Cancelar" style={{...F,background:T.redBg,border:"none",borderRadius:4,padding:"3px 6px",cursor:"pointer",fontSize:11}}>✕</button>
                         </>}
-                        {c.jitsiLink&&<a href={c.jitsiLink} target="_blank" rel="noreferrer" title="Videollamada" style={{...F,background:T.blueBg,border:"none",borderRadius:4,padding:"3px 6px",fontSize:11,textDecoration:"none"}}>📹</a>}
+                        {c.jitsiLink&&<button onClick={()=>setJitsiRoom(c.jitsiLink)} title="Videollamada" style={{...F,background:T.blueBg,border:"none",borderRadius:4,padding:"3px 6px",fontSize:11,cursor:"pointer"}}>📹</button>}
                         <button onClick={()=>descargarICS(c,brand)} title="Descargar .ics" style={{...F,background:T.amberBg,border:"none",borderRadius:4,padding:"3px 6px",cursor:"pointer",fontSize:11}}>📅</button>
                       </div>
                     </td>
@@ -884,6 +885,42 @@ export default function Calendario() {
       {tab==="disponibilidad"&&renderDisponibilidad()}
       {tab==="config"&&renderConfig()}
       {tab==="compartir"&&renderCompartir()}
+    
+
+      {/* ── Jitsi Embedded Modal ── */}
+      {jitsiRoom && (()=>{
+        const roomName = jitsiRoom.replace("https://meet.jit.si/","");
+        return (
+          <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,.85)",display:"flex",flexDirection:"column"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 20px",background:"#111"}}>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <span style={{fontSize:16}}>📹</span>
+                <span style={{...F,fontSize:14,fontWeight:600,color:"#fff"}}>Videollamada Habitaris</span>
+                <span style={{...F,fontSize:10,color:"rgba(255,255,255,.4)",marginLeft:8}}>{roomName}</span>
+              </div>
+              <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                <button onClick={()=>{navigator.clipboard.writeText(jitsiRoom);}} title="Copiar link"
+                  style={{...F,background:"rgba(255,255,255,.1)",border:"none",borderRadius:6,padding:"6px 12px",color:"#fff",cursor:"pointer",fontSize:11}}>
+                  📋 Copiar link
+                </button>
+                <button onClick={()=>window.open(jitsiRoom,"_blank")} title="Abrir en pestaña"
+                  style={{...F,background:"rgba(255,255,255,.1)",border:"none",borderRadius:6,padding:"6px 12px",color:"#fff",cursor:"pointer",fontSize:11}}>
+                  ↗ Abrir externo
+                </button>
+                <button onClick={()=>setJitsiRoom(null)} title="Cerrar"
+                  style={{...F,background:"#B91C1C",border:"none",borderRadius:6,padding:"6px 14px",color:"#fff",cursor:"pointer",fontSize:12,fontWeight:700}}>
+                  ✕ Salir
+                </button>
+              </div>
+            </div>
+            <iframe
+              src={"https://meet.jit.si/"+roomName+"#config.prejoinPageEnabled=false&config.startWithVideoMuted=false&config.startWithAudioMuted=false&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.SHOW_BRAND_WATERMARK=false&interfaceConfig.TOOLBAR_BUTTONS=%5B%22microphone%22%2C%22camera%22%2C%22desktop%22%2C%22chat%22%2C%22raisehand%22%2C%22tileview%22%2C%22hangup%22%5D"}
+              allow="camera;microphone;display-capture;autoplay;clipboard-write"
+              style={{flex:1,border:"none",width:"100%"}}
+            />
+          </div>
+        );
+      })()}
     </div>
   );
 }
