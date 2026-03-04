@@ -710,6 +710,13 @@ export default function Calendario() {
             </label>
             <div>
               <label style={{fontSize:10,fontWeight:600,color:T.inkMid,textTransform:"uppercase"}}>Notas</label>
+              <div style={{...F,fontSize:10,fontWeight:600,color:T.inkMid,letterSpacing:1,marginBottom:4}}>ENVIAR DESDE</div>
+              <select value={r.emailRemitente||config.userEmail||"comercial@habitaris.co"} onChange={e=>upd("emailRemitente",e.target.value)} style={{...F,width:"100%",padding:"10px 12px",borderRadius:8,border:"1px solid "+T.border,fontSize:13,color:T.ink,marginBottom:16,background:T.surface}}>
+                <option value="comercial@habitaris.co">comercial@habitaris.co (General)</option>
+                <option value="dparra@habitaris.co">David Parra (dparra@habitaris.co)</option>
+                {(()=>{try{const emps=JSON.parse(localStorage.getItem("hab:rrhh:empleados")||"[]");return emps.filter(e=>e.email&&e.email.includes("@habitaris.co")&&e.email!=="dparra@habitaris.co").map(e=><option key={e.email} value={e.email}>{e.nombre||e.email} ({e.email})</option>);}catch{return null;}})()}
+              </select>
+              <div style={{...F,fontSize:10,fontWeight:600,color:T.inkMid,letterSpacing:1,marginBottom:4}}>NOTAS</div>
               <textarea value={r.notas} onChange={e=>upd("notas",e.target.value)} rows={2} style={{...inp2,resize:"vertical"}} />
             </div>
           </div>
