@@ -25,9 +25,9 @@ const DIAS_LABELS = { lunes:"Lunes", martes:"Martes", miercoles:"Miércoles", ju
 const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
 const DEF_DISP = {
-  lunes:{activo:true,inicio:"09:00",fin:"18:00"}, martes:{activo:true,inicio:"09:00",fin:"18:00"},
-  miercoles:{activo:true,inicio:"09:00",fin:"18:00"}, jueves:{activo:true,inicio:"09:00",fin:"18:00"},
-  viernes:{activo:true,inicio:"09:00",fin:"18:00"}, sabado:{activo:false,inicio:"09:00",fin:"13:00"},
+  lunes:{activo:true,inicio:"09:00",fin:"17:00"}, martes:{activo:true,inicio:"09:00",fin:"17:00"},
+  miercoles:{activo:true,inicio:"09:00",fin:"17:00"}, jueves:{activo:true,inicio:"09:00",fin:"17:00"},
+  viernes:{activo:true,inicio:"09:00",fin:"17:00"}, sabado:{activo:false,inicio:"09:00",fin:"13:00"},
   domingo:{activo:false,inicio:"",fin:""},
 };
 
