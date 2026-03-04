@@ -52,8 +52,8 @@ function getBrand() {
     const cfg = JSON.parse(store.getSync("habitaris_config")) || {};
     return {
       nombre: cfg.empresa?.nombre || "Habitaris",
-      logoBlanco: cfg.apariencia?.logoBlanco || "/logo-habitaris-blanco.png",
-      logoNegro: cfg.apariencia?.logoNegro || "/logo-habitaris-negro.svg",
+      logoBlanco: ((cfg.apariencia?.logoBlanco||"/logo-habitaris-blanco.png").startsWith("/")?(cfg.app?.url||"https://suite.habitaris.co")+(cfg.apariencia?.logoBlanco||"/logo-habitaris-blanco.png"):(cfg.apariencia?.logoBlanco||"/logo-habitaris-blanco.png")),
+      logoNegro: ((cfg.apariencia?.logoNegro||"/logo-habitaris-negro.svg").startsWith("/")?(cfg.app?.url||"https://suite.habitaris.co")+(cfg.apariencia?.logoNegro||"/logo-habitaris-negro.svg"):(cfg.apariencia?.logoNegro||"/logo-habitaris-negro.svg")),
       colorPrimario: cfg.apariencia?.colorPrimario || "#111111",
       tipografia: cfg.apariencia?.tipografia || "DM Sans",
       slogan: cfg.apariencia?.slogan || "Arquitectura · Interiorismo",
@@ -898,7 +898,7 @@ export default function Calendario() {
           <div style={{position:"fixed",inset:0,zIndex:9999,background:"rgba(0,0,0,.85)",display:"flex",flexDirection:"column"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"12px 20px",background:"#111"}}>
               <div style={{display:"flex",alignItems:"center",gap:12}}>
-                {brand.logo ? <img src={brand.logo} alt="Logo" style={{height:24,objectFit:"contain"}}/> : <span style={{...F,fontSize:14,fontWeight:700,color:"#fff",letterSpacing:3}}>{(brand.nombre||"HABITARIS").toUpperCase()}</span>}
+                {brand.logoBlanco ? <img src={brand.logoBlanco} alt="Logo" style={{height:24,objectFit:"contain"}}/> : <span style={{...F,fontSize:14,fontWeight:700,color:"#fff",letterSpacing:3}}>{(brand.nombre||"HABITARIS").toUpperCase()}</span>}
                 {brand.slogan && <span style={{...F,fontSize:7,color:"rgba(255,255,255,.35)",letterSpacing:1.5,textTransform:"uppercase"}}>{brand.slogan}</span>}
                 <span style={{...F,fontSize:9,color:"rgba(255,255,255,.3)",marginLeft:8,background:"rgba(255,255,255,.08)",padding:"3px 8px",borderRadius:4}}>🌐 {Intl.DateTimeFormat().resolvedOptions().timeZone}</span>
               </div>
