@@ -6,7 +6,7 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    const { client_name, client_email, form_name, form_link, link_info, from_name, type, extra, fromEmail, to, subject, message, brand, link, link_info: linkInfo2} = req.body || {};
+    const { client_name, client_email, form_name, form_link, from_name, type, extra, fromEmail, to, subject, message, brand, link, link_info} = req.body || {}; const linkInfo2 = link_info;
     const recipientEmail = to || client_email;
     if (!recipientEmail) return res.status(400).json({ ok: false, error: "email required" });
 

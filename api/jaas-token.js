@@ -53,7 +53,7 @@ export default function handler(req, res) {
     const payloadB64 = base64url(Buffer.from(JSON.stringify(payload)));
     const signingInput = headerB64 + "." + payloadB64;
 
-    let pk = process.env.JAAS_PRIVATE_KEY || ""; pk = pk.replace(/\\n/g,"\n").replace(/\n/g,"\n"); if(!pk.includes("-----BEGIN")) { console.error("Invalid JAAS_PRIVATE_KEY"); return res.status(500).json({error:"Invalid private key"}); }
+    let pk = (process.env.JAAS_PRIVATE_KEY || "").replace(/\\n/g,"\n").replace(/\n/g,"\n").trim(); if(!pk.includes("-----BEGIN")) { console.error("Invalid JAAS_PRIVATE_KEY"); return res.status(500).json({error:"Invalid private key"}); }
     const sign = crypto.createSign("RSA-SHA256");
     sign.update(signingInput);
     const signature = base64url(sign.sign(pk));
