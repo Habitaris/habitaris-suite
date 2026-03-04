@@ -917,11 +917,35 @@ export default function Calendario() {
                 </button>
               </div>
             </div>
-            <iframe
-              src={"https://meet.jit.si/"+roomName+"#config.prejoinPageEnabled=false&config.startWithVideoMuted=false&config.startWithAudioMuted=false&interfaceConfig.SHOW_JITSI_WATERMARK=false&interfaceConfig.SHOW_WATERMARK_FOR_GUESTS=false&interfaceConfig.SHOW_BRAND_WATERMARK=false&interfaceConfig.TOOLBAR_BUTTONS=%5B%22microphone%22%2C%22camera%22%2C%22desktop%22%2C%22chat%22%2C%22raisehand%22%2C%22tileview%22%2C%22hangup%22%5D"}
-              allow="camera;microphone;display-capture;autoplay;clipboard-write"
-              style={{flex:1,border:"none",width:"100%"}}
-            />
+            <div id="jitsi-container" style={{flex:1,width:"100%"}} ref={el=>{
+              if(!el||el.dataset.loaded) return;
+              el.dataset.loaded="1";
+              const s=document.createElement("script");
+              s.src="https://meet.jit.si/external_api.js";
+              s.onload=()=>{
+                new window.JitsiMeetExternalAPI("meet.jit.si",{
+                  roomName:roomName,
+                  parentNode:el,
+                  width:"100%",height:"100%",
+                  configOverwrite:{
+                    prejoinPageEnabled:false,
+                    startWithAudioMuted:false,
+                    startWithVideoMuted:false,
+                    disableDeepLinking:true,
+                    hideConferenceSubject:false,
+                    subject:brand.nombre+" · Videollamada",
+                  },
+                  interfaceConfigOverwrite:{
+                    SHOW_JITSI_WATERMARK:false,
+                    SHOW_WATERMARK_FOR_GUESTS:false,
+                    SHOW_BRAND_WATERMARK:false,
+                    TOOLBAR_BUTTONS:["microphone","camera","desktop","chat","raisehand","tileview","fullscreen","hangup"],
+                    DEFAULT_BACKGROUND:"#111111",
+                  },
+                });
+              };
+              document.head.appendChild(s);
+            }}/>
           </div>
         );
       })()}
