@@ -61,14 +61,31 @@ export default async function handler(req, res) {
     const cp = b.colorPrimario || "#111111";
     const logo2 = b.logo || "https://suite.habitaris.co/logo-habitaris-blanco.png";
     const slogan2 = b.slogan || "";
-    const msgHtml = message.replace(/\n/g,"<br/>").replace(/
-/g,"<br/>");
-    const linkHtml = link ? `<a href="${link}" style="display:inline-block;background:${cp};color:#fff;text-decoration:none;padding:14px 44px;border-radius:6px;font-size:14px;font-weight:bold;letter-spacing:0.5px;margin-top:16px">${linkInfo2 || "Abrir enlace"} →</a>` : "";
-    const genHtml = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5F4F1;font-family:Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:40px 20px"><tr><td align="center"><table width="580" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)"><tr><td style="background:${cp};padding:28px 40px;text-align:center">${logo2 ? `<img src="${logo2}" alt="${empresa2}" style="height:28px;object-fit:contain;display:block;margin:0 auto"/>` : `<h1 style="margin:0;color:#fff;font-size:16px;letter-spacing:3px">${empresa2.toUpperCase()}</h1>`}${slogan2 ? `<p style="margin:6px 0 0;color:rgba(255,255,255,.4);font-size:10px;letter-spacing:1px">${slogan2}</p>` : ""}</td></tr><tr><td style="padding:36px 40px"><div style="font-size:14px;color:#333;line-height:1.8">${msgHtml}</div><div style="text-align:center;margin-top:24px">${linkHtml}</div></td></tr><tr><td style="background:#F5F4F1;padding:20px 40px;text-align:center;border-top:1px solid #E4E1DB"><p style="margin:0;font-size:10px;color:#aaa">${empresa2} · comercial@habitaris.co</p></td></tr></table></td></tr></table></body></html>`;
-    const r2 = await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+RESEND_KEY,"Content-Type":"application/json"},body:JSON.stringify({from:(req.body.fromName||empresa2)+" <comercial@habitaris.co>",to:[to],subject:subject,html:genHtml,reply_to:req.body.fromEmail||"comercial@habitaris.co"})});
-    const d2 = await r2.json();
-    if(r2.ok) return res.status(200).json({ok:true,id:d2.id});
-    return res.status(r2.status).json({ok:false,error:d2.message||"Send failed"});
+    const msgLines = (message || "").replace(/\n/g, "
+").split("
+").map(l => "<p style="margin:0 0 8px;font-size:14px;color:#333;line-height:1.6">" + l + "</p>").join("");
+    const linkHtml = link ? "<div style="text-align:center;margin-top:24px"><a href="" + link + "" style="display:inline-block;background:" + cp + ";color:#fff;text-decoration:none;padding:14px 44px;border-radius:6px;font-size:14px;font-weight:bold">" + (link_info || "Abrir enlace") + " →</a></div>" : "";
+    const genHtml = "<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5F4F1;font-family:Arial,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:40px 20px"><tr><td align="center"><table width="580" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)"><tr><td style="background:" + cp + ";padding:28px 40px;text-align:center">" + (logo2 ? "<img src="" + logo2 + "" alt="" + empresa2 + "" style="height:28px;object-fit:contain;display:block;margin:0 auto"/>" : "<h1 style="margin:0;color:#fff;font-size:16px;letter-spacing:3px">" + empresa2.toUpperCase() + "</h1>") + (slogan2 ? "<p style="margin:6px 0 0;color:rgba(255,255,255,.4);font-size:10px;letter-spacing:1px">" + slogan2 + "</p>" : "") + "</td></tr><tr><td style="padding:36px 40px">" + msgLines + linkHtml + "</td></tr><tr><td style="background:#F5F4F1;padding:20px 40px;text-align:center;border-top:1px solid #E4E1DB"><p style="margin:0;font-size:10px;color:#aaa">" + empresa2 + " · comercial@habitaris.co</p></td></tr></table></td></tr></table></body></html>";
+    try {
+      const r2 = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: (req.body.fromName || empresa2) + " <comercial@habitaris.co>",
+          to: [to],
+          subject: subject,
+          html: genHtml,
+          reply_to: req.body.fromEmail || "comercial@habitaris.co",
+        }),
+      });
+      const d2 = await r2.json();
+      if (r2.ok) return res.status(200).json({ ok: true, id: d2.id });
+      console.error("Resend error:", d2);
+      return res.status(r2.status).json({ ok: false, error: d2.message || "Send failed" });
+    } catch (emailErr) {
+      console.error("Email fetch error:", emailErr);
+      return res.status(500).json({ ok: false, error: emailErr.message });
+    }
   }
 
   const html = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5F4F1;font-family:Arial,Helvetica,sans-serif"><table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:40px 20px"><tr><td align="center"><table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08)"><tr><td style="background:#111111;padding:36px 40px;text-align:center"><img src="https://suite.habitaris.co/logo-habitaris-blanco.png" alt="Habitaris" width="180" style="display:inline-block;max-width:180px"/></td></tr><tr><td style="background:#3B3B3B;height:2px"></td></tr><tr><td style="padding:44px 40px 20px"><div style="font-size:22px;color:#111;font-weight:bold;margin-bottom:12px">Hola ${nombre} 👋</div><div style="font-size:14px;color:#555;line-height:1.8;margin-bottom:28px">Estamos emocionados de trabajar contigo.<br><br>Para conocer mejor tu proyecto y prepararte la mejor propuesta, necesitamos que completes un breve formulario:</div></td></tr><tr><td style="padding:0 40px 30px"><table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;border-radius:10px;border:1px solid #E4E1DB"><tr><td style="padding:28px;text-align:center"><div style="font-size:10px;color:#888;letter-spacing:3px;text-transform:uppercase;font-weight:bold;margin-bottom:10px">FORMULARIO</div><div style="font-size:18px;color:#111;font-weight:bold;margin-bottom:24px">📋 ${formulario}</div><a href="${link}" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:14px 44px;border-radius:6px;font-size:14px;font-weight:bold;letter-spacing:0.5px">Completar formulario →</a>${info ? `<div style="font-size:11px;color:#999;margin-top:16px">${info}</div>` : ""}</td></tr></table></td></tr><tr><td style="padding:0 40px 40px"><div style="font-size:12px;color:#999;line-height:1.6;text-align:center">Es rápido y sencillo. Si tienes alguna pregunta,<br>no dudes en responder a este correo.</div></td></tr><tr><td style="background:#F5F4F1;padding:24px 40px;text-align:center;border-top:1px solid #E4E1DB"><div style="font-size:11px;color:#888;font-weight:bold">¡Gracias por confiar en nosotros!</div><div style="font-size:10px;color:#aaa;margin-top:8px">${empresa} · Bogotá D.C. · comercial@habitaris.co</div></td></tr></table></td></tr></table></body></html>`;

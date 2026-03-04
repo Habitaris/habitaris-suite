@@ -7,6 +7,14 @@ function base64url(buf) {
   return buf.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
+function getPrivateKey() {
+  let raw = process.env.JAAS_PRIVATE_KEY || "";
+  // Handle all newline formats
+  if (raw.includes("\\n")) raw = raw.split("\\n").join("\n");
+  raw = raw.trim();
+  return raw;
+}
+
 export default function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
@@ -16,14 +24,13 @@ export default function handler(req, res) {
   try {
     const { room, userName, userEmail, isModerator } = req.body || {};
     const now = Math.floor(Date.now() / 1000);
-    const exp = now + 7200; // 2 hours
 
     const header = { kid: JAAS_KID, typ: "JWT", alg: "RS256" };
     const payload = {
       aud: "jitsi",
       iss: "chat",
       iat: now,
-      exp: exp,
+      exp: now + 7200,
       nbf: now - 5,
       sub: JAAS_APP_ID,
       context: {
@@ -33,9 +40,7 @@ export default function handler(req, res) {
           "outbound-call": false,
           "sip-outbound-call": false,
           transcription: true,
-          "list-visitors": false,
           recording: true,
-          flip: false,
         },
         user: {
           "hidden-from-recorder": false,
@@ -53,15 +58,19 @@ export default function handler(req, res) {
     const payloadB64 = base64url(Buffer.from(JSON.stringify(payload)));
     const signingInput = headerB64 + "." + payloadB64;
 
-    let pk = (process.env.JAAS_PRIVATE_KEY || "").replace(/\\n/g,"\n").replace(/\n/g,"\n").trim(); if(!pk.includes("-----BEGIN")) { console.error("Invalid JAAS_PRIVATE_KEY"); return res.status(500).json({error:"Invalid private key"}); }
+    const pk = getPrivateKey();
+    if (!pk.includes("-----BEGIN")) {
+      console.error("JAAS_PRIVATE_KEY invalid. Length:", pk.length, "Start:", pk.substring(0, 30));
+      return res.status(500).json({ error: "Invalid private key format" });
+    }
+
     const sign = crypto.createSign("RSA-SHA256");
     sign.update(signingInput);
     const signature = base64url(sign.sign(pk));
 
-    const jwt = signingInput + "." + signature;
-    res.status(200).json({ token: jwt });
+    res.status(200).json({ token: signingInput + "." + signature });
   } catch (err) {
-    console.error("JaaS token error:", err);
+    console.error("JaaS token error:", err.message);
     res.status(500).json({ error: err.message });
   }
 }

@@ -390,7 +390,7 @@ export default function Calendario() {
   const saveCitas = n => { setCitas(n); save(KEYS.citas,n); };
 
   const tabs = [
-    {id:"agenda",icon:"📅",label:"Agenda"},
+    {id:"calendario",icon:"📅",label:"Calendario"},{id:"agenda",icon:"📋",label:"Agenda"},
     {id:"solicitudes",icon:"📩",label:"Solicitudes"},
     {id:"nueva",icon:"➕",label:"Nueva reunión"},
     {id:"servicios",icon:"📋",label:"Servicios"},
@@ -583,7 +583,7 @@ export default function Calendario() {
             const isWeekend = (firstDay+day-1)%7===0 || (firstDay+day-1)%7===6;
             return (
               <div key={day} style={{background:isToday2?"#EFF6FF":isWeekend?T.surfaceAlt:T.surface,minHeight:90,padding:4,cursor:"pointer",position:"relative"}} onClick={()=>{setNuevaReunion(p=>({...p,fecha:dateStr}));setTab("nueva");}}>
-                <div style={{...F,fontSize:11,fontWeight:isToday2?800:500,color:isToday2?"#1D4ED8":T.ink,width:22,height:22,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",background:isToday2?"#1D4ED8":"transparent",color:isToday2?"#fff":T.ink,marginBottom:2}}>{day}</div>
+                <div style={{...F,fontSize:11,fontWeight:isToday2?800:500,width:22,height:22,borderRadius:"50%",display:"flex",alignItems:"center",justifyContent:"center",background:isToday2?"#1D4ED8":"transparent",color:isToday2?"#fff":T.ink,marginBottom:2}}>{day}</div>
                 {dayCitas.slice(0,3).map(ci=>{
                   const serv = config.servicios.find(s=>s.id===ci.servicioId);
                   const col = ci.tipo==="publica"?(ci.estado==="pendiente"?"#D97706":ci.estado==="confirmada"?"#059669":"#6B7280"):"#1D4ED8";
