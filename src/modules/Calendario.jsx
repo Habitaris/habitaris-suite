@@ -922,27 +922,19 @@ export default function Calendario() {
               el.dataset.loaded="1";
               const s=document.createElement("script");
               s.src="https://8x8.vc/external_api.js";
-              s.onload=()=>{
+              s.onload=async()=>{
+                let jwt="";
+                try{const r=await fetch("/api/jaas-token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName,userName:brand.nombre||"Habitaris",userEmail:"comercial@habitaris.co",isModerator:true})});const d=await r.json();jwt=d.token||"";}catch(e){console.warn("JWT fetch failed:",e);}
                 const api=new window.JitsiMeetExternalAPI("8x8.vc",{
                   roomName:roomName,
+                  jwt:jwt||undefined,
                   parentNode:el,
                   width:"100%",height:"100%",
-                  configOverwrite:{
-                    prejoinPageEnabled:false,
-                    startWithAudioMuted:false,
-                    startWithVideoMuted:false,
-                    disableDeepLinking:true,
-                    hideConferenceSubject:false,
-                    subject:brand.nombre+" · Videollamada",
-                  },
-                  interfaceConfigOverwrite:{
-                    SHOW_JITSI_WATERMARK:false,
-                    SHOW_WATERMARK_FOR_GUESTS:false,
-                    SHOW_BRAND_WATERMARK:false,
-                    TOOLBAR_BUTTONS:["microphone","camera","desktop","chat","raisehand","tileview","fullscreen","hangup"],
-                    DEFAULT_BACKGROUND:"#111111",
-                  },
+                  userInfo:{displayName:brand.nombre||"Habitaris",email:"comercial@habitaris.co"},
+                  configOverwrite:{prejoinPageEnabled:false,startWithAudioMuted:false,startWithVideoMuted:false,disableDeepLinking:true,hideConferenceSubject:false,subject:(brand.nombre||"Habitaris")+" · Videollamada",recordingService:{enabled:true,sharingEnabled:true},transcription:{enabled:true,autoTranscribeOnRecord:true}},
+                  interfaceConfigOverwrite:{SHOW_JITSI_WATERMARK:false,SHOW_WATERMARK_FOR_GUESTS:false,SHOW_BRAND_WATERMARK:false,SHOW_POWERED_BY:false,SHOW_PROMOTIONAL_CLOSE_PAGE:false,TOOLBAR_BUTTONS:["microphone","camera","desktop","chat","raisehand","tileview","fullscreen","hangup","recording","closedcaptions","select-background","settings"],DEFAULT_BACKGROUND:"#111111",DEFAULT_LOCAL_DISPLAY_NAME:brand.nombre||"Habitaris",DEFAULT_REMOTE_DISPLAY_NAME:"Participante",APP_NAME:brand.nombre||"Habitaris",PROVIDER_NAME:brand.nombre||"Habitaris",DEFAULT_LANGUAGE:"es"},
                 });
+                api.addEventListener("readyToClose",()=>setJitsiRoom(null));
               };
               document.head.appendChild(s);
             }}/>
