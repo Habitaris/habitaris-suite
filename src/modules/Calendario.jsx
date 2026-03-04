@@ -33,14 +33,17 @@ const DEF_DISP = {
 
 const DEF_CONFIG = {
   servicios: [
-    { id:"s1", nombre:"Consultoría de Diseño", duracion:60, descripcion:"Sesión de asesoría personalizada", precio:150000, tipo:"virtual", color:"#2563eb" },
-    { id:"s2", nombre:"Visita Técnica", duracion:90, descripcion:"Inspección y mediciones en sitio", precio:250000, tipo:"presencial", color:"#16a34a" },
-    { id:"s3", nombre:"Presentación de Proyecto", duracion:45, descripcion:"Revisión de propuesta y renders", precio:0, tipo:"virtual", color:"#d97706" },
+    { id:"s1", nombre:"Consultoría inicial", duracion:20, descripcion:"Primera toma de contacto para conocer tu proyecto", precio:0, tipo:"virtual", color:"#111111" },
+    { id:"s2", nombre:"Diseño de interiores", duracion:20, descripcion:"Concepto creativo, moodboard, mobiliario, iluminación y acabados", precio:0, tipo:"virtual", color:"#2563eb" },
+    { id:"s3", nombre:"Arquitectura", duracion:20, descripcion:"Reforma, redistribución, planos técnicos y modelado 3D", precio:0, tipo:"virtual", color:"#16a34a" },
+    { id:"s4", nombre:"Obra integral", duracion:20, descripcion:"Gestión y ejecución completa de tu proyecto", precio:0, tipo:"presencial", color:"#d97706" },
+    { id:"s5", nombre:"Obra parcial", duracion:20, descripcion:"Ejecución de partidas específicas según presupuesto", precio:0, tipo:"presencial", color:"#9333ea" },
+    { id:"s6", nombre:"Visita técnica", duracion:20, descripcion:"Inspección en sitio, mediciones y diagnóstico", precio:0, tipo:"presencial", color:"#059669" },
   ],
   slotsPublicos: [],
   disponibilidad: {...DEF_DISP},
   bufferMinutos:15, anticipacionMaxDias:60,
-  mensajeBienvenida:"Agenda tu cita con nuestro equipo de diseño y arquitectura.",
+  mensajeBienvenida:"Agenda tu cita con nuestro equipo de Habitaris.",
   formularioIntake:true, crearJitsi:true, notificarEmail:true, notificarWhatsApp:false,
   modulos: ["CRM","Proyectos","RRHH","Legal","Postventa"],
 };
