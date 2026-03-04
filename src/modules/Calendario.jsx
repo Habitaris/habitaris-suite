@@ -699,6 +699,9 @@ export default function Calendario() {
                 <input value={r.emailExterno} onChange={e=>upd("emailExterno",e.target.value)} style={inp2} placeholder="externo@email.com" />
               </div>
             )}
+              <div style={{fontSize:10,color:T.inkLight,marginBottom:12,display:"flex",alignItems:"center",gap:6}}>
+                🌐 <span style={{fontWeight:600}}>Zona horaria:</span> América/Bogotá (COT · UTC−5)
+              </div>
             <label style={{display:"flex",alignItems:"center",gap:8,fontSize:12,cursor:"pointer"}}>
               <input type="checkbox" checked={r.conJitsi} onChange={e=>upd("conJitsi",e.target.checked)} />
               Crear videollamada Jitsi automáticamente
