@@ -299,34 +299,12 @@ export function CalendarioPublico() {
               ))}
               {config.formularioIntake&&<>
                 <div>
-                  <label style={{fontSize:10,fontWeight:600,color:T.inkMid,textTransform:"uppercase"}}>Tipo de proyecto</label>
-                  <select value={form.tipoProyecto} onChange={e=>setForm(p=>({...p,tipoProyecto:e.target.value}))} style={{...inp,background:T.surface}}>
-                    <option value="">Seleccionar...</option>
-                    <option value="Diseño interior">Diseño interior</option>
-                    <option value="Remodelación">Remodelación</option>
-                    <option value="Obra nueva">Obra nueva</option>
-                    <option value="Consultoría">Consultoría</option>
-                    <option value="Otro">Otro</option>
-                  </select>
+                  <label style={{fontSize:10,fontWeight:600,color:T.inkMid,textTransform:"uppercase"}}>Dirección del inmueble (opcional)</label>
+                  <input value={form.direccion||""} onChange={e=>setForm(p=>({...p,direccion:e.target.value}))} style={{...inp}} placeholder="Ciudad, barrio, dirección..." />
                 </div>
                 <div>
-                  <label style={{fontSize:10,fontWeight:600,color:T.inkMid,textTransform:"uppercase"}}>Presupuesto estimado</label>
-                  <select value={form.presupuesto} onChange={e=>setForm(p=>({...p,presupuesto:e.target.value}))} style={{...inp,background:T.surface}}>
-                    <option value="">Seleccionar...</option>
-                    <option value="Menos de 10M">Menos de 10M COP</option>
-                    <option value="10 - 30M">10 - 30M COP</option>
-                    <option value="30 - 60M">30 - 60M COP</option>
-                    <option value="60 - 100M">60 - 100M COP</option>
-                    <option value="Más de 100M">Más de 100M COP</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{fontSize:10,fontWeight:600,color:T.inkMid,textTransform:"uppercase"}}>Dirección del inmueble</label>
-                  <input value={form.direccion||""} onChange={e=>setForm(p=>({...p,direccion:e.target.value}))} style={{...inp}} />
-                </div>
-                <div>
-                  <label style={{fontSize:10,fontWeight:600,color:T.inkMid,textTransform:"uppercase"}}>Notas adicionales</label>
-                  <textarea value={form.notas||""} onChange={e=>setForm(p=>({...p,notas:e.target.value}))} rows={3} style={{...inp,resize:"vertical"}} />
+                  <label style={{fontSize:10,fontWeight:600,color:T.inkMid,textTransform:"uppercase"}}>Cuéntanos brevemente sobre tu proyecto</label>
+                  <textarea value={form.notas||""} onChange={e=>setForm(p=>({...p,notas:e.target.value}))} rows={3} style={{...inp,resize:"vertical"}} placeholder="Descripción breve de lo que necesitas..." />
                 </div>
               </>}
             </div>
@@ -354,8 +332,7 @@ export function CalendarioPublico() {
                   <span style={{fontWeight:600,color:T.inkMid}}>Nombre:</span><span>{form.nombre}</span>
                   <span style={{fontWeight:600,color:T.inkMid}}>Email:</span><span>{form.email}</span>
                   <span style={{fontWeight:600,color:T.inkMid}}>Teléfono:</span><span>{form.telefono}</span>
-                  {form.tipoProyecto&&<><span style={{fontWeight:600,color:T.inkMid}}>Proyecto:</span><span>{form.tipoProyecto}</span></>}
-                  {form.presupuesto&&<><span style={{fontWeight:600,color:T.inkMid}}>Presupuesto:</span><span>{form.presupuesto}</span></>}
+                  {form.direccion&&<><span style={{fontWeight:600,color:T.inkMid}}>Dirección:</span><span>{form.direccion}</span></>}
                 </div>
               </div>
               <div style={{background:T.amberBg,borderRadius:8,padding:12,marginBottom:16}}>
@@ -394,7 +371,6 @@ export default function Calendario() {
   const [showNueva, setShowNueva] = useState(false);
   const [showReprogram, setShowReprogram] = useState(null);
 
-  // Load projects from CRM
   const proyectos = useMemo(()=>{
     try {
       const ofertas = JSON.parse(store.getSync("hab:crm:ofertas")) || [];
@@ -405,6 +381,9 @@ export default function Calendario() {
       }));
     } catch { return []; }
   },[]);
+
+  // Load projects from CRM
+  
 
   const saveConfig = n => { setConfig(n); save(KEYS.config,n); };
   const saveCitas = n => { setCitas(n); save(KEYS.citas,n); };
