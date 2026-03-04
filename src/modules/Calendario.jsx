@@ -449,6 +449,8 @@ export default function Calendario() {
       createdAt:new Date().toISOString(),
     };
     saveCitas([...citas, nueva]);
+    // Email notification
+    try { if(nueva.clienteEmail||nueva.emailExterno){ const toEmail=nueva.emailExterno||nueva.clienteEmail; const b=getBrand(); fetch("/api/send-email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:toEmail,subject:"📅 Reunión programada: "+nueva.asunto+" — "+(b.nombre||"Habitaris"),message:"Hola,\n\nSe ha programado una reunión:\n\nAsunto: "+nueva.asunto+"\nFecha: "+nueva.fecha+"\nHora: "+nueva.hora+"\nDuración: "+nueva.duracionMin+" min"+(nueva.jitsiLink?"\n\nEnlace videollamada: "+nueva.jitsiLink:"")+"\n\nSaludos,\n"+(b.nombre||"Habitaris"),brand:{empresa:b.nombre,colorPrimario:b.colorPrimario,logo:b.logoBlanco,slogan:b.slogan},link:nueva.jitsiLink||"",link_info:nueva.jitsiLink?"Unirse a videollamada":""})}); console.log("[Cal] Email sent to "+toEmail); } } catch(e){console.warn("Email err:",e);}
     setNuevaReunion({asunto:"",modulo:"CRM",fecha:today(),hora:"10:00",duracionMin:60,tipo:"interna",participantes:"",clienteEmail:"",proyectoId:"",notas:"",conJitsi:true,conExterno:false,emailExterno:""});
     setTab("agenda");
   };
