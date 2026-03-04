@@ -44,7 +44,7 @@ const DEF_CONFIG = {
   bufferMinutos:15, anticipacionMaxDias:60,
   mensajeBienvenida:"Agenda tu cita con nuestro equipo de Habitaris.",
   formularioIntake:true, crearJitsi:true, notificarEmail:true, notificarWhatsApp:false,
-  modulos: ["CRM","Proyectos","RRHH","Legal","Postventa"],
+  modulos: ["General","CRM","Proyectos","RRHH","Legal","Postventa","Externo"],
 };
 
 function getBrand() {
@@ -648,7 +648,10 @@ export default function Calendario() {
               </div>
               <div>
                 <label style={{fontSize:10,fontWeight:600,color:T.inkMid,textTransform:"uppercase"}}>Hora</label>
-                <input type="time" value={r.hora} onChange={e=>upd("hora",e.target.value)} style={inp2} />
+                <select value={r.hora} onChange={e=>upd("hora",e.target.value)} style={{...inp2,background:T.surface}}>
+                  {(()=>{const horas=[];for(let h=9;h<17;h++){horas.push(String(h).padStart(2,"0")+":00");horas.push(String(h).padStart(2,"0")+":30");}return horas;})()
+                    .map(h=><option key={h} value={h}>{h}</option>)}
+                </select>
               </div>
             </div>
             <div>
