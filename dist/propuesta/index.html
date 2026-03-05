@@ -23,15 +23,16 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
 .salary-box .period{font-size:12px;color:rgba(255,255,255,.6)}
 .detail{background:#F8F7F5;border-radius:8px;padding:14px;margin:12px 0;font-size:12px;color:#555;line-height:1.6}
 .detail strong{color:#111}
+.req-box{background:#FEF3C7;border:1px solid #D97706;border-radius:8px;padding:16px;margin:16px 0}
+.req-box .title{font-weight:700;font-size:13px;color:#92400E;margin-bottom:10px}
+.req-box ul{font-size:12px;color:#92400E;line-height:2;list-style:none;padding:0}
+.req-box ul li::before{content:"\2022 ";font-weight:700}
 .btn{width:100%;padding:14px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;margin-bottom:8px}
 .bg{background:#059669;color:#fff}
-.br{background:#DC2626;color:#fff}
 .ghost{background:none;color:#888;font-size:12px;padding:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%}
 .spin{width:24px;height:24px;border:3px solid #E0E0E0;border-top-color:#111;border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 8px}
 @keyframes sp{to{transform:rotate(360deg)}}
 .legal{font-size:9px;color:#999;line-height:1.5;margin-top:16px;padding-top:12px;border-top:1px solid #F3F4F6}
-.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
-.b-g{background:#DCFCE7;color:#059669}
 </style>
 </head>
 <body>
@@ -43,7 +44,7 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
   var TOKEN=P.get("token")||"";
   var data=null;
   function R(h){document.getElementById("app").innerHTML=h;}
-  function fmt(n){return new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n);}
+  function fmt(n){return n?new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n):"$0";}
 
   async function load(){
     if(!TOKEN){R('<div class="card" style="text-align:center"><h2>Enlace inv\u00e1lido</h2></div>');return;}
@@ -59,7 +60,7 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
 
   function showAccepted(){
     R('<div class="card" style="text-align:center"><div style="font-size:48px;margin-bottom:12px">\u2705</div><h2>Propuesta aceptada</h2>'
-      +'<div class="sub">Ya aceptaste esta propuesta. Completa tus datos en el siguiente enlace:</div>'
+      +'<div class="sub">Ya acept\u00f3 esta propuesta. Complete sus datos:</div>'
       +'<button class="btn bg" onclick="window.location.href=\'/contratacion?token='+data.token_datos+'\'">Completar mis datos \u2192</button></div>');
   }
 
@@ -68,7 +69,6 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
       +'<div style="text-align:center;margin-bottom:20px"><div style="font-size:40px;margin-bottom:8px">\ud83d\udce9</div>'
       +'<h2>Propuesta de empleo</h2>'
       +'<div class="sub">'+data.codigo+'</div></div>'
-
       +'<div class="row"><span class="lbl">Empresa</span><span class="val">HABITARIS SAS</span></div>'
       +'<div class="row"><span class="lbl">Cargo</span><span class="val">'+data.cargo+'</span></div>'
       +'<div class="row"><span class="lbl">Tipo contrato</span><span class="val">'+(data.tipo_contrato==="fijo"?"T\u00e9rmino fijo":data.tipo_contrato==="indefinido"?"Indefinido":"Obra o labor")+'</span></div>'
@@ -78,27 +78,30 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
       +'<div class="row"><span class="lbl">Horario</span><span class="val">'+data.horario+'</span></div>'
       +'<div class="row"><span class="lbl">D\u00edas laborales</span><span class="val">'+data.dias_laborales+'</span></div>'
       +(data.fecha_inicio?'<div class="row"><span class="lbl">Fecha inicio</span><span class="val">'+data.fecha_inicio+'</span></div>':'')
-
       +'<div class="salary-box">'
       +'<div style="font-size:11px;letter-spacing:1px;opacity:.6">SALARIO NETO MENSUAL</div>'
       +'<div class="amount">'+fmt(data.salario_neto)+'</div>'
       +'<div class="period">Pago quincenal</div></div>'
-
       +'<div class="detail">'
       +'<strong>Detalle:</strong><br/>'
       +(data.salario_base?'Salario base: '+fmt(data.salario_base)+'<br/>':'')
       +(data.auxilio_transporte?'Auxilio de transporte: '+fmt(data.auxilio_transporte)+'<br/>':'')
       +(data.bono_no_salarial?'Bono complementario: '+fmt(data.bono_no_salarial)+'<br/>':'')
-      +'<br/><strong>Incluye:</strong> Afiliaci\u00f3n a EPS, pensi\u00f3n, ARL, caja de compensaci\u00f3n y prestaciones sociales conforme a la ley.'
-      +'</div>'
-
+      +'<br/><strong>Incluye:</strong> Afiliaci\u00f3n a EPS, pensi\u00f3n, ARL, caja de compensaci\u00f3n y prestaciones sociales conforme a la ley.</div>'
       +(data.periodo_prueba?'<div class="detail"><strong>Per\u00edodo de prueba:</strong> '+data.periodo_prueba+'</div>':'')
-
-      +'<div style="margin-top:20px">'
-      +'<button class="btn bg" onclick="APP.accept()">Acepto la propuesta \u2192</button>'
+      +'<div class="req-box">'
+      +'<div class="title">\ud83d\udccb Antes de aceptar, tenga a mano:</div>'
+      +'<ul>'
+      +'<li>C\u00e9dula de ciudadan\u00eda o documento de identidad (foto por ambas caras)</li>'
+      +'<li>Datos de contacto de emergencia (nombre, tel\u00e9fono, parentesco)</li>'
+      +'<li>Nombre de su EPS y fondo de pensiones</li>'
+      +'<li>Datos bancarios para pago de n\u00f3mina (banco, tipo y n\u00famero de cuenta)</li>'
+      +'<li>Foto tipo documento o selfie reciente</li>'
+      +'<li>Informaci\u00f3n de beneficiarios / personas a cargo (si aplica)</li>'
+      +'<li>Certificados o documentos adicionales que considere relevantes</li>'
+      +'</ul></div>'
+      +'<button class="btn bg" onclick="APP.accept()">Acepto la propuesta y tengo los documentos \u2192</button>'
       +'<button class="ghost">Si tiene preguntas, escriba a comercial@habitaris.co</button>'
-      +'</div>'
-
       +'<div class="legal">Esta propuesta de empleo no constituye contrato de trabajo. El contrato se formalizar\u00e1 una vez completados los tr\u00e1mites de contrataci\u00f3n y firma de las partes. HABITARIS SAS \u2014 NIT 901.922.136-8</div>'
       +'</div>');
   }
@@ -109,10 +112,10 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
       await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:data.id,estado:"aceptada",fecha_aceptacion:new Date().toISOString()})});
       R('<div class="card" style="text-align:center">'
         +'<div style="font-size:56px;margin-bottom:12px">\ud83c\udf89</div>'
-        +'<h2 style="color:#059669">Propuesta aceptada</h2>'
+        +'<h2 style="color:#059669">\u00a1Propuesta aceptada!</h2>'
         +'<div class="sub">Bienvenido/a al equipo de Habitaris</div>'
         +'<div style="background:#EFF6FF;border:1px solid #1D4ED8;border-radius:8px;padding:14px;font-size:12px;color:#1E40AF;margin:16px 0">'
-        +'<strong>Siguiente paso:</strong> Complete sus datos personales y adjunte los documentos requeridos para formalizar su contrataci\u00f3n.</div>'
+        +'<strong>Siguiente paso:</strong> Complete sus datos personales y adjunte los documentos requeridos.</div>'
         +'<button class="btn bg" onclick="window.location.href=\'/contratacion?token='+data.token_datos+'\'">Completar mis datos \u2192</button></div>');
     }catch(e){R('<div class="card"><h2>Error</h2><div class="sub">'+e.message+'</div></div>');}
   }
