@@ -720,7 +720,7 @@ export default function Calendario() {
               <input value={r.participantes} onChange={e=>upd("participantes",e.target.value)} style={inp2} placeholder="Laura, Ana, Carlos..." />
             </div>
             <div>
-              <label style={{fontSize:10,fontWeight:600,color:T.inkMid,textTransform:"uppercase"}}>Email cliente del portal (opcional)</label>
+              <label style={{fontSize:10,fontWeight:600,color:T.inkMid,textTransform:"uppercase"}}>Email destinatario (para notificación)</label>
               <input value={r.clienteEmail} onChange={e=>upd("clienteEmail",e.target.value)} style={inp2} placeholder="cliente@email.com" />
             </div>
             <div>
