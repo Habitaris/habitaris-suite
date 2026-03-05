@@ -19,7 +19,10 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
 .info-row:last-child{border:none}
 .info-label{color:#888;font-weight:600;font-size:11px;text-transform:uppercase}
 .info-value{color:#111;font-weight:500;text-align:right}
-.pdf-viewer{border:1px solid #DDD;border-radius:8px;overflow:hidden;background:#666;margin-bottom:16px;position:relative}
+.otp-input{display:flex;justify-content:center;gap:8px;margin:20px 0}
+.otp-input input{width:44px;height:52px;text-align:center;font-size:22px;font-weight:700;border:2px solid #DDD;border-radius:8px;font-family:'DM Sans',sans-serif;outline:none}
+.otp-input input:focus{border-color:#111}
+.pdf-viewer{border:1px solid #DDD;border-radius:8px;overflow:hidden;background:#666;margin-bottom:16px}
 .pdf-scroll{max-height:500px;overflow-y:auto;padding:8px;display:flex;flex-direction:column;align-items:center;gap:8px}
 .pdf-scroll canvas{max-width:100%;box-shadow:0 2px 8px rgba(0,0,0,.3)}
 .pdf-bar{background:#333;color:#fff;padding:8px 16px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
@@ -46,6 +49,13 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
 .step{flex:1;height:4px;border-radius:2px;background:#E0E0E0}
 .step.done{background:#059669}
 .step.active{background:#111}
+.upload-area{border:1px dashed #CCC;border-radius:8px;padding:16px;text-align:center;margin-bottom:12px;cursor:pointer;background:#FAFAFA}
+.upload-area:hover{border-color:#888;background:#F5F5F5}
+.or-divider{text-align:center;color:#CCC;font-size:11px;margin:12px 0;position:relative}
+.or-divider::before,.or-divider::after{content:"";position:absolute;top:50%;width:40%;height:1px;background:#E0E0E0}
+.or-divider::before{left:0}
+.or-divider::after{right:0}
+.timer{font-size:11px;color:#888;text-align:center;margin-top:4px}
 </style>
 </head>
 <body>
@@ -56,9 +66,9 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
 (function(){
   var P=new URLSearchParams(window.location.search);
   var TOKEN=P.get("token")||"";
-  var pending=null, sigData=null, gps=null;
+  var pending=null,sigData=null,gps=null;
   var canvas,ctx,drawing=false,hasDrawn=false;
-  var scrolledToEnd=false, checked=false;
+  var scrolledToEnd=false,checked=false,otpVerified=false;
 
   function R(h){document.getElementById("app").innerHTML=h;}
 
@@ -71,63 +81,102 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
       var d=await r.json();
       if(!d.ok||!d.data){R('<div class="card" style="text-align:center"><h2>Enlace inv\u00e1lido</h2><div class="sub">Este enlace no existe o ha expirado.</div></div>');return;}
       pending=d.data;
-      if(pending.status==="signed"){showAlready();return;}
+      if(pending.status==="signed"){R('<div class="card" style="text-align:center"><div style="font-size:48px;margin-bottom:12px">\u2705</div><h2>Documento ya firmado</h2></div>');return;}
       if(pending.status==="expired"){R('<div class="card" style="text-align:center"><h2>Enlace expirado</h2></div>');return;}
       showStep1();
     }catch(e){R('<div class="card"><h2>Error</h2><div class="sub">'+e.message+'</div></div>');}
   }
 
-  function showAlready(){
-    R('<div class="card" style="text-align:center"><div style="font-size:48px;margin-bottom:12px">\u2705</div><h2>Documento ya firmado</h2><div class="sub">Este documento ya fue firmado anteriormente.</div></div>');
-  }
-
-  // STEP 1: Info del documento
+  // STEP 1: Info
   function showStep1(){
-    R('<div class="step-bar"><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div></div>'
-      +'<div class="card">'
-      +'<div style="text-align:center;margin-bottom:20px"><div style="font-size:40px;margin-bottom:8px">\ud83d\udcc4</div>'
-      +'<h2>Firma de documento</h2>'
-      +'<div class="sub">Revise la informaci\u00f3n y proceda a leer el documento</div></div>'
+    R('<div class="step-bar"><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>'
+      +'<div class="card"><div style="text-align:center;margin-bottom:20px"><div style="font-size:40px;margin-bottom:8px">\ud83d\udcc4</div>'
+      +'<h2>Firma de documento</h2><div class="sub">Verifique sus datos y proceda</div></div>'
       +'<div class="info-row"><span class="info-label">Documento</span><span class="info-value">'+pending.doc_code+'</span></div>'
       +'<div class="info-row"><span class="info-label">T\u00edtulo</span><span class="info-value">'+pending.doc_title+'</span></div>'
       +'<div class="info-row"><span class="info-label">Firmante</span><span class="info-value">'+pending.signer_name+'</span></div>'
       +'<div class="info-row"><span class="info-label">Rol</span><span class="info-value">'+pending.signer_role+'</span></div>'
       +'<div class="info-row"><span class="info-label">Email</span><span class="info-value">'+(pending.signer_email||"")+'</span></div>'
       +'<div style="background:#EFF6FF;border:1px solid #1D4ED8;border-radius:8px;padding:14px;font-size:12px;color:#1E40AF;margin:16px 0">'
-      +'<strong>Importante:</strong> Deber\u00e1 leer el documento completo antes de poder firmar. Su firma tendr\u00e1 validez legal conforme a la Ley 527/1999 (Colombia) y el Reglamento eIDAS (UE).</div>'
-      +'<button class="btn bk" onclick="APP.showStep2()">Leer documento \u2192</button>'
+      +'<strong>Proceso de firma:</strong> Se le enviar\u00e1 un c\u00f3digo de verificaci\u00f3n a su email. Luego deber\u00e1 leer el documento completo antes de firmar.</div>'
+      +'<button class="btn bk" onclick="APP.sendOTP()">Enviar c\u00f3digo de verificaci\u00f3n \u2192</button>'
       +'</div>');
   }
 
-  // STEP 2: Leer el PDF
-  function showStep2(){
-    scrolledToEnd=false;
-    R('<div class="step-bar"><div class="step done"></div><div class="step done"></div><div class="step active"></div><div class="step"></div></div>'
+  // STEP 2: OTP
+  async function sendOTP(){
+    R('<div class="step-bar"><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>'
+      +'<div class="card" style="text-align:center"><div class="spin"></div><div style="font-size:13px;color:#888">Enviando c\u00f3digo a su email...</div></div>');
+    try{
+      var r=await fetch("/api/firma",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"send_otp",token:TOKEN})});
+      var d=await r.json();
+      if(d.ok) showOTPInput(d.email);
+      else R('<div class="card" style="text-align:center"><h2>Error</h2><div class="sub">'+(d.error||"")+'</div><button class="btn bk" onclick="APP.showStep1()">Reintentar</button></div>');
+    }catch(e){R('<div class="card"><h2>Error</h2><div class="sub">'+e.message+'</div><button class="btn bk" onclick="APP.showStep1()">Reintentar</button></div>');}
+  }
+
+  function showOTPInput(maskedEmail){
+    R('<div class="step-bar"><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>'
+      +'<div class="card" style="text-align:center">'
+      +'<div style="font-size:40px;margin-bottom:8px">\ud83d\udd12</div>'
+      +'<h2>Verificaci\u00f3n de identidad</h2>'
+      +'<div class="sub">Hemos enviado un c\u00f3digo de 6 d\u00edgitos a<br/><strong>'+(maskedEmail||pending.signer_email)+'</strong></div>'
+      +'<div class="otp-input" id="otpBox">'
+      +'<input type="tel" maxlength="1" id="o1" oninput="APP.otpNav(1)" autofocus/>'
+      +'<input type="tel" maxlength="1" id="o2" oninput="APP.otpNav(2)"/>'
+      +'<input type="tel" maxlength="1" id="o3" oninput="APP.otpNav(3)"/>'
+      +'<input type="tel" maxlength="1" id="o4" oninput="APP.otpNav(4)"/>'
+      +'<input type="tel" maxlength="1" id="o5" oninput="APP.otpNav(5)"/>'
+      +'<input type="tel" maxlength="1" id="o6" oninput="APP.otpNav(6)"/>'
+      +'</div>'
+      +'<div id="otpErr" style="color:#DC2626;font-size:12px;margin-bottom:12px;display:none"></div>'
+      +'<button class="btn bk" id="verifyBtn" onclick="APP.verifyOTP()">Verificar c\u00f3digo \u2192</button>'
+      +'<div class="timer">El c\u00f3digo expira en 10 minutos</div>'
+      +'<button class="ghost" onclick="APP.sendOTP()">Reenviar c\u00f3digo</button>'
+      +'</div>');
+    setTimeout(function(){document.getElementById("o1").focus();},100);
+  }
+
+  function otpNav(n){
+    var el=document.getElementById("o"+n);
+    if(el.value.length===1&&n<6){document.getElementById("o"+(n+1)).focus();}
+    if(n===6&&el.value.length===1){verifyOTP();}
+  }
+
+  async function verifyOTP(){
+    var code="";
+    for(var i=1;i<=6;i++) code+=document.getElementById("o"+i).value;
+    if(code.length!==6){document.getElementById("otpErr").textContent="Ingrese los 6 d\u00edgitos";document.getElementById("otpErr").style.display="block";return;}
+
+    R('<div class="step-bar"><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div><div class="step"></div></div>'
+      +'<div class="card" style="text-align:center"><div class="spin"></div><div style="font-size:13px;color:#888">Verificando...</div></div>');
+
+    try{
+      var r=await fetch("/api/firma",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"verify_otp",token:TOKEN,code:code})});
+      var d=await r.json();
+      if(d.ok&&d.verified){otpVerified=true;showStep3();}
+      else{showOTPInput(null);setTimeout(function(){var e=document.getElementById("otpErr");if(e){e.textContent=d.error||"C\u00f3digo incorrecto";e.style.display="block";}},100);}
+    }catch(e){showOTPInput(null);setTimeout(function(){var el=document.getElementById("otpErr");if(el){el.textContent=e.message;el.style.display="block";}},100);}
+  }
+
+  // STEP 3: Read document
+  function showStep3(){
+    scrolledToEnd=false;checked=false;
+    R('<div class="step-bar"><div class="step done"></div><div class="step done"></div><div class="step active"></div><div class="step"></div><div class="step"></div></div>'
       +'<div class="card" style="padding:16px">'
-      +'<div class="pdf-bar"><span>\ud83d\udcc4 '+pending.doc_code+' \u2014 '+pending.doc_title+'</span><span id="pageInfo"></span></div>'
+      +'<div class="pdf-bar"><span>\ud83d\udcc4 '+pending.doc_code+'</span><span id="pageInfo"></span></div>'
       +'<div class="pdf-viewer"><div class="pdf-scroll" id="pdfScroll"></div></div>'
       +'<div class="pdf-progress"><div class="pdf-progress-fill" id="progFill" style="width:0%"></div></div>'
       +'<div id="readGate" class="read-gate">\u2b07\ufe0f Despl\u00e1cese hasta el final del documento para continuar</div>'
       +'<div id="checkArea" style="display:none">'
       +'<div class="check-row"><input type="checkbox" id="readCheck" onchange="APP.onCheck()"/><label for="readCheck">He le\u00eddo \u00edntegramente el documento <strong>'+pending.doc_code+'</strong> y manifiesto mi conformidad con su contenido.</label></div>'
-      +'<button class="btn bk" id="toSignBtn" disabled onclick="APP.showStep3()">Proceder a firmar \u2192</button>'
-      +'</div>'
-      +'</div>');
-    renderPDF();
+      +'<button class="btn bk" id="toSignBtn" disabled onclick="APP.showStep4()">Proceder a firmar \u2192</button>'
+      +'</div></div>');
+    renderDoc();
   }
 
-  async function renderPDF(){
+  function renderDoc(){
     var container=document.getElementById("pdfScroll");
-    // If we have a PDF URL, load it. Otherwise show placeholder
-    if(pending.doc_pdf_url && pending.doc_pdf_url.startsWith("data:")){
-      try{
-        var pdfData=atob(pending.doc_pdf_url.split(",")[1]);
-        var pdf=await pdfjsLib.getDocument({data:pdfData}).promise;
-        renderPages(pdf,container);
-        return;
-      }catch(e){console.error(e);}
-    }
-    // Placeholder: show document info as styled HTML
     container.innerHTML='<div style="background:#fff;padding:40px;max-width:600px;width:100%;min-height:800px">'
       +'<div style="text-align:center;border-bottom:2px solid #111;padding-bottom:16px;margin-bottom:20px">'
       +'<div style="font-weight:700;font-size:18px;letter-spacing:2px">HABITARIS</div>'
@@ -138,102 +187,88 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
       +'<p>Este documento ha sido generado por Habitaris Suite y est\u00e1 pendiente de firma digital.</p>'
       +'<p style="margin-top:12px"><strong>Firmante:</strong> '+pending.signer_name+'</p>'
       +'<p><strong>Rol:</strong> '+pending.signer_role+'</p>'
-      +'<p><strong>Documento de identidad:</strong> '+(pending.signer_id_number||"")+'</p>'
-      +'<p style="margin-top:20px">El contenido completo del documento ha sido revisado y aprobado por las partes. Al firmar, el firmante acepta \u00edntegramente las condiciones establecidas en el documento original.</p>'
-      +'<p style="margin-top:20px;padding-top:16px;border-top:1px solid #eee;font-size:10px;color:#999">Documento protegido con SHA-256. Verificable en suite.habitaris.co/verificar</p>'
+      +'<p><strong>Identificaci\u00f3n:</strong> '+(pending.signer_id_number||"")+'</p>'
+      +'<p style="margin-top:20px">El contenido completo del documento ha sido revisado y aprobado por las partes. Al firmar, el firmante acepta \u00edntegramente las condiciones establecidas.</p>'
+      +'<p style="margin-top:20px;padding-top:16px;border-top:1px solid #eee;font-size:10px;color:#999">Documento protegido con SHA-256 \xb7 Verificable en suite.habitaris.co/verificar</p>'
       +'</div></div>';
-    // Monitor scroll
     var sc=document.getElementById("pdfScroll");
     sc.style.maxHeight="500px";
     sc.addEventListener("scroll",function(){
       var pct=sc.scrollTop/(sc.scrollHeight-sc.clientHeight)*100;
       document.getElementById("progFill").style.width=Math.min(pct,100)+"%";
-      if(pct>90&&!scrolledToEnd){
-        scrolledToEnd=true;
-        document.getElementById("readGate").style.display="none";
-        document.getElementById("checkArea").style.display="block";
-      }
+      if(pct>90&&!scrolledToEnd){scrolledToEnd=true;document.getElementById("readGate").style.display="none";document.getElementById("checkArea").style.display="block";}
     });
   }
 
-  async function renderPages(pdf,container){
-    var totalPages=pdf.numPages;
-    document.getElementById("pageInfo").textContent=totalPages+" p\u00e1g.";
-    for(var i=1;i<=totalPages;i++){
-      var page=await pdf.getPage(i);
-      var viewport=page.getViewport({scale:1.5});
-      var cv=document.createElement("canvas");
-      cv.width=viewport.width;cv.height=viewport.height;
-      cv.style.maxWidth="100%";cv.style.height="auto";
-      container.appendChild(cv);
-      await page.render({canvasContext:cv.getContext("2d"),viewport:viewport}).promise;
-    }
-    // Monitor scroll
-    var sc=document.getElementById("pdfScroll");
-    sc.style.maxHeight="500px";
-    sc.addEventListener("scroll",function(){
-      var pct=sc.scrollTop/(sc.scrollHeight-sc.clientHeight)*100;
-      document.getElementById("progFill").style.width=Math.min(pct,100)+"%";
-      if(pct>90&&!scrolledToEnd){
-        scrolledToEnd=true;
-        document.getElementById("readGate").style.display="none";
-        document.getElementById("checkArea").style.display="block";
-      }
-    });
-  }
+  function onCheck(){checked=document.getElementById("readCheck").checked;document.getElementById("toSignBtn").disabled=!checked;}
 
-  function onCheck(){
-    checked=document.getElementById("readCheck").checked;
-    document.getElementById("toSignBtn").disabled=!checked;
-  }
-
-  // STEP 3: Firmar
-  function showStep3(){
-    R('<div class="step-bar"><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step active"></div></div>'
+  // STEP 4: Sign
+  function showStep4(){
+    R('<div class="step-bar"><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step active"></div><div class="step"></div></div>'
       +'<div class="card">'
       +'<h2 style="text-align:center">\u270d\ufe0f Su firma</h2>'
-      +'<div class="sub" style="text-align:center">Firme con el dedo o el mouse dentro del recuadro</div>'
+      +'<div class="sub" style="text-align:center">Dibuje su firma o suba una imagen</div>'
       +'<div class="pad-area" id="padArea"><canvas id="sigCanvas" width="500" height="200"></canvas><div class="pad-hint" id="padHint">Firme aqu\u00ed</div></div>'
-      +(gps?'<div style="font-size:10px;color:#888;background:#F5F5F5;border-radius:6px;padding:6px 10px;margin-bottom:12px">\ud83d\udccd Ubicaci\u00f3n capturada: '+gps.lat.toFixed(4)+', '+gps.lng.toFixed(4)+'</div>':'')
+      +'<div class="or-divider">o suba una imagen</div>'
+      +'<div class="upload-area" onclick="document.getElementById(\'sigFile\').click()">\ud83d\udcc1 Subir imagen de firma (PNG, JPG)</div>'
+      +'<input type="file" id="sigFile" accept="image/*" style="display:none" onchange="APP.uploadSig(this)"/>'
+      +'<div id="uploadPreview" style="display:none;text-align:center;margin-bottom:12px"><img id="uploadImg" style="max-height:80px;border:1px solid #DDD;border-radius:6px;padding:4px"/></div>'
+      +(gps?'<div style="font-size:10px;color:#888;background:#F5F5F5;border-radius:6px;padding:6px 10px;margin-bottom:12px">\ud83d\udccd Ubicaci\u00f3n: '+gps.lat.toFixed(4)+', '+gps.lng.toFixed(4)+'</div>':'')
       +'<button class="btn bg" id="signBtn" disabled onclick="APP.submit()">Firmar documento \u2192</button>'
       +'<button class="ghost" onclick="APP.clearPad()">Borrar firma</button>'
-      +'<button class="ghost" onclick="APP.showStep2()">\u2190 Volver al documento</button>'
-      +'<div class="legal">Al firmar, se registrar\u00e1: su direcci\u00f3n IP, dispositivo, ubicaci\u00f3n GPS y fecha/hora UTC. '
-      +'El documento firmado recibir\u00e1 un certificado \u00fanico verificable en suite.habitaris.co/verificar. '
+      +'<button class="ghost" onclick="APP.showStep3()">\u2190 Volver al documento</button>'
+      +'<div class="legal">Al firmar se registrar\u00e1: direcci\u00f3n IP, dispositivo, ubicaci\u00f3n GPS, fecha/hora UTC y c\u00f3digo OTP verificado. '
       +'Validez legal: Ley 527/1999 (Colombia) \xb7 Reglamento (UE) 910/2014 (eIDAS).</div>'
       +'</div>');
     initCanvas();
   }
 
   function initCanvas(){
-    canvas=document.getElementById("sigCanvas");
-    ctx=canvas.getContext("2d");
-    ctx.strokeStyle="#111";ctx.lineWidth=2.5;ctx.lineCap="round";ctx.lineJoin="round";
-    hasDrawn=false;drawing=false;
-    function gp(e){var r=canvas.getBoundingClientRect();var x,y;if(e.touches){x=e.touches[0].clientX-r.left;y=e.touches[0].clientY-r.top;}else{x=e.clientX-r.left;y=e.clientY-r.top;}var sx=canvas.width/r.width;var sy=canvas.height/r.height;return{x:x*sx,y:y*sy};}
+    canvas=document.getElementById("sigCanvas");ctx=canvas.getContext("2d");
+    ctx.strokeStyle="#111";ctx.lineWidth=2.5;ctx.lineCap="round";ctx.lineJoin="round";hasDrawn=false;drawing=false;
+    function gp(e){var r=canvas.getBoundingClientRect();var x,y;if(e.touches){x=e.touches[0].clientX-r.left;y=e.touches[0].clientY-r.top;}else{x=e.clientX-r.left;y=e.clientY-r.top;}return{x:x*(canvas.width/r.width),y:y*(canvas.height/r.height)};}
     function s(e){e.preventDefault();drawing=true;var p=gp(e);ctx.beginPath();ctx.moveTo(p.x,p.y);}
-    function m(e){e.preventDefault();if(!drawing)return;var p=gp(e);ctx.lineTo(p.x,p.y);ctx.stroke();hasDrawn=true;document.getElementById("padHint").style.display="none";document.getElementById("signBtn").disabled=false;}
+    function m(e){e.preventDefault();if(!drawing)return;var p=gp(e);ctx.lineTo(p.x,p.y);ctx.stroke();hasDrawn=true;document.getElementById("padHint").style.display="none";document.getElementById("signBtn").disabled=false;document.getElementById("uploadPreview").style.display="none";}
     function en(e){e.preventDefault();drawing=false;}
     canvas.addEventListener("mousedown",s);canvas.addEventListener("mousemove",m);canvas.addEventListener("mouseup",en);canvas.addEventListener("mouseleave",en);
     canvas.addEventListener("touchstart",s);canvas.addEventListener("touchmove",m);canvas.addEventListener("touchend",en);
   }
 
-  function clearPad(){if(ctx){ctx.clearRect(0,0,canvas.width,canvas.height);hasDrawn=false;document.getElementById("padHint").style.display="block";document.getElementById("signBtn").disabled=true;}}
+  function clearPad(){
+    if(ctx){ctx.clearRect(0,0,canvas.width,canvas.height);hasDrawn=false;sigData=null;
+    document.getElementById("padHint").style.display="block";document.getElementById("signBtn").disabled=true;document.getElementById("uploadPreview").style.display="none";}
+  }
+
+  function uploadSig(input){
+    if(!input.files||!input.files[0])return;
+    var reader=new FileReader();
+    reader.onload=function(){
+      sigData=reader.result;hasDrawn=true;
+      document.getElementById("uploadPreview").style.display="block";
+      document.getElementById("uploadImg").src=sigData;
+      document.getElementById("padHint").style.display="none";
+      document.getElementById("signBtn").disabled=false;
+      if(ctx)ctx.clearRect(0,0,canvas.width,canvas.height);
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
 
   async function submit(){
-    if(!hasDrawn){alert("Debe firmar antes de continuar.");return;}
-    sigData=canvas.toDataURL("image/png");
-    R('<div class="card" style="text-align:center;padding:40px"><div class="spin"></div><div style="font-size:13px;color:#888">Procesando firma y generando certificado...</div></div>');
+    if(!hasDrawn&&!sigData){alert("Debe firmar o subir una imagen.");return;}
+    if(!sigData) sigData=canvas.toDataURL("image/png");
+
+    R('<div class="step-bar"><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step active"></div></div>'
+      +'<div class="card" style="text-align:center;padding:40px"><div class="spin"></div><div style="font-size:13px;color:#888">Procesando firma y generando certificado...</div></div>');
     try{
       var r=await fetch("/api/firma",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"sign",token:TOKEN,signature_image:sigData,user_agent:navigator.userAgent.substring(0,150),lat:gps?gps.lat:null,lng:gps?gps.lng:null,id_type:"CC",id_number:pending.signer_id_number||""})});
       var d=await r.json();
-      if(d.ok){showSuccess(d);}
-      else{R('<div class="card" style="text-align:center"><h2>Error</h2><div class="sub">'+(d.error||"Error desconocido")+'</div><button class="btn bk" onclick="APP.showStep3()">Reintentar</button></div>');}
-    }catch(e){R('<div class="card" style="text-align:center"><h2>Error</h2><div class="sub">'+e.message+'</div><button class="btn bk" onclick="APP.showStep3()">Reintentar</button></div>');}
+      if(d.ok)showSuccess(d);
+      else R('<div class="card" style="text-align:center"><h2>Error</h2><div class="sub">'+(d.error||"")+'</div><button class="btn bk" onclick="APP.showStep4()">Reintentar</button></div>');
+    }catch(e){R('<div class="card"><h2>Error</h2><div class="sub">'+e.message+'</div><button class="btn bk" onclick="APP.showStep4()">Reintentar</button></div>');}
   }
 
   function showSuccess(data){
-    R('<div class="step-bar"><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step done"></div></div>'
+    R('<div class="step-bar"><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step done"></div><div class="step done"></div></div>'
       +'<div class="card" style="text-align:center">'
       +'<div style="font-size:56px;margin-bottom:12px">\u2705</div>'
       +'<h2 style="color:#059669">Documento firmado exitosamente</h2>'
@@ -247,15 +282,16 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
       +'<strong>Documento:</strong> '+pending.doc_code+'<br/>'
       +'<strong>T\u00edtulo:</strong> '+pending.doc_title+'<br/>'
       +'<strong>Firmante:</strong> '+pending.signer_name+'<br/>'
-      +'<strong>Fecha:</strong> '+new Date(data.signed_at).toLocaleString("es-CO")+'</div>'
-      +'<div class="legal">Este certificado acredita que el firmante ha suscrito el documento de forma electr\u00f3nica. '
+      +'<strong>Fecha:</strong> '+new Date(data.signed_at).toLocaleString("es-CO")+'<br/>'
+      +'<strong>Verificaci\u00f3n:</strong> Email OTP + GPS + IP + SHA-256</div>'
+      +'<button class="btn bk" onclick="window.open(\''+data.verification_url+'\')">Verificar certificado \u2192</button>'
+      +'<div class="legal">Este certificado acredita que el firmante ha suscrito el documento de forma electr\u00f3nica con verificaci\u00f3n de identidad por c\u00f3digo OTP. '
       +'La firma incluye: hash SHA-256, direcci\u00f3n IP, dispositivo, ubicaci\u00f3n GPS y marca temporal UTC. '
-      +'Cualquier persona puede verificar la autenticidad en la URL indicada. '
       +'Validez legal: Ley 527/1999 (Colombia) \xb7 Reglamento (UE) 910/2014 (eIDAS).</div>'
       +'</div>');
   }
 
-  window.APP={showStep1:showStep1,showStep2:showStep2,showStep3:showStep3,clearPad:clearPad,submit:submit,onCheck:onCheck};
+  window.APP={showStep1:showStep1,sendOTP:sendOTP,otpNav:otpNav,verifyOTP:verifyOTP,showStep3:showStep3,showStep4:showStep4,clearPad:clearPad,uploadSig:uploadSig,submit:submit,onCheck:onCheck};
   load();
 })();
 </script>
