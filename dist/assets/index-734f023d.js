@@ -827,20 +827,94 @@ GARANTÍAS:
 - Acabados: 1 año
 - Instalaciones: 2 años
 
-Se firma en {{ciudad}} a los {{fecha}}.`,pais:"CO",obligatorio:!1},{id:"tpl_contrato_laboral",cat:"contratos",nombre:"Contrato Laboral a Término Fijo",desc:"Contrato laboral para personal vinculado a proyectos con término definido.",variables:["nombre_empleado","documento_empleado","cargo","salario","fecha_inicio","fecha_fin","funciones"],contenido:`CONTRATO INDIVIDUAL DE TRABAJO A TÉRMINO FIJO
+Se firma en {{ciudad}} a los {{fecha}}.`,pais:"CO",obligatorio:!1},{id:"tpl_contrato_laboral",cat:"contratos",nombre:"Contrato Individual de Trabajo — Término Fijo",desc:"Contrato laboral a término fijo con cláusulas normalizadas según Código Sustantivo del Trabajo colombiano. Formato PDF con tabla de datos, cláusulas y bloque de firmas.",variables:["nombre_trabajador","tipo_doc","numero_doc","direccion_trabajador","email_trabajador","celular_trabajador","cargo","salario_neto","salario_base","auxilio_transporte","bono_no_salarial","jornada_horas","horario","dias_laborales","tipo_contrato","duracion_meses","fecha_inicio","periodo_prueba","ciudad","descriptor_codigo","abogado_nombre"],contenido:`CONTRATO INDIVIDUAL DE TRABAJO
 
-EMPLEADOR: {{empresa_nombre}}, NIT {{empresa_nit}}
-TRABAJADOR: {{nombre_empleado}}, C.C. {{documento_empleado}}
-CARGO: {{cargo}}
+[Tabla de datos del contrato con formato Habitaris]
 
-El EMPLEADOR contrata los servicios del TRABAJADOR para desempeñar el cargo de {{cargo}} con las siguientes funciones: {{funciones}}
+DATOS DEL CONTRATO
+- Código: HAB-CTR-{{año}}-{{consecutivo}}
+- Clase: Individual a término fijo
+- Duración: {{duracion_meses}} meses
 
-REMUNERACIÓN: {{salario}} mensuales, pagaderos quincenalmente.
-VIGENCIA: Del {{fecha_inicio}} al {{fecha_fin}}.
+EMPLEADOR
+- HABITARIS SAS — NIT 901.922.136-8
+- Rep. Legal: Ana María Díaz Buitrago — CC 1.109.293.384
 
-JORNADA: 48 horas semanales.
+TRABAJADOR(A)
+- {{nombre_trabajador}} — {{tipo_doc}} {{numero_doc}}
+- Dirección: {{direccion_trabajador}}
+- Email: {{email_trabajador}} — Cel: {{celular_trabajador}}
 
-El presente contrato se rige por el Código Sustantivo del Trabajo.`,pais:"CO",obligatorio:!1},{id:"tpl_contrato_prest_serv",cat:"contratos",nombre:"Contrato de Prestación de Servicios",desc:"Para contratistas independientes, proveedores y consultores.",variables:["nombre_contratista","documento_contratista","objeto","valor","plazo","entregables"],contenido:`CONTRATO DE PRESTACIÓN DE SERVICIOS PROFESIONALES
+CONDICIONES LABORALES
+- Cargo: {{cargo}}
+- Salario neto: {{salario_neto}}
+- Jornada: {{jornada_horas}} horas — {{dias_laborales}}
+- Horario: {{horario}}
+
+CLÁUSULAS
+
+PRIMERA.- EL EMPLEADOR contrata los servicios personales de EL TRABAJADOR para desempeñar el cargo de {{cargo}}.
+
+SEGUNDA.- Las partes declaran que en el presente contrato se entienden incorporadas las disposiciones del Código Sustantivo del Trabajo.
+
+TERCERA.- Funciones según descriptor de cargo {{descriptor_codigo}}.
+
+CUARTA.- Duración del contrato: {{duracion_meses}} meses a partir del {{fecha_inicio}}.
+
+QUINTA.- Jornada laboral: {{jornada_horas}} horas semanales en horario {{horario}}, días {{dias_laborales}}.
+
+SEXTA.- Remuneración: {{salario_neto}} neto mensual, pagadero quincenalmente.
+
+SÉPTIMA.- Afiliación a seguridad social (EPS, pensión, ARL) conforme a la ley.
+
+OCTAVA.- Lugar de trabajo: {{ciudad}}.
+
+NOVENA.- Período de prueba: {{periodo_prueba}}.
+
+DÉCIMA.- Vacaciones conforme al artículo 186 del CST.
+
+[Cláusulas adicionales estándar: obligaciones, terminación, descuentos, horas extra, modificaciones]
+
+FIRMANTES:
+- Revisado por: {{abogado_nombre}} — Asesor(a) Legal
+- Trabajador: {{nombre_trabajador}} — {{tipo_doc}} {{numero_doc}}
+- Empleador: Ana María Díaz Buitrago — CC 1.109.293.384 — Rep. Legal HABITARIS SAS`,pais:"CO",obligatorio:!1},{id:"tpl_contrato_indefinido",cat:"contratos",nombre:"Contrato Individual de Trabajo — Término Indefinido",desc:"Contrato laboral a término indefinido. Mismo formato que el de término fijo pero sin fecha de terminación.",variables:["nombre_trabajador","tipo_doc","numero_doc","direccion_trabajador","email_trabajador","celular_trabajador","cargo","salario_neto","jornada_horas","horario","dias_laborales","fecha_inicio","periodo_prueba","ciudad","descriptor_codigo","abogado_nombre"],contenido:`CONTRATO INDIVIDUAL DE TRABAJO
+
+Clase: Individual a término indefinido
+Demás condiciones y cláusulas iguales al contrato a término fijo, sin cláusula de duración definida.`,pais:"CO",obligatorio:!1},{id:"tpl_descriptor_cargo",cat:"contratos",nombre:"Descriptor de Cargo",desc:"Descriptor genérico de cargo con funciones, competencias, perfil y sistemas de gestión. Para biblioteca de cargos.",variables:["cargo","codigo_cargo","area","nivel","reporta_a","supervisa","interactua","objetivo","funciones_principales","funciones_calidad","funciones_sst","educacion","formacion","experiencia_general","experiencia_especifica","competencias_org","competencias_cargo"],contenido:`DESCRIPTOR DE CARGO
+
+[Formato Habitaris con secciones]
+
+I. IDENTIFICACIÓN DEL CARGO
+- Cargo: {{cargo}}
+- Código: {{codigo_cargo}}
+- Área: {{area}}
+- Nivel: {{nivel}}
+- Reporta a: {{reporta_a}}
+- Supervisa: {{supervisa}}
+
+II. OBJETIVO DEL CARGO
+{{objetivo}}
+
+III. FUNCIONES PRINCIPALES
+{{funciones_principales}}
+
+IV. RESPONSABILIDADES EN SISTEMAS DE GESTIÓN
+Calidad: {{funciones_calidad}}
+SST: {{funciones_sst}}
+
+V. PERFIL DEL CARGO
+- Educación: {{educacion}}
+- Formación: {{formacion}}
+- Experiencia general: {{experiencia_general}}
+- Experiencia específica: {{experiencia_especifica}}
+- Competencias organizacionales: {{competencias_org}}
+- Competencias específicas: {{competencias_cargo}}
+
+Nota: La empresa podrá considerar idóneo a cualquier candidato que demuestre capacidad suficiente.
+
+VI. ACEPTACIÓN
+Firma del trabajador.`,pais:"CO",obligatorio:!1},{id:"tpl_contrato_prest_serv",cat:"contratos",nombre:"Contrato de Prestación de Servicios",desc:"Para contratistas independientes, proveedores y consultores.",variables:["nombre_contratista","documento_contratista","objeto","valor","plazo","entregables"],contenido:`CONTRATO DE PRESTACIÓN DE SERVICIOS PROFESIONALES
 
 CONTRATANTE: {{empresa_nombre}}
 CONTRATISTA: {{nombre_contratista}}, {{documento_contratista}}
