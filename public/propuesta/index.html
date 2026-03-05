@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>Propuesta de Empleo · Habitaris</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',Arial,sans-serif;background:#F0EEE9;min-height:100vh;color:#111}
+.hdr{background:#111;padding:16px 20px;text-align:center}
+.hdr img{height:28px}
+.wrap{max-width:600px;margin:0 auto;padding:20px}
+.card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px}
+h2{font-size:18px;font-weight:700;margin-bottom:4px}
+.sub{font-size:12px;color:#888;margin-bottom:20px}
+.row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F3F4F6;font-size:13px}
+.row:last-child{border:none}
+.lbl{color:#888;font-weight:600;font-size:11px;text-transform:uppercase}
+.val{color:#111;font-weight:600;text-align:right}
+.salary-box{background:#111;color:#fff;border-radius:10px;padding:20px;text-align:center;margin:16px 0}
+.salary-box .amount{font-size:28px;font-weight:700;margin:8px 0}
+.salary-box .period{font-size:12px;color:rgba(255,255,255,.6)}
+.detail{background:#F8F7F5;border-radius:8px;padding:14px;margin:12px 0;font-size:12px;color:#555;line-height:1.6}
+.detail strong{color:#111}
+.btn{width:100%;padding:14px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;margin-bottom:8px}
+.bg{background:#059669;color:#fff}
+.br{background:#DC2626;color:#fff}
+.ghost{background:none;color:#888;font-size:12px;padding:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%}
+.spin{width:24px;height:24px;border:3px solid #E0E0E0;border-top-color:#111;border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.legal{font-size:9px;color:#999;line-height:1.5;margin-top:16px;padding-top:12px;border-top:1px solid #F3F4F6}
+.badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
+.b-g{background:#DCFCE7;color:#059669}
+</style>
+</head>
+<body>
+<div class="hdr"><img src="/logo-habitaris-blanco.png" alt="Habitaris"/></div>
+<div class="wrap" id="app"><div style="text-align:center;padding:40px"><div class="spin"></div></div></div>
+<script>
+(function(){
+  var P=new URLSearchParams(window.location.search);
+  var TOKEN=P.get("token")||"";
+  var data=null;
+  function R(h){document.getElementById("app").innerHTML=h;}
+  function fmt(n){return new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n);}
+
+  async function load(){
+    if(!TOKEN){R('<div class="card" style="text-align:center"><h2>Enlace inv\u00e1lido</h2></div>');return;}
+    try{
+      var r=await fetch("/api/hiring?token_propuesta="+TOKEN);
+      var d=await r.json();
+      if(!d.ok){R('<div class="card" style="text-align:center"><h2>Propuesta no encontrada</h2></div>');return;}
+      data=d.data;
+      if(data.estado!=="propuesta"){showAccepted();return;}
+      showProposal();
+    }catch(e){R('<div class="card"><h2>Error</h2><div class="sub">'+e.message+'</div></div>');}
+  }
+
+  function showAccepted(){
+    R('<div class="card" style="text-align:center"><div style="font-size:48px;margin-bottom:12px">\u2705</div><h2>Propuesta aceptada</h2>'
+      +'<div class="sub">Ya aceptaste esta propuesta. Completa tus datos en el siguiente enlace:</div>'
+      +'<button class="btn bg" onclick="window.location.href=\'/contratacion?token='+data.token_datos+'\'">Completar mis datos \u2192</button></div>');
+  }
+
+  function showProposal(){
+    R('<div class="card">'
+      +'<div style="text-align:center;margin-bottom:20px"><div style="font-size:40px;margin-bottom:8px">\ud83d\udce9</div>'
+      +'<h2>Propuesta de empleo</h2>'
+      +'<div class="sub">'+data.codigo+'</div></div>'
+
+      +'<div class="row"><span class="lbl">Empresa</span><span class="val">HABITARIS SAS</span></div>'
+      +'<div class="row"><span class="lbl">Cargo</span><span class="val">'+data.cargo+'</span></div>'
+      +'<div class="row"><span class="lbl">Tipo contrato</span><span class="val">'+(data.tipo_contrato==="fijo"?"T\u00e9rmino fijo":data.tipo_contrato==="indefinido"?"Indefinido":"Obra o labor")+'</span></div>'
+      +(data.duracion_meses?'<div class="row"><span class="lbl">Duraci\u00f3n</span><span class="val">'+data.duracion_meses+' meses</span></div>':'')
+      +'<div class="row"><span class="lbl">Ciudad</span><span class="val">'+data.ciudad+'</span></div>'
+      +'<div class="row"><span class="lbl">Jornada</span><span class="val">'+data.jornada_horas+' horas/semana</span></div>'
+      +'<div class="row"><span class="lbl">Horario</span><span class="val">'+data.horario+'</span></div>'
+      +'<div class="row"><span class="lbl">D\u00edas laborales</span><span class="val">'+data.dias_laborales+'</span></div>'
+      +(data.fecha_inicio?'<div class="row"><span class="lbl">Fecha inicio</span><span class="val">'+data.fecha_inicio+'</span></div>':'')
+
+      +'<div class="salary-box">'
+      +'<div style="font-size:11px;letter-spacing:1px;opacity:.6">SALARIO NETO MENSUAL</div>'
+      +'<div class="amount">'+fmt(data.salario_neto)+'</div>'
+      +'<div class="period">Pago quincenal</div></div>'
+
+      +'<div class="detail">'
+      +'<strong>Detalle:</strong><br/>'
+      +(data.salario_base?'Salario base: '+fmt(data.salario_base)+'<br/>':'')
+      +(data.auxilio_transporte?'Auxilio de transporte: '+fmt(data.auxilio_transporte)+'<br/>':'')
+      +(data.bono_no_salarial?'Bono complementario: '+fmt(data.bono_no_salarial)+'<br/>':'')
+      +'<br/><strong>Incluye:</strong> Afiliaci\u00f3n a EPS, pensi\u00f3n, ARL, caja de compensaci\u00f3n y prestaciones sociales conforme a la ley.'
+      +'</div>'
+
+      +(data.periodo_prueba?'<div class="detail"><strong>Per\u00edodo de prueba:</strong> '+data.periodo_prueba+'</div>':'')
+
+      +'<div style="margin-top:20px">'
+      +'<button class="btn bg" onclick="APP.accept()">Acepto la propuesta \u2192</button>'
+      +'<button class="ghost">Si tiene preguntas, escriba a comercial@habitaris.co</button>'
+      +'</div>'
+
+      +'<div class="legal">Esta propuesta de empleo no constituye contrato de trabajo. El contrato se formalizar\u00e1 una vez completados los tr\u00e1mites de contrataci\u00f3n y firma de las partes. HABITARIS SAS \u2014 NIT 901.922.136-8</div>'
+      +'</div>');
+  }
+
+  async function accept(){
+    R('<div class="card" style="text-align:center;padding:40px"><div class="spin"></div><div style="font-size:13px;color:#888">Registrando aceptaci\u00f3n...</div></div>');
+    try{
+      await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:data.id,estado:"aceptada",fecha_aceptacion:new Date().toISOString()})});
+      R('<div class="card" style="text-align:center">'
+        +'<div style="font-size:56px;margin-bottom:12px">\ud83c\udf89</div>'
+        +'<h2 style="color:#059669">Propuesta aceptada</h2>'
+        +'<div class="sub">Bienvenido/a al equipo de Habitaris</div>'
+        +'<div style="background:#EFF6FF;border:1px solid #1D4ED8;border-radius:8px;padding:14px;font-size:12px;color:#1E40AF;margin:16px 0">'
+        +'<strong>Siguiente paso:</strong> Complete sus datos personales y adjunte los documentos requeridos para formalizar su contrataci\u00f3n.</div>'
+        +'<button class="btn bg" onclick="window.location.href=\'/contratacion?token='+data.token_datos+'\'">Completar mis datos \u2192</button></div>');
+    }catch(e){R('<div class="card"><h2>Error</h2><div class="sub">'+e.message+'</div></div>');}
+  }
+
+  window.APP={accept:accept};
+  load();
+})();
+</script>
+</body>
+</html>

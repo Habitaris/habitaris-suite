@@ -53,6 +53,22 @@
       "destination": "/verificar/index.html"
     },
     {
+      "source": "/propuesta",
+      "destination": "/propuesta/index.html"
+    },
+    {
+      "source": "/propuesta/(.*)",
+      "destination": "/propuesta/index.html"
+    },
+    {
+      "source": "/contratacion",
+      "destination": "/contratacion/index.html"
+    },
+    {
+      "source": "/contratacion/(.*)",
+      "destination": "/contratacion/index.html"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

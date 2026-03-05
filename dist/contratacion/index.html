@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>Datos de Contrataci&oacute;n · Habitaris</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',Arial,sans-serif;background:#F0EEE9;min-height:100vh;color:#111}
+.hdr{background:#111;padding:16px 20px;text-align:center}
+.hdr img{height:28px}
+.wrap{max-width:600px;margin:0 auto;padding:20px}
+.card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px}
+h2{font-size:18px;font-weight:700;margin-bottom:4px}
+h3{font-size:14px;font-weight:700;margin:20px 0 12px;padding:8px 0;border-bottom:1px solid #E0E0E0;color:#111}
+.sub{font-size:12px;color:#888;margin-bottom:20px}
+.fg{margin-bottom:14px}
+.fg label{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
+.fg input,.fg select,.fg textarea{width:100%;padding:12px 14px;border:1px solid #E0E0E0;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;background:#fff;color:#111}
+.fg textarea{resize:vertical;min-height:60px}
+.fg .req{color:#DC2626}
+.fg .hint{font-size:10px;color:#aaa;margin-top:4px}
+.fg input[type=file]{padding:10px;background:#F8F7F5;font-size:12px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.photo-area{border:2px dashed #DDD;border-radius:12px;padding:20px;text-align:center;cursor:pointer;background:#FAFAFA;margin-bottom:14px}
+.photo-area:hover{border-color:#888}
+.photo-area img{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid #E0E0E0}
+.ben-card{background:#F8F7F5;border-radius:8px;padding:14px;margin-bottom:10px}
+.btn{width:100%;padding:14px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;margin-bottom:8px}
+.bk{background:#111;color:#fff}
+.bg{background:#059669;color:#fff}
+.ghost{background:none;color:#888;font-size:12px;padding:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.spin{width:24px;height:24px;border:3px solid #E0E0E0;border-top-color:#111;border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.progress{display:flex;gap:4px;margin-bottom:20px}
+.progress div{flex:1;height:4px;border-radius:2px;background:#E0E0E0}
+.progress div.done{background:#059669}
+.progress div.active{background:#111}
+.section-badge{background:#111;color:#fff;padding:4px 12px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:1px;display:inline-block;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="hdr"><img src="/logo-habitaris-blanco.png" alt="Habitaris"/></div>
+<div class="wrap" id="app"><div style="text-align:center;padding:40px"><div class="spin"></div></div></div>
+<script>
+(function(){
+  var P=new URLSearchParams(window.location.search);
+  var TOKEN=P.get("token")||"";
+  var data=null, photoData=null, cedulaData=null, step=1, beneficiarios=[];
+
+  function R(h){document.getElementById("app").innerHTML=h;}
+  function $(id){return document.getElementById(id);}
+
+  async function load(){
+    if(!TOKEN){R('<div class="card" style="text-align:center"><h2>Enlace inv\u00e1lido</h2></div>');return;}
+    try{
+      var r=await fetch("/api/hiring?token_datos="+TOKEN);
+      var d=await r.json();
+      if(!d.ok){R('<div class="card" style="text-align:center"><h2>No encontrado</h2></div>');return;}
+      data=d.data;
+      if(data.estado==="datos_recibidos"||data.estado==="revision_legal"||data.estado==="firma_pendiente"||data.estado==="firmado"||data.estado==="completado"){
+        R('<div class="card" style="text-align:center"><div style="font-size:48px;margin-bottom:12px">\u2705</div><h2>Datos ya enviados</h2><div class="sub">Sus datos fueron recibidos. Le notificaremos cuando el contrato est\u00e9 listo para firmar.</div></div>');return;
+      }
+      showStep1();
+    }catch(e){R('<div class="card"><h2>Error</h2><div class="sub">'+e.message+'</div></div>');}
+  }
+
+  function prog(n){
+    var h='<div class="progress">';
+    for(var i=1;i<=4;i++) h+='<div class="'+(i<n?"done":i===n?"active":"")+'"></div>';
+    return h+'</div>';
+  }
+
+  // STEP 1: Datos personales + foto
+  function showStep1(){
+    step=1;
+    R(prog(1)
+      +'<div class="card">'
+      +'<div class="section-badge">PASO 1 DE 4</div>'
+      +'<h2>Datos personales</h2>'
+      +'<div class="sub">Cargo: <strong>'+data.cargo+'</strong></div>'
+
+      +'<div class="photo-area" onclick="$(\'photoInput\').click()">'
+      +'<div id="photoPreview">'+(photoData?'<img src="'+photoData+'"/>':'<div style="font-size:40px;margin-bottom:8px">\ud83d\udcf7</div><div style="font-size:12px;color:#888">Toque para subir foto tipo documento</div>')+'</div></div>'
+      +'<input type="file" id="photoInput" accept="image/*" style="display:none" onchange="APP.loadPhoto(this)"/>'
+
+      +'<div class="fg"><label>Nombre completo <span class="req">*</span></label><input id="nombre" value="'+(data.candidato_nombre||"")+'"/></div>'
+      +'<div class="row2">'
+      +'<div class="fg"><label>C\u00e9dula / CC <span class="req">*</span></label><input id="cc" value="'+(data.candidato_cc||"")+'"/></div>'
+      +'<div class="fg"><label>Adjuntar c\u00e9dula <span class="req">*</span></label><input type="file" id="cedulaInput" accept="image/*,.pdf" onchange="APP.loadCedula(this)"/></div></div>'
+      +'<div class="fg"><label>Direcci\u00f3n <span class="req">*</span></label><input id="dir" value="'+(data.candidato_direccion||"")+'"/></div>'
+      +'<div class="row2">'
+      +'<div class="fg"><label>Email <span class="req">*</span></label><input type="email" id="email" value="'+(data.candidato_email||"")+'"/></div>'
+      +'<div class="fg"><label>Celular <span class="req">*</span></label><input type="tel" id="cel" value="'+(data.candidato_celular||"")+'"/></div></div>'
+
+      +'<button class="btn bk" onclick="APP.next1()">Siguiente \u2192</button>'
+      +'</div>');
+  }
+
+  function loadPhoto(input){
+    if(!input.files[0])return;
+    var r=new FileReader();r.onload=function(){photoData=r.result;$("photoPreview").innerHTML='<img src="'+photoData+'"/>';};r.readAsDataURL(input.files[0]);
+  }
+  function loadCedula(input){
+    if(!input.files[0])return;
+    var r=new FileReader();r.onload=function(){cedulaData=r.result;};r.readAsDataURL(input.files[0]);
+  }
+
+  function next1(){
+    if(!$("nombre").value||!$("cc").value||!$("dir").value||!$("email").value||!$("cel").value){alert("Complete todos los campos obligatorios.");return;}
+    if(!photoData){alert("La foto es obligatoria.");return;}
+    if(!cedulaData){alert("Adjunte su c\u00e9dula.");return;}
+    data.candidato_nombre=$("nombre").value;
+    data.candidato_cc=$("cc").value;
+    data.candidato_direccion=$("dir").value;
+    data.candidato_email=$("email").value;
+    data.candidato_celular=$("cel").value;
+    showStep2();
+  }
+
+  // STEP 2: Contacto emergencia
+  function showStep2(){
+    step=2;
+    var ce=data.candidato_contacto_emergencia?JSON.parse(data.candidato_contacto_emergencia):{};
+    R(prog(2)
+      +'<div class="card">'
+      +'<div class="section-badge">PASO 2 DE 4</div>'
+      +'<h2>Contacto de emergencia</h2>'
+      +'<div class="sub">Persona a contactar en caso de emergencia</div>'
+      +'<div class="fg"><label>Nombre completo <span class="req">*</span></label><input id="ceNombre" value="'+(ce.nombre||"")+'"/></div>'
+      +'<div class="row2">'
+      +'<div class="fg"><label>Tel\u00e9fono <span class="req">*</span></label><input type="tel" id="ceTel" value="'+(ce.telefono||"")+'"/></div>'
+      +'<div class="fg"><label>Parentesco <span class="req">*</span></label><select id="cePar"><option value="">Seleccione...</option><option>C\u00f3nyuge</option><option>Padre/Madre</option><option>Hermano/a</option><option>Hijo/a</option><option>Otro familiar</option><option>Amigo/a</option></select></div></div>'
+      +'<button class="btn bk" onclick="APP.next2()">Siguiente \u2192</button>'
+      +'<button class="ghost" onclick="APP.showStep1()">\u2190 Anterior</button>'
+      +'</div>');
+  }
+
+  function next2(){
+    if(!$("ceNombre").value||!$("ceTel").value||!$("cePar").value){alert("Complete todos los campos.");return;}
+    data.candidato_contacto_emergencia=JSON.stringify({nombre:$("ceNombre").value,telefono:$("ceTel").value,parentesco:$("cePar").value});
+    showStep3();
+  }
+
+  // STEP 3: Seguridad social + banco
+  function showStep3(){
+    step=3;
+    R(prog(3)
+      +'<div class="card">'
+      +'<div class="section-badge">PASO 3 DE 4</div>'
+      +'<h2>Seguridad social y datos bancarios</h2>'
+      +'<div class="sub">Informaci\u00f3n para afiliaciones y pago de n\u00f3mina</div>'
+      +'<div class="row2">'
+      +'<div class="fg"><label>EPS <span class="req">*</span></label><input id="eps" value="'+(data.candidato_eps||"")+'"/></div>'
+      +'<div class="fg"><label>Fondo de pensiones <span class="req">*</span></label><input id="pension" value="'+(data.candidato_pension||"")+'"/></div></div>'
+      +'<h3>Datos bancarios</h3>'
+      +'<div class="fg"><label>Banco <span class="req">*</span></label><input id="banco" value="'+(data.candidato_banco||"")+'"/></div>'
+      +'<div class="row2">'
+      +'<div class="fg"><label>Tipo de cuenta</label><select id="tipoCta"><option value="Ahorros">Ahorros</option><option value="Corriente">Corriente</option></select></div>'
+      +'<div class="fg"><label>N\u00famero de cuenta <span class="req">*</span></label><input id="numCta" value="'+(data.candidato_numero_cuenta||"")+'"/></div></div>'
+      +'<button class="btn bk" onclick="APP.next3()">Siguiente \u2192</button>'
+      +'<button class="ghost" onclick="APP.showStep2()">\u2190 Anterior</button>'
+      +'</div>');
+  }
+
+  function next3(){
+    if(!$("eps").value||!$("pension").value||!$("banco").value||!$("numCta").value){alert("Complete todos los campos obligatorios.");return;}
+    data.candidato_eps=$("eps").value;
+    data.candidato_pension=$("pension").value;
+    data.candidato_banco=$("banco").value;
+    data.candidato_tipo_cuenta=$("tipoCta").value;
+    data.candidato_numero_cuenta=$("numCta").value;
+    showStep4();
+  }
+
+  // STEP 4: Beneficiarios + documentos extra
+  function showStep4(){
+    step=4;
+    var benHtml=beneficiarios.map(function(b,i){
+      return '<div class="ben-card"><strong>'+b.nombre+'</strong> \u2014 '+b.parentesco+'<br/><span style="font-size:11px;color:#888">CC '+b.documento+' \u2014 Nac. '+b.fecha_nac+'</span>'
+        +'<button class="ghost" style="padding:4px;font-size:10px" onclick="APP.rmBen('+i+')">Eliminar</button></div>';
+    }).join("");
+
+    R(prog(4)
+      +'<div class="card">'
+      +'<div class="section-badge">PASO 4 DE 4</div>'
+      +'<h2>Beneficiarios y documentos</h2>'
+      +'<div class="sub">Personas a cargo y documentos adicionales</div>'
+
+      +'<h3>Beneficiarios / Personas a cargo</h3>'
+      +'<div id="benList">'+benHtml+'</div>'
+      +'<div style="background:#F8F7F5;border-radius:8px;padding:14px;margin-bottom:14px">'
+      +'<div class="row2" style="margin-bottom:8px">'
+      +'<div class="fg" style="margin:0"><label>Nombre</label><input id="benNom" style="font-size:12px;padding:8px"/></div>'
+      +'<div class="fg" style="margin:0"><label>Parentesco</label><select id="benPar" style="font-size:12px;padding:8px"><option>C\u00f3nyuge</option><option>Hijo/a</option><option>Padre/Madre</option></select></div></div>'
+      +'<div class="row2">'
+      +'<div class="fg" style="margin:0"><label>Documento</label><input id="benDoc" style="font-size:12px;padding:8px"/></div>'
+      +'<div class="fg" style="margin:0"><label>Fecha nac.</label><input type="date" id="benFN" style="font-size:12px;padding:8px"/></div></div>'
+      +'<button class="ghost" style="margin-top:8px;color:#059669;font-weight:600" onclick="APP.addBen()">+ A\u00f1adir beneficiario</button></div>'
+
+      +'<h3>Documentos adicionales</h3>'
+      +'<div class="fg"><label>Certificados, cartas, etc. (opcional)</label><input type="file" id="docsExtra" multiple accept="image/*,.pdf"/><div class="hint">Puede subir varios archivos</div></div>'
+
+      +'<button class="btn bg" onclick="APP.submit()">Enviar datos \u2192</button>'
+      +'<button class="ghost" onclick="APP.showStep3()">\u2190 Anterior</button>'
+      +'</div>');
+  }
+
+  function addBen(){
+    var n=$("benNom").value,p=$("benPar").value,d=$("benDoc").value,f=$("benFN").value;
+    if(!n){alert("Nombre del beneficiario es obligatorio.");return;}
+    beneficiarios.push({nombre:n,parentesco:p,documento:d,fecha_nac:f});
+    showStep4();
+  }
+  function rmBen(i){beneficiarios.splice(i,1);showStep4();}
+
+  async function submit(){
+    R('<div class="card" style="text-align:center;padding:40px"><div class="spin"></div><div style="font-size:13px;color:#888">Enviando datos...</div></div>');
+    try{
+      var update={
+        id:data.id,
+        estado:"datos_recibidos",
+        candidato_nombre:data.candidato_nombre,
+        candidato_cc:data.candidato_cc,
+        candidato_direccion:data.candidato_direccion,
+        candidato_email:data.candidato_email,
+        candidato_celular:data.candidato_celular,
+        candidato_foto_url:photoData,
+        candidato_cedula_url:cedulaData,
+        candidato_contacto_emergencia:data.candidato_contacto_emergencia,
+        candidato_eps:data.candidato_eps,
+        candidato_pension:data.candidato_pension,
+        candidato_banco:data.candidato_banco,
+        candidato_tipo_cuenta:data.candidato_tipo_cuenta,
+        candidato_numero_cuenta:data.candidato_numero_cuenta,
+        candidato_beneficiarios:JSON.stringify(beneficiarios),
+        fecha_datos:new Date().toISOString(),
+      };
+      await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(update)});
+
+      R('<div class="card" style="text-align:center">'
+        +'<div style="font-size:56px;margin-bottom:12px">\u2705</div>'
+        +'<h2 style="color:#059669">Datos enviados exitosamente</h2>'
+        +'<div class="sub">Hemos recibido toda su informaci\u00f3n</div>'
+        +'<div style="background:#EFF6FF;border:1px solid #1D4ED8;border-radius:8px;padding:14px;font-size:12px;color:#1E40AF;margin:16px 0">'
+        +'<strong>Pr\u00f3ximo paso:</strong> Nuestro equipo preparar\u00e1 su contrato. Recibir\u00e1 un enlace por email para revisarlo y firmarlo digitalmente.</div>'
+        +'<div style="font-size:10px;color:#999;margin-top:12px">HABITARIS SAS \u2014 NIT 901.922.136-8</div>'
+        +'</div>');
+    }catch(e){R('<div class="card"><h2>Error</h2><div class="sub">'+e.message+'</div><button class="btn bk" onclick="APP.showStep4()">Reintentar</button></div>');}
+  }
+
+  window.APP={loadPhoto:loadPhoto,loadCedula:loadCedula,next1:next1,showStep1:showStep1,next2:next2,showStep2:showStep2,next3:next3,showStep3:showStep3,showStep4:showStep4,addBen:addBen,rmBen:rmBen,submit:submit};
+  load();
+})();
+</script>
+</body>
+</html>
