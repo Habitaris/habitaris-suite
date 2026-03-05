@@ -201,25 +201,46 @@ function renderPermissions() {
 }
 
 function requestPermissions() {
-  // Request GPS first
-  if (!permGpsOk && navigator.geolocation) {
+  if (!permGpsOk) {
+    render(
+      '<div class="card" style="text-align:center">'
+      + '<div class="icon-big">📍</div>'
+      + '<h2>Paso 1: Ubicación</h2>'
+      + '<div class="sub">Permite el acceso a tu ubicación GPS</div>'
+      + '<div class="gps-box gps-loading"><div class="spinner"></div>Solicitando permiso...</div>'
+      + '</div>'
+    );
     navigator.geolocation.getCurrentPosition(
       function(pos) {
         gpsCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude, precision: Math.round(pos.coords.accuracy) };
+        gpsErr = null;
         permGpsOk = true;
-        // Now request camera
         requestCameraPermission();
       },
       function(err) {
         gpsErr = err.message;
-        // Still try camera
-        requestCameraPermission();
-        setTimeout(function(){ renderPermissions(); }, 300);
+        var isIOS = /iPhone|iPad/.test(navigator.userAgent);
+        render(
+          '<div class="card" style="text-align:center">'
+          + '<div class="icon-big">📍</div>'
+          + '<h2>Activa tu ubicación</h2>'
+          + '<div class="sub">Es obligatorio para fichar</div>'
+          + '<div style="background:#FEF3C7;border:1px solid #D97706;border-radius:8px;padding:16px;text-align:left;margin-bottom:16px;font-size:13px;color:#92400E;line-height:1.6">'
+          + (isIOS
+            ? '<strong>En iPhone:</strong><br/>1. Toca <strong>aA</strong> en la barra de dirección<br/>2. <strong>Ajustes del sitio web</strong><br/>3. <strong>Ubicación → Permitir</strong><br/>4. Recarga la página'
+            : '<strong>En Android:</strong><br/>1. Toca el <strong>candado 🔒</strong> en la barra<br/>2. <strong>Permisos → Ubicación → Permitir</strong><br/>3. Recarga la página')
+          + '</div>'
+          + '<button class="btn btn-primary" onclick="location.reload()">Ya lo activé, recargar →</button>'
+          + '<button class="btn btn-ghost" onclick="currentEmp=null;renderStep1()">← Volver</button>'
+          + '</div>'
+        );
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
     );
-  } else if (permGpsOk) {
+  } else if (!permCamOk) {
     requestCameraPermission();
+  } else {
+    renderPermissions();
   }
 }
 
