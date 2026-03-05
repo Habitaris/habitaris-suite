@@ -21,6 +21,10 @@
       "destination": "/sala/index.html"
     },
     {
+      "source": "/responder/(.*)",
+      "destination": "/responder/index.html"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

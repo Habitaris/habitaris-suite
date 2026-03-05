@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Responder reunión · Habitaris</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:Arial,sans-serif;background:#F5F4F1;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .card{background:#fff;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);max-width:500px;width:100%;overflow:hidden}
+  .head{background:#111;padding:32px 40px;text-align:center}
+  .head img{height:32px}
+  .body{padding:36px 40px}
+  h1{font-size:20px;color:#111;margin-bottom:8px}
+  .sub{font-size:13px;color:#888;margin-bottom:24px}
+  .actions{display:flex;gap:8px;margin-bottom:24px}
+  .actions button{flex:1;padding:14px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;color:#fff}
+  .actions button.confirm{background:#059669}
+  .actions button.reschedule{background:#D97706}
+  .actions button.decline{background:#DC2626}
+  .actions button.active{outline:3px solid #111;outline-offset:2px}
+  .msg-area{display:none;margin-bottom:20px}
+  .msg-area textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:13px;resize:vertical;min-height:80px}
+  .msg-area label{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;margin-bottom:6px;display:block}
+  .send-btn{width:100%;padding:14px;background:#111;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;display:none}
+  .send-btn:hover{background:#333}
+  .success{display:none;text-align:center;padding:40px}
+  .success h2{font-size:20px;color:#059669;margin-bottom:8px}
+  .foot{background:#F5F4F1;padding:20px 40px;text-align:center;border-top:1px solid #E4E1DB}
+  .foot p{font-size:10px;color:#aaa}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="head"><img src="/logo-habitaris-blanco.png" alt="Habitaris"/></div>
+  <div class="body" id="formArea">
+    <h1>📅 Responder a reunión</h1>
+    <div class="sub" id="meetingInfo"></div>
+    <div class="actions">
+      <button class="confirm" onclick="selectAction('confirmar')">✓ Confirmar</button>
+      <button class="reschedule" onclick="selectAction('reprogramar')">🕐 Otra hora</button>
+      <button class="decline" onclick="selectAction('rechazar')">✗ No puedo</button>
+    </div>
+    <div class="msg-area" id="msgArea">
+      <label id="msgLabel">Mensaje (opcional)</label>
+      <textarea id="msgText" placeholder="Escribe aquí..."></textarea>
+    </div>
+    <button class="send-btn" id="sendBtn" onclick="sendResponse()">Enviar respuesta →</button>
+  </div>
+  <div class="success" id="successArea">
+    <div style="font-size:48px;margin-bottom:16px">✅</div>
+    <h2>Respuesta enviada</h2>
+    <p style="color:#888;font-size:13px">Hemos notificado al equipo de Habitaris. Gracias.</p>
+  </div>
+  <div class="foot"><p>Habitaris · Bogotá D.C. · comercial@habitaris.co</p></div>
+</div>
+<script>
+  var params = new URLSearchParams(window.location.search);
+  var meetingSubject = params.get("asunto") || "Reunión";
+  var meetingDate = params.get("fecha") || "";
+  var meetingHour = params.get("hora") || "";
+  var fromEmail = params.get("email") || "";
+  var selectedAction = "";
+
+  document.getElementById("meetingInfo").textContent = meetingSubject + (meetingDate ? " · " + meetingDate : "") + (meetingHour ? " " + meetingHour : "");
+
+  function selectAction(action) {
+    selectedAction = action;
+    document.querySelectorAll(".actions button").forEach(function(b){ b.classList.remove("active"); });
+    var map = {confirmar:0, reprogramar:1, rechazar:2};
+    document.querySelectorAll(".actions button")[map[action]].classList.add("active");
+    
+    var msgArea = document.getElementById("msgArea");
+    var msgLabel = document.getElementById("msgLabel");
+    msgArea.style.display = "block";
+    document.getElementById("sendBtn").style.display = "block";
+    
+    if (action === "reprogramar") {
+      msgLabel.textContent = "¿Qué horario te funciona mejor?";
+      document.getElementById("msgText").placeholder = "Ej: Prefiero martes a las 15:00...";
+    } else if (action === "rechazar") {
+      msgLabel.textContent = "Motivo (opcional)";
+      document.getElementById("msgText").placeholder = "Ej: Tengo un conflicto de agenda...";
+    } else {
+      msgLabel.textContent = "Mensaje (opcional)";
+      document.getElementById("msgText").placeholder = "Ej: Perfecto, nos vemos ahí...";
+    }
+  }
+
+  async function sendResponse() {
+    var btn = document.getElementById("sendBtn");
+    btn.textContent = "Enviando...";
+    btn.disabled = true;
+    
+    var msg = document.getElementById("msgText").value;
+    var actionLabels = {confirmar: "✓ CONFIRMADA", reprogramar: "🕐 PROPONE OTRA HORA", rechazar: "✗ RECHAZADA"};
+    
+    var body = {
+      to: "comercial@habitaris.co",
+      subject: actionLabels[selectedAction] + " — " + meetingSubject,
+      message: "Reunión: " + meetingSubject + "\nFecha: " + meetingDate + " " + meetingHour + "\nCliente: " + fromEmail + "\nRespuesta: " + actionLabels[selectedAction] + (msg ? "\n\nMensaje del cliente:\n" + msg : ""),
+      brand: {empresa: "Habitaris"},
+    };
+    
+    try {
+      await fetch("/api/send-email", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(body),
+      });
+    } catch(e) { console.warn(e); }
+    
+    document.getElementById("formArea").style.display = "none";
+    document.getElementById("successArea").style.display = "block";
+  }
+</script>
+</body>
+</html>

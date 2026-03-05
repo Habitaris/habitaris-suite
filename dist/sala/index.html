@@ -10,7 +10,6 @@
   .header{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:#111;border-bottom:1px solid rgba(255,255,255,.08)}
   .brand{display:flex;align-items:center;gap:12px}
   .brand img{height:24px;object-fit:contain}
-  .brand-name{font-size:13px;font-weight:700;letter-spacing:3px}
   .brand-slogan{font-size:8px;color:rgba(255,255,255,.35);letter-spacing:1.5px;text-transform:uppercase;margin-left:10px}
   .tz{font-size:9px;color:rgba(255,255,255,.3);background:rgba(255,255,255,.08);padding:3px 8px;border-radius:4px}
   .actions{display:flex;gap:8px}
@@ -20,8 +19,17 @@
   .btn-exit{background:#B91C1C;color:#fff}
   .btn-exit:hover{background:#991B1B}
   #jitsi-container{flex:1;width:100%}
+  .prejoin{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+  .prejoin img{height:40px;margin-bottom:8px}
+  .prejoin h2{font-size:18px;font-weight:700;letter-spacing:2px}
+  .prejoin p{font-size:12px;color:rgba(255,255,255,.4)}
+  .prejoin input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:14px 20px;font-size:15px;color:#fff;width:300px;text-align:center;outline:none}
+  .prejoin input::placeholder{color:rgba(255,255,255,.3)}
+  .prejoin input:focus{border-color:rgba(255,255,255,.4)}
+  .prejoin button{background:#fff;color:#111;border:none;border-radius:8px;padding:14px 48px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.5px}
+  .prejoin button:hover{background:#eee}
   .loading{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px}
-  .loading .spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.1);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
+  .spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.1);border-top-color:#fff;border-radius:50%;animation:spin 1s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -29,7 +37,6 @@
 <div class="header">
   <div class="brand">
     <img src="/logo-habitaris-blanco.png" alt="Habitaris"/>
-    
     <span class="brand-slogan">ARQUITECTURA · INTERIORISMO</span>
   </div>
   <div style="display:flex;align-items:center;gap:16px">
@@ -40,53 +47,71 @@
     </div>
   </div>
 </div>
-<div id="jitsi-container">
+
+<!-- Prejoin: ask name -->
+<div class="prejoin" id="prejoin">
+  <img src="/logo-habitaris-blanco.png" alt="Habitaris"/>
+  <h2>HABITARIS</h2>
+  <p>Ingresa tu nombre para unirte a la videollamada</p>
+  <input type="text" id="userName" placeholder="Tu nombre..." autofocus onkeydown="if(event.key==='Enter')joinCall()"/>
+  <button onclick="joinCall()">Unirse a la llamada →</button>
+</div>
+
+<div id="jitsi-container" style="flex:1;width:100%;display:none">
   <div class="loading" id="loading">
     <div class="spinner"></div>
-    <div style="font-size:13px;color:rgba(255,255,255,.5)">Conectando videollamada...</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.5)">Conectando...</div>
   </div>
 </div>
+
 <script>
   const APPID = "vpaas-magic-cookie-3cfaa45d1fd143f4818e2959871dfb07";
-  // Get room from URL path: /sala/habitaris-xxx or /sala/?room=xxx
   const path = window.location.pathname.replace("/sala/","").replace("/sala","");
   const params = new URLSearchParams(window.location.search);
   const room = path || params.get("room") || "habitaris-general";
   
-  document.getElementById("tz").textContent = "🌐 " + Intl.DateTimeFormat().resolvedOptions().timeZone.replace("_"," ");
+  document.getElementById("tz").textContent = Intl.DateTimeFormat().resolvedOptions().timeZone.replace("_"," ");
   
   function copyLink() {
     navigator.clipboard.writeText(window.location.href);
-    const btn = document.querySelector(".btn-copy");
+    var btn = document.querySelector(".btn-copy");
     btn.textContent = "✅ Copiado";
-    setTimeout(()=> btn.textContent = "📋 Copiar link", 2000);
+    setTimeout(function(){ btn.textContent = "📋 Copiar link"; }, 2000);
   }
   
-  async function init() {
-    // Fetch JWT
-    let jwt = "";
+  function joinCall() {
+    var name = document.getElementById("userName").value.trim();
+    if (!name) { document.getElementById("userName").focus(); return; }
+    
+    document.getElementById("prejoin").style.display = "none";
+    document.getElementById("jitsi-container").style.display = "flex";
+    
+    initJitsi(name);
+  }
+  
+  async function initJitsi(displayName) {
+    var jwt = "";
     try {
-      const r = await fetch("/api/jaas-token", {
+      var r = await fetch("/api/jaas-token", {
         method: "POST",
         headers: {"Content-Type":"application/json"},
-        body: JSON.stringify({room: APPID+"/"+room, userName:"Habitaris", userEmail:"comercial@habitaris.co", isModerator:true})
+        body: JSON.stringify({room: APPID+"/"+room, userName: displayName, userEmail:"", isModerator:false})
       });
-      const d = await r.json();
+      var d = await r.json();
       jwt = d.token || "";
     } catch(e) { console.warn("JWT failed:", e); }
     
-    // Load Jitsi
-    const s = document.createElement("script");
+    var s = document.createElement("script");
     s.src = "https://8x8.vc/external_api.js";
-    s.onload = () => {
+    s.onload = function() {
       document.getElementById("loading").style.display = "none";
-      const api = new JitsiMeetExternalAPI("8x8.vc", {
+      var api = new JitsiMeetExternalAPI("8x8.vc", {
         roomName: APPID+"/"+room,
         jwt: jwt || undefined,
         parentNode: document.getElementById("jitsi-container"),
         width: "100%",
         height: "100%",
-        userInfo: {displayName: "Habitaris", email: "comercial@habitaris.co"},
+        userInfo: {displayName: displayName, email:""},
         configOverwrite: {
           prejoinPageEnabled: false,
           startWithAudioMuted: false,
@@ -104,18 +129,17 @@
           SHOW_PROMOTIONAL_CLOSE_PAGE: false,
           TOOLBAR_BUTTONS: ["microphone","camera","desktop","chat","raisehand","tileview","fullscreen","hangup","recording","closedcaptions","select-background","settings"],
           DEFAULT_BACKGROUND: "#111111",
-          DEFAULT_LOCAL_DISPLAY_NAME: "Habitaris",
+          DEFAULT_LOCAL_DISPLAY_NAME: displayName,
           DEFAULT_REMOTE_DISPLAY_NAME: "Participante",
           APP_NAME: "Habitaris",
           PROVIDER_NAME: "Habitaris",
           DEFAULT_LANGUAGE: "es",
         },
       });
-      api.addEventListener("readyToClose", () => window.close());
+      api.addEventListener("readyToClose", function(){ window.close(); });
     };
     document.head.appendChild(s);
   }
-  init();
 </script>
 </body>
 </html>
