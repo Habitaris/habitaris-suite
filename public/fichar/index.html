@@ -21,13 +21,12 @@
   .emp-item{padding:14px 16px;cursor:pointer;border-bottom:1px solid #eee;font-size:14px;font-weight:500;display:flex;justify-content:space-between;align-items:center}
   .emp-item:hover{background:#EFF6FF}
   .emp-item:last-child{border-bottom:none}
-  .emp-status{font-size:10px;padding:2px 8px;border-radius:10px}
   .pin-dots{display:flex;justify-content:center;gap:12px;margin-bottom:16px}
   .pin-dot{width:14px;height:14px;border-radius:50%;background:#E0E0E0}
   .pin-dot.active{background:#1D4ED8}
   .pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:200px;margin:0 auto}
-  .pin-btn{padding:14px;font-size:18px;font-weight:600;border:1px solid #E0E0E0;border-radius:8px;background:#F5F5F5;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif}
-  .pin-btn:hover{background:#E8E8E8}
+  .pin-btn{padding:14px;font-size:18px;font-weight:600;border:1px solid #E0E0E0;border-radius:8px;background:#F5F5F5;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;-webkit-user-select:none;user-select:none}
+  .pin-btn:active{background:#E0E0E0}
   .pin-btn.del{background:#FEE2E2;color:#DC2626}
   .pin-err{color:#DC2626;font-size:12px;text-align:center;margin-bottom:12px}
   .gps-box{border-radius:8px;padding:14px;margin-bottom:16px;font-size:12px}
@@ -36,36 +35,39 @@
   .gps-loading{background:#EFF6FF;border:1px solid #1D4ED8;color:#1D4ED8;text-align:center}
   .spinner{width:24px;height:24px;border:3px solid #E0E0E0;border-top-color:#1D4ED8;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 8px}
   @keyframes spin{to{transform:rotate(360deg)}}
-  .btn{width:100%;padding:14px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center}
+  .btn{width:100%;padding:14px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;margin-bottom:8px}
   .btn-primary{background:#111;color:#fff}
-  .btn-primary:hover{background:#333}
   .btn-green{background:#059669;color:#fff}
   .btn-red{background:#DC2626;color:#fff}
-  .btn-ghost{background:none;color:#888;font-size:12px;padding:8px;margin-top:8px}
-  .btn-ghost:hover{color:#111}
+  .btn-amber{background:#D97706;color:#fff}
+  .btn-ghost{background:none;color:#888;font-size:12px;padding:8px;margin-top:4px;width:100%;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
   .actions{display:flex;flex-direction:column;gap:10px;margin-top:20px}
-  .action-btn{padding:16px;border-radius:10px;border:1px solid #E0E0E0;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif}
-  .action-btn:hover{background:#F5F5F5;border-color:#ccc}
-  .action-icon{font-size:24px}
+  .action-btn{padding:16px;border-radius:10px;border:1px solid #E0E0E0;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif;width:100%}
+  .action-btn:active{background:#F5F5F5}
+  .action-icon{font-size:24px;flex-shrink:0}
   .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
   .badge-green{background:#DCFCE7;color:#059669}
   .badge-amber{background:#FEF3C7;color:#D97706}
   .badge-red{background:#FEE2E2;color:#DC2626}
-  .badge-gray{background:#F3F4F6;color:#6B7280}
-  .history-item{padding:10px 0;border-bottom:1px solid #F3F4F6;font-size:12px;display:flex;justify-content:space-between}
+  .history-item{padding:12px 0;border-bottom:1px solid #F3F4F6;font-size:12px}
   .history-item:last-child{border:none}
-  .form-group{margin-bottom:14px}
-  .form-group label{font-size:10px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;display:block}
-  .form-group select,.form-group input,.form-group textarea{width:100%;padding:10px 12px;border:1px solid #E0E0E0;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif}
-  .form-group textarea{resize:vertical;min-height:60px}
+  .form-group{margin-bottom:16px}
+  .form-group label{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block}
+  .form-group select,.form-group input,.form-group textarea{width:100%;padding:12px 14px;border:1px solid #E0E0E0;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;background:#fff;color:#111;-webkit-appearance:none}
+  .form-group select{background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 14px center;padding-right:36px}
+  .form-group textarea{resize:vertical;min-height:80px}
+  .form-group .required{color:#DC2626}
+  .form-group .hint{font-size:10px;color:#aaa;margin-top:4px}
   .success-screen{text-align:center;padding:40px 20px}
   .success-screen .icon{font-size:56px;margin-bottom:16px}
   .success-screen h2{color:#059669;margin-bottom:8px}
   .success-screen .detail{font-size:13px;color:#888;margin-bottom:24px}
-  .tabs{display:flex;gap:4px;margin-bottom:16px}
-  .tab{flex:1;padding:8px;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;background:#F3F4F6;color:#888;text-align:center}
-  .tab.active{background:#111;color:#fff}
   .empty{text-align:center;padding:32px;color:#888;font-size:13px}
+  .selfie-container{position:relative;margin-bottom:16px;border-radius:8px;overflow:hidden;background:#000;aspect-ratio:4/3}
+  .selfie-container video,.selfie-container img{width:100%;height:100%;object-fit:cover;display:block}
+  .selfie-btn{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.9);border:none;border-radius:50%;width:56px;height:56px;font-size:24px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+  .device-info{background:#F5F5F5;border-radius:6px;padding:8px 12px;font-size:9px;color:#aaa;margin-top:8px;text-align:center}
 </style>
 </head>
 <body>
@@ -85,9 +87,20 @@ var CC = params.get("cc") || "oficina";
 var OT = params.get("ot") || "";
 var employees = [];
 var currentEmp = null;
-var currentTab = "home";
 var attendance = [];
 var novelties = [];
+var gpsCoords = null;
+var gpsErr = null;
+var selfieData = null;
+var videoStream = null;
+var deviceInfo = "";
+
+// Capture device info
+try {
+  var ua = navigator.userAgent;
+  var platform = navigator.platform || "";
+  deviceInfo = ua.substring(0, 120) + " | " + platform;
+} catch(e) {}
 
 document.getElementById("ccLabel").textContent = OT ? "Obra: " + OT : CC.replace(/-/g, " ").toUpperCase();
 
@@ -97,7 +110,7 @@ async function loadEmployees() {
     var r = await fetch(url);
     var d = await r.json();
     employees = d.data || [];
-  } catch(e) { console.error(e); employees = []; }
+  } catch(e) { employees = []; }
   renderStep1();
 }
 
@@ -118,23 +131,20 @@ async function loadNovelties(empId) {
   } catch(e) { novelties = []; }
 }
 
-function getLastType(empId) {
+function getLastType() {
   var today = new Date().toISOString().split("T")[0];
-  var regs = attendance.filter(function(a){ return a.employee_id === empId && a.fecha === today; });
+  var regs = attendance.filter(function(a){ return a.employee_id === currentEmp.id && a.fecha === today; });
   if (regs.length === 0) return null;
   return regs[regs.length - 1].tipo;
 }
 
 function render(html) { document.getElementById("app").innerHTML = html; }
+function fmtTime(ts) { return new Date(ts).toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}); }
 
 // ═══ STEP 1: Select employee ═══
 function renderStep1() {
-  var list = employees.map(function(e, i) {
-    var last = attendance.find(function(a){ return a.employee_id === e.id; });
-    var statusHtml = "";
-    return '<div class="emp-item" onclick="selectEmployee(\'' + e.id + '\')">'
-      + e.nombre
-      + '</div>';
+  var list = employees.map(function(e) {
+    return '<div class="emp-item" onclick="selectEmployee(\'' + e.id + '\')">' + e.nombre + '</div>';
   }).join("");
 
   render(
@@ -152,6 +162,7 @@ function renderStep1() {
 function selectEmployee(id) {
   currentEmp = employees.find(function(e){ return e.id === id; });
   if (!currentEmp) return;
+  pinInput = ""; pinError = false;
   renderStep2();
 }
 
@@ -161,9 +172,7 @@ var pinError = false;
 
 function renderStep2() {
   var dots = "";
-  for (var i = 0; i < 4; i++) {
-    dots += '<div class="pin-dot ' + (i < pinInput.length ? "active" : "") + '"></div>';
-  }
+  for (var i = 0; i < 4; i++) dots += '<div class="pin-dot ' + (i < pinInput.length ? "active" : "") + '"></div>';
 
   var keys = [1,2,3,4,5,6,7,8,9,"",0,"⌫"].map(function(k) {
     if (k === "") return '<div></div>';
@@ -179,7 +188,7 @@ function renderStep2() {
     + '<div class="pin-dots">' + dots + '</div>'
     + (pinError ? '<div class="pin-err">PIN incorrecto. Inténtalo de nuevo.</div>' : '')
     + '<div class="pin-grid">' + keys + '</div>'
-    + '<button class="btn btn-ghost" onclick="pinInput=\'\';pinError=false;renderStep1()">← Volver</button>'
+    + '<button class="btn btn-ghost" onclick="renderStep1()">← Volver</button>'
     + '</div>'
   );
 }
@@ -190,32 +199,22 @@ function pinKey(k) {
   if (pinInput.length === 4) {
     if (pinInput === currentEmp.pin) {
       pinInput = ""; pinError = false;
-      loadAttendance(currentEmp.id).then(function() {
-        loadNovelties(currentEmp.id).then(function() { renderHome(); });
-      });
-    } else {
-      pinError = true; pinInput = "";
-      renderStep2();
-    }
-  } else {
-    renderStep2();
-  }
+      Promise.all([loadAttendance(currentEmp.id), loadNovelties(currentEmp.id)]).then(function() { renderHome(); });
+    } else { pinError = true; pinInput = ""; renderStep2(); }
+  } else { renderStep2(); }
 }
 
-// ═══ HOME: Dashboard personal ═══
+// ═══ HOME ═══
 function renderHome() {
-  var last = getLastType(currentEmp.id);
+  var last = getLastType();
   var isIn = last === "entrada";
   var todayRegs = attendance.filter(function(a){ return a.employee_id === currentEmp.id; });
   var entrada = todayRegs.find(function(a){ return a.tipo === "entrada"; });
   var salida = todayRegs.find(function(a){ return a.tipo === "salida"; });
-
   var statusText = !entrada ? "Sin fichar hoy" : isIn ? "🟢 En " + CC.replace(/-/g," ") : "Jornada finalizada";
   var statusColor = !entrada ? "#D97706" : isIn ? "#059669" : "#6B7280";
-
-  var entradaTime = entrada ? new Date(entrada.timestamp).toLocaleTimeString("es-ES", {hour:"2-digit",minute:"2-digit"}) : "–";
-  var salidaTime = salida ? new Date(salida.timestamp).toLocaleTimeString("es-ES", {hour:"2-digit",minute:"2-digit"}) : "–";
-
+  var entradaTime = entrada ? fmtTime(entrada.timestamp) : "–";
+  var salidaTime = salida ? fmtTime(salida.timestamp) : "–";
   var pendientes = novelties.filter(function(n){ return n.estado === "pendiente"; }).length;
   var novBadge = pendientes > 0 ? ' <span class="badge badge-amber">' + pendientes + ' pendiente' + (pendientes>1?"s":"") + '</span>' : '';
 
@@ -224,71 +223,129 @@ function renderHome() {
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
     + '<div><div style="font-size:16px;font-weight:700">' + currentEmp.nombre + '</div>'
     + '<div style="font-size:11px;color:#888">' + (currentEmp.cargo || CC.replace(/-/g," ")) + '</div></div>'
-    + '<div style="font-size:12px;font-weight:600;color:' + statusColor + '">' + statusText + '</div>'
-    + '</div>'
+    + '<div style="font-size:12px;font-weight:600;color:' + statusColor + '">' + statusText + '</div></div>'
     + '<div style="display:flex;gap:8px;margin-bottom:16px">'
-    + '<div style="flex:1;background:#F5F5F5;border-radius:8px;padding:10px;text-align:center">'
-    + '<div style="font-size:10px;color:#888;margin-bottom:2px">ENTRADA</div>'
-    + '<div style="font-size:16px;font-weight:700;color:#059669">' + entradaTime + '</div></div>'
-    + '<div style="flex:1;background:#F5F5F5;border-radius:8px;padding:10px;text-align:center">'
-    + '<div style="font-size:10px;color:#888;margin-bottom:2px">SALIDA</div>'
-    + '<div style="font-size:16px;font-weight:700;color:#DC2626">' + salidaTime + '</div></div>'
-    + '</div>'
+    + '<div style="flex:1;background:#F5F5F5;border-radius:8px;padding:12px;text-align:center">'
+    + '<div style="font-size:10px;color:#888;margin-bottom:4px">ENTRADA</div>'
+    + '<div style="font-size:18px;font-weight:700;color:#059669">' + entradaTime + '</div></div>'
+    + '<div style="flex:1;background:#F5F5F5;border-radius:8px;padding:12px;text-align:center">'
+    + '<div style="font-size:10px;color:#888;margin-bottom:4px">SALIDA</div>'
+    + '<div style="font-size:18px;font-weight:700;color:#DC2626">' + salidaTime + '</div></div></div>'
     + '<div class="actions">'
     + (!entrada
-      ? '<div class="action-btn" onclick="startFichaje(\'entrada\')"><span class="action-icon">🟢</span><div><div style="font-weight:700">Registrar entrada</div><div style="font-size:11px;color:#888">Se capturará tu ubicación GPS</div></div></div>'
+      ? '<button class="action-btn" onclick="startFichaje(\'entrada\')"><span class="action-icon">🟢</span><div><div style="font-weight:700">Registrar entrada</div><div style="font-size:11px;color:#888">Selfie + GPS obligatorio</div></div></button>'
       : isIn
-        ? '<div class="action-btn" onclick="startFichaje(\'salida\')"><span class="action-icon">🔴</span><div><div style="font-weight:700">Registrar salida</div><div style="font-size:11px;color:#888">Marca tu hora de salida</div></div></div>'
+        ? '<button class="action-btn" onclick="startFichaje(\'salida\')"><span class="action-icon">🔴</span><div><div style="font-weight:700">Registrar salida</div><div style="font-size:11px;color:#888">Selfie + GPS obligatorio</div></div></button>'
         : '')
-    + '<div class="action-btn" onclick="renderNoveltyForm()"><span class="action-icon">📝</span><div><div style="font-weight:700">Reportar novedad</div><div style="font-size:11px;color:#888">Permiso, ausencia, horas extra' + novBadge + '</div></div></div>'
-    + '<div class="action-btn" onclick="renderMyNovelties()"><span class="action-icon">📊</span><div><div style="font-weight:700">Mis novedades</div><div style="font-size:11px;color:#888">Ver estado de solicitudes</div></div></div>'
-    + '</div>'
-    + '</div>'
+    + '<button class="action-btn" onclick="renderNoveltyForm()"><span class="action-icon">📝</span><div><div style="font-weight:700">Reportar novedad</div><div style="font-size:11px;color:#888">Permiso, ausencia, horas extra' + novBadge + '</div></div></button>'
+    + '<button class="action-btn" onclick="renderMyNovelties()"><span class="action-icon">📊</span><div><div style="font-weight:700">Mis novedades</div><div style="font-size:11px;color:#888">Ver estado de solicitudes</div></div></button>'
+    + '</div></div>'
     + '<button class="btn btn-ghost" onclick="currentEmp=null;renderStep1()">Cambiar persona</button>'
+    + '<div class="device-info">🔒 ' + deviceInfo.substring(0,60) + '</div>'
   );
 }
 
-// ═══ FICHAJE: GPS capture + register ═══
-var gpsCoords = null;
-var gpsErr = null;
-
+// ═══ FICHAJE: Selfie + GPS ═══
 function startFichaje(tipo) {
-  gpsCoords = null; gpsErr = null;
-  renderGPS(tipo);
+  gpsCoords = null; gpsErr = null; selfieData = null;
+  renderSelfie(tipo);
+  // Request GPS in parallel
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
-      function(pos) {
-        gpsCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude, precision: Math.round(pos.coords.accuracy) };
-        renderGPS(tipo);
-      },
-      function(err) { gpsErr = "No se pudo obtener GPS: " + err.message; renderGPS(tipo); },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      function(pos) { gpsCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude, precision: Math.round(pos.coords.accuracy) }; },
+      function(err) { gpsErr = err.message; },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
-  } else { gpsErr = "GPS no disponible"; renderGPS(tipo); }
+  } else { gpsErr = "GPS no disponible en este dispositivo"; }
 }
 
-function renderGPS(tipo) {
+function renderSelfie(tipo) {
+  render(
+    '<div class="card" style="text-align:center">'
+    + '<h2>' + (tipo==="entrada"?"🟢 Entrada":"🔴 Salida") + ' — Selfie</h2>'
+    + '<div class="sub">' + currentEmp.nombre + ' · ' + new Date().toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}) + '</div>'
+    + '<div class="selfie-container"><video id="selfieVideo" autoplay playsinline muted></video>'
+    + '<button class="selfie-btn" onclick="captureSelfie(\'' + tipo + '\')">📸</button></div>'
+    + '<div style="font-size:11px;color:#888;margin-bottom:12px">Toca 📸 para capturar tu selfie</div>'
+    + '<button class="btn btn-ghost" onclick="stopCam();renderHome()">← Cancelar</button>'
+    + '</div>'
+  );
+  startCam();
+}
+
+function startCam() {
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } })
+    .then(function(stream) {
+      videoStream = stream;
+      var v = document.getElementById("selfieVideo");
+      if (v) { v.srcObject = stream; }
+    })
+    .catch(function(err) {
+      render(
+        '<div class="card" style="text-align:center">'
+        + '<div class="icon-big">📷</div>'
+        + '<h2>Cámara no disponible</h2>'
+        + '<div class="sub">' + err.message + '</div>'
+        + '<div style="font-size:12px;color:#DC2626;margin-bottom:16px">La selfie es obligatoria para fichar. Permite el acceso a la cámara en los ajustes del navegador.</div>'
+        + '<button class="btn btn-primary" onclick="renderHome()">Volver</button>'
+        + '</div>'
+      );
+    });
+}
+
+function stopCam() {
+  if (videoStream) { videoStream.getTracks().forEach(function(t){ t.stop(); }); videoStream = null; }
+}
+
+function captureSelfie(tipo) {
+  var v = document.getElementById("selfieVideo");
+  if (!v) return;
+  var canvas = document.createElement("canvas");
+  canvas.width = v.videoWidth || 640;
+  canvas.height = v.videoHeight || 480;
+  canvas.getContext("2d").drawImage(v, 0, 0);
+  selfieData = canvas.toDataURL("image/jpeg", 0.6);
+  stopCam();
+  renderConfirm(tipo);
+}
+
+function renderConfirm(tipo) {
   var gpsHtml = "";
   if (gpsCoords) {
-    gpsHtml = '<div class="gps-box gps-ok"><strong>✅ Ubicación capturada</strong><br/>📍 ' + gpsCoords.lat.toFixed(5) + ', ' + gpsCoords.lng.toFixed(5) + ' (±' + gpsCoords.precision + 'm)</div>'
-      + '<button class="btn ' + (tipo==="entrada"?"btn-green":"btn-red") + '" onclick="doFichaje(\'' + tipo + '\')">'
-      + (tipo==="entrada" ? "✓ Confirmar ENTRADA" : "✓ Confirmar SALIDA") + '</button>';
+    gpsHtml = '<div class="gps-box gps-ok"><strong>✅ Ubicación capturada</strong><br/>📍 ' + gpsCoords.lat.toFixed(5) + ', ' + gpsCoords.lng.toFixed(5) + ' (±' + gpsCoords.precision + 'm)</div>';
   } else if (gpsErr) {
-    gpsHtml = '<div class="gps-box gps-err">' + gpsErr + '</div>'
-      + '<button class="btn btn-primary" onclick="doFichaje(\'' + tipo + '\')">Registrar sin GPS</button>';
+    gpsHtml = '<div class="gps-box gps-err">⚠️ GPS: ' + gpsErr + '<br/><strong>El GPS es obligatorio.</strong> Permite la ubicación en ajustes del navegador y recarga la página.</div>'
+      + '<button class="btn btn-amber" onclick="retryGPS(\'' + tipo + '\')">🔄 Reintentar GPS</button>';
   } else {
     gpsHtml = '<div class="gps-box gps-loading"><div class="spinner"></div>Obteniendo ubicación...</div>';
+    setTimeout(function(){ renderConfirm(tipo); }, 1000);
+    return;
   }
+
+  var canSubmit = gpsCoords && selfieData;
 
   render(
     '<div class="card" style="text-align:center">'
-    + '<div class="icon-big">' + (tipo==="entrada"?"🟢":"🔴") + '</div>'
-    + '<h2>Registrar ' + tipo + '</h2>'
+    + '<h2>' + (tipo==="entrada"?"🟢 Confirmar entrada":"🔴 Confirmar salida") + '</h2>'
     + '<div class="sub">' + currentEmp.nombre + ' · ' + new Date().toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}) + '</div>'
+    + (selfieData ? '<img src="' + selfieData + '" style="width:100%;border-radius:8px;margin-bottom:12px"/>' : '')
     + gpsHtml
+    + (canSubmit ? '<button class="btn ' + (tipo==="entrada"?"btn-green":"btn-red") + '" onclick="doFichaje(\'' + tipo + '\')">' + (tipo==="entrada"?"✓ CONFIRMAR ENTRADA":"✓ CONFIRMAR SALIDA") + '</button>' : '')
     + '<button class="btn btn-ghost" onclick="renderHome()">← Cancelar</button>'
     + '</div>'
   );
+}
+
+function retryGPS(tipo) {
+  gpsCoords = null; gpsErr = null;
+  renderConfirm(tipo);
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) { gpsCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude, precision: Math.round(pos.coords.accuracy) }; renderConfirm(tipo); },
+      function(err) { gpsErr = err.message; renderConfirm(tipo); },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  }
 }
 
 async function doFichaje(tipo) {
@@ -297,19 +354,16 @@ async function doFichaje(tipo) {
     await fetch("/api/attendance", {
       method: "POST", headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
-        employee_id: currentEmp.id,
-        employee_nombre: currentEmp.nombre,
+        employee_id: currentEmp.id, employee_nombre: currentEmp.nombre,
         tipo: tipo,
-        lat: gpsCoords ? gpsCoords.lat : null,
-        lng: gpsCoords ? gpsCoords.lng : null,
-        precision: gpsCoords ? gpsCoords.precision : null,
-        centro_costo: OT ? null : CC,
-        ot_id: OT || null,
-        gps_error: gpsErr || null,
+        lat: gpsCoords.lat, lng: gpsCoords.lng, precision: gpsCoords.precision,
+        foto_url: selfieData,
+        centro_costo: OT ? null : CC, ot_id: OT || null,
+        gps_error: null,
+        device_info: deviceInfo,
       })
     });
   } catch(e) { console.error(e); }
-
   await loadAttendance(currentEmp.id);
 
   render(
@@ -317,27 +371,58 @@ async function doFichaje(tipo) {
     + '<div class="icon">✅</div>'
     + '<h2>' + (tipo==="entrada"?"Entrada":"Salida") + ' registrada</h2>'
     + '<div class="detail">' + currentEmp.nombre + ' · ' + new Date().toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}) + '</div>'
-    + (gpsCoords ? '<div style="font-size:11px;color:#888;margin-bottom:16px">📍 ' + gpsCoords.lat.toFixed(4) + ', ' + gpsCoords.lng.toFixed(4) + ' (±' + gpsCoords.precision + 'm)</div>' : '')
-    + '<button class="btn btn-primary" onclick="renderHome()">Volver</button>'
+    + '<div style="font-size:11px;color:#888;margin-bottom:16px">📍 ' + gpsCoords.lat.toFixed(4) + ', ' + gpsCoords.lng.toFixed(4) + ' (±' + gpsCoords.precision + 'm)</div>'
+    + (selfieData ? '<img src="' + selfieData + '" style="width:120px;height:120px;border-radius:50%;object-fit:cover;margin-bottom:16px;border:3px solid #059669"/>' : '')
+    + '<div class="device-info">🔒 ' + deviceInfo.substring(0,60) + '</div>'
+    + '<button class="btn btn-primary" style="margin-top:16px" onclick="renderHome()">Volver</button>'
     + '</div>'
   );
 }
 
-// ═══ NOVEDADES: Form ═══
+// ═══ NOVEDADES ═══
 function renderNoveltyForm() {
   render(
     '<div class="card">'
     + '<h2>📝 Nueva novedad</h2>'
     + '<div class="sub">Reportar permiso, ausencia u otra novedad</div>'
-    + '<div class="form-group"><label>Tipo</label>'
-    + '<select id="novTipo"><option value="permiso">Permiso</option><option value="vacaciones">Vacaciones</option><option value="baja_medica">Baja médica / Incapacidad</option><option value="horas_extra">Horas extra</option><option value="ausencia">Ausencia</option><option value="otro">Otro</option></select></div>'
-    + '<div class="form-group"><label>Fecha inicio</label><input type="date" id="novFechaIni" value="' + new Date().toISOString().split("T")[0] + '"/></div>'
-    + '<div class="form-group"><label>Fecha fin (opcional)</label><input type="date" id="novFechaFin"/></div>'
-    + '<div class="form-group"><label>Motivo / Descripción</label><textarea id="novMotivo" placeholder="Describe la novedad..."></textarea></div>'
+    + '<div class="form-group"><label>Tipo <span class="required">*</span></label>'
+    + '<select id="novTipo" onchange="toggleAdjunto()">'
+    + '<option value="permiso">🙋 Permiso</option>'
+    + '<option value="vacaciones">🏖️ Vacaciones</option>'
+    + '<option value="baja_medica">🏥 Baja médica / Incapacidad</option>'
+    + '<option value="horas_extra">⏰ Horas extra</option>'
+    + '<option value="ausencia">❌ Ausencia</option>'
+    + '<option value="otro">📌 Otro</option>'
+    + '</select></div>'
+    + '<div class="form-group"><label>Fecha inicio <span class="required">*</span></label>'
+    + '<input type="date" id="novFechaIni" value="' + new Date().toISOString().split("T")[0] + '"/></div>'
+    + '<div class="form-group"><label>Fecha fin (opcional)</label>'
+    + '<input type="date" id="novFechaFin"/></div>'
+    + '<div class="form-group"><label>Motivo / Descripción <span class="required">*</span></label>'
+    + '<textarea id="novMotivo" placeholder="Describe la novedad..." rows="3"></textarea></div>'
+    + '<div class="form-group" id="adjuntoGroup" style="display:none"><label>Adjunto <span class="required">*</span></label>'
+    + '<input type="file" id="novAdjunto" accept="image/*,.pdf" style="padding:10px;background:#F5F5F5"/>'
+    + '<div class="hint">Obligatorio para baja médica: sube el certificado, informe médico, etc.</div></div>'
     + '<button class="btn btn-primary" onclick="submitNovelty()">Enviar novedad →</button>'
     + '<button class="btn btn-ghost" onclick="renderHome()">← Cancelar</button>'
     + '</div>'
   );
+  toggleAdjunto();
+}
+
+function toggleAdjunto() {
+  var tipo = document.getElementById("novTipo");
+  var group = document.getElementById("adjuntoGroup");
+  if (tipo && group) {
+    group.style.display = (tipo.value === "baja_medica") ? "block" : "block";
+    // Always show but only required for baja_medica
+    var label = group.querySelector("label");
+    if (tipo.value === "baja_medica") {
+      label.innerHTML = 'Adjunto <span class="required">* obligatorio</span>';
+    } else {
+      label.innerHTML = 'Adjunto (opcional)';
+    }
+  }
 }
 
 async function submitNovelty() {
@@ -345,6 +430,19 @@ async function submitNovelty() {
   var fechaIni = document.getElementById("novFechaIni").value;
   var fechaFin = document.getElementById("novFechaFin").value;
   var motivo = document.getElementById("novMotivo").value;
+  var adjunto = document.getElementById("novAdjunto");
+  var adjuntoData = null;
+
+  if (!motivo.trim()) { alert("El motivo es obligatorio."); return; }
+  if (tipo === "baja_medica" && adjunto && !adjunto.files.length) { alert("Para baja médica el adjunto es obligatorio."); return; }
+
+  if (adjunto && adjunto.files.length) {
+    adjuntoData = await new Promise(function(res) {
+      var reader = new FileReader();
+      reader.onload = function() { res(reader.result); };
+      reader.readAsDataURL(adjunto.files[0]);
+    });
+  }
 
   render('<div class="card" style="text-align:center;padding:40px"><div class="spinner"></div><div style="font-size:13px;color:#888">Enviando...</div></div>');
 
@@ -352,14 +450,10 @@ async function submitNovelty() {
     await fetch("/api/novelties", {
       method: "POST", headers: {"Content-Type":"application/json"},
       body: JSON.stringify({
-        employee_id: currentEmp.id,
-        employee_nombre: currentEmp.nombre,
-        tipo: tipo,
-        fecha_inicio: fechaIni,
-        fecha_fin: fechaFin || null,
-        motivo: motivo,
-        centro_costo: OT ? null : CC,
-        ot_id: OT || null,
+        employee_id: currentEmp.id, employee_nombre: currentEmp.nombre,
+        tipo: tipo, fecha_inicio: fechaIni, fecha_fin: fechaFin || null,
+        motivo: motivo, adjunto_url: adjuntoData,
+        centro_costo: OT ? null : CC, ot_id: OT || null,
       })
     });
   } catch(e) { console.error(e); }
@@ -370,31 +464,32 @@ async function submitNovelty() {
     '<div class="card success-screen">'
     + '<div class="icon">📝</div>'
     + '<h2 style="color:#1D4ED8">Novedad enviada</h2>'
-    + '<div class="detail">Tu solicitud está pendiente de aprobación.</div>'
+    + '<div class="detail">Tu solicitud está pendiente de aprobación por tu supervisor.</div>'
     + '<button class="btn btn-primary" onclick="renderHome()">Volver</button>'
     + '</div>'
   );
 }
 
-// ═══ NOVEDADES: My list ═══
+// ═══ MIS NOVEDADES ═══
 function renderMyNovelties() {
-  var tipos = {vacaciones:"🏖️ Vacaciones",permiso:"🙋 Permiso",baja_medica:"🏥 Baja médica",horas_extra:"⏰ Horas extra",ausencia:"❌ Ausencia",otro:"📌 Otro"};
+  var tipos = {vacaciones:"🏖️ Vacaciones",permiso:"🙋 Permiso",baja_medica:"🏥 Incapacidad",horas_extra:"⏰ Horas extra",ausencia:"❌ Ausencia",otro:"📌 Otro"};
   var estados = {pendiente:'<span class="badge badge-amber">⏳ Pendiente</span>',aprobada:'<span class="badge badge-green">✅ Aprobada</span>',rechazada:'<span class="badge badge-red">❌ Rechazada</span>'};
 
   var list = novelties.map(function(n) {
     return '<div class="history-item">'
-      + '<div><div style="font-weight:600;font-size:13px">' + (tipos[n.tipo]||n.tipo) + '</div>'
-      + '<div style="color:#888">' + n.fecha_inicio + (n.fecha_fin ? " → " + n.fecha_fin : "") + '</div>'
-      + (n.motivo ? '<div style="color:#888;font-size:11px;margin-top:2px">' + n.motivo + '</div>' : '')
+      + '<div style="flex:1"><div style="font-weight:600;font-size:13px">' + (tipos[n.tipo]||n.tipo) + '</div>'
+      + '<div style="color:#888;font-size:11px">' + n.fecha_inicio + (n.fecha_fin ? " → " + n.fecha_fin : "") + '</div>'
+      + (n.motivo ? '<div style="color:#888;font-size:11px;margin-top:2px">' + n.motivo.substring(0,60) + '</div>' : '')
       + '</div>'
-      + '<div>' + (estados[n.estado]||n.estado) + '</div>'
-      + '</div>';
+      + '<div style="text-align:right">' + (estados[n.estado]||n.estado)
+      + (n.aprobado_at ? '<div style="font-size:9px;color:#aaa;margin-top:2px">' + new Date(n.aprobado_at).toLocaleDateString("es-ES") + '</div>' : '')
+      + '</div></div>';
   }).join("");
 
   render(
     '<div class="card">'
     + '<h2>📊 Mis novedades</h2>'
-    + '<div class="sub">' + novelties.length + ' novedad' + (novelties.length!==1?"es":"") + '</div>'
+    + '<div class="sub">' + novelties.length + ' registro' + (novelties.length!==1?"s":"") + '</div>'
     + (list || '<div class="empty">No tienes novedades registradas.</div>')
     + '<button class="btn btn-ghost" onclick="renderHome()">← Volver</button>'
     + '</div>'

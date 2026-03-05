@@ -49,6 +49,7 @@ export default async function handler(req, res) {
         centro_costo: body.centro_costo || "oficina",
         ot_id: body.ot_id || null,
         gps_error: body.gps_error || null,
+        device_info: body.device_info || null,
       };
       
       var r2 = await fetch(SB_URL + "/rest/v1/attendance", {
