@@ -628,9 +628,7 @@ function renderMyNovelties() {
 
 // ═══ INIT ═══
 // Detect in-app browser (WhatsApp, Instagram, etc)
-var isInApp = /FBAN|FBAV|Instagram|Line|Twitter/.test(navigator.userAgent)
-  || (window.navigator.standalone === undefined && /iPhone|iPad/.test(navigator.userAgent) && !window.safari)
-  || (document.referrer.includes("whatsapp"));
+var isInApp = /FBAN|FBAV|Instagram|Line|Twitter/.test(navigator.userAgent);
 
 if (isInApp) {
   document.getElementById("app").innerHTML = '<div class="card" style="text-align:center">'
