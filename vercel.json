@@ -37,6 +37,22 @@
       "destination": "/f/index.html"
     },
     {
+      "source": "/firmar",
+      "destination": "/firmar/index.html"
+    },
+    {
+      "source": "/firmar/(.*)",
+      "destination": "/firmar/index.html"
+    },
+    {
+      "source": "/verificar",
+      "destination": "/verificar/index.html"
+    },
+    {
+      "source": "/verificar/(.*)",
+      "destination": "/verificar/index.html"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
