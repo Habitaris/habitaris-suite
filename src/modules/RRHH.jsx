@@ -3285,8 +3285,8 @@ function TabContratacion() {
                           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                             {p.candidato_cedula_url && (() => {
                               try{const ced=JSON.parse(p.candidato_cedula_url);
-                              return <>{ced.anverso && <img src={ced.anverso} onClick={()=>window.open(ced.anverso)} style={{width:80,height:50,objectFit:"cover",borderRadius:4,border:"1px solid "+C.border,cursor:"pointer"}} title="Cédula anverso"/><div style={{fontSize:9,color:C.inkLight,textAlign:"center"}}>Cédula anverso</div>}
-                              {ced.reverso && <img src={ced.reverso} onClick={()=>window.open(ced.reverso)} style={{width:80,height:50,objectFit:"cover",borderRadius:4,border:"1px solid "+C.border,cursor:"pointer"}} title="Cédula reverso"/><div style={{fontSize:9,color:C.inkLight,textAlign:"center"}}>Cédula reverso</div>}</>;}catch(e){return null;}
+                              return <>{ced.anverso && <><img src={ced.anverso} onClick={()=>window.open(ced.anverso)} style={{width:80,height:50,objectFit:"cover",borderRadius:4,border:"1px solid "+C.border,cursor:"pointer"}} title="Cédula anverso"/><div style={{fontSize:9,color:C.inkLight,textAlign:"center"}}>Cédula anverso</div></>}
+                              {ced.reverso && <><img src={ced.reverso} onClick={()=>window.open(ced.reverso)} style={{width:80,height:50,objectFit:"cover",borderRadius:4,border:"1px solid "+C.border,cursor:"pointer"}} title="Cédula reverso"/><div style={{fontSize:9,color:C.inkLight,textAlign:"center"}}>Cédula reverso</div></>}</>;}catch(e){return null;}
                             })()}
                             {p.candidato_documentos_extra && (() => {
                               try{const docs=JSON.parse(p.candidato_documentos_extra);
