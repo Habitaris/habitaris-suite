@@ -634,21 +634,7 @@ function renderMyNovelties() {
 
 // ═══ INIT ═══
 // Detect in-app browser (WhatsApp, Instagram, etc)
-var isInApp = /FBAN|FBAV|Instagram|Line|Twitter/.test(navigator.userAgent);
-
-if (isInApp) {
-  document.getElementById("app").innerHTML = '<div class="card" style="text-align:center">'
-    + '<div class="icon-big">🔗</div>'
-    + '<h2>Abrir en el navegador</h2>'
-    + '<div class="sub" style="margin-bottom:20px">Para usar GPS y cámara correctamente, abre este enlace en Safari o Chrome</div>'
-    + '<button class="btn btn-primary" onclick="window.open(window.location.href, '_system')">Abrir en Safari →</button>'
-    + '<div style="margin-top:16px;background:#FEF3C7;border-radius:8px;padding:14px;text-align:left;font-size:12px;color:#92400E;line-height:1.6">'
-    + '<strong>Truco rápido:</strong><br/>Toca los <strong>⋯</strong> abajo a la derecha → <strong>Abrir en Safari</strong>'
-    + '<br/><br/>💡 <strong>Tip:</strong> Una vez en Safari, añade esta página a tu pantalla de inicio para acceder siempre como una app.'
-    + '</div></div>';
-} else {
-  loadEmployees();
-}
+loadEmployees();
 </script>
 </body>
 </html>
