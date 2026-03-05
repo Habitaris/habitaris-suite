@@ -157,10 +157,18 @@ function SignatureDisplay({ firma, size="md" }) {
 }
 
 /* ─────── HASH GENERATOR (simple visual) ─────── */
-function generateHash(text) {
-  let hash = 0
-  for(let i=0; i<text.length; i++) hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0
-  return Math.abs(hash).toString(16).toUpperCase().padStart(8,"0")
+async function generateHash(text) {
+  try {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(text);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2,"0")).join("").toUpperCase().substring(0,16);
+  } catch(e) {
+    let hash = 0;
+    for(let i=0; i<text.length; i++) hash = ((hash << 5) - hash + text.charCodeAt(i)) | 0;
+    return Math.abs(hash).toString(16).toUpperCase().padStart(8,"0");
+  }
 }
 
 /* ─────── DOCUMENT TYPES ─────── */
@@ -274,11 +282,13 @@ export default function FirmaDigital() {
 
   /* ── Sign a document ── */
   const firmarDocumento = (docId, firmanteId, imagenFirma) => {
+    const now = new Date().toISOString();
+    const deviceInfo = navigator.userAgent.substring(0,100);
     setDocs(prev => prev.map(d => {
       if(d.id !== docId) return d
       const firmantes = d.firmantes.map(f => {
         if(f.id !== firmanteId) return f
-        return { ...f, estado:"firmado", firma:{ imagen:imagenFirma, fecha:new Date().toISOString() }, fechaFirma:new Date().toISOString() }
+        return { ...f, estado:"firmado", firma:{ imagen:imagenFirma, fecha:now, device:deviceInfo, ip:"capturado" }, fechaFirma:now }
       })
       const todosFirmaron = firmantes.every(f => f.estado==="firmado")
       const algunoFirmo = firmantes.some(f => f.estado==="firmado")
@@ -307,7 +317,7 @@ export default function FirmaDigital() {
     if(!doc) return null
     const tipo = DOC_TYPES.find(t=>t.id===doc.tipo)
     const est = ESTADOS_FIRMA.find(e=>e.id===doc.estado)
-    const hash = generateHash(doc.id + doc.titulo + doc.fechaCreacion)
+    const hash = doc.id.substring(0,8).toUpperCase() + doc.fechaCreacion.replace(/[^0-9]/g,"").substring(0,8)
     const vencido = doc.fechaLimite && new Date(doc.fechaLimite) < new Date() && doc.estado !== "completado"
 
     return (
@@ -429,7 +439,7 @@ export default function FirmaDigital() {
               <div style={{ fontSize:28, marginBottom:8 }}>🔏</div>
               <div style={{ ...F, fontSize:14, fontWeight:700, color:C.accent }}>Documento firmado digitalmente</div>
               <div style={{ ...F, fontSize:11, color:C.inkMid, marginTop:4 }}>
-                Hash de integridad: <code style={{ background:"#fff", padding:"2px 8px", borderRadius:4, fontSize:10 }}>SHA-{hash}-{doc.firmantes.length}F</code>
+                Hash SHA-256: <code style={{ background:"#fff", padding:"2px 8px", borderRadius:4, fontSize:10 }}>{hash}</code>
               </div>
               <div style={{ ...F, fontSize:10, color:C.inkLight, marginTop:4 }}>
                 {doc.firmantes.length} firmante(s) · Completado: {fmtDate(doc.auditoria[doc.auditoria.length-1]?.fecha)}
