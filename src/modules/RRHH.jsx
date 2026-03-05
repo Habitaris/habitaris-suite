@@ -3054,6 +3054,159 @@ function ModalFooter({ onCancel, onSave, saveLabel = "Guardar" }) {
   );
 }
 
+
+/* ─────────────────────────────────────────────
+   TAB CONTRATACIÓN
+───────────────────────────────────────────── */
+function TabContratacion() {
+  const [procesos, setProcesos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({
+    cargo:"",area:"",nivel:"Operativo",salario_neto:0,salario_base:0,
+    auxilio_transporte:0,bono_no_salarial:0,jornada_horas:48,
+    horario:"8:00 a.m. a 5:00 p.m.",dias_laborales:"Lunes a viernes",
+    tipo_contrato:"fijo",duracion_meses:6,ciudad:"Bogotá D.C.",
+    fecha_inicio:"",periodo_prueba:"Dos (2) meses",descriptor_codigo:"",
+    candidato_nombre:"",candidato_email:""
+  });
+
+  const loadProcesos = async () => {
+    try {
+      const r = await fetch("/api/hiring");
+      const d = await r.json();
+      if (d.ok) setProcesos(d.data || []);
+    } catch(e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadProcesos(); }, []);
+
+  const crearPropuesta = async () => {
+    if (!form.cargo) { alert("El cargo es obligatorio"); return; }
+    if (!form.salario_neto) { alert("El salario neto es obligatorio"); return; }
+    try {
+      const r = await fetch("/api/hiring", {
+        method: "POST", headers: {"Content-Type":"application/json"},
+        body: JSON.stringify(form)
+      });
+      const d = await r.json();
+      if (d.ok) {
+        alert("Propuesta creada: " + d.data.codigo + "\n\nLink propuesta:\n" + d.links.propuesta + "\n\nLink datos:\n" + d.links.datos);
+        setShowForm(false);
+        setForm({cargo:"",area:"",nivel:"Operativo",salario_neto:0,salario_base:0,auxilio_transporte:0,bono_no_salarial:0,jornada_horas:48,horario:"8:00 a.m. a 5:00 p.m.",dias_laborales:"Lunes a viernes",tipo_contrato:"fijo",duracion_meses:6,ciudad:"Bogotá D.C.",fecha_inicio:"",periodo_prueba:"Dos (2) meses",descriptor_codigo:"",candidato_nombre:"",candidato_email:""});
+        loadProcesos();
+      }
+    } catch(e) { alert("Error: " + e.message); }
+  };
+
+  const ESTADOS = {
+    propuesta:{label:"Propuesta enviada",color:"#8C6A00",bg:"#FFF8EE"},
+    aceptada:{label:"Aceptada",color:"#059669",bg:"#DCFCE7"},
+    datos_pendientes:{label:"Datos pendientes",color:"#D97706",bg:"#FEF3C7"},
+    datos_recibidos:{label:"Datos recibidos",color:"#1D4ED8",bg:"#EFF6FF"},
+    revision_legal:{label:"Revisión legal",color:"#5B3A8C",bg:"#EDE8F4"},
+    firma_pendiente:{label:"Firma pendiente",color:"#D97706",bg:"#FEF3C7"},
+    firmado:{label:"Firmado",color:"#059669",bg:"#DCFCE7"},
+    completado:{label:"Completado",color:"#111",bg:"#E8E8E8"},
+    cancelado:{label:"Cancelado",color:"#B91C1C",bg:"#FEE2E2"},
+  };
+
+  const fmtMoney = (n) => n ? new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n) : "$0";
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("es-CO") : "-";
+
+  return (
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <div style={{fontSize:16,fontWeight:700,color:C.ink}}>Procesos de contratación ({procesos.length})</div>
+        <Btn icon={Plus} onClick={() => setShowForm(!showForm)}>{showForm ? "Cancelar" : "Nueva propuesta"}</Btn>
+      </div>
+
+      {showForm && (
+        <Card style={{marginBottom:16,border:"1px solid "+C.green}}>
+          <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:12}}>Nueva propuesta de empleo</div>
+          <Row gap={14} wrap>
+            <Col><Inp label="Cargo *" value={form.cargo} onChange={e=>setForm({...form,cargo:e.target.value})}/></Col>
+            <Col><Inp label="Área" value={form.area} onChange={e=>setForm({...form,area:e.target.value})}/></Col>
+            <Col><Sel label="Tipo contrato" value={form.tipo_contrato} onChange={e=>setForm({...form,tipo_contrato:e.target.value})} options={[{value:"fijo",label:"Término fijo"},{value:"indefinido",label:"Indefinido"},{value:"obra_labor",label:"Obra o labor"}]}/></Col>
+          </Row>
+          {form.tipo_contrato==="fijo" && (
+            <Row gap={14} wrap>
+              <Col><Inp label="Duración (meses)" type="number" value={form.duracion_meses} onChange={e=>setForm({...form,duracion_meses:parseInt(e.target.value)||0})}/></Col>
+              <Col><Inp label="Periodo de prueba" value={form.periodo_prueba} onChange={e=>setForm({...form,periodo_prueba:e.target.value})}/></Col>
+            </Row>
+          )}
+          <Row gap={14} wrap>
+            <Col><Inp label="Salario neto mensual *" type="number" value={form.salario_neto} onChange={e=>setForm({...form,salario_neto:parseFloat(e.target.value)||0})}/></Col>
+            <Col><Inp label="Salario base" type="number" value={form.salario_base} onChange={e=>setForm({...form,salario_base:parseFloat(e.target.value)||0})}/></Col>
+          </Row>
+          <Row gap={14} wrap>
+            <Col><Inp label="Auxilio transporte" type="number" value={form.auxilio_transporte} onChange={e=>setForm({...form,auxilio_transporte:parseFloat(e.target.value)||0})}/></Col>
+            <Col><Inp label="Bono no salarial" type="number" value={form.bono_no_salarial} onChange={e=>setForm({...form,bono_no_salarial:parseFloat(e.target.value)||0})}/></Col>
+          </Row>
+          <Row gap={14} wrap>
+            <Col><Inp label="Jornada (horas/semana)" type="number" value={form.jornada_horas} onChange={e=>setForm({...form,jornada_horas:parseInt(e.target.value)||0})}/></Col>
+            <Col><Inp label="Horario" value={form.horario} onChange={e=>setForm({...form,horario:e.target.value})}/></Col>
+          </Row>
+          <Row gap={14} wrap>
+            <Col><Inp label="Días laborales" value={form.dias_laborales} onChange={e=>setForm({...form,dias_laborales:e.target.value})}/></Col>
+            <Col><Inp label="Ciudad" value={form.ciudad} onChange={e=>setForm({...form,ciudad:e.target.value})}/></Col>
+          </Row>
+          <Row gap={14} wrap>
+            <Col><Inp label="Fecha inicio" type="date" value={form.fecha_inicio} onChange={e=>setForm({...form,fecha_inicio:e.target.value})}/></Col>
+            <Col><Inp label="Nombre candidato (opcional)" value={form.candidato_nombre} onChange={e=>setForm({...form,candidato_nombre:e.target.value})}/></Col>
+          </Row>
+          <div style={{display:"flex",gap:8,marginTop:12}}>
+            <Btn icon={Check} onClick={crearPropuesta}>Generar propuesta</Btn>
+            <Btn variant="secondary" onClick={() => setShowForm(false)}>Cancelar</Btn>
+          </div>
+        </Card>
+      )}
+
+      {loading ? (
+        <div style={{textAlign:"center",padding:40,color:C.inkLight}}>Cargando...</div>
+      ) : procesos.length === 0 ? (
+        <Card style={{textAlign:"center",padding:40}}>
+          <div style={{fontSize:32,marginBottom:8}}>📋</div>
+          <div style={{fontSize:14,fontWeight:600,color:C.ink}}>Sin procesos de contratación</div>
+          <div style={{fontSize:12,color:C.inkLight,marginTop:4}}>Crea una propuesta de empleo para iniciar</div>
+        </Card>
+      ) : (
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {procesos.map(p => {
+            const est = ESTADOS[p.estado] || {label:p.estado,color:"#888",bg:"#F5F5F5"};
+            return (
+              <Card key={p.id} style={{padding:"14px 18px",cursor:"pointer"}} onClick={() => {
+                const info = "Código: " + p.codigo
+                  + "\nEstado: " + est.label
+                  + "\nCargo: " + p.cargo
+                  + "\nSalario: " + fmtMoney(p.salario_neto)
+                  + "\nCandidato: " + (p.candidato_nombre || "Pendiente")
+                  + (p.candidato_email ? "\nEmail: " + p.candidato_email : "")
+                  + "\n\nLink propuesta:\nhttps://suite.habitaris.co/propuesta?token=" + p.token_propuesta
+                  + "\n\nLink datos:\nhttps://suite.habitaris.co/contratacion?token=" + p.token_datos;
+                alert(info);
+              }}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div>
+                    <div style={{fontWeight:700,fontSize:13,color:C.ink}}>{p.cargo}</div>
+                    <div style={{fontSize:11,color:C.inkLight}}>{p.codigo} · {p.candidato_nombre || "Sin candidato"} · {fmtMoney(p.salario_neto)}</div>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{padding:"3px 10px",borderRadius:12,fontSize:10,fontWeight:600,color:est.color,background:est.bg}}>{est.label}</span>
+                    <span style={{fontSize:11,color:C.inkLight}}>{fmtDate(p.created_at)}</span>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 /* ─────────────────────────────────────────────
    MAIN APP
 ───────────────────────────────────────────── */
@@ -3071,6 +3224,7 @@ const TABS = [
     { id:"asistencia", lbl:"Asistencia Obra", I:Camera, desc:"Control GPS+Foto de entrada/salida" },
   { id:"partes",    lbl:"Partes de Trabajo",    I:ClipboardList,desc:"Vista admin — empleados imputan desde Portal" },
   { id:"novedades", lbl:"Novedades Nómina",     I:FileText,     desc:"Vacaciones, bajas, permisos y horas extra" },
+  { id:"contratacion", lbl:"Contratación",      I:FileText,     desc:"Propuestas, datos candidato y firma de contratos" },
   { id:"docs",      lbl:"Documentos",           I:Briefcase,    desc:"Nóminas, contratos y certificados" },
   { id:"portal",    lbl:"Portal Empleado",      I:Eye,          desc:"Vista del trabajador" },
 ];
@@ -3201,6 +3355,7 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                   {tab==="asistencia"&& <TabAsistencia equipo={equipos} asistencia={asistencia} setAsistencia={saveAsistencia} pais={currentUser?.pais||"CO"}/>}
                   {tab==="partes"    && <TabPartes    partes={partes}    setPartes={savePartes}    equipo={equipos} cargos={cargos} currentUser={null} pais={currentUser?.pais||"CO"}/>}
                   {tab==="novedades" && <TabNovedades novedades={novedades} saveNovedades={saveNovedades}/>}
+                  {tab==="contratacion" && <TabContratacion/>}
                   {tab==="docs"      && <TabDocumentos docs={docs}       saveDocs={saveDocs}        fichas={fichas} cargos={cargos}/>}
                 </div>
               )
