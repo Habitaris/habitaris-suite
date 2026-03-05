@@ -1,0 +1,11 @@
+{
+  "name": "Habitaris Fichar",
+  "short_name": "Fichar",
+  "start_url": "/fichar?cc=oficina",
+  "display": "standalone",
+  "background_color": "#F0EEE9",
+  "theme_color": "#111111",
+  "icons": [
+    { "src": "/logo-habitaris-negro.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

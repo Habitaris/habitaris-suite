@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <title>Fichar · Habitaris</title>
+<link rel="manifest" href="/fichar/manifest.json"/>
+<link rel="apple-touch-icon" href="/logo-habitaris-negro.svg"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="theme-color" content="#111111"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
@@ -441,6 +445,7 @@ async function doFichaje(tipo) {
     + (selfieData ? '<img src="' + selfieData + '" style="width:120px;height:120px;border-radius:50%;object-fit:cover;margin-bottom:16px;border:3px solid #059669"/>' : '')
     + '<div class="device-info">🔒 ' + deviceInfo.substring(0,60) + '</div>'
     + '<button class="btn btn-primary" style="margin-top:16px" onclick="renderHome()">Volver</button>'
+    + (!window.matchMedia("(display-mode: standalone)").matches ? '<div style="margin-top:16px;background:#EFF6FF;border:1px solid #1D4ED8;border-radius:8px;padding:12px;font-size:11px;color:#1D4ED8;line-height:1.5">💡 <strong>Tip:</strong> Añade esta página a tu pantalla de inicio para acceder más rápido. En Safari: toca <strong>Compartir ↗</strong> → <strong>Añadir a pantalla de inicio</strong></div>' : '')
     + '</div>'
   );
 }
@@ -563,8 +568,23 @@ function renderMyNovelties() {
 }
 
 // ═══ INIT ═══
-// GPS and camera requested after user selects name
-loadEmployees();
+// Detect in-app browser (WhatsApp, Instagram, etc)
+var isInApp = /FBAN|FBAV|Instagram|WhatsApp|Line|Twitter/.test(navigator.userAgent) 
+  || (navigator.userAgent.includes("Mobile") && !navigator.userAgent.includes("Safari") && navigator.userAgent.includes("AppleWebKit"));
+
+if (isInApp) {
+  document.getElementById("app").innerHTML = '<div class="card" style="text-align:center">'
+    + '<div class="icon-big">🔗</div>'
+    + '<h2>Abrir en el navegador</h2>'
+    + '<div class="sub" style="margin-bottom:20px">Para usar GPS y cámara correctamente, abre este enlace en Safari o Chrome</div>'
+    + '<button class="btn btn-primary" onclick="window.open(window.location.href, "_system")">Abrir en Safari →</button>'
+    + '<div style="margin-top:16px;background:#FEF3C7;border-radius:8px;padding:14px;text-align:left;font-size:12px;color:#92400E;line-height:1.6">'
+    + '<strong>Truco rápido:</strong><br/>Toca los <strong>⋯</strong> abajo a la derecha → <strong>Abrir en Safari</strong>'
+    + '<br/><br/>💡 <strong>Tip:</strong> Una vez en Safari, añade esta página a tu pantalla de inicio para acceder siempre como una app.'
+    + '</div></div>';
+} else {
+  loadEmployees();
+}
 </script>
 </body>
 </html>
