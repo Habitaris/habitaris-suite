@@ -51,7 +51,7 @@ h3{font-size:14px;font-weight:700;margin:20px 0 12px;padding:8px 0;border-bottom
   var data=null, photoData=null, cedulaData=null, step=1, beneficiarios=[];
 
   function R(h){document.getElementById("app").innerHTML=h;}
-  function $(id){return document.getElementById(id);}
+  window.$=function(id){return document.getElementById(id);};
 
   async function load(){
     if(!TOKEN){R('<div class="card" style="text-align:center"><h2>Enlace inv\u00e1lido</h2></div>');return;}
