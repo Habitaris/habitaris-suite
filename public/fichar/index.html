@@ -216,7 +216,7 @@ function requestPermissions() {
         }
       },
       function(err) {
-        gpsErr = err.message;
+        gpsErr = err.message; alert("GPS Error - Code: " + err.code + " Message: " + err.message);
         // code 1 = denied, code 2 = unavailable, code 3 = timeout
         if (err.code === 1) {
           var isIOS = /iPhone|iPad/.test(navigator.userAgent);
