@@ -41,7 +41,7 @@ export const C = {
 const MODULES = [
   { id:"dashboard",    label:"Dashboard",               icon:"📊", desc:"KPIs financieros, alertas, flujo caja, vista consolidada empresa",    color:"#111111", component:Dashboard,    ready:true  },
   { id:"formularios", label:"Formularios",              icon:"📋", desc:"Constructor, plantillas, lógica condicional, compartir WhatsApp/email", color:"#111111", component:Formularios,  ready:true  },
-  { id:"crm",          label:"CRM / Ofertas",          icon:"📋", desc:"Ofertas, clientes, proveedores, APU, borrador y presupuesto",         color:"#111111", component:CRM,          ready:true  },
+  { id:"crm",          label:"CRM / Ofertas",          icon:"💼", desc:"Ofertas, clientes, proveedores, APU, borrador y presupuesto",         color:"#111111", component:CRM,          ready:true  },
   { id:"rrhh",         label:"RRHH",                   icon:"👷", desc:"Equipo, cargos, partes de trabajo, asistencia y nómina",               color:"#111111", component:RRHH,         ready:true  },
   { id:"herramientas", label:"Herramientas Técnicas",   icon:"🔧", desc:"Cuadro de cargas, concreto, cubicación, materiales, unidades",         color:"#111111", component:Herramientas, ready:true  },
   { id:"logistica",    label:"Logística",               icon:"📦", desc:"Almacén, EPPs, dotaciones, herramientas, equipos, compras y proveedores", color:"#111111", component:Logistica,    ready:true  },
