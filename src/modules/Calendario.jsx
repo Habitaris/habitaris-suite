@@ -418,7 +418,7 @@ export default function Calendario() {
       if (estado==="aprobada" && c.tipo==="publica" && config.crearJitsi) {
         const serv = config.servicios.find(s=>s.id===c.servicioId);
         if (serv?.tipo==="virtual" && !c.jitsiLink) {
-          upd.jitsiLink = "/sala/habitaris-"+uid();
+          upd.jitsiLink = window.location.origin+"/sala/habitaris-"+uid();
         }
       }
       return upd;
@@ -439,7 +439,7 @@ export default function Calendario() {
   });
 
   const crearReunion = () => {
-    const jitsi = nuevaReunion.conJitsi ? "/sala/habitaris-"+uid() : null;
+    const jitsi = nuevaReunion.conJitsi ? window.location.origin+"/sala/habitaris-"+uid() : null;
     const nueva = {
       id:uid(), tipo:"interna", fecha:nuevaReunion.fecha, hora:nuevaReunion.hora,
       duracionMin:nuevaReunion.duracionMin, asunto:nuevaReunion.asunto,

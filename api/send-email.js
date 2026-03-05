@@ -22,30 +22,49 @@ export default async function handler(req, res) {
       const cp = b.colorPrimario || "#111111";
       const logo = b.logo || "https://suite.habitaris.co/logo-habitaris-blanco.png";
       const slogan = b.slogan || "";
-      const msg = (body.message || "").replace(/\\n/g, "\n").replace(/\n/g, "<br/>");
+      const msg = (body.message || "").replace(/\\n/g, "
+").replace(/\n/g, "
+").split("
+").filter(Boolean);
       const lnk = body.link || "";
       const lnkInfo = body.link_info || "Abrir enlace";
 
-      const linkBtn = lnk
-        ? '<div style="text-align:center;margin-top:24px"><a href="' + lnk + '" style="display:inline-block;background:' + cp + ';color:#fff;text-decoration:none;padding:14px 44px;border-radius:6px;font-size:14px;font-weight:bold">' + lnkInfo + ' &rarr;</a></div>'
-        : "";
-
       const logoBlock = logo
-        ? '<img src="' + logo + '" alt="' + emp + '" style="height:28px;object-fit:contain;display:block;margin:0 auto"/>'
+        ? '<img src="' + logo + '" alt="' + emp + '" width="180" style="display:inline-block;max-width:180px"/>'
         : '<h1 style="margin:0;color:#fff;font-size:16px;letter-spacing:3px">' + emp.toUpperCase() + '</h1>';
 
-      const sloganBlock = slogan
-        ? '<p style="margin:6px 0 0;color:rgba(255,255,255,.4);font-size:10px;letter-spacing:1px">' + slogan + '</p>'
+      const msgHtml = msg.map(function(line) {
+        return '<div style="font-size:14px;color:#555;line-height:1.8">' + line + '</div>';
+      }).join("");
+
+      const linkBtn = lnk
+        ? '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;border-radius:10px;border:1px solid #E4E1DB;margin-top:24px"><tr><td style="padding:28px;text-align:center">'
+          + '<div style="font-size:10px;color:#888;letter-spacing:3px;text-transform:uppercase;font-weight:bold;margin-bottom:10px">VIDEOLLAMADA</div>'
+          + '<a href="' + lnk + '" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:14px 44px;border-radius:6px;font-size:14px;font-weight:bold;letter-spacing:0.5px">' + lnkInfo + ' &rarr;</a>'
+          + '</td></tr></table>'
         : "";
 
-      const html = '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5F4F1;font-family:Arial,sans-serif">'
+      const actionsHtml = '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px"><tr>'
+        + '<td width="33%" style="padding:4px"><a href="mailto:comercial@habitaris.co?subject=Confirmo%20reuni%C3%B3n:%20' + encodeURIComponent(body.subject || "") + '" style="display:block;background:#059669;color:#fff;text-decoration:none;padding:12px;border-radius:6px;font-size:12px;font-weight:bold;text-align:center">&#10003; Confirmar</a></td>'
+        + '<td width="33%" style="padding:4px"><a href="mailto:comercial@habitaris.co?subject=Propongo%20otra%20hora:%20' + encodeURIComponent(body.subject || "") + '" style="display:block;background:#D97706;color:#fff;text-decoration:none;padding:12px;border-radius:6px;font-size:12px;font-weight:bold;text-align:center">&#128340; Otra hora</a></td>'
+        + '<td width="33%" style="padding:4px"><a href="mailto:comercial@habitaris.co?subject=No%20puedo%20asistir:%20' + encodeURIComponent(body.subject || "") + '" style="display:block;background:#DC2626;color:#fff;text-decoration:none;padding:12px;border-radius:6px;font-size:12px;font-weight:bold;text-align:center">&#10007; No puedo</a></td>'
+        + '</tr></table>';
+
+      const html = '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5F4F1;font-family:Arial,Helvetica,sans-serif">'
         + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:40px 20px"><tr><td align="center">'
-        + '<table width="580" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">'
-        + '<tr><td style="background:' + cp + ';padding:28px 40px;text-align:center">' + logoBlock + sloganBlock + '</td></tr>'
-        + '<tr><td style="padding:36px 40px"><div style="font-size:14px;color:#333;line-height:1.8">' + msg + '</div>' + linkBtn + '</td></tr>'
-        + '<tr><td style="background:#F5F4F1;padding:20px 40px;text-align:center;border-top:1px solid #E4E1DB">'
-        + '<p style="margin:0;font-size:10px;color:#aaa">' + emp + ' &middot; comercial@habitaris.co</p></td></tr>'
-        + '</table></td></tr></table></body></html>';
+        + '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08)">'
+        + '<tr><td style="background:#111111;padding:36px 40px;text-align:center">' + logoBlock + '</td></tr>'
+        + '<tr><td style="background:#3B3B3B;height:2px"></td></tr>'
+        + '<tr><td style="padding:44px 40px 20px">'
+        + '<div style="font-size:22px;color:#111;font-weight:bold;margin-bottom:12px">&#128197; Reuni&oacute;n programada</div>'
+        + '<div style="font-size:14px;color:#555;line-height:1.8;margin-bottom:20px">' + msgHtml + '</div>'
+        + linkBtn
+        + actionsHtml
+        + '</td></tr>'
+        + '<tr><td style="background:#F5F4F1;padding:24px 40px;text-align:center;border-top:1px solid #E4E1DB">'
+        + '<div style="font-size:11px;color:#888;font-weight:bold">&iexcl;Gracias por confiar en nosotros!</div>'
+        + '<div style="font-size:10px;color:#aaa;margin-top:8px">' + emp + ' &middot; Bogot&aacute; D.C. &middot; comercial@habitaris.co</div>'
+        + '</td></tr></table></td></tr></table></body></html>';
 
       const r2 = await fetch("https://api.resend.com/emails", {
         method: "POST",
