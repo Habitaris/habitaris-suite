@@ -60,6 +60,7 @@
   var meetingDate = params.get("fecha") || "";
   var meetingHour = params.get("hora") || "";
   var fromEmail = params.get("email") || "";
+  var creadorEmail = params.get("creador") || "comercial@habitaris.co";
   var selectedAction = "";
 
   document.getElementById("meetingInfo").textContent = meetingSubject + (meetingDate ? " · " + meetingDate : "") + (meetingHour ? " " + meetingHour : "");
@@ -96,7 +97,7 @@
     var actionLabels = {confirmar: "✓ CONFIRMADA", reprogramar: "🕐 PROPONE OTRA HORA", rechazar: "✗ RECHAZADA"};
     
     var body = {
-      to: "comercial@habitaris.co",
+      to: creadorEmail,
       subject: actionLabels[selectedAction] + " — " + meetingSubject,
       message: "Reunión: " + meetingSubject + "\nFecha: " + meetingDate + " " + meetingHour + "\nCliente: " + fromEmail + "\nRespuesta: " + actionLabels[selectedAction] + (msg ? "\n\nMensaje del cliente:\n" + msg : ""),
       brand: {empresa: "Habitaris"},
