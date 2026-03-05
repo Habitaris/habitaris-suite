@@ -363,6 +363,7 @@ export function CalendarioPublico() {
 export default function Calendario() {
   const brand = useMemo(getBrand,[]);
   const [tab, setTab] = useState("calendario");
+  const [agendaVista, setAgendaVista] = useState("semana");
   const [calMonth, setCalMonth] = useState(()=>{const n=new Date();return n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0");});
   const [config, setConfig] = useState(()=>load(KEYS.config)||DEF_CONFIG);
   const [citas, setCitas] = useState(()=>load(KEYS.citas)||[]);
@@ -639,6 +640,12 @@ export default function Calendario() {
               background:filtroTipo===v?T.blue:T.surface,color:filtroTipo===v?"#fff":T.inkMid,border:"1px solid "+(filtroTipo===v?T.blue:T.border)}}>{l}</button>
         ))}
       </div>
+        <div style={{display:"flex",gap:6,marginTop:12,marginBottom:12}}>
+          {[["hoy","Hoy"],["semana","Semana"],["mes","Mes"],["todas","Todas"]].map(([k,l])=>(
+            <button key={k} onClick={()=>setAgendaVista(k)} style={{...F,padding:"6px 14px",borderRadius:6,fontSize:11,fontWeight:600,cursor:"pointer",
+              background:agendaVista===k?"#1D4ED8":T.surface,color:agendaVista===k?"#fff":T.ink,border:agendaVista===k?"none":"1px solid "+T.border}}>{l}</button>
+          ))}
+        </div>
       {citasFiltradas.length===0?(
         <div style={{background:T.surface,borderRadius:10,border:"1px solid "+T.border,padding:40,textAlign:"center"}}>
           <div style={{fontSize:32,marginBottom:8}}>📅</div>
