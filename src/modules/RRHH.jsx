@@ -3202,11 +3202,27 @@ function TabContratacion() {
             <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:4}}>📝 Lanzar a contratación</div>
             <div style={{fontSize:12,color:C.inkLight,marginBottom:12}}>{proc.cargo} — {proc.candidato_nombre}</div>
             <Row gap={14} wrap>
-              <Col><Inp label="Abogado/a revisor(a) *" value={lanzarForm.abogado_nombre} onChange={e=>setLanzarForm({...lanzarForm,abogado_nombre:e.target.value})}/></Col>
-              <Col><Inp label="Email abogado/a *" value={lanzarForm.abogado_email} onChange={e=>setLanzarForm({...lanzarForm,abogado_email:e.target.value})}/></Col>
+              <Col>
+                <Sel label="Plantilla de contrato *" value={lanzarForm.contrato_plantilla} onChange={e=>setLanzarForm({...lanzarForm,contrato_plantilla:e.target.value})} options={[
+                  {value:"tpl_contrato_laboral",label:"Contrato laboral a término fijo"},
+                  {value:"tpl_contrato_indefinido",label:"Contrato laboral indefinido"},
+                  {value:"tpl_contrato_obra",label:"Contrato de obra o labor"},
+                  {value:"tpl_contrato_prest_serv",label:"Contrato de prestación de servicios"},
+                ]}/>
+              </Col>
+              <Col>
+                <Sel label="Descriptor de cargo *" value={lanzarForm.descriptor_codigo||proc.descriptor_codigo||""} onChange={e=>setLanzarForm({...lanzarForm,descriptor_codigo:e.target.value})} options={[
+                  {value:"HAB-DC-SGC-01",label:"Aux. Servicios Generales y Cafetería"},
+                  {value:"HAB-DC-ARQ-01",label:"Arquitecto/a"},
+                  {value:"HAB-DC-ADM-01",label:"Administrativo/a"},
+                  {value:"HAB-DC-OBR-01",label:"Obrero/a de obra"},
+                  {value:"HAB-DC-DIS-01",label:"Diseñador/a interior"},
+                ]}/>
+              </Col>
             </Row>
             <Row gap={14} wrap>
-              <Col><Inp label="Descriptor de cargo" value={lanzarForm.descriptor_codigo||proc.descriptor_codigo||""} onChange={e=>setLanzarForm({...lanzarForm,descriptor_codigo:e.target.value})}/></Col>
+              <Col><Inp label="Abogado/a revisor(a) *" value={lanzarForm.abogado_nombre} onChange={e=>setLanzarForm({...lanzarForm,abogado_nombre:e.target.value})}/></Col>
+              <Col><Inp label="Email abogado/a *" value={lanzarForm.abogado_email} onChange={e=>setLanzarForm({...lanzarForm,abogado_email:e.target.value})}/></Col>
             </Row>
             <div style={{display:"flex",gap:8,marginTop:12}}>
               <Btn icon={Check} onClick={lanzarContratacion}>Generar contrato y enviar a firma</Btn>
