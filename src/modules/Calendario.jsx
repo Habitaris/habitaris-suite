@@ -14,7 +14,7 @@ const T = {
 };
 const F = { fontFamily:"'DM Sans',sans-serif" };
 const uid = () => Math.random().toString(36).slice(2,10);
-const today = () => new Date().toISOString().slice(0,10);
+const today = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
 
 const KEYS = { config:"hab:calendario:config", citas:"hab:calendario:citas" };
 const load = k => { try { return JSON.parse(store.getSync(k)) || null } catch { return null }};
@@ -449,10 +449,25 @@ export default function Calendario() {
       jitsiLink:jitsi, estado:"confirmada", notas:nuevaReunion.notas,
       createdAt:new Date().toISOString(),
     };
-    saveCitas([...citas, nueva]);
+    // Generate recurring meetings if needed
+    const allNew = [nueva];
+    if (nuevaReunion.recurrente && nuevaReunion.recurrenciaHasta) {
+      const endDate = new Date(nuevaReunion.recurrenciaHasta+"T23:59:59");
+      let cur = new Date(nueva.fecha+"T12:00:00");
+      const inc = {diaria:1,semanal:7,bisemanal:14,mensual:0}[nuevaReunion.recurrencia||"semanal"];
+      while(true) {
+        if (inc > 0) cur.setDate(cur.getDate()+inc);
+        else cur.setMonth(cur.getMonth()+1);
+        if (cur > endDate) break;
+        const fd = cur.getFullYear()+"-"+String(cur.getMonth()+1).padStart(2,"0")+"-"+String(cur.getDate()).padStart(2,"0");
+        const jitsiR = nuevaReunion.conJitsi ? window.location.origin+"/sala/habitaris-"+uid() : null;
+        allNew.push({...nueva, id:uid(), fecha:fd, jitsiLink:jitsiR, createdAt:new Date().toISOString()});
+      }
+    }
+    saveCitas([...citas, ...allNew]);
     // Email notification
     try { if(nueva.clienteEmail||nueva.emailExterno){ const toEmail=nueva.emailExterno||nueva.clienteEmail; const b=getBrand(); const ue=nueva.emailRemitente||config.userEmail||"comercial@habitaris.co"; const un=ue==="comercial@habitaris.co"?b.nombre||"Habitaris":ue.split("@")[0].replace(/\./g," ").replace(/\w/g,l=>l.toUpperCase()); fetch("/api/send-email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:toEmail,subject:"📅 Reunión programada: "+nueva.asunto+" — "+(b.nombre||"Habitaris"),message:"Hola,\n\nSe ha programado una reunión:\n\nAsunto: "+nueva.asunto+"\nFecha: "+nueva.fecha+"\nHora: "+nueva.hora+"\nDuración: "+nueva.duracionMin+" min"+(nueva.jitsiLink?"\n\nEnlace videollamada: "+nueva.jitsiLink:"")+"\n\nSaludos,\n"+(b.nombre||"Habitaris"),brand:{empresa:b.nombre,colorPrimario:b.colorPrimario,logo:b.logoBlanco,slogan:b.slogan},fromEmail:ue,fromName:un,link:nueva.jitsiLink||"",link_info:nueva.jitsiLink?"Unirse a videollamada":""})}); console.log("[Cal] Email sent to "+toEmail); } } catch(e){console.warn("Email err:",e);}
-    setNuevaReunion({asunto:"",modulo:"CRM",fecha:today(),hora:"10:00",duracionMin:60,tipo:"interna",participantes:"",clienteEmail:"",proyectoId:"",notas:"",conJitsi:true,conExterno:false,emailExterno:"",emailRemitente:""});
+    setNuevaReunion({asunto:"",modulo:"CRM",fecha:today(),hora:"10:00",duracionMin:60,tipo:"interna",participantes:"",clienteEmail:"",proyectoId:"",notas:"",conJitsi:true,conExterno:false,emailExterno:"",emailRemitente:"",recurrente:false,recurrencia:"semanal",recurrenciaHasta:""});
     setTab("agenda");
   };
 
@@ -662,7 +677,7 @@ export default function Calendario() {
                           <button onClick={()=>cambiarEstado(c.id,"completada")} title="Completar" style={{...F,background:T.greenBg,border:"none",borderRadius:4,padding:"3px 6px",cursor:"pointer",fontSize:11}}>✓</button>
                           <button onClick={()=>cambiarEstado(c.id,"cancelada")} title="Cancelar" style={{...F,background:T.redBg,border:"none",borderRadius:4,padding:"3px 6px",cursor:"pointer",fontSize:11}}>✕</button>
                         </>}
-                        {c.jitsiLink&&<button onClick={()=>window.open(c.jitsiLink,"_blank")} title="Videollamada" style={{...F,background:T.blueBg,border:"none",borderRadius:4,padding:"3px 6px",fontSize:11,cursor:"pointer"}}>📹</button>}
+                        <button onClick={()=>{if(confirm("¿Eliminar esta reunión?"))saveCitas(citas.filter(x=>x.id!==c.id));}} title="Eliminar" style={{...F,background:"#FEE2E2",border:"none",borderRadius:4,padding:"3px 6px",fontSize:11,cursor:"pointer",color:"#DC2626"}}>🗑️</button>{c.jitsiLink&&<button onClick={()=>window.open(c.jitsiLink,"_blank")} title="Videollamada" style={{...F,background:T.blueBg,border:"none",borderRadius:4,padding:"3px 6px",fontSize:11,cursor:"pointer"}}>📹</button>}
                         <button onClick={()=>descargarICS(c,brand)} title="Descargar .ics" style={{...F,background:T.amberBg,border:"none",borderRadius:4,padding:"3px 6px",cursor:"pointer",fontSize:11}}>📅</button>
                       </div>
                     </td>
@@ -1005,4 +1020,20 @@ export default function Calendario() {
       })()}
     </div>
   );
-}
+<label style={{display:"flex",alignItems:"center",gap:10,fontSize:13,color:T.ink,cursor:"pointer",marginBottom:12}}>
+                <input type="checkbox" checked={r.recurrente||false} onChange={e=>upd("recurrente",e.target.checked)} />
+                Reunión recurrente
+              </label>
+              {r.recurrente&&<div style={{background:T.surfaceAlt,borderRadius:8,padding:12,marginBottom:12,display:"flex",gap:12,alignItems:"center",flexWrap:"wrap"}}>
+                <select value={r.recurrencia||"semanal"} onChange={e=>upd("recurrencia",e.target.value)} style={{...F,padding:"8px 12px",borderRadius:6,border:"1px solid "+T.border,fontSize:12}}>
+                  <option value="diaria">Todos los días</option>
+                  <option value="semanal">Cada semana</option>
+                  <option value="bisemanal">Cada 2 semanas</option>
+                  <option value="mensual">Cada mes</option>
+                </select>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <span style={{fontSize:11,color:T.inkMid}}>Hasta:</span>
+                  <input type="date" value={r.recurrenciaHasta||""} onChange={e=>upd("recurrenciaHasta",e.target.value)} style={{...F,padding:"8px 12px",borderRadius:6,border:"1px solid "+T.border,fontSize:12}} />
+                </div>
+              </div>}
+              }
