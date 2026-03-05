@@ -33,6 +33,10 @@
       "destination": "/fichar/index.html"
     },
     {
+      "source": "/f",
+      "destination": "/f/index.html"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
