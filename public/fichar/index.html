@@ -497,6 +497,17 @@ function renderMyNovelties() {
 }
 
 // ═══ INIT ═══
+// Request GPS immediately on page load
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    function(pos) {
+      gpsCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude, precision: Math.round(pos.coords.accuracy) };
+      console.log("GPS ready:", gpsCoords);
+    },
+    function(err) { gpsErr = err.message; console.warn("GPS error:", err.message); },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
 loadEmployees();
 </script>
 </body>
