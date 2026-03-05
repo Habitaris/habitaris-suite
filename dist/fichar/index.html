@@ -224,10 +224,17 @@ function requestPermissions() {
 }
 
 function requestCameraPermission() {
+  render(
+    '<div class="card" style="text-align:center">'
+    + '<div class="icon-big">📷</div>'
+    + '<h2>Paso 2: Cámara</h2>'
+    + '<div class="sub">Permite el acceso a la cámara para selfie</div>'
+    + '<div class="gps-box gps-loading"><div class="spinner"></div>Solicitando permiso de cámara...</div>'
+    + '</div>'
+  );
   navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
     .then(function(stream) {
       permCamOk = true;
-      // Stop the stream immediately, we just needed permission
       stream.getTracks().forEach(function(t){ t.stop(); });
       renderPermissions();
     })
