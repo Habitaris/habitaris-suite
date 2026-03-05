@@ -167,9 +167,15 @@ function selectEmployee(id) {
   currentEmp = employees.find(function(e){ return e.id === id; });
   if (!currentEmp) return;
   pinInput = ""; pinError = false;
-  // If permissions already granted, skip to PIN
-  if (gpsCoords) { renderStep2(); return; }
-  renderPermissions();
+  // Try GPS in background, don't block
+  if (!gpsCoords && navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) { gpsCoords = {lat:pos.coords.latitude,lng:pos.coords.longitude,precision:Math.round(pos.coords.accuracy)}; },
+      function(err) { gpsErr = err.message; },
+      {enableHighAccuracy:true,timeout:30000,maximumAge:0}
+    );
+  }
+  renderStep2();
 }
 
 // ═══ PERMISSIONS SCREEN ═══
@@ -451,7 +457,7 @@ function renderConfirm(tipo) {
     return;
   }
 
-  var canSubmit = gpsCoords && selfieData;
+  var canSubmit = selfieData; // GPS optional, selfie required
 
   render(
     '<div class="card" style="text-align:center">'
