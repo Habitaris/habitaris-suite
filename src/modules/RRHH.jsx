@@ -3068,7 +3068,7 @@ function TabContratacion() {
     horario:"8:00 a.m. a 5:00 p.m.",dias_laborales:"Lunes a viernes",
     tipo_contrato:"fijo",duracion_meses:6,ciudad:"Bogotá D.C.",
     fecha_inicio:"",periodo_prueba:"Dos (2) meses",descriptor_codigo:"",
-    candidato_nombre:"",candidato_email:""
+    
   });
 
   const loadProcesos = async () => {
@@ -3094,7 +3094,7 @@ function TabContratacion() {
       if (d.ok) {
         alert("Propuesta creada: " + d.data.codigo + "\n\nLink propuesta:\n" + d.links.propuesta + "\n\nLink datos:\n" + d.links.datos);
         setShowForm(false);
-        setForm({cargo:"",area:"",nivel:"Operativo",salario_neto:0,salario_base:0,auxilio_transporte:0,bono_no_salarial:0,jornada_horas:48,horario:"8:00 a.m. a 5:00 p.m.",dias_laborales:"Lunes a viernes",tipo_contrato:"fijo",duracion_meses:6,ciudad:"Bogotá D.C.",fecha_inicio:"",periodo_prueba:"Dos (2) meses",descriptor_codigo:"",candidato_nombre:"",candidato_email:""});
+        setForm({cargo:"",area:"",nivel:"Operativo",salario_neto:0,salario_base:0,auxilio_transporte:0,bono_no_salarial:0,jornada_horas:48,horario:"8:00 a.m. a 5:00 p.m.",dias_laborales:"Lunes a viernes",tipo_contrato:"fijo",duracion_meses:6,ciudad:"Bogotá D.C.",fecha_inicio:"",periodo_prueba:"Dos (2) meses",descriptor_codigo:"",});
         loadProcesos();
       }
     } catch(e) { alert("Error: " + e.message); }
@@ -3154,7 +3154,7 @@ function TabContratacion() {
           </Row>
           <Row gap={14} wrap>
             <Col><Inp label="Fecha inicio" type="date" value={form.fecha_inicio} onChange={e=>setForm({...form,fecha_inicio:e.target.value})}/></Col>
-            <Col><Inp label="Nombre candidato (opcional)" value={form.candidato_nombre} onChange={e=>setForm({...form,candidato_nombre:e.target.value})}/></Col>
+            
           </Row>
           <div style={{display:"flex",gap:8,marginTop:12}}>
             <Btn icon={Check} onClick={crearPropuesta}>Generar propuesta</Btn>
@@ -3177,15 +3177,8 @@ function TabContratacion() {
             const est = ESTADOS[p.estado] || {label:p.estado,color:"#888",bg:"#F5F5F5"};
             return (
               <Card key={p.id} style={{padding:"14px 18px",cursor:"pointer"}} onClick={() => {
-                const info = "Código: " + p.codigo
-                  + "\nEstado: " + est.label
-                  + "\nCargo: " + p.cargo
-                  + "\nSalario: " + fmtMoney(p.salario_neto)
-                  + "\nCandidato: " + (p.candidato_nombre || "Pendiente")
-                  + (p.candidato_email ? "\nEmail: " + p.candidato_email : "")
-                  + "\n\nLink propuesta:\nhttps://suite.habitaris.co/propuesta?token=" + p.token_propuesta
-                  + "\n\nLink datos:\nhttps://suite.habitaris.co/contratacion?token=" + p.token_datos;
-                alert(info);
+                navigator.clipboard.writeText("https://suite.habitaris.co/propuesta?token=" + p.token_propuesta);
+                alert("Link copiado al portapapeles:\n\nhttps://suite.habitaris.co/propuesta?token=" + p.token_propuesta + "\n\nEnvíalo al candidato por WhatsApp o email.\n\nEstado: " + est.label + "\nCandidato: " + (p.candidato_nombre || "Pendiente"));
               }}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                   <div>
