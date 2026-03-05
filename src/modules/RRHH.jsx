@@ -3064,7 +3064,7 @@ function TabContratacion() {
   const [showForm, setShowForm] = useState(false);
   const [selProceso, setSelProceso] = useState(null);
   const [lanzarId, setLanzarId] = useState(null);
-  const [lanzarForm, setLanzarForm] = useState({abogado_nombre:"",abogado_email:"",contrato_plantilla:"tpl_contrato_laboral",descriptor_codigo:""});
+  const [lanzarForm, setLanzarForm] = useState({abogado_nombre:"",abogado_email:"",contrato_plantilla:"tpl_contrato_laboral",descriptor_codigo:"",firmantes:[{nombre:"",email:"",rol:"Revisor legal",orden:1},{nombre:"",email:"",rol:"Trabajador",orden:2},{nombre:"Ana María Díaz Buitrago",email:"amdiaz@habitaris.co",rol:"Empleador — Rep. Legal",orden:3}]});
   const [form, setForm] = useState({
     cargo:"",area:"",nivel:"Operativo",salario_neto:0,salario_base:0,
     auxilio_transporte:0,bono_no_salarial:0,jornada_horas:48,
@@ -3120,7 +3120,7 @@ function TabContratacion() {
 
 
   const lanzarContratacion = async () => {
-    if(!lanzarForm.abogado_nombre||!lanzarForm.abogado_email){alert("Nombre y email del abogado son obligatorios.");return;}
+    const hasFirmantes = lanzarForm.firmantes.some(f=>f.nombre&&f.email||f.rol==="Trabajador"); if(!hasFirmantes){alert("Configure al menos un firmante.");return;}
     const proc = procesos.find(p=>p.id===lanzarId);
     if(!proc) return;
     try {
@@ -3128,11 +3128,13 @@ function TabContratacion() {
       await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({id:proc.id,estado:"firma_pendiente",abogado_nombre:lanzarForm.abogado_nombre,abogado_email:lanzarForm.abogado_email,contrato_plantilla:lanzarForm.contrato_plantilla,descriptor_codigo:lanzarForm.descriptor_codigo||proc.descriptor_codigo,fecha_contrato:new Date().toISOString()})});
       // 2. Create signing links
-      const signers = [
-        {name:lanzarForm.abogado_nombre,email:lanzarForm.abogado_email,role:"Revisor legal",id_number:"",order:1},
-        {name:proc.candidato_nombre,email:proc.candidato_email,role:"Trabajador",id_number:proc.candidato_cc,order:2},
-        {name:"Ana María Díaz Buitrago",email:"amdiaz@habitaris.co",role:"Empleador — Rep. Legal",id_number:"1.109.293.384",order:3}
-      ];
+      // Build signers from form - auto-fill trabajador
+      const ff = lanzarForm.firmantes.map((f,i) => {
+        if(f.rol==="Trabajador") return {name:proc.candidato_nombre,email:proc.candidato_email,role:f.rol,id_number:proc.candidato_cc,order:f.orden};
+        return {name:f.nombre,email:f.email,role:f.rol,id_number:"",order:f.orden};
+      }).filter(f=>f.name&&f.email);
+      if(!ff.length){alert("Configure al menos un firmante.");return;}
+      const signers = ff;
       const r = await fetch("/api/firma",{method:"POST",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({action:"create_pending",doc_code:"HAB-CTR-"+new Date().getFullYear()+"-"+String(procesos.length).padStart(3,"0"),doc_title:"Contrato Individual de Trabajo — "+proc.candidato_nombre,doc_hash:"pending",signers:signers})});
       const d = await r.json();
@@ -3220,11 +3222,31 @@ function TabContratacion() {
                 ]}/>
               </Col>
             </Row>
-            <Row gap={14} wrap>
-              <Col><Inp label="Abogado/a revisor(a) *" value={lanzarForm.abogado_nombre} onChange={e=>setLanzarForm({...lanzarForm,abogado_nombre:e.target.value})}/></Col>
-              <Col><Inp label="Email abogado/a *" value={lanzarForm.abogado_email} onChange={e=>setLanzarForm({...lanzarForm,abogado_email:e.target.value})}/></Col>
-            </Row>
-            <div style={{display:"flex",gap:8,marginTop:12}}>
+            <div style={{marginTop:12,borderTop:"1px solid "+C.border,paddingTop:12}}>
+              <div style={{fontSize:12,fontWeight:700,color:C.ink,marginBottom:8}}>✍️ Firmantes (en orden de firma)</div>
+              {lanzarForm.firmantes.map((f,i) => (
+                <div key={i} style={{display:"flex",gap:8,alignItems:"center",marginBottom:8,padding:8,background:C.bg,borderRadius:6}}>
+                  <span style={{fontSize:18,width:28,textAlign:"center"}}>{f.rol==="Revisor legal"?"⚖️":f.rol==="Trabajador"?"👤":"🏢"}</span>
+                  <div style={{flex:1,display:"flex",gap:6,flexWrap:"wrap"}}>
+                    {f.rol==="Trabajador" ? (
+                      <div style={{fontSize:11,color:C.inkLight}}><strong>{proc.candidato_nombre||"Candidato"}</strong> · {proc.candidato_email||"email pendiente"} · <em>Se rellena automáticamente</em></div>
+                    ) : (<>
+                      <input placeholder="Nombre" value={f.nombre} onChange={e=>{const nf=[...lanzarForm.firmantes];nf[i]={...nf[i],nombre:e.target.value};setLanzarForm({...lanzarForm,firmantes:nf});}} style={{flex:1,minWidth:120,padding:"6px 8px",fontSize:11,border:"1px solid "+C.border,borderRadius:4,fontFamily:"DM Sans,sans-serif"}}/>
+                      <input placeholder="Email" value={f.email} onChange={e=>{const nf=[...lanzarForm.firmantes];nf[i]={...nf[i],email:e.target.value};setLanzarForm({...lanzarForm,firmantes:nf});}} style={{flex:1,minWidth:150,padding:"6px 8px",fontSize:11,border:"1px solid "+C.border,borderRadius:4,fontFamily:"DM Sans,sans-serif"}}/>
+                    </>)}
+                    <select value={f.rol} onChange={e=>{const nf=[...lanzarForm.firmantes];nf[i]={...nf[i],rol:e.target.value};setLanzarForm({...lanzarForm,firmantes:nf});}} style={{padding:"6px 8px",fontSize:11,border:"1px solid "+C.border,borderRadius:4,fontFamily:"DM Sans,sans-serif",minWidth:120}}>
+                      <option value="Revisor legal">⚖️ Revisor legal</option>
+                      <option value="Trabajador">👤 Trabajador</option>
+                      <option value="Empleador — Rep. Legal">🏢 Empleador</option>
+                      <option value="Testigo">👁 Testigo</option>
+                    </select>
+                  </div>
+                  {lanzarForm.firmantes.length>1 && <button onClick={()=>{const nf=lanzarForm.firmantes.filter((_,j)=>j!==i);setLanzarForm({...lanzarForm,firmantes:nf});}} style={{background:"#FEE2E2",border:"none",borderRadius:4,color:"#DC2626",fontSize:10,padding:"4px 8px",cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>✕</button>}
+                </div>
+              ))}
+              <button onClick={()=>setLanzarForm({...lanzarForm,firmantes:[...lanzarForm.firmantes,{nombre:"",email:"",rol:"Testigo",orden:lanzarForm.firmantes.length+1}]})} style={{background:"none",border:"1px dashed "+C.border,borderRadius:6,padding:"6px 12px",fontSize:11,color:C.inkLight,cursor:"pointer",fontFamily:"DM Sans,sans-serif",width:"100%"}}>+ Añadir firmante</button>
+            </div>
+            <div style={{display:"flex",gap:8,marginTop:14}}>
               <Btn icon={Check} onClick={lanzarContratacion}>Generar contrato y enviar a firma</Btn>
               <Btn variant="secondary" onClick={()=>setLanzarId(null)}>Cancelar</Btn>
             </div>
