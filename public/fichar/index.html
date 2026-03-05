@@ -163,7 +163,73 @@ function selectEmployee(id) {
   currentEmp = employees.find(function(e){ return e.id === id; });
   if (!currentEmp) return;
   pinInput = ""; pinError = false;
-  renderStep2();
+  // If permissions already granted, skip to PIN
+  if (gpsCoords) { renderStep2(); return; }
+  renderPermissions();
+}
+
+// ═══ PERMISSIONS SCREEN ═══
+var permGpsOk = false;
+var permCamOk = false;
+
+function renderPermissions() {
+  render(
+    '<div class="card" style="text-align:center">'
+    + '<div class="icon-big">🔐</div>'
+    + '<h2>Permisos necesarios</h2>'
+    + '<div class="sub">Para fichar necesitamos acceso a tu ubicación y cámara</div>'
+    + '<div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px">'
+    + '<div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:8px;border:1px solid ' + (permGpsOk ? '#059669' : '#E0E0E0') + ';background:' + (permGpsOk ? '#DCFCE7' : '#fff') + '">'
+    + '<span style="font-size:24px">' + (permGpsOk ? '✅' : '📍') + '</span>'
+    + '<div style="text-align:left;flex:1"><div style="font-weight:600;font-size:13px">Ubicación GPS</div>'
+    + '<div style="font-size:11px;color:#888">' + (permGpsOk ? 'Permitido (' + (gpsCoords ? '±' + gpsCoords.precision + 'm' : '') + ')' : 'Necesario para verificar tu ubicación') + '</div></div></div>'
+    + '<div style="display:flex;align-items:center;gap:12px;padding:14px;border-radius:8px;border:1px solid ' + (permCamOk ? '#059669' : '#E0E0E0') + ';background:' + (permCamOk ? '#DCFCE7' : '#fff') + '">'
+    + '<span style="font-size:24px">' + (permCamOk ? '✅' : '📷') + '</span>'
+    + '<div style="text-align:left;flex:1"><div style="font-weight:600;font-size:13px">Cámara (selfie)</div>'
+    + '<div style="font-size:11px;color:#888">' + (permCamOk ? 'Permitido' : 'Necesaria para verificar tu identidad') + '</div></div></div>'
+    + '</div>'
+    + (permGpsOk && permCamOk
+      ? '<button class="btn btn-green" onclick="renderStep2()">Continuar →</button>'
+      : '<button class="btn btn-primary" onclick="requestPermissions()">Permitir acceso</button>')
+    + '<button class="btn btn-ghost" onclick="currentEmp=null;renderStep1()">← Volver</button>'
+    + '</div>'
+  );
+}
+
+function requestPermissions() {
+  // Request GPS first
+  if (!permGpsOk && navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        gpsCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude, precision: Math.round(pos.coords.accuracy) };
+        permGpsOk = true;
+        // Now request camera
+        requestCameraPermission();
+      },
+      function(err) {
+        gpsErr = err.message;
+        // Still try camera
+        requestCameraPermission();
+        setTimeout(function(){ renderPermissions(); }, 300);
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    );
+  } else if (permGpsOk) {
+    requestCameraPermission();
+  }
+}
+
+function requestCameraPermission() {
+  navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+    .then(function(stream) {
+      permCamOk = true;
+      // Stop the stream immediately, we just needed permission
+      stream.getTracks().forEach(function(t){ t.stop(); });
+      renderPermissions();
+    })
+    .catch(function(err) {
+      renderPermissions();
+    });
 }
 
 // ═══ STEP 2: PIN ═══
@@ -497,17 +563,7 @@ function renderMyNovelties() {
 }
 
 // ═══ INIT ═══
-// Request GPS immediately on page load
-if (navigator.geolocation) {
-  navigator.geolocation.getCurrentPosition(
-    function(pos) {
-      gpsCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude, precision: Math.round(pos.coords.accuracy) };
-      console.log("GPS ready:", gpsCoords);
-    },
-    function(err) { gpsErr = err.message; console.warn("GPS error:", err.message); },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-  );
-}
+// GPS and camera requested after user selects name
 loadEmployees();
 </script>
 </body>
