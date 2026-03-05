@@ -47,7 +47,7 @@ const MODULES = [
   { id:"logistica",    label:"Logística",               icon:"📦", desc:"Almacén, EPPs, dotaciones, herramientas, equipos, compras y proveedores", color:"#111111", component:Logistica,    ready:true  },
   { id:"compras",      label:"Compras",                 icon:"🛒", desc:"Órdenes de compra, recepción mercancía, evaluación proveedores",       color:"#111111", component:Compras,      ready:true  },
   { id:"aprobaciones", label:"Aprobaciones",             icon:"✅", desc:"Flujos de aprobación, cadenas, umbrales y permisos por módulo",           color:"#111111", component:Aprobaciones, ready:true  },
-  { id:"proyectos",    label:"Proyectos",               icon:"📅", desc:"Gantt, avances, seguimiento de obra y control de calidad",             color:"#111111", component:Proyectos,    ready:true  },
+  { id:"proyectos",    label:"Proyectos",               icon:"🏗️", desc:"Gantt, avances, seguimiento de obra y control de calidad",             color:"#111111", component:Proyectos,    ready:true  },
   { id:"biblioteca",   label:"Biblioteca",              icon:"📚", desc:"APUs normalizados, materiales, precios unitarios y textos tipo",       color:"#111111", component:Biblioteca,   ready:true  },
   { id:"contabilidad", label:"Contabilidad",            icon:"📊", desc:"Facturación, costos reales, ingresos, egresos e informes",             color:"#555555", component:Contabilidad, ready:true  },
   { id:"sst",          label:"SST",                    icon:"🦺", desc:"Seguridad y salud en el trabajo, inspecciones y riesgos",              color:"#111111", component:SST,          ready:true  },
