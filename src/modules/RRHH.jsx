@@ -3193,20 +3193,42 @@ function TabContratacion() {
                 </div>
                 {isOpen && (
                   <div style={{padding:"0 18px 16px",borderTop:"1px solid "+C.border}}>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px 16px",padding:"12px 0",fontSize:12}}>
+                    {/* Datos propuesta */}
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 16px",padding:"12px 0",fontSize:12}}>
                       <div><span style={{color:C.inkLight}}>Tipo:</span> <strong>{p.tipo_contrato==="fijo"?"Término fijo"+(p.duracion_meses?" ("+p.duracion_meses+" meses)":""):p.tipo_contrato}</strong></div>
                       <div><span style={{color:C.inkLight}}>Ciudad:</span> <strong>{p.ciudad}</strong></div>
                       <div><span style={{color:C.inkLight}}>Jornada:</span> <strong>{p.jornada_horas}h / {p.dias_laborales}</strong></div>
                       <div><span style={{color:C.inkLight}}>Horario:</span> <strong>{p.horario}</strong></div>
                       <div><span style={{color:C.inkLight}}>Inicio:</span> <strong>{p.fecha_inicio || "Pendiente"}</strong></div>
-                      <div><span style={{color:C.inkLight}}>Prueba:</span> <strong>{p.periodo_prueba || "-"}</strong></div>
-                      {p.candidato_nombre && <div><span style={{color:C.inkLight}}>Candidato:</span> <strong>{p.candidato_nombre}</strong></div>}
-                      {p.candidato_cc && <div><span style={{color:C.inkLight}}>CC:</span> <strong>{p.candidato_cc}</strong></div>}
-                      {p.candidato_email && <div><span style={{color:C.inkLight}}>Email:</span> <strong>{p.candidato_email}</strong></div>}
-                      {p.candidato_celular && <div><span style={{color:C.inkLight}}>Celular:</span> <strong>{p.candidato_celular}</strong></div>}
-                      {p.candidato_eps && <div><span style={{color:C.inkLight}}>EPS:</span> <strong>{p.candidato_eps}</strong></div>}
-                      {p.candidato_pension && <div><span style={{color:C.inkLight}}>Pensión:</span> <strong>{p.candidato_pension}</strong></div>}
+                      <div><span style={{color:C.inkLight}}>Salario neto:</span> <strong>{fmtMoney(p.salario_neto)}</strong></div>
                     </div>
+                    {/* Expediente candidato */}
+                    {p.candidato_nombre && (
+                      <div style={{borderTop:"1px solid "+C.border,paddingTop:12,marginTop:4}}>
+                        <div style={{fontSize:12,fontWeight:700,color:C.ink,marginBottom:10}}>📋 Expediente del candidato</div>
+                        <div style={{display:"flex",gap:16,alignItems:"start",marginBottom:12}}>
+                          {p.candidato_foto_url && <img src={p.candidato_foto_url} style={{width:60,height:60,borderRadius:"50%",objectFit:"cover",border:"2px solid "+C.border}}/>}
+                          <div style={{flex:1}}>
+                            <div style={{fontWeight:700,fontSize:14,color:C.ink}}>{p.candidato_nombre}</div>
+                            <div style={{fontSize:11,color:C.inkLight}}>{p.candidato_cc}</div>
+                            <div style={{fontSize:11,color:C.inkLight}}>{p.candidato_email} · {p.candidato_celular}</div>
+                            <div style={{fontSize:11,color:C.inkLight}}>{p.candidato_direccion}</div>
+                          </div>
+                        </div>
+                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 16px",fontSize:11,marginBottom:8}}>
+                          {p.candidato_eps && <div><span style={{color:C.inkLight}}>EPS:</span> <strong>{p.candidato_eps}</strong></div>}
+                          {p.candidato_pension && <div><span style={{color:C.inkLight}}>Pensión:</span> <strong>{p.candidato_pension}</strong></div>}
+                          {p.candidato_banco && <div><span style={{color:C.inkLight}}>Banco:</span> <strong>{p.candidato_banco}</strong></div>}
+                          {p.candidato_numero_cuenta && <div><span style={{color:C.inkLight}}>Cuenta:</span> <strong>{p.candidato_tipo_cuenta} {p.candidato_numero_cuenta}</strong></div>}
+                        </div>
+                        {p.candidato_contacto_emergencia && (() => {
+                          try { const ce = JSON.parse(p.candidato_contacto_emergencia); return <div style={{fontSize:11,color:C.inkLight,marginBottom:8}}>🚨 Emergencia: <strong>{ce.nombre}</strong> ({ce.parentesco}) — {ce.telefono}</div>; } catch(e) { return null; }
+                        })()}
+                        {p.candidato_beneficiarios && p.candidato_beneficiarios !== "[]" && (() => {
+                          try { const bs = JSON.parse(p.candidato_beneficiarios); if(!bs.length) return null; return <div style={{fontSize:11,marginBottom:8}}><span style={{color:C.inkLight}}>👨‍👩‍👧 Beneficiarios:</span> {bs.map((b,i)=><span key={i} style={{background:C.bg,padding:"1px 6px",borderRadius:4,marginLeft:4,fontSize:10}}>{b.nombre} ({b.parentesco})</span>)}</div>; } catch(e) { return null; }
+                        })()}
+                      </div>
+                    )}
                     <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.border}}>
                       <button onClick={()=>{navigator.clipboard.writeText(linkProp);alert("Link copiado:\n"+linkProp);}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:C.card,cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:C.ink}}>📋 Copiar link propuesta</button>
                       <button onClick={()=>window.open(linkProp,"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:C.card,cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:C.ink}}>👁 Ver propuesta</button>
