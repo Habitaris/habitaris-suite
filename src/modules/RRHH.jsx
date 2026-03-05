@@ -3227,14 +3227,45 @@ function TabContratacion() {
                         {p.candidato_beneficiarios && p.candidato_beneficiarios !== "[]" && (() => {
                           try { const bs = JSON.parse(p.candidato_beneficiarios); if(!bs.length) return null; return <div style={{fontSize:11,marginBottom:8}}><span style={{color:C.inkLight}}>👨‍👩‍👧 Beneficiarios:</span> {bs.map((b,i)=><span key={i} style={{background:C.bg,padding:"1px 6px",borderRadius:4,marginLeft:4,fontSize:10}}>{b.nombre} ({b.parentesco})</span>)}</div>; } catch(e) { return null; }
                         })()}
+                        {/* Documentos adjuntos */}
+                        <div style={{borderTop:"1px solid "+C.border,paddingTop:10,marginTop:8}}>
+                          <div style={{fontSize:11,fontWeight:600,color:C.inkLight,marginBottom:8}}>📎 Documentos adjuntos</div>
+                          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                            {p.candidato_cedula_url && (() => {
+                              try{const ced=JSON.parse(p.candidato_cedula_url);
+                              return <>{ced.anverso && <img src={ced.anverso} onClick={()=>window.open(ced.anverso)} style={{width:80,height:50,objectFit:"cover",borderRadius:4,border:"1px solid "+C.border,cursor:"pointer"}} title="Cédula anverso"/>}
+                              {ced.reverso && <img src={ced.reverso} onClick={()=>window.open(ced.reverso)} style={{width:80,height:50,objectFit:"cover",borderRadius:4,border:"1px solid "+C.border,cursor:"pointer"}} title="Cédula reverso"/>}</>;}catch(e){return null;}
+                            })()}
+                            {p.candidato_documentos_extra && (() => {
+                              try{const docs=JSON.parse(p.candidato_documentos_extra);
+                              return <>{docs.cert_eps && <span onClick={()=>window.open(docs.cert_eps)} style={{padding:"4px 8px",background:"#EFF6FF",borderRadius:4,fontSize:10,cursor:"pointer",color:"#1D4ED8"}}>📄 Cert. EPS</span>}
+                              {docs.cert_pension && <span onClick={()=>window.open(docs.cert_pension)} style={{padding:"4px 8px",background:"#EFF6FF",borderRadius:4,fontSize:10,cursor:"pointer",color:"#1D4ED8"}}>📄 Cert. Pensión</span>}
+                              {docs.cert_banco && <span onClick={()=>window.open(docs.cert_banco)} style={{padding:"4px 8px",background:"#EFF6FF",borderRadius:4,fontSize:10,cursor:"pointer",color:"#1D4ED8"}}>📄 Cert. Bancario</span>}</>;}catch(e){return null;}
+                            })()}
+                          </div>
+                        </div>
                       </div>
                     )}
                     <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.border}}>
-                      <button onClick={()=>{navigator.clipboard.writeText(linkProp);alert("Link copiado:\n"+linkProp);}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:C.card,cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:C.ink}}>📋 Copiar link propuesta</button>
-                      <button onClick={()=>window.open(linkProp,"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:C.card,cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:C.ink}}>👁 Ver propuesta</button>
-                      <button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("Propuesta de empleo Habitaris — "+p.cargo+"\n"+linkProp),"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📱 Enviar WhatsApp</button>
-                      {p.candidato_nombre && <button onClick={()=>window.open(linkDatos,"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #1D4ED8",borderRadius:6,background:"#EFF6FF",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#1D4ED8"}}>📄 Ver datos candidato</button>}
-                      <button onClick={async()=>{if(!confirm("¿Eliminar esta propuesta?"))return;try{const r=await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"cancelado"})});if(r.ok)loadProcesos();}catch(e){alert(e.message);}}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #DC2626",borderRadius:6,background:"#FEE2E2",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#DC2626"}}>🗑 Cancelar</button>
+                      {/* Botones según estado */}
+                      {(p.estado==="propuesta") && <>
+                        <button onClick={()=>{navigator.clipboard.writeText(linkProp);alert("Link copiado al portapapeles");}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:C.card,cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:C.ink}}>📋 Copiar link</button>
+                        <button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("Propuesta de empleo Habitaris — "+p.cargo+"\n"+linkProp),"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📱 Enviar WhatsApp</button>
+                      </>}
+                      {(p.estado==="aceptada") && <>
+                        <button onClick={()=>{navigator.clipboard.writeText(linkDatos);alert("Link de formulario copiado");}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #1D4ED8",borderRadius:6,background:"#EFF6FF",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#1D4ED8"}}>📋 Copiar link formulario</button>
+                        <button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("Complete sus datos para la contratación en Habitaris:\n"+linkDatos),"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📱 Recordar por WhatsApp</button>
+                      </>}
+                      {(p.estado==="datos_recibidos") && <>
+                        <button onClick={()=>alert("Próximamente: seleccionar plantilla de contrato y descriptor de cargo para generar el contrato y enviarlo a firma.")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📝 Lanzar a contratación</button>
+                      </>}
+                      {(p.estado==="firma_pendiente") && <>
+                        <span style={{padding:"6px 12px",fontSize:11,fontWeight:600,background:"#FEF3C7",borderRadius:6,color:"#D97706"}}>⏳ Esperando firmas</span>
+                      </>}
+                      {(p.estado==="firmado"||p.estado==="completado") && <>
+                        <span style={{padding:"6px 12px",fontSize:11,fontWeight:600,background:"#DCFCE7",borderRadius:6,color:"#059669"}}>✅ Proceso completado</span>
+                      </>}
+                      <button onClick={async()=>{if(!confirm("¿Cancelar esta propuesta?"))return;try{const r=await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"cancelado"})});if(r.ok)loadProcesos();}catch(e){alert(e.message);}}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #DC2626",borderRadius:6,background:"#FEE2E2",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#DC2626"}}>🗑 Cancelar</button>
                     </div>
                   </div>
                 )}
