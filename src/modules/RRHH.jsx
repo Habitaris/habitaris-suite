@@ -3062,6 +3062,7 @@ function TabContratacion() {
   const [procesos, setProcesos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [selProceso, setSelProceso] = useState(null);
   const [form, setForm] = useState({
     cargo:"",area:"",nivel:"Operativo",salario_neto:0,salario_base:0,
     auxilio_transporte:0,bono_no_salarial:0,jornada_horas:48,
@@ -3175,21 +3176,46 @@ function TabContratacion() {
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           {procesos.map(p => {
             const est = ESTADOS[p.estado] || {label:p.estado,color:"#888",bg:"#F5F5F5"};
+            const isOpen = selProceso === p.id;
+            const linkProp = "https://suite.habitaris.co/propuesta?token=" + p.token_propuesta;
+            const linkDatos = "https://suite.habitaris.co/contratacion?token=" + p.token_datos;
             return (
-              <Card key={p.id} style={{padding:"14px 18px",cursor:"pointer"}} onClick={() => {
-                navigator.clipboard.writeText("https://suite.habitaris.co/propuesta?token=" + p.token_propuesta);
-                alert("Link copiado al portapapeles:\n\nhttps://suite.habitaris.co/propuesta?token=" + p.token_propuesta + "\n\nEnvíalo al candidato por WhatsApp o email.\n\nEstado: " + est.label + "\nCandidato: " + (p.candidato_nombre || "Pendiente"));
-              }}>
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <Card key={p.id} style={{padding:0,overflow:"hidden"}}>
+                <div style={{padding:"14px 18px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}} onClick={() => setSelProceso(isOpen?null:p.id)}>
                   <div>
                     <div style={{fontWeight:700,fontSize:13,color:C.ink}}>{p.cargo}</div>
                     <div style={{fontSize:11,color:C.inkLight}}>{p.codigo} · {p.candidato_nombre || "Sin candidato"} · {fmtMoney(p.salario_neto)}</div>
                   </div>
                   <div style={{display:"flex",alignItems:"center",gap:8}}>
                     <span style={{padding:"3px 10px",borderRadius:12,fontSize:10,fontWeight:600,color:est.color,background:est.bg}}>{est.label}</span>
-                    <span style={{fontSize:11,color:C.inkLight}}>{fmtDate(p.created_at)}</span>
+                    <span style={{fontSize:16,color:C.inkLight}}>{isOpen?"▲":"▼"}</span>
                   </div>
                 </div>
+                {isOpen && (
+                  <div style={{padding:"0 18px 16px",borderTop:"1px solid "+C.border}}>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"8px 16px",padding:"12px 0",fontSize:12}}>
+                      <div><span style={{color:C.inkLight}}>Tipo:</span> <strong>{p.tipo_contrato==="fijo"?"Término fijo"+(p.duracion_meses?" ("+p.duracion_meses+" meses)":""):p.tipo_contrato}</strong></div>
+                      <div><span style={{color:C.inkLight}}>Ciudad:</span> <strong>{p.ciudad}</strong></div>
+                      <div><span style={{color:C.inkLight}}>Jornada:</span> <strong>{p.jornada_horas}h / {p.dias_laborales}</strong></div>
+                      <div><span style={{color:C.inkLight}}>Horario:</span> <strong>{p.horario}</strong></div>
+                      <div><span style={{color:C.inkLight}}>Inicio:</span> <strong>{p.fecha_inicio || "Pendiente"}</strong></div>
+                      <div><span style={{color:C.inkLight}}>Prueba:</span> <strong>{p.periodo_prueba || "-"}</strong></div>
+                      {p.candidato_nombre && <div><span style={{color:C.inkLight}}>Candidato:</span> <strong>{p.candidato_nombre}</strong></div>}
+                      {p.candidato_cc && <div><span style={{color:C.inkLight}}>CC:</span> <strong>{p.candidato_cc}</strong></div>}
+                      {p.candidato_email && <div><span style={{color:C.inkLight}}>Email:</span> <strong>{p.candidato_email}</strong></div>}
+                      {p.candidato_celular && <div><span style={{color:C.inkLight}}>Celular:</span> <strong>{p.candidato_celular}</strong></div>}
+                      {p.candidato_eps && <div><span style={{color:C.inkLight}}>EPS:</span> <strong>{p.candidato_eps}</strong></div>}
+                      {p.candidato_pension && <div><span style={{color:C.inkLight}}>Pensión:</span> <strong>{p.candidato_pension}</strong></div>}
+                    </div>
+                    <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.border}}>
+                      <button onClick={()=>{navigator.clipboard.writeText(linkProp);alert("Link copiado:\n"+linkProp);}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:C.card,cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:C.ink}}>📋 Copiar link propuesta</button>
+                      <button onClick={()=>window.open(linkProp,"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:C.card,cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:C.ink}}>👁 Ver propuesta</button>
+                      <button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("Propuesta de empleo Habitaris — "+p.cargo+"\n"+linkProp),"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📱 Enviar WhatsApp</button>
+                      {p.candidato_nombre && <button onClick={()=>window.open(linkDatos,"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #1D4ED8",borderRadius:6,background:"#EFF6FF",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#1D4ED8"}}>📄 Ver datos candidato</button>}
+                      <button onClick={async()=>{if(!confirm("¿Eliminar esta propuesta?"))return;try{const r=await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"cancelado"})});if(r.ok)loadProcesos();}catch(e){alert(e.message);}}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #DC2626",borderRadius:6,background:"#FEE2E2",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#DC2626"}}>🗑 Cancelar</button>
+                    </div>
+                  </div>
+                )}
               </Card>
             );
           })}
