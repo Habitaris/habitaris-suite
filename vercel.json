@@ -69,6 +69,14 @@
       "destination": "/contratacion/index.html"
     },
     {
+      "source": "/psicotecnico",
+      "destination": "/psicotecnico/index.html"
+    },
+    {
+      "source": "/psicotecnico/(.*)",
+      "destination": "/psicotecnico/index.html"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
