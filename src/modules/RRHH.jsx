@@ -3104,15 +3104,18 @@ function TabContratacion() {
   };
 
   const ESTADOS = {
-    propuesta:{label:"Propuesta enviada",color:"#8C6A00",bg:"#FFF8EE"},
-    aceptada:{label:"Aceptada",color:"#059669",bg:"#DCFCE7"},
-    datos_pendientes:{label:"Datos pendientes",color:"#D97706",bg:"#FEF3C7"},
-    datos_recibidos:{label:"Datos recibidos",color:"#1D4ED8",bg:"#EFF6FF"},
-    revision_legal:{label:"Revisión legal",color:"#5B3A8C",bg:"#EDE8F4"},
-    firma_pendiente:{label:"Firma pendiente",color:"#D97706",bg:"#FEF3C7"},
-    firmado:{label:"Firmado",color:"#059669",bg:"#DCFCE7"},
-    completado:{label:"Completado",color:"#111",bg:"#E8E8E8"},
-    cancelado:{label:"Cancelado",color:"#B91C1C",bg:"#FEE2E2"},
+    propuesta:{label:"Propuesta enviada",color:"#8C6A00",bg:"#FFF8EE",icon:"📩"},
+    aceptada:{label:"Aceptada",color:"#059669",bg:"#DCFCE7",icon:"✅"},
+    datos_pendientes:{label:"Datos pendientes",color:"#D97706",bg:"#FEF3C7",icon:"📋"},
+    datos_recibidos:{label:"Datos recibidos",color:"#1D4ED8",bg:"#EFF6FF",icon:"📄"},
+    psicotecnico:{label:"Psicotécnico",color:"#5B3A8C",bg:"#EDE8F4",icon:"🧠"},
+    examen_medico:{label:"Examen médico",color:"#0D5E6E",bg:"#E0F2FE",icon:"🏥"},
+    validacion_sst:{label:"Validación SST",color:"#D97706",bg:"#FEF3C7",icon:"🦺"},
+    revision_legal:{label:"Revisión legal",color:"#5B3A8C",bg:"#EDE8F4",icon:"⚖️"},
+    firma_pendiente:{label:"Firma pendiente",color:"#D97706",bg:"#FEF3C7",icon:"✍️"},
+    firmado:{label:"Firmado",color:"#059669",bg:"#DCFCE7",icon:"✅"},
+    completado:{label:"Completado",color:"#111",bg:"#E8E8E8",icon:"🏁"},
+    cancelado:{label:"Cancelado",color:"#B91C1C",bg:"#FEE2E2",icon:"❌"},
   };
 
   const fmtMoney = (n) => n ? new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n) : "$0";
@@ -3347,7 +3350,17 @@ function TabContratacion() {
                         <button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("Complete sus datos para la contratación en Habitaris:\n"+linkDatos),"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📱 Recordar por WhatsApp</button>
                       </>}
                       {(p.estado==="datos_recibidos") && <>
-                        <button onClick={()=>setLanzarId(p.id)} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📝 Lanzar a contratación</button>
+                        <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"psicotecnico"})});loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #5B3A8C",borderRadius:6,background:"#EDE8F4",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#5B3A8C"}}>🧠 Enviar a psicotécnico</button>
+                        <button onClick={()=>setLanzarId(p.id)} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>⏩ Saltar a contratación</button>
+                      </>}
+                      {(p.estado==="psicotecnico") && <>
+                        <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"examen_medico"})});loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #0D5E6E",borderRadius:6,background:"#E0F2FE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#0D5E6E"}}>🏥 Psicotécnico OK → Enviar a examen médico</button>
+                      </>}
+                      {(p.estado==="examen_medico") && <>
+                        <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"validacion_sst"})});loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #D97706",borderRadius:6,background:"#FEF3C7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#D97706"}}>🦺 Examen OK → Enviar a SST</button>
+                      </>}
+                      {(p.estado==="validacion_sst") && <>
+                        <button onClick={()=>setLanzarId(p.id)} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📝 SST OK → Lanzar a contratación</button>
                       </>}
                       {(p.estado==="firma_pendiente") && <>
                         <span style={{padding:"6px 12px",fontSize:11,fontWeight:600,background:"#FEF3C7",borderRadius:6,color:"#D97706"}}>⏳ Esperando firmas</span>
