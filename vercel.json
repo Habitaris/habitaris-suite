@@ -25,6 +25,14 @@
       "destination": "/responder/index.html"
     },
     {
+      "source": "/fichar",
+      "destination": "/fichar/index.html"
+    },
+    {
+      "source": "/fichar/(.*)",
+      "destination": "/fichar/index.html"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }

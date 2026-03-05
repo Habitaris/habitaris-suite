@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>Fichar · Habitaris</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans',Arial,sans-serif;background:#F0EEE9;min-height:100vh;color:#111}
+  .header{background:#111;padding:16px 20px;text-align:center}
+  .header img{height:28px;object-fit:contain}
+  .header .cc-label{font-size:9px;color:rgba(255,255,255,.35);letter-spacing:2px;margin-top:4px;text-transform:uppercase}
+  .container{max-width:420px;margin:0 auto;padding:20px}
+  .card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px}
+  .card h2{font-size:18px;font-weight:700;margin-bottom:4px}
+  .card .sub{font-size:12px;color:#888;margin-bottom:20px}
+  .icon-big{font-size:40px;text-align:center;margin-bottom:12px}
+  .emp-list{max-height:300px;overflow-y:auto;border:1px solid #E0E0E0;border-radius:8px}
+  .emp-item{padding:14px 16px;cursor:pointer;border-bottom:1px solid #eee;font-size:14px;font-weight:500;display:flex;justify-content:space-between;align-items:center}
+  .emp-item:hover{background:#EFF6FF}
+  .emp-item:last-child{border-bottom:none}
+  .emp-status{font-size:10px;padding:2px 8px;border-radius:10px}
+  .pin-dots{display:flex;justify-content:center;gap:12px;margin-bottom:16px}
+  .pin-dot{width:14px;height:14px;border-radius:50%;background:#E0E0E0}
+  .pin-dot.active{background:#1D4ED8}
+  .pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:200px;margin:0 auto}
+  .pin-btn{padding:14px;font-size:18px;font-weight:600;border:1px solid #E0E0E0;border-radius:8px;background:#F5F5F5;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif}
+  .pin-btn:hover{background:#E8E8E8}
+  .pin-btn.del{background:#FEE2E2;color:#DC2626}
+  .pin-err{color:#DC2626;font-size:12px;text-align:center;margin-bottom:12px}
+  .gps-box{border-radius:8px;padding:14px;margin-bottom:16px;font-size:12px}
+  .gps-ok{background:#DCFCE7;border:1px solid #059669;color:#059669}
+  .gps-err{background:#FEE2E2;border:1px solid #DC2626;color:#DC2626}
+  .gps-loading{background:#EFF6FF;border:1px solid #1D4ED8;color:#1D4ED8;text-align:center}
+  .spinner{width:24px;height:24px;border:3px solid #E0E0E0;border-top-color:#1D4ED8;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 8px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .btn{width:100%;padding:14px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center}
+  .btn-primary{background:#111;color:#fff}
+  .btn-primary:hover{background:#333}
+  .btn-green{background:#059669;color:#fff}
+  .btn-red{background:#DC2626;color:#fff}
+  .btn-ghost{background:none;color:#888;font-size:12px;padding:8px;margin-top:8px}
+  .btn-ghost:hover{color:#111}
+  .actions{display:flex;flex-direction:column;gap:10px;margin-top:20px}
+  .action-btn{padding:16px;border-radius:10px;border:1px solid #E0E0E0;background:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;font-size:14px;font-weight:500;font-family:'DM Sans',sans-serif}
+  .action-btn:hover{background:#F5F5F5;border-color:#ccc}
+  .action-icon{font-size:24px}
+  .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
+  .badge-green{background:#DCFCE7;color:#059669}
+  .badge-amber{background:#FEF3C7;color:#D97706}
+  .badge-red{background:#FEE2E2;color:#DC2626}
+  .badge-gray{background:#F3F4F6;color:#6B7280}
+  .history-item{padding:10px 0;border-bottom:1px solid #F3F4F6;font-size:12px;display:flex;justify-content:space-between}
+  .history-item:last-child{border:none}
+  .form-group{margin-bottom:14px}
+  .form-group label{font-size:10px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;display:block}
+  .form-group select,.form-group input,.form-group textarea{width:100%;padding:10px 12px;border:1px solid #E0E0E0;border-radius:8px;font-size:13px;font-family:'DM Sans',sans-serif}
+  .form-group textarea{resize:vertical;min-height:60px}
+  .success-screen{text-align:center;padding:40px 20px}
+  .success-screen .icon{font-size:56px;margin-bottom:16px}
+  .success-screen h2{color:#059669;margin-bottom:8px}
+  .success-screen .detail{font-size:13px;color:#888;margin-bottom:24px}
+  .tabs{display:flex;gap:4px;margin-bottom:16px}
+  .tab{flex:1;padding:8px;border:none;border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;background:#F3F4F6;color:#888;text-align:center}
+  .tab.active{background:#111;color:#fff}
+  .empty{text-align:center;padding:32px;color:#888;font-size:13px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img src="/logo-habitaris-blanco.png" alt="Habitaris"/>
+  <div class="cc-label" id="ccLabel"></div>
+</div>
+
+<div class="container" id="app">
+  <div style="text-align:center;padding:40px"><div class="spinner"></div><div style="font-size:13px;color:#888">Cargando...</div></div>
+</div>
+
+<script>
+var params = new URLSearchParams(window.location.search);
+var CC = params.get("cc") || "oficina";
+var OT = params.get("ot") || "";
+var employees = [];
+var currentEmp = null;
+var currentTab = "home";
+var attendance = [];
+var novelties = [];
+
+document.getElementById("ccLabel").textContent = OT ? "Obra: " + OT : CC.replace(/-/g, " ").toUpperCase();
+
+async function loadEmployees() {
+  try {
+    var url = "/api/employees-public?" + (OT ? "ot=" + OT : "cc=" + CC);
+    var r = await fetch(url);
+    var d = await r.json();
+    employees = d.data || [];
+  } catch(e) { console.error(e); employees = []; }
+  renderStep1();
+}
+
+async function loadAttendance(empId) {
+  try {
+    var today = new Date().toISOString().split("T")[0];
+    var r = await fetch("/api/attendance?fecha=" + today + "&employee_id=" + empId);
+    var d = await r.json();
+    attendance = d.data || [];
+  } catch(e) { attendance = []; }
+}
+
+async function loadNovelties(empId) {
+  try {
+    var r = await fetch("/api/novelties?employee_id=" + empId);
+    var d = await r.json();
+    novelties = d.data || [];
+  } catch(e) { novelties = []; }
+}
+
+function getLastType(empId) {
+  var today = new Date().toISOString().split("T")[0];
+  var regs = attendance.filter(function(a){ return a.employee_id === empId && a.fecha === today; });
+  if (regs.length === 0) return null;
+  return regs[regs.length - 1].tipo;
+}
+
+function render(html) { document.getElementById("app").innerHTML = html; }
+
+// ═══ STEP 1: Select employee ═══
+function renderStep1() {
+  var list = employees.map(function(e, i) {
+    var last = attendance.find(function(a){ return a.employee_id === e.id; });
+    var statusHtml = "";
+    return '<div class="emp-item" onclick="selectEmployee(\'' + e.id + '\')">'
+      + e.nombre
+      + '</div>';
+  }).join("");
+
+  render(
+    '<div class="card">'
+    + '<div class="icon-big">👋</div>'
+    + '<h2 style="text-align:center">Control de asistencia</h2>'
+    + '<div class="sub" style="text-align:center">Selecciona tu nombre</div>'
+    + (employees.length > 0
+      ? '<div class="emp-list">' + list + '</div>'
+      : '<div class="empty">No hay empleados registrados para este centro.</div>')
+    + '</div>'
+  );
+}
+
+function selectEmployee(id) {
+  currentEmp = employees.find(function(e){ return e.id === id; });
+  if (!currentEmp) return;
+  renderStep2();
+}
+
+// ═══ STEP 2: PIN ═══
+var pinInput = "";
+var pinError = false;
+
+function renderStep2() {
+  var dots = "";
+  for (var i = 0; i < 4; i++) {
+    dots += '<div class="pin-dot ' + (i < pinInput.length ? "active" : "") + '"></div>';
+  }
+
+  var keys = [1,2,3,4,5,6,7,8,9,"",0,"⌫"].map(function(k) {
+    if (k === "") return '<div></div>';
+    if (k === "⌫") return '<div class="pin-btn del" onclick="pinKey(\'del\')">⌫</div>';
+    return '<div class="pin-btn" onclick="pinKey(\'' + k + '\')">' + k + '</div>';
+  }).join("");
+
+  render(
+    '<div class="card" style="text-align:center">'
+    + '<div class="icon-big">🔢</div>'
+    + '<h2>Hola, ' + currentEmp.nombre.split(" ")[0] + '</h2>'
+    + '<div class="sub">Introduce tu PIN de 4 dígitos</div>'
+    + '<div class="pin-dots">' + dots + '</div>'
+    + (pinError ? '<div class="pin-err">PIN incorrecto. Inténtalo de nuevo.</div>' : '')
+    + '<div class="pin-grid">' + keys + '</div>'
+    + '<button class="btn btn-ghost" onclick="pinInput=\'\';pinError=false;renderStep1()">← Volver</button>'
+    + '</div>'
+  );
+}
+
+function pinKey(k) {
+  if (k === "del") { pinInput = pinInput.slice(0, -1); renderStep2(); return; }
+  pinInput += k;
+  if (pinInput.length === 4) {
+    if (pinInput === currentEmp.pin) {
+      pinInput = ""; pinError = false;
+      loadAttendance(currentEmp.id).then(function() {
+        loadNovelties(currentEmp.id).then(function() { renderHome(); });
+      });
+    } else {
+      pinError = true; pinInput = "";
+      renderStep2();
+    }
+  } else {
+    renderStep2();
+  }
+}
+
+// ═══ HOME: Dashboard personal ═══
+function renderHome() {
+  var last = getLastType(currentEmp.id);
+  var isIn = last === "entrada";
+  var todayRegs = attendance.filter(function(a){ return a.employee_id === currentEmp.id; });
+  var entrada = todayRegs.find(function(a){ return a.tipo === "entrada"; });
+  var salida = todayRegs.find(function(a){ return a.tipo === "salida"; });
+
+  var statusText = !entrada ? "Sin fichar hoy" : isIn ? "🟢 En " + CC.replace(/-/g," ") : "Jornada finalizada";
+  var statusColor = !entrada ? "#D97706" : isIn ? "#059669" : "#6B7280";
+
+  var entradaTime = entrada ? new Date(entrada.timestamp).toLocaleTimeString("es-ES", {hour:"2-digit",minute:"2-digit"}) : "–";
+  var salidaTime = salida ? new Date(salida.timestamp).toLocaleTimeString("es-ES", {hour:"2-digit",minute:"2-digit"}) : "–";
+
+  var pendientes = novelties.filter(function(n){ return n.estado === "pendiente"; }).length;
+  var novBadge = pendientes > 0 ? ' <span class="badge badge-amber">' + pendientes + ' pendiente' + (pendientes>1?"s":"") + '</span>' : '';
+
+  render(
+    '<div class="card">'
+    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
+    + '<div><div style="font-size:16px;font-weight:700">' + currentEmp.nombre + '</div>'
+    + '<div style="font-size:11px;color:#888">' + (currentEmp.cargo || CC.replace(/-/g," ")) + '</div></div>'
+    + '<div style="font-size:12px;font-weight:600;color:' + statusColor + '">' + statusText + '</div>'
+    + '</div>'
+    + '<div style="display:flex;gap:8px;margin-bottom:16px">'
+    + '<div style="flex:1;background:#F5F5F5;border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:#888;margin-bottom:2px">ENTRADA</div>'
+    + '<div style="font-size:16px;font-weight:700;color:#059669">' + entradaTime + '</div></div>'
+    + '<div style="flex:1;background:#F5F5F5;border-radius:8px;padding:10px;text-align:center">'
+    + '<div style="font-size:10px;color:#888;margin-bottom:2px">SALIDA</div>'
+    + '<div style="font-size:16px;font-weight:700;color:#DC2626">' + salidaTime + '</div></div>'
+    + '</div>'
+    + '<div class="actions">'
+    + (!entrada
+      ? '<div class="action-btn" onclick="startFichaje(\'entrada\')"><span class="action-icon">🟢</span><div><div style="font-weight:700">Registrar entrada</div><div style="font-size:11px;color:#888">Se capturará tu ubicación GPS</div></div></div>'
+      : isIn
+        ? '<div class="action-btn" onclick="startFichaje(\'salida\')"><span class="action-icon">🔴</span><div><div style="font-weight:700">Registrar salida</div><div style="font-size:11px;color:#888">Marca tu hora de salida</div></div></div>'
+        : '')
+    + '<div class="action-btn" onclick="renderNoveltyForm()"><span class="action-icon">📝</span><div><div style="font-weight:700">Reportar novedad</div><div style="font-size:11px;color:#888">Permiso, ausencia, horas extra' + novBadge + '</div></div></div>'
+    + '<div class="action-btn" onclick="renderMyNovelties()"><span class="action-icon">📊</span><div><div style="font-weight:700">Mis novedades</div><div style="font-size:11px;color:#888">Ver estado de solicitudes</div></div></div>'
+    + '</div>'
+    + '</div>'
+    + '<button class="btn btn-ghost" onclick="currentEmp=null;renderStep1()">Cambiar persona</button>'
+  );
+}
+
+// ═══ FICHAJE: GPS capture + register ═══
+var gpsCoords = null;
+var gpsErr = null;
+
+function startFichaje(tipo) {
+  gpsCoords = null; gpsErr = null;
+  renderGPS(tipo);
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(pos) {
+        gpsCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude, precision: Math.round(pos.coords.accuracy) };
+        renderGPS(tipo);
+      },
+      function(err) { gpsErr = "No se pudo obtener GPS: " + err.message; renderGPS(tipo); },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  } else { gpsErr = "GPS no disponible"; renderGPS(tipo); }
+}
+
+function renderGPS(tipo) {
+  var gpsHtml = "";
+  if (gpsCoords) {
+    gpsHtml = '<div class="gps-box gps-ok"><strong>✅ Ubicación capturada</strong><br/>📍 ' + gpsCoords.lat.toFixed(5) + ', ' + gpsCoords.lng.toFixed(5) + ' (±' + gpsCoords.precision + 'm)</div>'
+      + '<button class="btn ' + (tipo==="entrada"?"btn-green":"btn-red") + '" onclick="doFichaje(\'' + tipo + '\')">'
+      + (tipo==="entrada" ? "✓ Confirmar ENTRADA" : "✓ Confirmar SALIDA") + '</button>';
+  } else if (gpsErr) {
+    gpsHtml = '<div class="gps-box gps-err">' + gpsErr + '</div>'
+      + '<button class="btn btn-primary" onclick="doFichaje(\'' + tipo + '\')">Registrar sin GPS</button>';
+  } else {
+    gpsHtml = '<div class="gps-box gps-loading"><div class="spinner"></div>Obteniendo ubicación...</div>';
+  }
+
+  render(
+    '<div class="card" style="text-align:center">'
+    + '<div class="icon-big">' + (tipo==="entrada"?"🟢":"🔴") + '</div>'
+    + '<h2>Registrar ' + tipo + '</h2>'
+    + '<div class="sub">' + currentEmp.nombre + ' · ' + new Date().toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}) + '</div>'
+    + gpsHtml
+    + '<button class="btn btn-ghost" onclick="renderHome()">← Cancelar</button>'
+    + '</div>'
+  );
+}
+
+async function doFichaje(tipo) {
+  render('<div class="card" style="text-align:center;padding:40px"><div class="spinner"></div><div style="font-size:13px;color:#888">Registrando...</div></div>');
+  try {
+    await fetch("/api/attendance", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        employee_id: currentEmp.id,
+        employee_nombre: currentEmp.nombre,
+        tipo: tipo,
+        lat: gpsCoords ? gpsCoords.lat : null,
+        lng: gpsCoords ? gpsCoords.lng : null,
+        precision: gpsCoords ? gpsCoords.precision : null,
+        centro_costo: OT ? null : CC,
+        ot_id: OT || null,
+        gps_error: gpsErr || null,
+      })
+    });
+  } catch(e) { console.error(e); }
+
+  await loadAttendance(currentEmp.id);
+
+  render(
+    '<div class="card success-screen">'
+    + '<div class="icon">✅</div>'
+    + '<h2>' + (tipo==="entrada"?"Entrada":"Salida") + ' registrada</h2>'
+    + '<div class="detail">' + currentEmp.nombre + ' · ' + new Date().toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}) + '</div>'
+    + (gpsCoords ? '<div style="font-size:11px;color:#888;margin-bottom:16px">📍 ' + gpsCoords.lat.toFixed(4) + ', ' + gpsCoords.lng.toFixed(4) + ' (±' + gpsCoords.precision + 'm)</div>' : '')
+    + '<button class="btn btn-primary" onclick="renderHome()">Volver</button>'
+    + '</div>'
+  );
+}
+
+// ═══ NOVEDADES: Form ═══
+function renderNoveltyForm() {
+  render(
+    '<div class="card">'
+    + '<h2>📝 Nueva novedad</h2>'
+    + '<div class="sub">Reportar permiso, ausencia u otra novedad</div>'
+    + '<div class="form-group"><label>Tipo</label>'
+    + '<select id="novTipo"><option value="permiso">Permiso</option><option value="vacaciones">Vacaciones</option><option value="baja_medica">Baja médica / Incapacidad</option><option value="horas_extra">Horas extra</option><option value="ausencia">Ausencia</option><option value="otro">Otro</option></select></div>'
+    + '<div class="form-group"><label>Fecha inicio</label><input type="date" id="novFechaIni" value="' + new Date().toISOString().split("T")[0] + '"/></div>'
+    + '<div class="form-group"><label>Fecha fin (opcional)</label><input type="date" id="novFechaFin"/></div>'
+    + '<div class="form-group"><label>Motivo / Descripción</label><textarea id="novMotivo" placeholder="Describe la novedad..."></textarea></div>'
+    + '<button class="btn btn-primary" onclick="submitNovelty()">Enviar novedad →</button>'
+    + '<button class="btn btn-ghost" onclick="renderHome()">← Cancelar</button>'
+    + '</div>'
+  );
+}
+
+async function submitNovelty() {
+  var tipo = document.getElementById("novTipo").value;
+  var fechaIni = document.getElementById("novFechaIni").value;
+  var fechaFin = document.getElementById("novFechaFin").value;
+  var motivo = document.getElementById("novMotivo").value;
+
+  render('<div class="card" style="text-align:center;padding:40px"><div class="spinner"></div><div style="font-size:13px;color:#888">Enviando...</div></div>');
+
+  try {
+    await fetch("/api/novelties", {
+      method: "POST", headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        employee_id: currentEmp.id,
+        employee_nombre: currentEmp.nombre,
+        tipo: tipo,
+        fecha_inicio: fechaIni,
+        fecha_fin: fechaFin || null,
+        motivo: motivo,
+        centro_costo: OT ? null : CC,
+        ot_id: OT || null,
+      })
+    });
+  } catch(e) { console.error(e); }
+
+  await loadNovelties(currentEmp.id);
+
+  render(
+    '<div class="card success-screen">'
+    + '<div class="icon">📝</div>'
+    + '<h2 style="color:#1D4ED8">Novedad enviada</h2>'
+    + '<div class="detail">Tu solicitud está pendiente de aprobación.</div>'
+    + '<button class="btn btn-primary" onclick="renderHome()">Volver</button>'
+    + '</div>'
+  );
+}
+
+// ═══ NOVEDADES: My list ═══
+function renderMyNovelties() {
+  var tipos = {vacaciones:"🏖️ Vacaciones",permiso:"🙋 Permiso",baja_medica:"🏥 Baja médica",horas_extra:"⏰ Horas extra",ausencia:"❌ Ausencia",otro:"📌 Otro"};
+  var estados = {pendiente:'<span class="badge badge-amber">⏳ Pendiente</span>',aprobada:'<span class="badge badge-green">✅ Aprobada</span>',rechazada:'<span class="badge badge-red">❌ Rechazada</span>'};
+
+  var list = novelties.map(function(n) {
+    return '<div class="history-item">'
+      + '<div><div style="font-weight:600;font-size:13px">' + (tipos[n.tipo]||n.tipo) + '</div>'
+      + '<div style="color:#888">' + n.fecha_inicio + (n.fecha_fin ? " → " + n.fecha_fin : "") + '</div>'
+      + (n.motivo ? '<div style="color:#888;font-size:11px;margin-top:2px">' + n.motivo + '</div>' : '')
+      + '</div>'
+      + '<div>' + (estados[n.estado]||n.estado) + '</div>'
+      + '</div>';
+  }).join("");
+
+  render(
+    '<div class="card">'
+    + '<h2>📊 Mis novedades</h2>'
+    + '<div class="sub">' + novelties.length + ' novedad' + (novelties.length!==1?"es":"") + '</div>'
+    + (list || '<div class="empty">No tienes novedades registradas.</div>')
+    + '<button class="btn btn-ghost" onclick="renderHome()">← Volver</button>'
+    + '</div>'
+  );
+}
+
+// ═══ INIT ═══
+loadEmployees();
+</script>
+</body>
+</html>
