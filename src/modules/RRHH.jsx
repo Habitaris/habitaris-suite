@@ -3063,6 +3063,8 @@ function TabContratacion() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [selProceso, setSelProceso] = useState(null);
+  const [lanzarId, setLanzarId] = useState(null);
+  const [lanzarForm, setLanzarForm] = useState({abogado_nombre:"",abogado_email:"",contrato_plantilla:"tpl_contrato_laboral",descriptor_codigo:""});
   const [form, setForm] = useState({
     cargo:"",area:"",nivel:"Operativo",salario_neto:0,salario_base:0,
     auxilio_transporte:0,bono_no_salarial:0,jornada_horas:48,
@@ -3116,6 +3118,34 @@ function TabContratacion() {
   const fmtMoney = (n) => n ? new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n) : "$0";
   const fmtDate = (d) => d ? new Date(d).toLocaleDateString("es-CO") : "-";
 
+
+  const lanzarContratacion = async () => {
+    if(!lanzarForm.abogado_nombre||!lanzarForm.abogado_email){alert("Nombre y email del abogado son obligatorios.");return;}
+    const proc = procesos.find(p=>p.id===lanzarId);
+    if(!proc) return;
+    try {
+      // 1. Update hiring process
+      await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({id:proc.id,estado:"firma_pendiente",abogado_nombre:lanzarForm.abogado_nombre,abogado_email:lanzarForm.abogado_email,contrato_plantilla:lanzarForm.contrato_plantilla,descriptor_codigo:lanzarForm.descriptor_codigo||proc.descriptor_codigo,fecha_contrato:new Date().toISOString()})});
+      // 2. Create signing links
+      const signers = [
+        {name:lanzarForm.abogado_nombre,email:lanzarForm.abogado_email,role:"Revisor legal",id_number:"",order:1},
+        {name:proc.candidato_nombre,email:proc.candidato_email,role:"Trabajador",id_number:proc.candidato_cc,order:2},
+        {name:"Ana María Díaz Buitrago",email:"amdiaz@habitaris.co",role:"Empleador — Rep. Legal",id_number:"1.109.293.384",order:3}
+      ];
+      const r = await fetch("/api/firma",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({action:"create_pending",doc_code:"HAB-CTR-"+new Date().getFullYear()+"-"+String(procesos.length).padStart(3,"0"),doc_title:"Contrato Individual de Trabajo — "+proc.candidato_nombre,doc_hash:"pending",signers:signers})});
+      const d = await r.json();
+      if(d.ok){
+        let msg = "Links de firma generados:\n\n";
+        d.data.forEach(s => { msg += s.signer + ":\n" + s.link + "\n\n"; });
+        alert(msg);
+        setLanzarId(null);
+        loadProcesos();
+      }
+    } catch(e) { alert("Error: "+e.message); }
+  };
+
   return (
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
@@ -3163,6 +3193,28 @@ function TabContratacion() {
           </div>
         </Card>
       )}
+
+      {lanzarId && (() => {
+        const proc = procesos.find(p=>p.id===lanzarId);
+        if(!proc) return null;
+        return (
+          <Card style={{marginBottom:16,border:"1px solid #059669"}}>
+            <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:4}}>📝 Lanzar a contratación</div>
+            <div style={{fontSize:12,color:C.inkLight,marginBottom:12}}>{proc.cargo} — {proc.candidato_nombre}</div>
+            <Row gap={14} wrap>
+              <Col><Inp label="Abogado/a revisor(a) *" value={lanzarForm.abogado_nombre} onChange={e=>setLanzarForm({...lanzarForm,abogado_nombre:e.target.value})}/></Col>
+              <Col><Inp label="Email abogado/a *" value={lanzarForm.abogado_email} onChange={e=>setLanzarForm({...lanzarForm,abogado_email:e.target.value})}/></Col>
+            </Row>
+            <Row gap={14} wrap>
+              <Col><Inp label="Descriptor de cargo" value={lanzarForm.descriptor_codigo||proc.descriptor_codigo||""} onChange={e=>setLanzarForm({...lanzarForm,descriptor_codigo:e.target.value})}/></Col>
+            </Row>
+            <div style={{display:"flex",gap:8,marginTop:12}}>
+              <Btn icon={Check} onClick={lanzarContratacion}>Generar contrato y enviar a firma</Btn>
+              <Btn variant="secondary" onClick={()=>setLanzarId(null)}>Cancelar</Btn>
+            </div>
+          </Card>
+        );
+      })()}
 
       {loading ? (
         <div style={{textAlign:"center",padding:40,color:C.inkLight}}>Cargando...</div>
@@ -3233,14 +3285,14 @@ function TabContratacion() {
                           <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
                             {p.candidato_cedula_url && (() => {
                               try{const ced=JSON.parse(p.candidato_cedula_url);
-                              return <>{ced.anverso && <img src={ced.anverso} onClick={()=>window.open(ced.anverso)} style={{width:80,height:50,objectFit:"cover",borderRadius:4,border:"1px solid "+C.border,cursor:"pointer"}} title="Cédula anverso"/>}
-                              {ced.reverso && <img src={ced.reverso} onClick={()=>window.open(ced.reverso)} style={{width:80,height:50,objectFit:"cover",borderRadius:4,border:"1px solid "+C.border,cursor:"pointer"}} title="Cédula reverso"/>}</>;}catch(e){return null;}
+                              return <>{ced.anverso && <img src={ced.anverso} onClick={()=>window.open(ced.anverso)} style={{width:80,height:50,objectFit:"cover",borderRadius:4,border:"1px solid "+C.border,cursor:"pointer"}} title="Cédula anverso"/><div style={{fontSize:9,color:C.inkLight,textAlign:"center"}}>Cédula anverso</div>}
+                              {ced.reverso && <img src={ced.reverso} onClick={()=>window.open(ced.reverso)} style={{width:80,height:50,objectFit:"cover",borderRadius:4,border:"1px solid "+C.border,cursor:"pointer"}} title="Cédula reverso"/><div style={{fontSize:9,color:C.inkLight,textAlign:"center"}}>Cédula reverso</div>}</>;}catch(e){return null;}
                             })()}
                             {p.candidato_documentos_extra && (() => {
                               try{const docs=JSON.parse(p.candidato_documentos_extra);
-                              return <>{docs.cert_eps && <span onClick={()=>window.open(docs.cert_eps)} style={{padding:"4px 8px",background:"#EFF6FF",borderRadius:4,fontSize:10,cursor:"pointer",color:"#1D4ED8"}}>📄 Cert. EPS</span>}
-                              {docs.cert_pension && <span onClick={()=>window.open(docs.cert_pension)} style={{padding:"4px 8px",background:"#EFF6FF",borderRadius:4,fontSize:10,cursor:"pointer",color:"#1D4ED8"}}>📄 Cert. Pensión</span>}
-                              {docs.cert_banco && <span onClick={()=>window.open(docs.cert_banco)} style={{padding:"4px 8px",background:"#EFF6FF",borderRadius:4,fontSize:10,cursor:"pointer",color:"#1D4ED8"}}>📄 Cert. Bancario</span>}</>;}catch(e){return null;}
+                              return <>{docs.cert_eps && <span onClick={()=>window.open(docs.cert_eps)} style={{padding:"4px 8px",background:"#EFF6FF",borderRadius:4,fontSize:10,cursor:"pointer",color:"#1D4ED8"}}>📄 Certificado afiliación EPS</span>}
+                              {docs.cert_pension && <span onClick={()=>window.open(docs.cert_pension)} style={{padding:"4px 8px",background:"#EFF6FF",borderRadius:4,fontSize:10,cursor:"pointer",color:"#1D4ED8"}}>📄 Certificado afiliación pensión</span>}
+                              {docs.cert_banco && <span onClick={()=>window.open(docs.cert_banco)} style={{padding:"4px 8px",background:"#EFF6FF",borderRadius:4,fontSize:10,cursor:"pointer",color:"#1D4ED8"}}>📄 Certificación bancaria</span>}</>;}catch(e){return null;}
                             })()}
                           </div>
                         </div>
@@ -3257,7 +3309,7 @@ function TabContratacion() {
                         <button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("Complete sus datos para la contratación en Habitaris:\n"+linkDatos),"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📱 Recordar por WhatsApp</button>
                       </>}
                       {(p.estado==="datos_recibidos") && <>
-                        <button onClick={()=>alert("Próximamente: seleccionar plantilla de contrato y descriptor de cargo para generar el contrato y enviarlo a firma.")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📝 Lanzar a contratación</button>
+                        <button onClick={()=>setLanzarId(p.id)} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📝 Lanzar a contratación</button>
                       </>}
                       {(p.estado==="firma_pendiente") && <>
                         <span style={{padding:"6px 12px",fontSize:11,fontWeight:600,background:"#FEF3C7",borderRadius:6,color:"#D97706"}}>⏳ Esperando firmas</span>
