@@ -3064,6 +3064,7 @@ function TabContratacion() {
   const [showForm, setShowForm] = useState(false);
   const [selProceso, setSelProceso] = useState(null);
   const [lanzarId, setLanzarId] = useState(null);
+  const [sendModal, setSendModal] = useState(null);
   const [lanzarForm, setLanzarForm] = useState({abogado_nombre:"",abogado_email:"",contrato_plantilla:"tpl_contrato_laboral",descriptor_codigo:"",firmantes:[{nombre:"",email:"",rol:"Revisor legal",orden:1},{nombre:"",email:"",rol:"Trabajador",orden:2},{nombre:"Ana María Díaz Buitrago",email:"amdiaz@habitaris.co",rol:"Empleador — Rep. Legal",orden:3}]});
   const [form, setForm] = useState({
     cargo:"",area:"",nivel:"Operativo",salario_neto:0,salario_base:0,
@@ -3269,6 +3270,32 @@ function TabContratacion() {
         );
       })()}
 
+      {sendModal && (
+        <div style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setSendModal(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{maxWidth:420,width:"100%",background:"#fff",borderRadius:12,padding:24,boxShadow:"0 8px 30px rgba(0,0,0,.2)"}}>
+            <div style={{textAlign:"center",marginBottom:16}}>
+              <div style={{fontSize:32,marginBottom:8}}>{"\ud83d\udce8"}</div>
+              <div style={{fontSize:16,fontWeight:700,color:C.ink}}>Enviar {sendModal.titulo}</div>
+              <div style={{fontSize:12,color:C.inkLight,marginTop:4}}>{sendModal.nombre || "Candidato"}</div>
+            </div>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              <button onClick={()=>{navigator.clipboard.writeText(sendModal.link);setSendModal(null);alert("Link copiado al portapapeles");}} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",border:"1px solid "+C.border,borderRadius:8,background:C.card,cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:600,color:C.ink,textAlign:"left"}}>
+                <span style={{fontSize:20}}>{"\ud83d\udccb"}</span><div><div>Copiar link</div><div style={{fontSize:10,fontWeight:400,color:C.inkLight}}>Para pegar donde quiera</div></div>
+              </button>
+              <button onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent(sendModal.titulo+" - Habitaris\n"+sendModal.link));setSendModal(null);}} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",border:"1px solid #059669",borderRadius:8,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:600,color:"#059669",textAlign:"left"}}>
+                <span style={{fontSize:20}}>{"\ud83d\udcf1"}</span><div><div>Enviar por WhatsApp</div><div style={{fontSize:10,fontWeight:400,color:"#059669"}}>Se abre WhatsApp con el link</div></div>
+              </button>
+              {sendModal.email && <button onClick={()=>{window.open("mailto:"+sendModal.email+"?subject="+encodeURIComponent(sendModal.titulo+" - Habitaris")+"&body="+encodeURIComponent("Hola,\n\nPor favor complete el siguiente proceso:\n"+sendModal.link+"\n\nGracias,\nHabitaris"));setSendModal(null);}} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",border:"1px solid #1D4ED8",borderRadius:8,background:"#EFF6FF",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:600,color:"#1D4ED8",textAlign:"left"}}>
+                <span style={{fontSize:20}}>{"\u2709\ufe0f"}</span><div><div>Enviar por email</div><div style={{fontSize:10,fontWeight:400,color:"#1D4ED8"}}>{sendModal.email}</div></div>
+              </button>}
+            </div>
+            <div style={{textAlign:"center",marginTop:12}}>
+              <button onClick={()=>setSendModal(null)} style={{background:"none",border:"none",color:C.inkLight,fontSize:12,cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>Cancelar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div style={{textAlign:"center",padding:40,color:C.inkLight}}>Cargando...</div>
       ) : procesos.length === 0 ? (
@@ -3362,7 +3389,7 @@ function TabContratacion() {
                         <button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("Complete sus datos para la contratación en Habitaris:\n"+linkDatos),"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📱 Recordar por WhatsApp</button>
                       </>}
                       {(p.estado==="datos_recibidos") && <>
-                        <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"psicotecnico"})});var psiLink="https://suite.habitaris.co/psicotecnico?hiring_id="+p.id;var action=prompt("Link del psicotecnico:\n"+psiLink+"\n\nEscriba: 1=Copiar link, 2=WhatsApp, 3=Email");if(action==="1"){navigator.clipboard.writeText(psiLink);alert("Link copiado");}else if(action==="2"){window.open("https://wa.me/?text="+encodeURIComponent("Evaluacion psicotecnica Habitaris\n"+psiLink));}else if(action==="3"&&p.candidato_email){window.open("mailto:"+p.candidato_email+"?subject=Evaluacion psicotecnica Habitaris&body="+encodeURIComponent("Complete su evaluacion psicotecnica:\n"+psiLink));}loadProcesos;loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #5B3A8C",borderRadius:6,background:"#EDE8F4",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#5B3A8C"}}>🧠 Enviar a psicotécnico</button>
+                        <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"psicotecnico"})});var psiLink="https://suite.habitaris.co/psicotecnico?hiring_id="+p.id;setSendModal({link:psiLink,email:p.candidato_email,titulo:"Evaluaci\u00f3n psicot\u00e9cnica",nombre:p.candidato_nombre});loadProcesos;loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #5B3A8C",borderRadius:6,background:"#EDE8F4",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#5B3A8C"}}>🧠 Enviar a psicotécnico</button>
                         <button onClick={()=>setLanzarId(p.id)} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>⏩ Saltar a contratación</button>
                       </>}
                       {(p.estado==="psicotecnico") && <>
