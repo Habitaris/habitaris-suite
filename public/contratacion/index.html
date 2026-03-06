@@ -44,6 +44,9 @@ h3{font-size:14px;font-weight:700;margin:20px 0 12px;padding:8px 0;border-bottom
 .progress div.done{background:#059669}
 .progress div.active{background:#111}
 .section-badge{background:#111;color:#fff;padding:4px 12px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:1px;display:inline-block;margin-bottom:12px}
+.pad-area{border:2px dashed #DDD;border-radius:12px;background:#FAFAFA;position:relative;margin-bottom:14px;touch-action:none}
+.pad-area canvas{display:block;border-radius:10px;cursor:crosshair}
+.pad-hint{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#CCC;font-size:14px;pointer-events:none}
 .legal{font-size:9px;color:#999;line-height:1.5;margin-top:16px;padding-top:12px;border-top:1px solid #F3F4F6}
 </style>
 </head>
@@ -54,7 +57,7 @@ h3{font-size:14px;font-weight:700;margin:20px 0 12px;padding:8px 0;border-bottom
 (function(){
   var P=new URLSearchParams(window.location.search);
   var TOKEN=P.get("token")||"";
-  var data=null,photoData=null,cedulaFront=null,cedulaBack=null;
+  var data=null,photoData=null,cedulaFront=null,cedulaBack=null,sigData=null;
   var certEps=null,certPension=null,certBanco=null;
   var beneficiarios=[];
   window.$=function(id){return document.getElementById(id);};
@@ -79,8 +82,8 @@ h3{font-size:14px;font-weight:700;margin:20px 0 12px;padding:8px 0;border-bottom
 
   // ═══ STEP 1: Datos personales ═══
   function showStep1(){
-    R(prog(1,4)+'<div class="card">'
-      +'<div class="section-badge">PASO 1 DE 4</div>'
+    R(prog(1,5)+'<div class="card">'
+      +'<div class="section-badge">PASO 1 DE 5</div>'
       +'<h2>Datos personales</h2>'
       +'<div class="sub">Cargo: <strong>'+data.cargo+'</strong></div>'
       +'<h3>\ud83d\udcf7 Foto para expediente</h3>'
@@ -128,8 +131,8 @@ h3{font-size:14px;font-weight:700;margin:20px 0 12px;padding:8px 0;border-bottom
   // ═══ STEP 2: Contacto emergencia ═══
   function showStep2(){
     var ce=data._ce||{};
-    R(prog(2,4)+'<div class="card">'
-      +'<div class="section-badge">PASO 2 DE 4</div>'
+    R(prog(2,5)+'<div class="card">'
+      +'<div class="section-badge">PASO 2 DE 5</div>'
       +'<h2>Contacto de emergencia</h2>'
       +'<div class="sub">Persona a contactar en caso de emergencia</div>'
       +'<div class="fg"><label>Nombre completo <span class="req">*</span></label><input id="ceNom" value="'+(ce.nombre||"")+'"/></div>'
@@ -148,8 +151,8 @@ h3{font-size:14px;font-weight:700;margin:20px 0 12px;padding:8px 0;border-bottom
 
   // ═══ STEP 3: Seguridad social + banco + certificados ═══
   function showStep3(){
-    R(prog(3,4)+'<div class="card">'
-      +'<div class="section-badge">PASO 3 DE 4</div>'
+    R(prog(3,5)+'<div class="card">'
+      +'<div class="section-badge">PASO 3 DE 5</div>'
       +'<h2>Seguridad social y datos bancarios</h2>'
       +'<div class="sub">Para afiliaciones y pago de n\u00f3mina</div>'
 
@@ -208,8 +211,8 @@ h3{font-size:14px;font-weight:700;margin:20px 0 12px;padding:8px 0;border-bottom
         +'</div>';
     }).join("");
 
-    R(prog(4,4)+'<div class="card">'
-      +'<div class="section-badge">PASO 4 DE 4</div>'
+    R(prog(4,5)+'<div class="card">'
+      +'<div class="section-badge">PASO 4 DE 5</div>'
       +'<h2>Beneficiarios y documentos</h2>'
       +'<div class="sub">Personas a cargo y documentos adicionales (opcional)</div>'
 
@@ -231,7 +234,7 @@ h3{font-size:14px;font-weight:700;margin:20px 0 12px;padding:8px 0;border-bottom
       +'<div class="fg"><label>Certificados, cartas, etc. (opcional)</label><input type="file" id="docsExtra" multiple accept="image/*,.pdf"/><div class="hint">Puede subir varios archivos</div></div>'
 
       +'<div class="legal" style="margin-bottom:16px">Al enviar este formulario, declaro bajo la gravedad de juramento que la informaci\u00f3n suministrada es veraz y completa. Autorizo a HABITARIS SAS para el tratamiento de mis datos personales conforme a la Ley 1581 de 2012 y su decreto reglamentario 1377 de 2013.</div>'
-      +'<button class="btn bg" onclick="APP.submit()">Enviar datos \u2192</button>'
+      +'<button class="btn bk" onclick="APP.showStep5()">Siguiente \u2192</button>'
       +'<button class="ghost" onclick="APP.showStep3()">\u2190 Anterior</button></div>');
   }
 
@@ -256,7 +259,9 @@ h3{font-size:14px;font-weight:700;margin:20px 0 12px;padding:8px 0;border-bottom
   function rmBen(i){beneficiarios.splice(i,1);showStep4();}
 
   async function submit(){
-    R('<div class="card" style="text-align:center;padding:40px"><div class="spin"></div><div style="font-size:13px;color:#888">Enviando datos...</div></div>');
+    if(window._sigDrawn && !window._sigDrawn()){alert("Debe firmar antes de enviar.");return;}
+    if(window._sigCanvas) sigData=window._sigCanvas.toDataURL("image/png");
+    R('<div class="card" style="text-align:center;padding:40px"><div class="spin"></div><div style="font-size:13px;color:#888">Enviando datos y firma...</div></div>');
     try{
       var update={
         id:data.id,estado:"datos_recibidos",
@@ -274,8 +279,8 @@ h3{font-size:14px;font-weight:700;margin:20px 0 12px;padding:8px 0;border-bottom
         candidato_tipo_cuenta:data.candidato_tipo_cuenta,
         candidato_numero_cuenta:data.candidato_numero_cuenta,
         candidato_beneficiarios:JSON.stringify(beneficiarios),
-        candidato_documentos_extra:JSON.stringify({cert_eps:certEps,cert_pension:certPension,cert_banco:certBanco}),
         fecha_datos:new Date().toISOString(),
+        candidato_documentos_extra:JSON.stringify({cert_eps:certEps,cert_pension:certPension,cert_banco:certBanco,firma_aceptacion:sigData}),
       };
       await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(update)});
       R('<div class="card" style="text-align:center">'
@@ -288,7 +293,51 @@ h3{font-size:14px;font-weight:700;margin:20px 0 12px;padding:8px 0;border-bottom
     }catch(e){R('<div class="card"><h2>Error</h2><div class="sub">'+e.message+'</div><button class="btn bk" onclick="APP.showStep4()">Reintentar</button></div>');}
   }
 
-  window.APP={loadPhoto:loadPhoto,loadCedF:loadCedF,loadCedB:loadCedB,loadCertEps:loadCertEps,loadCertPension:loadCertPension,loadCertBanco:loadCertBanco,next1:next1,showStep1:showStep1,next2:next2,showStep2:showStep2,next3:next3,showStep3:showStep3,showStep4:showStep4,addBen:addBen,rmBen:rmBen,submit:submit};
+
+  // ═══ STEP 5: Firma de aceptación ═══
+  function showStep5(){
+    sigData=null;
+    R(prog(5,5)+'<div class="card">'
+      +'<div class="section-badge">PASO 5 DE 5</div>'
+      +'<h2>Firma de aceptaci\u00f3n</h2>'
+      +'<div class="sub">Confirme la veracidad de los datos y acepte la propuesta</div>'
+      +'<div style="background:#F8F7F5;border-radius:8px;padding:14px;margin-bottom:16px;font-size:12px;color:#555;line-height:1.8">'
+      +'Yo, <strong>'+data.candidato_nombre+'</strong>, identificado/a con <strong>'+data._tipoDoc+' '+data.candidato_cc+'</strong>, declaro bajo la gravedad de juramento que:<br/><br/>'
+      +'\u2022 Toda la informaci\u00f3n suministrada en este formulario es veraz y completa.<br/>'
+      +'\u2022 Los documentos adjuntos son aut\u00e9nticos y corresponden a mi persona.<br/>'
+      +'\u2022 Acepto la propuesta de empleo c\u00f3digo <strong>'+data.codigo+'</strong> para el cargo de <strong>'+data.cargo+'</strong>.<br/>'
+      +'\u2022 Autorizo a HABITARIS SAS para el tratamiento de mis datos personales conforme a la Ley 1581 de 2012.<br/>'
+      +'\u2022 Entiendo que cualquier falsedad en la informaci\u00f3n podr\u00e1 dar lugar a la terminaci\u00f3n del contrato.</div>'
+      +'<div style="font-size:12px;font-weight:600;color:#111;margin-bottom:8px">\u270d\ufe0f Firme a continuaci\u00f3n:</div>'
+      +'<div class="pad-area"><canvas id="sigCanvas" width="500" height="180"></canvas><div class="pad-hint" id="padHint">Firme aqu\u00ed con el dedo o mouse</div></div>'
+      +'<button class="btn bg" id="signBtn" disabled onclick="APP.submit()">Firmar y enviar datos \u2192</button>'
+      +'<button class="ghost" onclick="APP.clearPad()">Borrar firma</button>'
+      +'<button class="ghost" onclick="APP.showStep4()">\u2190 Anterior</button>'
+      +'<div class="legal">Al firmar, se registrar\u00e1 su direcci\u00f3n IP, dispositivo y fecha/hora UTC como evidencia de aceptaci\u00f3n. Esta firma electr\u00f3nica tiene validez legal conforme a la Ley 527/1999 (Colombia) y al Reglamento (UE) 910/2014 (eIDAS).</div>'
+      +'</div>');
+    initCanvas();
+  }
+
+  function initCanvas(){
+    var cv=document.getElementById("sigCanvas");
+    var ct=cv.getContext("2d");
+    ct.strokeStyle="#111";ct.lineWidth=2.5;ct.lineCap="round";ct.lineJoin="round";
+    var drawing=false,hasDrawn=false;
+    function gp(e){var r=cv.getBoundingClientRect();var x,y;if(e.touches){x=e.touches[0].clientX-r.left;y=e.touches[0].clientY-r.top;}else{x=e.clientX-r.left;y=e.clientY-r.top;}return{x:x*(cv.width/r.width),y:y*(cv.height/r.height)};}
+    function s(e){e.preventDefault();drawing=true;var p=gp(e);ct.beginPath();ct.moveTo(p.x,p.y);}
+    function m(e){e.preventDefault();if(!drawing)return;var p=gp(e);ct.lineTo(p.x,p.y);ct.stroke();hasDrawn=true;document.getElementById("padHint").style.display="none";document.getElementById("signBtn").disabled=false;}
+    function en(e){e.preventDefault();drawing=false;}
+    cv.addEventListener("mousedown",s);cv.addEventListener("mousemove",m);cv.addEventListener("mouseup",en);cv.addEventListener("mouseleave",en);
+    cv.addEventListener("touchstart",s);cv.addEventListener("touchmove",m);cv.addEventListener("touchend",en);
+    window._sigCanvas=cv;window._sigCtx=ct;window._sigDrawn=function(){return hasDrawn;};
+  }
+
+  function clearPad(){
+    if(window._sigCtx){window._sigCtx.clearRect(0,0,window._sigCanvas.width,window._sigCanvas.height);document.getElementById("padHint").style.display="block";document.getElementById("signBtn").disabled=true;}
+    sigData=null;
+  }
+
+  window.APP={loadPhoto:loadPhoto,loadCedF:loadCedF,loadCedB:loadCedB,loadCertEps:loadCertEps,loadCertPension:loadCertPension,loadCertBanco:loadCertBanco,next1:next1,showStep1:showStep1,next2:next2,showStep2:showStep2,next3:next3,showStep3:showStep3,showStep4:showStep4,showStep5:showStep5,clearPad:clearPad,addBen:addBen,rmBen:rmBen,submit:submit};
   load();
 })();
 </script>
