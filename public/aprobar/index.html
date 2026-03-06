@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<title>Aprobaci&oacute;n · Habitaris</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',Arial,sans-serif;background:#F0EEE9;min-height:100vh;color:#111}
+.hdr{background:#111;padding:16px 20px;text-align:center}
+.hdr img{height:28px}
+.wrap{max-width:700px;margin:0 auto;padding:20px}
+.card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px}
+h2{font-size:18px;font-weight:700;margin-bottom:4px}
+.sub{font-size:12px;color:#888;margin-bottom:20px}
+.row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #F3F4F6;font-size:13px}
+.row:last-child{border:none}
+.lbl{color:#888;font-weight:600;font-size:11px;text-transform:uppercase}
+.val{color:#111;font-weight:500;text-align:right;max-width:60%}
+.section{background:#111;color:#fff;padding:6px 12px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:1px;display:inline-block;margin:16px 0 10px}
+.bar-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12px}
+.bar-bg{width:100px;height:8px;background:#E0E0E0;border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px}
+.flag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600}
+.f-v{background:#DCFCE7;color:#059669}
+.f-a{background:#FEF3C7;color:#D97706}
+.f-r{background:#FEE2E2;color:#DC2626}
+.fg{margin-bottom:14px}
+.fg label{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;display:block}
+.fg select,.fg textarea{width:100%;padding:12px 14px;border:1px solid #E0E0E0;border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif}
+.fg textarea{resize:vertical;min-height:80px}
+.btn{width:100%;padding:14px;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-align:center;margin-bottom:8px}
+.bg{background:#059669;color:#fff}
+.ba{background:#D97706;color:#fff}
+.br{background:#DC2626;color:#fff}
+.bk{background:#111;color:#fff}
+.ghost{background:none;color:#888;font-size:12px;padding:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;width:100%}
+.spin{width:24px;height:24px;border:3px solid #E0E0E0;border-top-color:#111;border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.legal{font-size:9px;color:#999;line-height:1.5;margin-top:16px;padding-top:12px;border-top:1px solid #F3F4F6}
+.concept-box{padding:16px;border-radius:8px;margin:12px 0;font-size:13px}
+</style>
+</head>
+<body>
+<div class="hdr"><img src="/logo-habitaris-blanco.png" alt="Habitaris"/></div>
+<div class="wrap" id="app"><div style="text-align:center;padding:40px"><div class="spin"></div></div></div>
+<script>
+(function(){
+  var P=new URLSearchParams(window.location.search);
+  var TOKEN=P.get("token")||"";
+  var approval=null,hiring=null,psico=null;
+
+  function R(h){document.getElementById("app").innerHTML=h;}
+
+  async function load(){
+    if(!TOKEN){R('<div class="card" style="text-align:center"><h2>Enlace inv\u00e1lido</h2></div>');return;}
+    try{
+      var r=await fetch("/api/aprobar?token="+TOKEN);
+      var d=await r.json();
+      if(!d.ok){R('<div class="card" style="text-align:center"><h2>No encontrado</h2></div>');return;}
+      approval=d.data;hiring=d.hiring;psico=d.psicotecnico;
+      if(approval.estado!=="pendiente"){showDone();return;}
+      showApproval();
+    }catch(e){R('<div class="card"><h2>Error</h2><div class="sub">'+e.message+'</div></div>');}
+  }
+
+  function showDone(){
+    var est=approval.estado==="aprobado"?{icon:"\u2705",label:"Aprobado",color:"#059669",bg:"#DCFCE7"}:approval.estado==="aprobado_con_observaciones"?{icon:"\u26a0\ufe0f",label:"Aprobado con observaciones",color:"#D97706",bg:"#FEF3C7"}:{icon:"\u274c",label:"Rechazado",color:"#DC2626",bg:"#FEE2E2"};
+    R('<div class="card" style="text-align:center"><div style="font-size:48px;margin-bottom:12px">'+est.icon+'</div><h2 style="color:'+est.color+'">'+est.label+'</h2>'
+      +'<div class="sub">Esta aprobaci\u00f3n ya fue procesada el '+new Date(approval.aprobado_at).toLocaleString("es-CO")+'</div>'
+      +(approval.concepto?'<div class="concept-box" style="background:'+est.bg+';color:'+est.color+';text-align:left"><strong>Concepto:</strong> '+approval.concepto+'</div>':'')
+      +(approval.recomendaciones?'<div style="text-align:left;font-size:12px;color:#555"><strong>Recomendaciones:</strong> '+approval.recomendaciones+'</div>':'')
+      +'</div>');
+  }
+
+  function showApproval(){
+    var tipos={psicotecnico:{icon:"\ud83e\udde0",label:"Evaluaci\u00f3n Psicot\u00e9cnica"},examen_medico:{icon:"\ud83c\udfe5",label:"Examen M\u00e9dico de Ingreso"},sst:{icon:"\ud83e\uddba",label:"Validaci\u00f3n SST"},legal:{icon:"\u2696\ufe0f",label:"Revisi\u00f3n Legal"}};
+    var tipo=tipos[approval.tipo]||{icon:"\ud83d\udccb",label:approval.tipo};
+
+    var html='<div class="card">'
+      +'<div style="text-align:center;margin-bottom:20px"><div style="font-size:40px;margin-bottom:8px">'+tipo.icon+'</div>'
+      +'<h2>'+tipo.label+'</h2>'
+      +'<div class="sub">Solicitud de aprobaci\u00f3n</div></div>';
+
+    // Candidate info
+    if(hiring){
+      html+='<div class="section">CANDIDATO</div>'
+        +'<div class="row"><span class="lbl">Nombre</span><span class="val">'+(hiring.candidato_nombre||"Pendiente")+'</span></div>'
+        +'<div class="row"><span class="lbl">Documento</span><span class="val">'+(hiring.candidato_cc||"")+'</span></div>'
+        +'<div class="row"><span class="lbl">Cargo</span><span class="val">'+(hiring.cargo||"")+'</span></div>'
+        +'<div class="row"><span class="lbl">Salario neto</span><span class="val">'+(hiring.salario_neto?new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(hiring.salario_neto):"")+'</span></div>'
+        +'<div class="row"><span class="lbl">Tipo contrato</span><span class="val">'+(hiring.tipo_contrato==="fijo"?"T\u00e9rmino fijo ("+hiring.duracion_meses+" meses)":hiring.tipo_contrato)+'</span></div>';
+    }
+
+    // Psicotecnico results if available
+    if(psico&&(approval.tipo==="psicotecnico"||approval.tipo==="sst")){
+      var fc={"verde":"f-v","amarillo":"f-a","rojo":"f-r"};
+      var fl={"verde":"\u2705 Verde","amarillo":"\u26a0\ufe0f Amarillo","rojo":"\u274c Rojo"};
+      var bc={"verde":"#059669","amarillo":"#D97706","rojo":"#DC2626"};
+      var areas=[
+        {label:"Responsabilidad",score:psico.score_responsabilidad,flag:psico.flag_responsabilidad},
+        {label:"Servicio",score:psico.score_servicio,flag:psico.flag_servicio},
+        {label:"Instrucciones",score:psico.score_instrucciones,flag:psico.flag_instrucciones},
+        {label:"Honestidad",score:psico.score_honestidad,flag:psico.flag_honestidad},
+        {label:"Estabilidad",score:psico.score_estabilidad,flag:psico.flag_estabilidad},
+        {label:"Equipo",score:psico.score_equipo,flag:psico.flag_equipo},
+        {label:"SST",score:psico.score_sst,flag:psico.flag_sst}
+      ];
+      html+='<div class="section">RESULTADOS PSICOT\u00c9CNICOS</div>'
+        +'<div style="text-align:center;padding:12px;border-radius:8px;margin-bottom:12px;background:'+(psico.apto?"#DCFCE7":"#FEF3C7")+'">'
+        +'<div style="font-size:24px;font-weight:700;color:'+(psico.apto?"#059669":"#D97706")+'">'+psico.score_total+'%</div>'
+        +'<div style="font-size:11px;font-weight:600;color:'+(psico.apto?"#059669":"#D97706")+'">'+(psico.apto?"APTO":"REQUIERE EVALUACI\u00d3N")+'</div></div>';
+      areas.forEach(function(a){
+        if(a.score===null||a.score===undefined)return;
+        html+='<div class="bar-row"><span style="flex:1">'+a.label+'</span>'
+          +'<div class="bar-bg"><div class="bar-fill" style="width:'+a.score+'%;background:'+bc[a.flag]+'"></div></div>'
+          +'<span style="font-weight:700;min-width:35px;text-align:right">'+a.score+'%</span>'
+          +'<span class="flag '+fc[a.flag]+'" style="margin-left:6px">'+fl[a.flag]+'</span></div>';
+      });
+      if(psico.concepto) html+='<div style="margin-top:10px;padding:10px;background:#F8F7F5;border-radius:6px;font-size:11px;color:#555"><strong>Concepto:</strong> '+psico.concepto+'</div>';
+    }
+
+    // Approval form
+    html+='<div class="section">SU CONCEPTO</div>'
+      +'<div class="fg"><label>Decisi\u00f3n *</label>'
+      +'<select id="decision"><option value="">Seleccione...</option><option value="aprobado">\u2705 Aprobado</option><option value="aprobado_con_observaciones">\u26a0\ufe0f Aprobado con observaciones</option><option value="rechazado">\u274c Rechazado</option></select></div>'
+      +'<div class="fg"><label>Concepto / Justificaci\u00f3n *</label><textarea id="concepto" placeholder="Escriba su concepto profesional..."></textarea></div>'
+      +'<div class="fg"><label>Observaciones</label><textarea id="observaciones" placeholder="Observaciones adicionales (opcional)"></textarea></div>';
+
+    if(approval.tipo==="sst"||approval.tipo==="examen_medico"){
+      html+='<div class="fg"><label>Recomendaciones SST</label><textarea id="recomendaciones" placeholder="Recomendaciones de seguridad y salud en el trabajo..."></textarea></div>';
+    }
+
+    html+='<button class="btn bk" onclick="APP.submit()">Enviar concepto \u2192</button>'
+      +'<div class="legal">Su concepto profesional quedar\u00e1 registrado con fecha, hora e identificaci\u00f3n en el expediente del candidato. HABITARIS SAS \u2014 NIT 901.922.136-8</div>'
+      +'</div>';
+
+    R(html);
+  }
+
+  async function submit(){
+    var decision=document.getElementById("decision").value;
+    var concepto=document.getElementById("concepto").value;
+    if(!decision){alert("Seleccione una decisi\u00f3n.");return;}
+    if(!concepto){alert("El concepto es obligatorio.");return;}
+    var obs=document.getElementById("observaciones")?document.getElementById("observaciones").value:"";
+    var recs=document.getElementById("recomendaciones")?document.getElementById("recomendaciones").value:"";
+
+    R('<div class="card" style="text-align:center;padding:40px"><div class="spin"></div><div style="font-size:13px;color:#888">Registrando concepto...</div></div>');
+    try{
+      var r=await fetch("/api/aprobar",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:TOKEN,estado:decision,concepto:concepto,observaciones:obs,recomendaciones:recs})});
+      var d=await r.json();
+      if(d.ok){
+        var est=decision==="aprobado"?{icon:"\u2705",label:"Aprobado",color:"#059669"}:decision==="aprobado_con_observaciones"?{icon:"\u26a0\ufe0f",label:"Aprobado con observaciones",color:"#D97706"}:{icon:"\u274c",label:"Rechazado",color:"#DC2626"};
+        R('<div class="card" style="text-align:center">'
+          +'<div style="font-size:56px;margin-bottom:12px">'+est.icon+'</div>'
+          +'<h2 style="color:'+est.color+'">Concepto registrado: '+est.label+'</h2>'
+          +'<div class="sub">Su evaluaci\u00f3n ha sido registrada exitosamente</div>'
+          +'<div style="text-align:left;font-size:12px;color:#555;padding:14px;background:#F8F7F5;border-radius:8px">'
+          +'<strong>Concepto:</strong> '+concepto
+          +(obs?'<br/><strong>Observaciones:</strong> '+obs:'')
+          +(recs?'<br/><strong>Recomendaciones:</strong> '+recs:'')+'</div>'
+          +'<div class="legal">Registrado el '+new Date().toLocaleString("es-CO")+' \u2014 HABITARIS SAS</div>'
+          +'</div>');
+      }else{R('<div class="card"><h2>Error</h2><div class="sub">'+(d.error||"")+'</div></div>');}
+    }catch(e){R('<div class="card"><h2>Error</h2><div class="sub">'+e.message+'</div></div>');}
+  }
+
+  window.APP={submit:submit};
+  load();
+})();
+</script>
+</body>
+</html>

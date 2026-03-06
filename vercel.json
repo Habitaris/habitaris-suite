@@ -77,6 +77,14 @@
       "destination": "/psicotecnico/index.html"
     },
     {
+      "source": "/aprobar",
+      "destination": "/aprobar/index.html"
+    },
+    {
+      "source": "/aprobar/(.*)",
+      "destination": "/aprobar/index.html"
+    },
+    {
       "source": "/((?!api/).*)",
       "destination": "/index.html"
     }
