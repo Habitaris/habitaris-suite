@@ -3206,6 +3206,108 @@ function TabEvaluaciones() {
 /* ─────────────────────────────────────────────
    TAB CONTRATACIÓN
 ───────────────────────────────────────────── */
+/* ── PsicotecnicoPanel: lanzar evaluaciones y ver resultados ── */
+function PsicotecnicoPanel({ p, onDone }) {
+  const [results, setResults] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [sending, setSending] = React.useState({});
+
+  React.useEffect(() => {
+    fetch("/api/psicotecnico?hiring_id="+p.id)
+      .then(r=>r.json())
+      .then(d=>{ setResults(d.data||null); setLoading(false); })
+      .catch(()=>setLoading(false));
+  }, [p.id]);
+
+  const lanzar = async (template) => {
+    setSending(s=>({...s,[template]:true}));
+    // Avanzar estado y generar link
+    await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({id:p.id,estado:"psicotecnico"})});
+    const link = "https://suite.habitaris.co/psicotecnico?hiring_id="+p.id+"&template="+template;
+    // Abrir modal de envío
+    window._sendPsiModal = {link, email:p.candidato_email, nombre:p.candidato_nombre, template};
+    // Copiar link al portapapeles
+    navigator.clipboard.writeText(link).catch(()=>{});
+    alert("Link copiado: "+link+"
+
+Envíalo por WhatsApp o email al candidato.");
+    setSending(s=>({...s,[template]:false}));
+    onDone();
+  };
+
+  const aprobar = async () => {
+    const ar = await fetch("/api/aprobar",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({hiring_id:p.id,tipo:"psicotecnico",aprobador_nombre:"",aprobador_email:""})});
+    const sd = await ar.json();
+    if(sd.ok){ navigator.clipboard.writeText(sd.link).catch(()=>{}); alert("Link aprobación SST copiado:\n"+sd.link); }
+    await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({id:p.id,estado:"examen_medico"})});
+    onDone();
+  };
+
+  const tpls = [
+    {id:"psi_general", lbl:"🧠 General / Wonderlic", desc:"Aptitud general, razonamiento"},
+    {id:"psi_disc",    lbl:"🎯 DISC",                desc:"Perfil de personalidad y comportamiento"},
+  ];
+
+  const psiLanzados = p.psi_lanzados ? p.psi_lanzados.split(",") : [];
+
+  return (
+    <div style={{marginTop:8}}>
+      {/* Lanzar evaluaciones */}
+      <div style={{padding:"10px 12px",background:"#EDE8F4",borderRadius:8,border:"1px solid #5B3A8C44",marginBottom:8}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#5B3A8C",marginBottom:8}}>🧠 Evaluaciones psicotécnicas</div>
+        <div style={{display:"flex",flexDirection:"column",gap:6}}>
+          {tpls.map(t => {
+            const yaLanzado = psiLanzados.includes(t.id);
+            return (
+              <div key={t.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 10px",background:"#fff",borderRadius:6,border:"1px solid #E0E0E0"}}>
+                <div>
+                  <div style={{fontSize:11,fontWeight:600}}>{t.lbl}</div>
+                  <div style={{fontSize:9,color:"#888"}}>{t.desc}</div>
+                </div>
+                <button onClick={()=>lanzar(t.id)} style={{padding:"4px 12px",fontSize:10,fontWeight:600,border:"none",borderRadius:4,cursor:"pointer",fontFamily:"DM Sans,sans-serif",
+                  background:yaLanzado?"#DCFCE7":"#5B3A8C",color:yaLanzado?"#059669":"#fff"}}>
+                  {yaLanzado?"✅ Relanzar":"Enviar link"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Resultados */}
+      <div style={{padding:"10px 12px",background:"#F8F8F8",borderRadius:8,border:"1px solid #E0E0E0",marginBottom:8}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#333",marginBottom:6}}>📊 Resultados recibidos</div>
+        {loading ? <div style={{fontSize:10,color:"#aaa"}}>Cargando...</div> :
+         !results ? <div style={{fontSize:10,color:"#aaa"}}>Sin resultados aún — el candidato no ha completado las evaluaciones</div> :
+         <div>
+           {results.puntaje_general !== undefined && (
+             <div style={{display:"flex",gap:16,marginBottom:6}}>
+               <div style={{fontSize:12,fontWeight:700}}>Puntaje: <span style={{color:"#5B3A8C"}}>{results.puntaje_general}</span></div>
+               {results.perfil_disc && <div style={{fontSize:12,fontWeight:700}}>DISC: <span style={{color:"#5B3A8C"}}>{results.perfil_disc}</span></div>}
+             </div>
+           )}
+           {results.concepto && (
+             <div style={{padding:"6px 10px",background:"#EDE8F4",borderRadius:6,fontSize:11,color:"#333",marginBottom:6}}>
+               <strong>Concepto:</strong> {results.concepto}
+             </div>
+           )}
+           {results.observaciones && <div style={{fontSize:10,color:"#555"}}>{results.observaciones}</div>}
+           <div style={{fontSize:9,color:"#aaa",marginTop:4}}>Completado: {results.created_at ? new Date(results.created_at).toLocaleDateString("es-CO") : "—"}</div>
+         </div>
+        }
+      </div>
+
+      {/* Acción: aprobar y avanzar */}
+      <button onClick={aprobar} style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:"1px solid #0D5E6E",borderRadius:6,background:"#E0F2FE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#0D5E6E"}}>
+        🏥 Psicotécnico OK → Avanzar a Examen médico
+      </button>
+    </div>
+  );
+}
+
 /* ── AfiliacionesPanel ── */
 function AfiliacionesPanel({ p, onDone }) {
   const [eps,setEps]           = React.useState(p.afil_eps||"");
@@ -3576,9 +3678,7 @@ function TabContratacion() {
                         <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"psicotecnico"})});var psiLink="https://suite.habitaris.co/psicotecnico?hiring_id="+p.id;setSendModal({link:psiLink,email:p.candidato_email,titulo:"Evaluaci\u00f3n psicot\u00e9cnica",nombre:p.candidato_nombre});loadProcesos;loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #5B3A8C",borderRadius:6,background:"#EDE8F4",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#5B3A8C"}}>🧠 Enviar a psicotécnico</button>
                         <button onClick={()=>setLanzarId(p.id)} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>⏩ Saltar a contratación</button>
                       </>}
-                      {(p.estado==="psicotecnico") && <>
-                        <button onClick={async()=>{const ar=await fetch("/api/aprobar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({hiring_id:p.id,tipo:"examen_medico",aprobador_nombre:"",aprobador_email:""})});const ad=await ar.json();if(ad.ok){navigator.clipboard.writeText(ad.link);alert("Link copiado");}await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"examen_medico"})});loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #0D5E6E",borderRadius:6,background:"#E0F2FE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#0D5E6E"}}>🏥 Psicotécnico OK → Examen médico</button>
-                      </>}
+                      {p.estado==="psicotecnico" && <PsicotecnicoPanel p={p} onDone={loadProcesos}/>}
                       {(p.estado==="examen_medico") && <>
                         <button onClick={async()=>{const sr=await fetch("/api/aprobar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({hiring_id:p.id,tipo:"sst",aprobador_nombre:"",aprobador_email:""})});const sd=await sr.json();if(sd.ok){navigator.clipboard.writeText(sd.link);alert("Link de validación SST copiado:\n"+sd.link);}await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"validacion_sst"})});loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #D97706",borderRadius:6,background:"#FEF3C7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#D97706"}}>🦺 Examen OK → Enviar a SST</button>
                       </>}
