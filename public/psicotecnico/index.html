@@ -108,12 +108,12 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
 
     var qs=sec.questions.map(function(q,qi){
       var sel=answers[q.id];
-      return '<div class="q-card'+(sel!==undefined?" answered":"")+'">'
+      return '<div class="q-card'+(sel?" answered":"")+'">'
         +'<div class="q-num">PREGUNTA '+(qi+1)+' DE '+sec.questions.length+'</div>'
         +'<div class="q-text">'+q.text+'</div>'
         +'<div class="q-opts">'
         +q.opts.map(function(o,oi){
-          return '<div class="q-opt'+(sel===oi?" sel":"")+'" onclick="APP.answer(\''+q.id+'\','+oi+','+o.v+')">'
+          return '<div class="q-opt'+(sel&&sel.idx===oi?" sel":"")+'" onclick="APP.answer(\''+q.id+'\','+oi+','+o.v+')">'
             +'<div class="dot"></div>'+o.t+'</div>';
         }).join('')
         +'</div></div>';
