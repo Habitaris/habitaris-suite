@@ -3131,6 +3131,10 @@ function TabContratacion() {
       await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({id:proc.id,estado:"firma_pendiente",abogado_nombre:lanzarForm.abogado_nombre,abogado_email:lanzarForm.abogado_email,contrato_plantilla:lanzarForm.contrato_plantilla,descriptor_codigo:lanzarForm.descriptor_codigo||proc.descriptor_codigo,fecha_contrato:new Date().toISOString()})});
       // 2. Create signing links
+      // Generate contract
+      const ctr = await fetch("/api/generate-contract?hiring_id="+proc.id);
+      const ctrData = await ctr.json();
+      const docCode = ctrData.ok ? ctrData.code : "HAB-CTR-"+new Date().getFullYear()+"-001";
       // Build signers from form - auto-fill trabajador
       const ff = lanzarForm.firmantes.map((f,i) => {
         if(f.rol==="Trabajador") return {name:proc.candidato_nombre,email:proc.candidato_email,role:f.rol,id_number:proc.candidato_cc,order:f.orden};
@@ -3139,7 +3143,7 @@ function TabContratacion() {
       if(!ff.length){alert("Configure al menos un firmante.");return;}
       const signers = ff;
       const r = await fetch("/api/firma",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({action:"create_pending",doc_code:"HAB-CTR-"+new Date().getFullYear()+"-"+String(procesos.length).padStart(3,"0"),doc_title:"Contrato Individual de Trabajo — "+proc.candidato_nombre,doc_hash:"pending",signers:signers})});
+        body:JSON.stringify({action:"create_pending",doc_code:docCode,doc_title:"Contrato Individual de Trabajo — "+proc.candidato_nombre,doc_hash:"pending",signers:signers})});
       const d = await r.json();
       if(d.ok){
         let msg = "Links de firma generados:\n\n";
