@@ -12,6 +12,8 @@ export default async function handler(req,res){
       var hid=req.query.hiring_id||"";
       var id=req.query.id||"";
       if(id){var r=await fetch(SB_URL+"/rest/v1/psicotecnico_results?id=eq."+id,{headers:sbH()});var d=await r.json();return res.status(200).json({ok:true,data:d[0]||null});}
+      var tpl=req.query.template||"";
+      if(tpl){var rt=await fetch(SB_URL+"/rest/v1/psicotecnico_templates?id=eq."+tpl,{headers:sbH()});var dt=await rt.json();if(dt&&dt.length>0)return res.status(200).json({ok:true,template:dt[0]});return res.status(404).json({ok:false,error:"Template not found"});}
       if(hid){var r2=await fetch(SB_URL+"/rest/v1/psicotecnico_results?hiring_id=eq."+hid,{headers:sbH()});var d2=await r2.json();return res.status(200).json({ok:true,data:d2[0]||null});}
       return res.status(400).json({ok:false,error:"hiring_id or id required"});
     }
