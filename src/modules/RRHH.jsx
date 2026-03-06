@@ -151,6 +151,13 @@ const DEF_CARGO = () => ({
   id: uid(), nombre: "", salarioBruto: 0,
   prestaciones: 52.18, segSocial: 12.5, parafiscales: 9,
   activo: true, fechaIngreso: today(),
+  // Descriptor de cargo
+  dc_codigo: "", dc_area: "", dc_nivel: "Operativo", dc_reporta: "", dc_supervisa: "No aplica",
+  dc_interactua: "", dc_objetivo: "", dc_funciones: "",
+  dc_calidad: "", dc_sst: "",
+  dc_educacion: "", dc_formacion: "", dc_exp_general: "", dc_exp_especifica: "",
+  dc_comp_org: "", dc_comp_cargo: "",
+  dc_psicotecnico: "psi_general",
 });
 const DEF_FICHA = (nombre = "") => ({
   nombre, apellidos: "", email: "", telefono: "",
@@ -415,6 +422,11 @@ function TabCargos({ cargos, saveCargos, jornada }) {
 
   const save = () => {
     if (!form.nombre) return;
+    // Auto-generate dc_codigo if empty
+    if (!form.dc_codigo && form.nombre) {
+      const abbr = form.nombre.split(" ").map(w=>w[0]).join("").toUpperCase().substring(0,3);
+      form.dc_codigo = "HAB-DC-" + abbr + "-01";
+    }
     saveCargos(prev =>
       isNew ? [...prev, form] : prev.map(c => c.id === form.id ? form : c)
     );
