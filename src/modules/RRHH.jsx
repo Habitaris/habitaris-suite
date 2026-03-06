@@ -3055,6 +3055,106 @@ function ModalFooter({ onCancel, onSave, saveLabel = "Guardar" }) {
 }
 
 
+
+/* -----------------------------------------------
+   TAB EVALUACIONES
+----------------------------------------------- */
+function TabEvaluaciones() {
+  const [templates, setTemplates] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selTpl, setSelTpl] = useState(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editQ, setEditQ] = useState(null);
+
+  const loadTemplates = async () => {
+    try {
+      const r = await fetch("/api/psicotecnico?template=psi_general");
+      const d = await r.json();
+      const r2 = await fetch("/api/psicotecnico?template=psi_disc");
+      const d2 = await r2.json();
+      const tpls = [];
+      if (d.ok && d.template) tpls.push(d.template);
+      if (d2.ok && d2.template) tpls.push(d2.template);
+      setTemplates(tpls);
+    } catch(e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadTemplates(); }, []);
+
+  const flagColor = (f) => f === "verde" ? "#059669" : f === "amarillo" ? "#D97706" : "#DC2626";
+  const flagBg = (f) => f === "verde" ? "#DCFCE7" : f === "amarillo" ? "#FEF3C7" : "#FEE2E2";
+
+  if (loading) return <div style={{textAlign:"center",padding:40,color:C.inkLight}}>Cargando evaluaciones...</div>;
+
+  return (
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <div style={{fontSize:16,fontWeight:700,color:C.ink}}>Plantillas de evaluacion ({templates.length})</div>
+      </div>
+
+      {templates.length === 0 ? (
+        <Card style={{textAlign:"center",padding:40}}>
+          <div style={{fontSize:32,marginBottom:8}}>{"\ud83e\udde0"}</div>
+          <div style={{fontSize:14,fontWeight:600,color:C.ink}}>Sin plantillas</div>
+          <div style={{fontSize:12,color:C.inkLight,marginTop:4}}>Las plantillas se gestionan en Supabase - tabla psicotecnico_templates</div>
+        </Card>
+      ) : (
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {templates.map(tpl => {
+            const isOpen = selTpl === tpl.id;
+            const secciones = tpl.secciones || [];
+            const totalPreguntas = secciones.reduce((acc, s) => acc + (s.questions ? s.questions.length : 0), 0);
+            return (
+              <Card key={tpl.id} style={{padding:0,overflow:"hidden"}}>
+                <div style={{padding:"16px 18px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}} onClick={() => setSelTpl(isOpen?null:tpl.id)}>
+                  <div>
+                    <div style={{fontWeight:700,fontSize:14,color:C.ink}}>{tpl.nombre}</div>
+                    <div style={{fontSize:11,color:C.inkLight,marginTop:2}}>{tpl.id} | {secciones.length} secciones | {totalPreguntas} preguntas{tpl.cargo_codigo ? " | Cargo: "+tpl.cargo_codigo : " | General"}</div>
+                  </div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}>
+                    <span style={{padding:"3px 10px",borderRadius:12,fontSize:10,fontWeight:600,color:tpl.activa?"#059669":"#888",background:tpl.activa?"#DCFCE7":"#F0F0F0"}}>{tpl.activa?"Activa":"Inactiva"}</span>
+                    <span style={{fontSize:16,color:C.inkLight}}>{isOpen?"▲":"▼"}</span>
+                  </div>
+                </div>
+                {isOpen && (
+                  <div style={{padding:"0 18px 18px",borderTop:"1px solid "+C.border}}>
+                    {secciones.map((sec, si) => (
+                      <div key={sec.id} style={{marginTop:14}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                          <div style={{fontSize:12,fontWeight:700,color:C.ink}}>{sec.icon} {sec.label}</div>
+                          <span style={{fontSize:10,color:C.inkLight}}>{sec.questions?sec.questions.length:0} preguntas</span>
+                        </div>
+                        {sec.questions && sec.questions.map((q, qi) => (
+                          <div key={q.id} style={{background:C.bg,borderRadius:6,padding:"8px 12px",marginBottom:6,fontSize:11}}>
+                            <div style={{fontWeight:600,color:C.ink,marginBottom:4}}>{qi+1}. {q.text}</div>
+                            <div style={{display:"flex",flexDirection:"column",gap:2}}>
+                              {q.opts && q.opts.map((o, oi) => (
+                                <div key={oi} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"2px 0"}}>
+                                  <span style={{color:C.inkLight}}>{o.t}</span>
+                                  <span style={{fontWeight:700,fontSize:10,minWidth:30,textAlign:"right"}}>{o.disc ? o.disc : o.v+" pts"}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                    <div style={{display:"flex",gap:8,marginTop:14,paddingTop:12,borderTop:"1px solid "+C.border}}>
+                      <span style={{fontSize:10,color:C.inkLight}}>Editar en Supabase: tabla psicotecnico_templates, columna secciones (JSON)</span>
+                    </div>
+                  </div>
+                )}
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 /* ─────────────────────────────────────────────
    TAB CONTRATACIÓN
 ───────────────────────────────────────────── */
@@ -3439,6 +3539,7 @@ const TABS = [
   { id:"partes",    lbl:"Partes de Trabajo",    I:ClipboardList,desc:"Vista admin — empleados imputan desde Portal" },
   { id:"novedades", lbl:"Novedades Nómina",     I:FileText,     desc:"Vacaciones, bajas, permisos y horas extra" },
   { id:"contratacion", lbl:"Contratación",      I:FileText,     desc:"Propuestas, datos candidato y firma de contratos" },
+  { id:"evaluaciones", lbl:"Evaluaciones",       I:ClipboardList,desc:"Plantillas psicotécnicas y DISC por cargo" },
   { id:"docs",      lbl:"Documentos",           I:Briefcase,    desc:"Nóminas, contratos y certificados" },
   { id:"portal",    lbl:"Portal Empleado",      I:Eye,          desc:"Vista del trabajador" },
 ];
@@ -3570,6 +3671,7 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                   {tab==="partes"    && <TabPartes    partes={partes}    setPartes={savePartes}    equipo={equipos} cargos={cargos} currentUser={null} pais={currentUser?.pais||"CO"}/>}
                   {tab==="novedades" && <TabNovedades novedades={novedades} saveNovedades={saveNovedades}/>}
                   {tab==="contratacion" && <TabContratacion/>}
+                  {tab==="evaluaciones" && <TabEvaluaciones/>}
                   {tab==="docs"      && <TabDocumentos docs={docs}       saveDocs={saveDocs}        fichas={fichas} cargos={cargos}/>}
                 </div>
               )
