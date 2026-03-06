@@ -544,6 +544,42 @@ function TabCargos({ cargos, saveCargos, jornada }) {
               <Select value={form.activo ? "true" : "false"} onChange={v => upd("activo", v === "true")}
                 options={[{value:"true",label:"Activo"},{value:"false",label:"Inactivo"}]} />
             </FieldRow>
+
+            {/* DESCRIPTOR DE CARGO */}
+            <div style={{ borderTop: `2px solid ${T.border}`, marginTop: 16, paddingTop: 16 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: T.ink, marginBottom: 12 }}>{"\ud83d\udccb"} Descriptor de cargo</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
+                <div><Label>C\u00f3digo</Label><Input value={form.dc_codigo||""} onChange={v=>upd("dc_codigo",v)} placeholder="HAB-DC-XXX-01" small/></div>
+                <div><Label>\u00c1rea</Label><Input value={form.dc_area||""} onChange={v=>upd("dc_area",v)} small/></div>
+                <div><Label>Nivel</Label><Select value={form.dc_nivel||"Operativo"} onChange={v=>upd("dc_nivel",v)} options={[{value:"Operativo",label:"Operativo"},{value:"T\u00e9cnico",label:"T\u00e9cnico"},{value:"Profesional",label:"Profesional"},{value:"Directivo",label:"Directivo"}]} small/></div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 10 }}>
+                <div><Label>Reporta a</Label><Input value={form.dc_reporta||""} onChange={v=>upd("dc_reporta",v)} small/></div>
+                <div><Label>Supervisa</Label><Input value={form.dc_supervisa||"No aplica"} onChange={v=>upd("dc_supervisa",v)} small/></div>
+                <div><Label>Interact\u00faa con</Label><Input value={form.dc_interactua||""} onChange={v=>upd("dc_interactua",v)} small/></div>
+              </div>
+              <div style={{ marginBottom: 10 }}><Label>Objetivo del cargo</Label><textarea value={form.dc_objetivo||""} onChange={e=>upd("dc_objetivo",e.target.value)} rows={2} style={{width:"100%",padding:"6px 8px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,fontFamily:"DM Sans,sans-serif",resize:"vertical",marginTop:2}} placeholder="Prop\u00f3sito principal..."/></div>
+              <div style={{ marginBottom: 10 }}><Label>Funciones principales (una por l\u00ednea)</Label><textarea value={form.dc_funciones||""} onChange={e=>upd("dc_funciones",e.target.value)} rows={3} style={{width:"100%",padding:"6px 8px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,fontFamily:"DM Sans,sans-serif",resize:"vertical",marginTop:2}}/></div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                <div><Label>Calidad/MA</Label><textarea value={form.dc_calidad||""} onChange={e=>upd("dc_calidad",e.target.value)} rows={2} style={{width:"100%",padding:"6px 8px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,fontFamily:"DM Sans,sans-serif",resize:"vertical",marginTop:2}}/></div>
+                <div><Label>SST</Label><textarea value={form.dc_sst||""} onChange={e=>upd("dc_sst",e.target.value)} rows={2} style={{width:"100%",padding:"6px 8px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,fontFamily:"DM Sans,sans-serif",resize:"vertical",marginTop:2}}/></div>
+              </div>
+              <p style={{ fontSize: 11, fontWeight: 700, color: T.ink, marginBottom: 8 }}>Perfil</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                <div><Label>Educaci\u00f3n</Label><Input value={form.dc_educacion||""} onChange={v=>upd("dc_educacion",v)} placeholder="Bachiller o equivalente" small/></div>
+                <div><Label>Formaci\u00f3n</Label><Input value={form.dc_formacion||""} onChange={v=>upd("dc_formacion",v)} small/></div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                <div><Label>Exp. general</Label><Input value={form.dc_exp_general||""} onChange={v=>upd("dc_exp_general",v)} small/></div>
+                <div><Label>Exp. espec\u00edfica</Label><Input value={form.dc_exp_especifica||""} onChange={v=>upd("dc_exp_especifica",v)} small/></div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+                <div><Label>Comp. organizacionales</Label><Input value={form.dc_comp_org||""} onChange={v=>upd("dc_comp_org",v)} small/></div>
+                <div><Label>Comp. del cargo</Label><Input value={form.dc_comp_cargo||""} onChange={v=>upd("dc_comp_cargo",v)} small/></div>
+              </div>
+              <div><Label>Psicot\u00e9cnico</Label><Select value={form.dc_psicotecnico||"psi_general"} onChange={v=>upd("dc_psicotecnico",v)} options={[{value:"psi_general",label:"General"},{value:"psi_disc",label:"DISC"},{value:"psi_general,psi_disc",label:"General + DISC"}]} small/></div>
+            </div>
+
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 20, paddingTop: 16, borderTop: `1px solid ${T.border}` }}>
               <Btn variant="outline" onClick={close}>Cancelar</Btn>
               <Btn variant="primary" onClick={save}><Save size={12}/>Guardar</Btn>
