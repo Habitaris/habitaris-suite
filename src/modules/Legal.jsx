@@ -129,7 +129,7 @@ const PLANTILLAS_SEED = [
   { id:"tpl_recomendaciones_sst", cat:"formatos", nombre:"Recomendaciones SST",
     desc:"Documento de recomendaciones de seguridad y salud en el trabajo emitido tras validación de examen médico de ingreso.",
     variables:["nombre_trabajador","tipo_doc","numero_doc","cargo","concepto_medico","restricciones","recomendaciones","fecha"],
-    contenido:\`RECOMENDACIONES DE SEGURIDAD Y SALUD EN EL TRABAJO\n\nTRABAJADOR: {{nombre_trabajador}} — {{tipo_doc}} {{numero_doc}}\nCARGO: {{cargo}}\n\nCONCEPTO MÉDICO: {{concepto_medico}}\n\nRESTRICCIONES: {{restricciones}}\n\nRECOMENDACIONES:\n{{recomendaciones}}\n\nFecha: {{fecha}}\`,
+    contenido:`RECOMENDACIONES DE SEGURIDAD Y SALUD EN EL TRABAJO\n\nTRABAJADOR: {{nombre_trabajador}} — {{tipo_doc}} {{numero_doc}}\nCARGO: {{cargo}}\n\nCONCEPTO MÉDICO: {{concepto_medico}}\n\nRESTRICCIONES: {{restricciones}}\n\nRECOMENDACIONES:\n{{recomendaciones}}\n\nFecha: {{fecha}}`,
     pais:"CO", obligatorio:false,
     firmantes:[{rol:"Responsable SST",obligatorio:true},{rol:"Trabajador",obligatorio:true,auto:true}] },
 
