@@ -175,8 +175,31 @@ pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/p
     renderDoc();
   }
 
-  function renderDoc(){
+  async function renderDoc(){
     var container=document.getElementById("pdfScroll");
+    container.innerHTML='<div style="text-align:center;padding:40px"><div class="spin"></div><div style="font-size:12px;color:#888">Cargando documento...</div></div>';
+    if(pending.doc_code && pending.doc_code.startsWith("HAB-CTR")){
+      try{
+        var rh=await fetch("/api/hiring?estado=firma_pendiente");
+        var dh=await rh.json();
+        if(dh.ok && dh.data && dh.data.length>0){
+          var proc=dh.data.find(function(p){return p.candidato_nombre && pending.doc_title.indexOf(p.candidato_nombre)>-1;}) || dh.data[0];
+          var rc=await fetch("/api/generate-contract?hiring_id="+proc.id);
+          var dc=await rc.json();
+          if(dc.ok && dc.html){
+            container.innerHTML=dc.html;
+            var sc=document.getElementById("pdfScroll");
+            sc.style.maxHeight="500px";
+            sc.addEventListener("scroll",function(){
+              var pct=sc.scrollTop/(sc.scrollHeight-sc.clientHeight)*100;
+              document.getElementById("progFill").style.width=Math.min(pct,100)+"%";
+              if(pct>90&&!scrolledToEnd){scrolledToEnd=true;document.getElementById("readGate").style.display="none";document.getElementById("checkArea").style.display="block";}
+            });
+            return;
+          }
+        }
+      }catch(e){console.error("Contract load error:",e);}
+    }
     container.innerHTML='<div style="background:#fff;padding:40px;max-width:600px;width:100%;min-height:800px">'
       +'<div style="text-align:center;border-bottom:2px solid #111;padding-bottom:16px;margin-bottom:20px">'
       +'<div style="font-weight:700;font-size:18px;letter-spacing:2px">HABITARIS</div>'
