@@ -70,7 +70,7 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
       var r=await fetch("/api/hiring?id="+HID);var d=await r.json();
       if(!d.ok){R('<div class="card"><h2>No encontrado</h2></div>');return;}
       hiring=d.data;
-      var rt=await fetch("/api/psicotecnico?template=psi_general");var dt=await rt.json();
+      var tplId=new URLSearchParams(window.location.search).get("disc")?"psi_disc":"psi_general";var rt=await fetch("/api/psicotecnico?template="+tplId);var dt=await rt.json();
       if(dt.ok&&dt.template&&dt.template.secciones){SECTIONS=dt.template.secciones;}
       allQ=[];SECTIONS.forEach(function(s,si){s.questions.forEach(function(q){allQ.push({section:s.id,sectionIdx:si,id:q.id,text:q.text,opts:q.opts});});});
       totalQ=allQ.length;
@@ -84,7 +84,7 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
   function showIntro(){
     R('<div class="card" style="text-align:center">'
       +'<div style="font-size:48px;margin-bottom:12px">\ud83e\udde0</div>'
-      +'<h2>Evaluaci\u00f3n psicot\u00e9cnica</h2>'
+      +'<h2>'+(new URLSearchParams(window.location.search).get('disc')?'Perfil conductual DISC':'Evaluaci\u00f3n psicot\u00e9cnica')+'</h2>'
       +'<div class="sub">'+hiring.cargo+'</div>'
       +'<div style="text-align:left;background:#F8F7F5;border-radius:8px;padding:16px;margin:16px 0;font-size:12px;line-height:1.8;color:#555">'
       +'<strong>Instrucciones:</strong><br/>'
@@ -209,7 +209,17 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
     try{
       var r=await fetch("/api/psicotecnico",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(result)});
       var d=await r.json();
-      if(d.ok) showReport(result);
+      if(d.ok){
+        // Check if DISC test is needed
+        var urlP=new URLSearchParams(window.location.search);
+        if(!urlP.get('disc')){
+          // Show transition then redirect to DISC
+          R('<div class="card" style="text-align:center;padding:40px"><div style="font-size:48px;margin-bottom:12px">✅</div><h2 style="color:#059669">Evaluación completada</h2><div class="sub">Cargando siguiente evaluación...</div><div class="spin" style="margin-top:16px"></div></div>');
+          setTimeout(function(){window.location.href='/psicotecnico?hiring_id='+HID+'&disc=1';},2000);
+        } else {
+          showReport(result);
+        }
+      }
       else R('<div class="card"><h2>Error</h2><div class="sub">'+(d.error||"")+'</div></div>');
     }catch(e){R('<div class="card"><h2>Error</h2><div class="sub">'+e.message+'</div></div>');}
   }
