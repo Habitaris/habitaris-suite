@@ -3206,6 +3206,41 @@ function TabEvaluaciones() {
 /* ─────────────────────────────────────────────
    TAB CONTRATACIÓN
 ───────────────────────────────────────────── */
+/* ── AfiliacionesPanel ── */
+function AfiliacionesPanel({ p, onDone }) {
+  const [eps,setEps]           = React.useState(p.afil_eps||"");
+  const [pension,setPension]   = React.useState(p.afil_pension||"");
+  const [arl,setArl]           = React.useState(p.afil_arl||"");
+  const [ccf,setCcf]           = React.useState(p.afil_ccf||"");
+  const [saving,setSaving]     = React.useState(false);
+  const completo = eps && pension && arl;
+  const inp = {padding:"5px 8px",fontSize:11,border:"1px solid "+C.border,borderRadius:4,fontFamily:"DM Sans,sans-serif",outline:"none",width:"100%",background:"#fff"};
+  const completar = async () => {
+    if (!completo||saving) return;
+    setSaving(true);
+    const expNum = "EXP-"+new Date().getFullYear()+"-"+String(Date.now()).slice(-5);
+    await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({id:p.id,estado:"completado",afil_eps:eps,afil_pension:pension,afil_arl:arl,afil_ccf:ccf,expediente_num:expNum,fecha_completado:new Date().toISOString()})});
+    setSaving(false);
+    onDone();
+  };
+  return (
+    <div style={{marginTop:8,padding:"12px 14px",background:"#E0F2FE",borderRadius:8,border:"1px solid #0891B244"}}>
+      <div style={{fontSize:11,fontWeight:700,color:"#0891B2",marginBottom:10}}>🏛️ Afiliaciones — completa para cerrar el proceso y crear expediente</div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
+        <div><div style={{fontSize:9,fontWeight:700,color:"#555",marginBottom:2}}>EPS *</div><input value={eps} onChange={e=>setEps(e.target.value)} style={inp} placeholder="Sura, Compensar, Sanitas..."/></div>
+        <div><div style={{fontSize:9,fontWeight:700,color:"#555",marginBottom:2}}>PENSIÓN *</div><input value={pension} onChange={e=>setPension(e.target.value)} style={inp} placeholder="Porvenir, Colpensiones..."/></div>
+        <div><div style={{fontSize:9,fontWeight:700,color:"#555",marginBottom:2}}>ARL *</div><input value={arl} onChange={e=>setArl(e.target.value)} style={inp} placeholder="Positiva, Sura, Colmena..."/></div>
+        <div><div style={{fontSize:9,fontWeight:700,color:"#555",marginBottom:2}}>CAJA (opcional)</div><input value={ccf} onChange={e=>setCcf(e.target.value)} style={inp} placeholder="Compensar, Cafam..."/></div>
+      </div>
+      <button onClick={completar} disabled={!completo||saving} style={{padding:"7px 16px",fontSize:11,fontWeight:700,border:"none",borderRadius:6,cursor:completo&&!saving?"pointer":"not-allowed",fontFamily:"DM Sans,sans-serif",background:completo&&!saving?"#1E6B42":"#ccc",color:"#fff"}}>
+        {saving?"Guardando...":"🏁 Completar proceso y crear expediente"}
+      </button>
+      {!completo && <div style={{fontSize:9,color:"#B91C1C",marginTop:4}}>* EPS, Pensión y ARL son obligatorios</div>}
+    </div>
+  );
+}
+
 function TabContratacion() {
   const [procesos, setProcesos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -3263,6 +3298,7 @@ function TabContratacion() {
     revision_legal:{label:"Revisión legal",color:"#5B3A8C",bg:"#EDE8F4",icon:"⚖️"},
     firma_pendiente:{label:"Firma pendiente",color:"#D97706",bg:"#FEF3C7",icon:"✍️"},
     firmado:{label:"Firmado",color:"#059669",bg:"#DCFCE7",icon:"✅"},
+    afiliaciones:{label:"Afiliaciones",color:"#0891B2",bg:"#E0F2FE",icon:"🏛️"},
     completado:{label:"Completado",color:"#111",bg:"#E8E8E8",icon:"🏁"},
     cancelado:{label:"Cancelado",color:"#B91C1C",bg:"#FEE2E2",icon:"❌"},
   };
@@ -3552,9 +3588,13 @@ function TabContratacion() {
                       {(p.estado==="firma_pendiente") && <>
                         <span style={{padding:"6px 12px",fontSize:11,fontWeight:600,background:"#FEF3C7",borderRadius:6,color:"#D97706"}}>⏳ Esperando firmas</span>
                       </>}
-                      {(p.estado==="firmado"||p.estado==="completado") && <>
-                        <span style={{padding:"6px 12px",fontSize:11,fontWeight:600,background:"#DCFCE7",borderRadius:6,color:"#059669"}}>✅ Proceso completado</span>
-                      </>}
+                      {p.estado==="firmado" && <>
+                      <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"afiliaciones"})});loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #0891B2",borderRadius:6,background:"#E0F2FE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#0891B2"}}>🏛️ Registrar afiliaciones</button>
+                    </>}
+                    {p.estado==="afiliaciones" && <AfiliacionesPanel p={p} onDone={loadProcesos}/>}
+                    {p.estado==="completado" && <>
+                      <span style={{padding:"6px 12px",fontSize:11,fontWeight:600,background:"#DCFCE7",borderRadius:6,color:"#059669"}}>✅ Proceso completo{p.expediente_num ? " · Exp. "+p.expediente_num : ""}</span>
+                    </>}
                       <button onClick={async()=>{if(!confirm("¿Cancelar esta propuesta?"))return;try{const r=await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"cancelado"})});if(r.ok)loadProcesos();}catch(e){alert(e.message);}}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #DC2626",borderRadius:6,background:"#FEE2E2",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#DC2626"}}>🗑 Cancelar</button>
                     </div>
                   </div>
