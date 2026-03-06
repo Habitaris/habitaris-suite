@@ -70,6 +70,10 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
       var r=await fetch("/api/hiring?id="+HID);var d=await r.json();
       if(!d.ok){R('<div class="card"><h2>No encontrado</h2></div>');return;}
       hiring=d.data;
+      var rt=await fetch("/api/psicotecnico?template=psi_general");var dt=await rt.json();
+      if(dt.ok&&dt.template&&dt.template.secciones){SECTIONS=dt.template.secciones;}
+      allQ=[];SECTIONS.forEach(function(s,si){s.questions.forEach(function(q){allQ.push({section:s.id,sectionIdx:si,id:q.id,text:q.text,opts:q.opts});});});
+      totalQ=allQ.length;
       // Check if already done
       var r2=await fetch("/api/psicotecnico?hiring_id="+HID);var d2=await r2.json();
       if(d2.ok&&d2.data){showReport(d2.data);return;}
