@@ -3143,7 +3143,15 @@ function TabContratacion() {
       if(!ff.length){alert("Configure al menos un firmante.");return;}
       const signers = ff;
       const r = await fetch("/api/firma",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({action:"create_pending",doc_code:docCode,doc_title:"Contrato Individual de Trabajo — "+proc.candidato_nombre,doc_hash:"pending",signers:signers})});
+        body:JSON.stringify({action:"create_pending",doc_code:docCode,doc_title:"Contrato Individual de Trabajo - "+proc.candidato_nombre,doc_hash:"pending",signers:signers})});
+      // 2. Descriptor de cargo
+      const descSgn = [{name:proc.candidato_nombre,email:proc.candidato_email,role:"Trabajador",id_number:proc.candidato_cc,order:1}];
+      await fetch("/api/firma",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({action:"create_pending",doc_code:lanzarForm.descriptor_codigo||proc.descriptor_codigo||"HAB-DC-001",doc_title:"Descriptor de Cargo - "+proc.cargo,doc_hash:"pending",signers:descSgn})});
+      // 3. Recomendaciones SST
+      const sstSgn = [{name:proc.candidato_nombre,email:proc.candidato_email,role:"Trabajador",id_number:proc.candidato_cc,order:1}];
+      await fetch("/api/firma",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({action:"create_pending",doc_code:"HAB-SST-"+new Date().getFullYear()+"-001",doc_title:"Recomendaciones SST - "+proc.candidato_nombre,doc_hash:"pending",signers:sstSgn})});
       const d = await r.json();
       if(d.ok){
         let msg = "Links de firma generados:\n\n";
