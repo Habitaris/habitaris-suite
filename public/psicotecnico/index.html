@@ -76,7 +76,17 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
       totalQ=allQ.length;
       // Check if already done
       var r2=await fetch("/api/psicotecnico?hiring_id="+HID);var d2=await r2.json();
-      if(d2.ok&&d2.data){showReport(d2.data);return;}
+      if(d2.ok&&d2.data){
+        var urlP2=new URLSearchParams(window.location.search);
+        if(!urlP2.get('disc')){
+          // General done, check if DISC needed - redirect
+          window.location.href="/psicotecnico?hiring_id="+HID+"&disc=1";
+          return;
+        }
+        // DISC also done - show completed
+        R('<div class="card" style="text-align:center"><div style="font-size:48px;margin-bottom:12px">\u2705</div><h2>Evaluaciones completadas</h2><div class="sub">Ya complet\u00f3 todas las evaluaciones. Gracias.</div></div>');
+        return;
+      }
       showIntro();
     }catch(e){R('<div class="card"><h2>Error</h2><div class="sub">'+e.message+'</div></div>');}
   }
