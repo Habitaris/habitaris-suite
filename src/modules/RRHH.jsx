@@ -3206,76 +3206,123 @@ function TabEvaluaciones() {
 /* ─────────────────────────────────────────────
    TAB CONTRATACIÓN
 ───────────────────────────────────────────── */
-/* ── PsicotecnicoPanel: lanzar evaluaciones y ver resultados ── */
-function PsicotecnicoPanel({ p, onDone }) {
-  const [results, setResults] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [sending, setSending] = React.useState({});
-  const [replyTo, setReplyTo] = React.useState("comercial@habitaris.co");
+/* ── ExamenPanel: carga de resultados examen médico + aprobación SST ── */
+function ExamenPanel({ p, onDone }) {
+  const [obs,     setObs]     = React.useState(p.examen_obs||"");
+  const [apto,    setApto]    = React.useState(p.examen_apto!==undefined ? p.examen_apto : null);
+  const [saving,  setSaving]  = React.useState(false);
+  const inp = {padding:"5px 8px",fontSize:11,border:"1px solid "+C.border,borderRadius:4,fontFamily:"DM Sans,sans-serif",outline:"none",width:"100%",background:"#fff"};
+  const emitir = async () => {
+    if (apto===null||saving) return;
+    setSaving(true);
+    await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({id:p.id,examen_apto:apto,examen_obs:obs,estado:"certificado_sst"})});
+    setSaving(false);
+    onDone();
+  };
+  return (
+    <div style={{marginTop:8,padding:"12px 14px",background:"#CFFAFE",borderRadius:8,border:"1px solid #0D5E6E44"}}>
+      <div style={{fontSize:11,fontWeight:700,color:"#0D5E6E",marginBottom:10}}>🏥 Resultados examen médico — revisión SST</div>
+      <div style={{marginBottom:8}}>
+        <div style={{fontSize:9,fontWeight:700,color:"#555",marginBottom:4}}>CONCEPTO MÉDICO *</div>
+        <div style={{display:"flex",gap:8,marginBottom:8}}>
+          <button onClick={()=>setApto(true)}  style={{padding:"6px 16px",fontSize:11,fontWeight:600,border:"2px solid "+(apto===true?"#059669":"#E0E0E0"),borderRadius:6,background:apto===true?"#DCFCE7":"#fff",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:apto===true?"#059669":"#555"}}>✅ Apto</button>
+          <button onClick={()=>setApto(false)} style={{padding:"6px 16px",fontSize:11,fontWeight:600,border:"2px solid "+(apto===false?"#B91C1C":"#E0E0E0"),borderRadius:6,background:apto===false?"#FEE2E2":"#fff",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:apto===false?"#B91C1C":"#555"}}>❌ No apto</button>
+        </div>
+        <div style={{fontSize:9,fontWeight:700,color:"#555",marginBottom:2}}>OBSERVACIONES Y RECOMENDACIONES SST</div>
+        <textarea autoComplete="off" value={obs} onChange={e=>setObs(e.target.value)} rows={3} style={{...inp,resize:"vertical"}} placeholder="Descripción de recomendaciones, restricciones, observaciones médicas..."/>
+      </div>
+      <button onClick={emitir} disabled={apto===null||saving} style={{padding:"7px 16px",fontSize:11,fontWeight:700,border:"none",borderRadius:6,cursor:apto!==null&&!saving?"pointer":"not-allowed",fontFamily:"DM Sans,sans-serif",background:apto!==null&&!saving?"#065F46":"#ccc",color:"#fff"}}>
+        {saving?"Guardando...":"🦺 Emitir certificado SST"}
+      </button>
+      {apto===null && <div style={{fontSize:9,color:"#B91C1C",marginTop:4}}>* Selecciona concepto antes de emitir</div>}
+    </div>
+  );
+}
+
+/* ── EvaluacionesPanel: lanzar, ver resultados y aprobación dual RRHH+SST ── */
+function EvaluacionesPanel({ p, onDone }) {
+  const [results,    setResults]    = React.useState(null);
+  const [loading,    setLoading]    = React.useState(true);
+  const [sending,    setSending]    = React.useState({});
+  const [replyTo,    setReplyTo]    = React.useState("comercial@habitaris.co");
+  const [apRRHH,     setApRRHH]     = React.useState(p.eval_aprobada_rrhh||false);
+  const [apSST,      setApSST]      = React.useState(p.eval_aprobada_sst||false);
+  const [savingAp,   setSavingAp]   = React.useState(false);
 
   React.useEffect(() => {
     fetch("/api/psicotecnico?hiring_id="+p.id)
-      .then(r=>r.json())
-      .then(d=>{ setResults(d.data||null); setLoading(false); })
+      .then(r=>r.json()).then(d=>{ setResults(d.data||null); setLoading(false); })
       .catch(()=>setLoading(false));
   }, [p.id]);
 
   const lanzar = async (template) => {
     setSending(s=>({...s,[template]:true}));
-    // Avanzar estado y generar link
     await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({id:p.id,estado:"psicotecnico"})});
+      body:JSON.stringify({id:p.id,estado:"evaluaciones"})});
     const link = "https://suite.habitaris.co/psicotecnico?hiring_id="+p.id+"&template="+template;
-    // Abrir modal de envío
-    window._sendPsiModal = {link, email:p.candidato_email, nombre:p.candidato_nombre, template};
-    // Copiar link al portapapeles
+    const tplLabel = template==="psi_disc" ? "Evaluación DISC" : "Evaluación General / Wonderlic";
+    let emailOk = false;
+    if (p.candidato_email) {
+      const er = await fetch("/api/send-email",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          client_email: p.candidato_email,
+          client_name:  p.candidato_nombre||"Candidato",
+          form_name:    tplLabel+" — Proceso de selección · "+p.cargo,
+          form_link:    link,
+          link_info:    "Completar evaluación",
+          from_name:    "Habitaris RRHH"
+        })});
+      emailOk = er.ok;
+    }
     navigator.clipboard.writeText(link).catch(()=>{});
-    alert("Link copiado: "+link+"
-
-Envíalo por WhatsApp o email al candidato.");
+    alert(emailOk ? "✅ Email enviado a "+p.candidato_email+"\nLink también copiado." : "Link copiado:\n"+link);
     setSending(s=>({...s,[template]:false}));
     onDone();
   };
 
-  const aprobar = async () => {
-    const ar = await fetch("/api/aprobar",{method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({hiring_id:p.id,tipo:"psicotecnico",aprobador_nombre:"",aprobador_email:""})});
-    const sd = await ar.json();
-    if(sd.ok){ navigator.clipboard.writeText(sd.link).catch(()=>{}); alert("Link aprobación SST copiado:\n"+sd.link); }
+  const aprobar = async (rol) => {
+    setSavingAp(true);
+    const patch = rol==="rrhh" ? {eval_aprobada_rrhh:true} : {eval_aprobada_sst:true};
     await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({id:p.id,estado:"examen_medico"})});
-    onDone();
+      body:JSON.stringify({id:p.id,...patch})});
+    if (rol==="rrhh") setApRRHH(true); else setApSST(true);
+    // Si los dos aprobaron → avanzar a examen_medico
+    const ambosOk = (rol==="rrhh" ? true : apRRHH) && (rol==="sst" ? true : apSST);
+    if (ambosOk) {
+      await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({id:p.id,estado:"examen_medico"})});
+      alert("✅ Evaluaciones aprobadas por RRHH y SST. Avanzando a Examen médico.");
+      onDone();
+    }
+    setSavingAp(false);
   };
 
   const tpls = [
-    {id:"psi_general", lbl:"🧠 General / Wonderlic", desc:"Aptitud general, razonamiento"},
+    {id:"psi_general", lbl:"🧠 General / Wonderlic", desc:"Aptitud general y razonamiento"},
     {id:"psi_disc",    lbl:"🎯 DISC",                desc:"Perfil de personalidad y comportamiento"},
   ];
-
   const psiLanzados = p.psi_lanzados ? p.psi_lanzados.split(",") : [];
 
   return (
     <div style={{marginTop:8}}>
-      {/* Email de respuesta configurable */}
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,padding:"6px 10px",background:"#F5F5F5",borderRadius:6,border:"1px solid #E0E0E0"}}>
+      {/* Campo reply-to */}
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,padding:"5px 10px",background:"#F5F5F5",borderRadius:6,border:"1px solid #E0E0E0"}}>
         <span style={{fontSize:9,fontWeight:700,color:"#555",whiteSpace:"nowrap"}}>RESPONDER A:</span>
-        <input value={replyTo} onChange={e=>setReplyTo(e.target.value)} style={{flex:1,padding:"3px 6px",fontSize:11,border:"1px solid #E0E0E0",borderRadius:4,fontFamily:"DM Sans,sans-serif",outline:"none",background:"#fff"}} placeholder="comercial@habitaris.co"/>
+        <input autoComplete="off" value={replyTo} onChange={e=>setReplyTo(e.target.value)} style={{flex:1,padding:"3px 6px",fontSize:11,border:"1px solid #E0E0E0",borderRadius:4,fontFamily:"DM Sans,sans-serif",outline:"none",background:"#fff"}} placeholder="comercial@habitaris.co"/>
       </div>
+
       {/* Lanzar evaluaciones */}
-      <div style={{padding:"10px 12px",background:"#EDE8F4",borderRadius:8,border:"1px solid #5B3A8C44",marginBottom:8}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#5B3A8C",marginBottom:8}}>🧠 Evaluaciones psicotécnicas</div>
+      <div style={{padding:"10px 12px",background:"#EDE8F4",borderRadius:8,border:"1px solid #5B3A8C33",marginBottom:8}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#5B3A8C",marginBottom:8}}>🧠 Lanzar evaluaciones al candidato</div>
         <div style={{display:"flex",flexDirection:"column",gap:6}}>
           {tpls.map(t => {
             const yaLanzado = psiLanzados.includes(t.id);
             return (
               <div key={t.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 10px",background:"#fff",borderRadius:6,border:"1px solid #E0E0E0"}}>
-                <div>
-                  <div style={{fontSize:11,fontWeight:600}}>{t.lbl}</div>
-                  <div style={{fontSize:9,color:"#888"}}>{t.desc}</div>
-                </div>
-                <button onClick={()=>lanzar(t.id)} style={{padding:"4px 12px",fontSize:10,fontWeight:600,border:"none",borderRadius:4,cursor:"pointer",fontFamily:"DM Sans,sans-serif",
-                  background:yaLanzado?"#DCFCE7":"#5B3A8C",color:yaLanzado?"#059669":"#fff"}}>
-                  {yaLanzado?"✅ Relanzar":"Enviar link"}
+                <div><div style={{fontSize:11,fontWeight:600}}>{t.lbl}</div><div style={{fontSize:9,color:"#888"}}>{t.desc}</div></div>
+                <button disabled={sending[t.id]} onClick={()=>lanzar(t.id)} style={{padding:"4px 12px",fontSize:10,fontWeight:600,border:"none",borderRadius:4,cursor:"pointer",fontFamily:"DM Sans,sans-serif",background:yaLanzado?"#DCFCE7":"#5B3A8C",color:yaLanzado?"#059669":"#fff"}}>
+                  {sending[t.id]?"Enviando...":yaLanzado?"✅ Relanzar":"Enviar link"}
                 </button>
               </div>
             );
@@ -3285,69 +3332,40 @@ Envíalo por WhatsApp o email al candidato.");
 
       {/* Resultados */}
       <div style={{padding:"10px 12px",background:"#F8F8F8",borderRadius:8,border:"1px solid #E0E0E0",marginBottom:8}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#333",marginBottom:6}}>📊 Resultados recibidos</div>
+        <div style={{fontSize:11,fontWeight:700,color:"#333",marginBottom:6}}>📊 Resultados de evaluaciones</div>
         {loading ? <div style={{fontSize:10,color:"#aaa"}}>Cargando...</div> :
          !results ? <div style={{fontSize:10,color:"#aaa"}}>Sin resultados aún — el candidato no ha completado las evaluaciones</div> :
          <div>
-           {results.puntaje_general !== undefined && (
-             <div style={{display:"flex",gap:16,marginBottom:6}}>
-               <div style={{fontSize:12,fontWeight:700}}>Puntaje: <span style={{color:"#5B3A8C"}}>{results.puntaje_general}</span></div>
-               {results.perfil_disc && <div style={{fontSize:12,fontWeight:700}}>DISC: <span style={{color:"#5B3A8C"}}>{results.perfil_disc}</span></div>}
-             </div>
-           )}
-           {results.concepto && (
-             <div style={{padding:"6px 10px",background:"#EDE8F4",borderRadius:6,fontSize:11,color:"#333",marginBottom:6}}>
-               <strong>Concepto:</strong> {results.concepto}
-             </div>
-           )}
-           {results.observaciones && <div style={{fontSize:10,color:"#555"}}>{results.observaciones}</div>}
-           <div style={{fontSize:9,color:"#aaa",marginTop:4}}>Completado: {results.created_at ? new Date(results.created_at).toLocaleDateString("es-CO") : "—"}</div>
+           <div style={{display:"flex",gap:16,marginBottom:6,flexWrap:"wrap"}}>
+             {results.puntaje_general!==undefined && <div style={{fontSize:12,fontWeight:700}}>Puntaje: <span style={{color:"#5B3A8C"}}>{results.puntaje_general}</span></div>}
+             {results.perfil_disc && <div style={{fontSize:12,fontWeight:700}}>DISC: <span style={{color:"#5B3A8C"}}>{results.perfil_disc}</span></div>}
+           </div>
+           {results.concepto && <div style={{padding:"6px 10px",background:"#EDE8F4",borderRadius:6,fontSize:11,color:"#333",marginBottom:6}}><strong>Concepto:</strong> {results.concepto}</div>}
+           {results.observaciones && <div style={{fontSize:10,color:"#555",marginBottom:4}}>{results.observaciones}</div>}
+           <div style={{fontSize:9,color:"#aaa"}}>Completado: {results.created_at ? new Date(results.created_at).toLocaleDateString("es-CO") : "—"}</div>
          </div>
         }
       </div>
 
-      {/* Acción: aprobar y avanzar */}
-      <button onClick={aprobar} style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:"1px solid #0D5E6E",borderRadius:6,background:"#E0F2FE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#0D5E6E"}}>
-        🏥 Psicotécnico OK → Avanzar a Examen médico
-      </button>
+      {/* Aprobación dual RRHH + SST */}
+      <div style={{padding:"10px 12px",background:"#F0FDF4",borderRadius:8,border:"1px solid #059669",marginBottom:6}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#065F46",marginBottom:8}}>✅ Aprobación de evaluaciones (requiere ambos)</div>
+        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+          <button disabled={apRRHH||savingAp} onClick={()=>aprobar("rrhh")}
+            style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:"none",borderRadius:6,cursor:apRRHH?"default":"pointer",fontFamily:"DM Sans,sans-serif",background:apRRHH?"#DCFCE7":"#1E6B42",color:apRRHH?"#059669":"#fff"}}>
+            {apRRHH?"✅ RRHH aprobó":"👤 Aprobar como RRHH"}
+          </button>
+          <button disabled={apSST||savingAp} onClick={()=>aprobar("sst")}
+            style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:"none",borderRadius:6,cursor:apSST?"default":"pointer",fontFamily:"DM Sans,sans-serif",background:apSST?"#DCFCE7":"#0D5E6E",color:apSST?"#059669":"#fff"}}>
+            {apSST?"✅ SST aprobó":"🦺 Aprobar como SST"}
+          </button>
+        </div>
+        {(apRRHH||apSST) && !(apRRHH&&apSST) && <div style={{fontSize:9,color:"#D97706",marginTop:6}}>⏳ Falta aprobación de {apRRHH?"SST":"RRHH"} para avanzar</div>}
+      </div>
     </div>
   );
 }
 
-/* ── AfiliacionesPanel ── */
-function AfiliacionesPanel({ p, onDone }) {
-  const [eps,setEps]           = React.useState(p.afil_eps||"");
-  const [pension,setPension]   = React.useState(p.afil_pension||"");
-  const [arl,setArl]           = React.useState(p.afil_arl||"");
-  const [ccf,setCcf]           = React.useState(p.afil_ccf||"");
-  const [saving,setSaving]     = React.useState(false);
-  const completo = eps && pension && arl;
-  const inp = {padding:"5px 8px",fontSize:11,border:"1px solid "+C.border,borderRadius:4,fontFamily:"DM Sans,sans-serif",outline:"none",width:"100%",background:"#fff"};
-  const completar = async () => {
-    if (!completo||saving) return;
-    setSaving(true);
-    const expNum = "EXP-"+new Date().getFullYear()+"-"+String(Date.now()).slice(-5);
-    await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({id:p.id,estado:"completado",afil_eps:eps,afil_pension:pension,afil_arl:arl,afil_ccf:ccf,expediente_num:expNum,fecha_completado:new Date().toISOString()})});
-    setSaving(false);
-    onDone();
-  };
-  return (
-    <div style={{marginTop:8,padding:"12px 14px",background:"#E0F2FE",borderRadius:8,border:"1px solid #0891B244"}}>
-      <div style={{fontSize:11,fontWeight:700,color:"#0891B2",marginBottom:10}}>🏛️ Afiliaciones — completa para cerrar el proceso y crear expediente</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
-        <div><div style={{fontSize:9,fontWeight:700,color:"#555",marginBottom:2}}>EPS *</div><input value={eps} onChange={e=>setEps(e.target.value)} style={inp} placeholder="Sura, Compensar, Sanitas..."/></div>
-        <div><div style={{fontSize:9,fontWeight:700,color:"#555",marginBottom:2}}>PENSIÓN *</div><input value={pension} onChange={e=>setPension(e.target.value)} style={inp} placeholder="Porvenir, Colpensiones..."/></div>
-        <div><div style={{fontSize:9,fontWeight:700,color:"#555",marginBottom:2}}>ARL *</div><input value={arl} onChange={e=>setArl(e.target.value)} style={inp} placeholder="Positiva, Sura, Colmena..."/></div>
-        <div><div style={{fontSize:9,fontWeight:700,color:"#555",marginBottom:2}}>CAJA (opcional)</div><input value={ccf} onChange={e=>setCcf(e.target.value)} style={inp} placeholder="Compensar, Cafam..."/></div>
-      </div>
-      <button onClick={completar} disabled={!completo||saving} style={{padding:"7px 16px",fontSize:11,fontWeight:700,border:"none",borderRadius:6,cursor:completo&&!saving?"pointer":"not-allowed",fontFamily:"DM Sans,sans-serif",background:completo&&!saving?"#1E6B42":"#ccc",color:"#fff"}}>
-        {saving?"Guardando...":"🏁 Completar proceso y crear expediente"}
-      </button>
-      {!completo && <div style={{fontSize:9,color:"#B91C1C",marginTop:4}}>* EPS, Pensión y ARL son obligatorios</div>}
-    </div>
-  );
-}
 
 function TabContratacion() {
   const [procesos, setProcesos] = useState([]);
@@ -3396,19 +3414,20 @@ function TabContratacion() {
   };
 
   const ESTADOS = {
-    propuesta:{label:"Propuesta enviada",color:"#8C6A00",bg:"#FFF8EE",icon:"📩"},
-    aceptada:{label:"Aceptada",color:"#059669",bg:"#DCFCE7",icon:"✅"},
-    datos_pendientes:{label:"Datos pendientes",color:"#D97706",bg:"#FEF3C7",icon:"📋"},
-    datos_recibidos:{label:"Datos recibidos",color:"#1D4ED8",bg:"#EFF6FF",icon:"📄"},
-    psicotecnico:{label:"Psicotécnico",color:"#5B3A8C",bg:"#EDE8F4",icon:"🧠"},
-    examen_medico:{label:"Examen médico",color:"#0D5E6E",bg:"#E0F2FE",icon:"🏥"},
-    validacion_sst:{label:"Validación SST",color:"#D97706",bg:"#FEF3C7",icon:"🦺"},
-    revision_legal:{label:"Revisión legal",color:"#5B3A8C",bg:"#EDE8F4",icon:"⚖️"},
-    firma_pendiente:{label:"Firma pendiente",color:"#D97706",bg:"#FEF3C7",icon:"✍️"},
-    firmado:{label:"Firmado",color:"#059669",bg:"#DCFCE7",icon:"✅"},
-    afiliaciones:{label:"Afiliaciones",color:"#0891B2",bg:"#E0F2FE",icon:"🏛️"},
-    completado:{label:"Completado",color:"#111",bg:"#E8E8E8",icon:"🏁"},
-    cancelado:{label:"Cancelado",color:"#B91C1C",bg:"#FEE2E2",icon:"❌"},
+    propuesta:          {label:"Propuesta enviada",       color:"#8C6A00",bg:"#FFF8EE",  icon:"📩"},
+    aceptada:           {label:"Aceptada",                color:"#059669",bg:"#DCFCE7",  icon:"✅"},
+    datos_pendientes:   {label:"Datos pendientes",        color:"#D97706",bg:"#FEF3C7",  icon:"📋"},
+    datos_recibidos:    {label:"Datos recibidos",         color:"#1D4ED8",bg:"#EFF6FF",  icon:"📄"},
+    evaluaciones:       {label:"Evaluaciones",            color:"#5B3A8C",bg:"#EDE8F4",  icon:"🧠"},
+    eval_revision:      {label:"Revisión evaluaciones",   color:"#7C3AED",bg:"#F3E8FF",  icon:"🔍"},
+    examen_medico:      {label:"Examen médico",           color:"#0D5E6E",bg:"#CFFAFE",  icon:"🏥"},
+    examen_recibido:    {label:"Resultados examen",       color:"#0369A1",bg:"#E0F2FE",  icon:"📋"},
+    certificado_sst:    {label:"Certificado SST",         color:"#065F46",bg:"#D1FAE5",  icon:"🦺"},
+    firma_pendiente:    {label:"Firma pendiente",         color:"#D97706",bg:"#FEF3C7",  icon:"✍️"},
+    firmado:            {label:"Firmado",                 color:"#059669",bg:"#DCFCE7",  icon:"✅"},
+    afiliaciones:       {label:"Afiliaciones",            color:"#0891B2",bg:"#E0F2FE",  icon:"🏛️"},
+    completado:         {label:"Completado",              color:"#111",   bg:"#E8E8E8",  icon:"🏁"},
+    cancelado:          {label:"Cancelado",               color:"#B91C1C",bg:"#FEE2E2",  icon:"❌"},
   };
 
   const fmtMoney = (n) => n ? new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n) : "$0";
@@ -3681,13 +3700,19 @@ function TabContratacion() {
                         <button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("Complete sus datos para la contratación en Habitaris:\n"+linkDatos),"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📱 Recordar por WhatsApp</button>
                       </>}
                       {(p.estado==="datos_recibidos") && <>
-                        <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"psicotecnico"})});var psiLink="https://suite.habitaris.co/psicotecnico?hiring_id="+p.id;setSendModal({link:psiLink,email:p.candidato_email,titulo:"Evaluaci\u00f3n psicot\u00e9cnica",nombre:p.candidato_nombre});loadProcesos;loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #5B3A8C",borderRadius:6,background:"#EDE8F4",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#5B3A8C"}}>🧠 Enviar a psicotécnico</button>
+                        <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"evaluaciones"})});var psiLink="https://suite.habitaris.co/psicotecnico?hiring_id="+p.id;setSendModal({link:psiLink,email:p.candidato_email,titulo:"Evaluaci\u00f3n psicot\u00e9cnica",nombre:p.candidato_nombre});loadProcesos;loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #5B3A8C",borderRadius:6,background:"#EDE8F4",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#5B3A8C"}}>🧠 Enviar a psicotécnico</button>
                         <button onClick={()=>setLanzarId(p.id)} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>⏩ Saltar a contratación</button>
                       </>}
-                      {p.estado==="psicotecnico" && <PsicotecnicoPanel p={p} onDone={loadProcesos}/>}
-                      {(p.estado==="examen_medico") && <>
-                        <button onClick={async()=>{const sr=await fetch("/api/aprobar",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({hiring_id:p.id,tipo:"sst",aprobador_nombre:"",aprobador_email:""})});const sd=await sr.json();if(sd.ok){navigator.clipboard.writeText(sd.link);alert("Link de validación SST copiado:\n"+sd.link);}await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"validacion_sst"})});loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #D97706",borderRadius:6,background:"#FEF3C7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#D97706"}}>🦺 Examen OK → Enviar a SST</button>
-                      </>}
+                      {p.estado==="evaluaciones" && <EvaluacionesPanel p={p} onDone={loadProcesos}/>}
+                      {p.estado==="examen_medico" && <>
+                      <span style={{fontSize:10,color:"#0D5E6E",fontStyle:"italic"}}>Solicita el examen médico al candidato y carga los resultados cuando los tengas.</span>
+                      <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"examen_recibido"})});onDone&&onDone();window.location.reload();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #0369A1",borderRadius:6,background:"#E0F2FE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#0369A1"}}>📋 Cargar resultados examen</button>
+                    </>}
+                    {p.estado==="examen_recibido" && <ExamenPanel p={p} onDone={loadProcesos}/>}
+                    {p.estado==="certificado_sst" && <>
+                      <span style={{padding:"6px 10px",fontSize:11,fontWeight:600,background:"#D1FAE5",borderRadius:6,color:"#065F46"}}>🦺 Certificado SST emitido — listo para firma</span>
+                      <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"firma_pendiente"})});loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #D97706",borderRadius:6,background:"#FEF3C7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#D97706"}}>✍️ Lanzar firma</button>
+                    </>}
                       {(p.estado==="validacion_sst") && <>
                         <button onClick={()=>setLanzarId(p.id)} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📝 SST OK → Lanzar a contratación</button>
                       </>}
