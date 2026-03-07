@@ -3211,6 +3211,7 @@ function PsicotecnicoPanel({ p, onDone }) {
   const [results, setResults] = React.useState(null);
   const [loading, setLoading] = React.useState(true);
   const [sending, setSending] = React.useState({});
+  const [replyTo, setReplyTo] = React.useState("comercial@habitaris.co");
 
   React.useEffect(() => {
     fetch("/api/psicotecnico?hiring_id="+p.id)
@@ -3255,6 +3256,11 @@ Envíalo por WhatsApp o email al candidato.");
 
   return (
     <div style={{marginTop:8}}>
+      {/* Email de respuesta configurable */}
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,padding:"6px 10px",background:"#F5F5F5",borderRadius:6,border:"1px solid #E0E0E0"}}>
+        <span style={{fontSize:9,fontWeight:700,color:"#555",whiteSpace:"nowrap"}}>RESPONDER A:</span>
+        <input value={replyTo} onChange={e=>setReplyTo(e.target.value)} style={{flex:1,padding:"3px 6px",fontSize:11,border:"1px solid #E0E0E0",borderRadius:4,fontFamily:"DM Sans,sans-serif",outline:"none",background:"#fff"}} placeholder="comercial@habitaris.co"/>
+      </div>
       {/* Lanzar evaluaciones */}
       <div style={{padding:"10px 12px",background:"#EDE8F4",borderRadius:8,border:"1px solid #5B3A8C44",marginBottom:8}}>
         <div style={{fontSize:11,fontWeight:700,color:"#5B3A8C",marginBottom:8}}>🧠 Evaluaciones psicotécnicas</div>
