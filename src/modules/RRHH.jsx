@@ -3877,40 +3877,53 @@ function TabContratacion() {
                         {/* Documentos adjuntos */}
                         {(()=>{
                           try {
-                            const ced = JSON.parse(p.candidato_cedula || '{}');
-                            const extras = JSON.parse(p.candidato_documentos_extra || '{}');
+                            const ced    = JSON.parse(p.candidato_cedula             || '{}');
+                            const extras = JSON.parse(p.candidato_documentos_extra   || '{}');
+                            const isImg  = url => /\.(jpg|jpeg|png|gif|webp)/i.test(url||'');
+                            const isPdf  = url => /\.pdf/i.test(url||'');
+                            const ext    = url => { const m = (url||'').match(/\.([a-zA-Z0-9]+)(?:\?|$)/); return m ? m[1].toUpperCase() : 'DOC'; };
                             const allDocs = [
-                              ced.anverso  && {label:'Cédula anverso',   url:ced.anverso,   icon:'🪪'},
-                              ced.reverso  && {label:'Cédula reverso',   url:ced.reverso,   icon:'🪪'},
-                              extras.cert_eps     && {label:'Certificado EPS',        url:extras.cert_eps,     icon:'🏥'},
-                              extras.cert_pension && {label:'Certificado Pensión',    url:extras.cert_pension, icon:'💼'},
-                              extras.cert_banco   && {label:'Certificación Bancaria', url:extras.cert_banco,   icon:'🏦'},
-                              extras.hv           && {label:'Hoja de Vida',           url:extras.hv,           icon:'📄'},
-                              extras.otros && Object.entries(extras.otros||{}).map(([k,v])=>({label:k,url:v,icon:'📎'})),
+                              ced.anverso             && {label:'Cédula — anverso',       url:ced.anverso,          cat:'Identidad'},
+                              ced.reverso             && {label:'Cédula — reverso',        url:ced.reverso,          cat:'Identidad'},
+                              p.candidato_foto_url    && {label:'Foto perfil',             url:p.candidato_foto_url, cat:'Identidad'},
+                              extras.cert_eps         && {label:'Certificado EPS',         url:extras.cert_eps,      cat:'Seguridad Social'},
+                              extras.cert_pension     && {label:'Certificado Pensión',     url:extras.cert_pension,  cat:'Seguridad Social'},
+                              extras.cert_banco       && {label:'Certificación Bancaria',  url:extras.cert_banco,    cat:'Financiero'},
+                              extras.hv               && {label:'Hoja de Vida',            url:extras.hv,            cat:'Laboral'},
+                              extras.otros && Object.entries(extras.otros||{}).map(([k,v])=>({label:k,url:v,cat:'Otros'})),
                             ].flat().filter(Boolean);
                             if (!allDocs.length) return null;
+                            const cats = [...new Set(allDocs.map(d=>d.cat))];
                             return (
-                              <div style={{borderTop:'1px solid '+C.border,paddingTop:12,marginTop:8}}>
-                                <div style={{fontSize:11,fontWeight:700,color:C.inkLight,marginBottom:10,letterSpacing:1,textTransform:'uppercase'}}>📎 Documentos adjuntos</div>
-                                <div style={{display:'flex',flexDirection:'column',gap:6}}>
-                                  {allDocs.map((doc,i)=>(
-                                    <div key={i} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 12px',background:'#F8F7F5',borderRadius:6,border:'1px solid '+C.border}}>
-                                      <div style={{display:'flex',alignItems:'center',gap:8}}>
-                                        <span style={{fontSize:16}}>{doc.icon}</span>
-                                        <span style={{fontSize:13,color:C.ink,fontWeight:500}}>{doc.label}</span>
-                                      </div>
-                                      <div style={{display:'flex',gap:6}}>
-                                        <button onClick={()=>window.open(doc.url,'_blank')} style={{padding:'4px 10px',fontSize:11,fontWeight:600,background:'#EFF6FF',border:'1px solid #BFDBFE',borderRadius:4,cursor:'pointer',color:'#1D4ED8',fontFamily:'inherit'}}>👁 Ver</button>
-                                        <a href={doc.url} download target="_blank" rel="noreferrer" style={{padding:'4px 10px',fontSize:11,fontWeight:600,background:C.green+'15',border:'1px solid '+C.green+'40',borderRadius:4,cursor:'pointer',color:C.green,textDecoration:'none',display:'inline-flex',alignItems:'center'}}>⬇ Descargar</a>
-                                      </div>
+                              <div style={{borderTop:'1px solid '+C.border,paddingTop:14,marginTop:10}}>
+                                <div style={{fontSize:11,fontWeight:700,color:C.inkLight,marginBottom:12,letterSpacing:1.5,textTransform:'uppercase'}}>Documentos adjuntos</div>
+                                {cats.map(cat=>(
+                                  <div key={cat} style={{marginBottom:12}}>
+                                    <div style={{fontSize:10,fontWeight:700,color:C.inkLight,letterSpacing:1,textTransform:'uppercase',marginBottom:6,paddingBottom:3,borderBottom:'1px solid '+C.border+'80'}}>{cat}</div>
+                                    <div style={{display:'flex',flexDirection:'column',gap:4}}>
+                                      {allDocs.filter(d=>d.cat===cat).map((doc,i)=>(
+                                        <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'7px 10px',background:C.bg,borderRadius:6,border:'1px solid '+C.border}}>
+                                          {isImg(doc.url) ? (
+                                            <img src={doc.url} alt={doc.label} style={{width:36,height:36,borderRadius:4,objectFit:'cover',border:'1px solid '+C.border,cursor:'pointer',flexShrink:0}} onClick={()=>window.open(doc.url,'_blank')}/>
+                                          ) : (
+                                            <div style={{width:36,height:36,borderRadius:4,background:isPdf(doc.url)?'#FEE2E2':'#EFF6FF',border:'1px solid '+C.border,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:10,fontWeight:700,color:isPdf(doc.url)?'#DC2626':'#1D4ED8'}}>
+                                              {ext(doc.url)}
+                                            </div>
+                                          )}
+                                          <span style={{flex:1,fontSize:13,color:C.ink,fontWeight:500}}>{doc.label}</span>
+                                          <div style={{display:'flex',gap:4,flexShrink:0}}>
+                                            <button onClick={()=>window.open(doc.url,'_blank')} style={{padding:'4px 10px',fontSize:11,fontWeight:600,background:'#F1F5F9',border:'1px solid #CBD5E1',borderRadius:4,cursor:'pointer',color:'#334155',fontFamily:'inherit'}}>👁 Ver</button>
+                                            <a href={doc.url} download target="_blank" rel="noreferrer" style={{padding:'4px 10px',fontSize:11,fontWeight:600,background:C.green+'15',border:'1px solid '+C.green+'40',borderRadius:4,cursor:'pointer',color:C.green,textDecoration:'none',display:'inline-flex',alignItems:'center'}}>⬇ Descargar</a>
+                                          </div>
+                                        </div>
+                                      ))}
                                     </div>
-                                  ))}
-                                </div>
+                                  </div>
+                                ))}
                               </div>
                             );
                           } catch(e) { return null; }
                         })()}
-   </div>
                     )}
                     <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.border}}>
                       {/* Botones según estado */}
