@@ -3924,6 +3924,7 @@ function TabContratacion() {
                             );
                           } catch(e) { return null; }
                         })()}
+                        </div>
                     )}
                     <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.border}}>
                       {/* Botones según estado */}
