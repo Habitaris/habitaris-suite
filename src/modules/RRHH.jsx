@@ -1708,7 +1708,33 @@ function TabAsistencia({ equipo, asistencia, setAsistencia, pais }) {
       fecha, timestamp:nowISO(), tipo,
       foto:fotoSrc, lat:coords?.lat||null, lng:coords?.lng||null,
       precision:coords?.precision||null, gpsError:gpsError||null,
+      device_info: (() => {
+        const ua = navigator.userAgent;
+        const os = /android/i.test(ua)?"Android":/iphone|ipad/i.test(ua)?"iOS":/windows/i.test(ua)?"Windows":/mac os/i.test(ua)?"macOS":"Linux";
+        const browser = /edg\//i.test(ua)?"Edge":/chrome/i.test(ua)?"Chrome":/firefox/i.test(ua)?"Firefox":/safari/i.test(ua)?"Safari":"Otro";
+        const dm = ua.match(/\(([^)]+)\)/);
+        let device = "Desconocido";
+        if (dm) { const info=dm[1]; if(/iphone/i.test(info)) device="iPhone"; else if(/ipad/i.test(info)) device="iPad"; else { const a=info.match(/; ([^;]+) Build/); device=a?a[1].trim():info.split(';')[0].trim(); } }
+        return { os, browser, device, ua: ua.slice(0,200) };
+      })(),
     };
+    // Guardar en Supabase
+    try {
+      await fetch("/api/attendance",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          employee_id:     reg.empleadoId,
+          employee_nombre: reg.empleadoNombre,
+          tipo:            reg.tipo,
+          fecha:           reg.fecha,
+          gps_lat:         reg.lat,
+          gps_lng:         reg.lng,
+          gps_accuracy:    reg.precision,
+          foto_url:        reg.foto,
+          device_info:     reg.device_info,
+          centro_costo:    reg.centroCosto||null,
+          novedad_desc:    reg.novedad||null,
+        })});
+    } catch(e) { console.error("Supabase attendance error:",e); }
     setAsistencia(a=>[...a,reg]);
     setPaso(5);
     stopCamera();
