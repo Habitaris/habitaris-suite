@@ -3946,7 +3946,7 @@ function TabContratacion() {
                       {p.estado==="firmado" && <>
                       <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"afiliaciones"})});loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #0891B2",borderRadius:6,background:"#E0F2FE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#0891B2"}}>🏛️ Registrar afiliaciones</button>
                     </>}
-                    {p.estado==="afiliaciones" && <AfiliacionesPanel p={p} onDone={loadProcesos}/>}
+                    {(p.estado==="afiliaciones"||p.estado==="firma_pendiente"||p.estado==="firmado") && <AfiliacionesPanel p={p} onDone={loadProcesos}/>}
                     {p.estado==="completado" && <>
                       <span style={{padding:"6px 12px",fontSize:11,fontWeight:600,background:"#DCFCE7",borderRadius:6,color:"#059669"}}>✅ Proceso completo{p.expediente_num ? " · Exp. "+p.expediente_num : ""}</span>
                     </>}
