@@ -28,6 +28,7 @@ import Calendario, { CalendarioPublico } from './modules/Calendario.jsx'
 import PortalCliente from './modules/PortalCliente.jsx'
 import FormularioPublico from './modules/FormularioPublico.jsx'
 import LoginScreen, { isLoggedIn, login as doLogin, logout, isAuthConfigured } from './modules/Login.jsx'
+import AprobarExterno from './modules/AprobarExterno.jsx'
 
 export const C = {
   ink:"#111111", inkMid:"#555555", inkLight:"#999999",
@@ -226,6 +227,7 @@ export default function App() {
 
   // Public routes — no login required
   const path = window.location.pathname
+  if (path.startsWith("/aprobar-externo")) return <AprobarExterno />
   if (path.startsWith("/portal")) return <PortalCliente />
   if (path.startsWith("/form")) return <FormularioPublico />
   if (path.startsWith("/agendar")) return <CalendarioPublico />
