@@ -1700,7 +1700,7 @@ function TabAsistencia({ equipo, asistencia, setAsistencia, pais }) {
   };
 
   // Confirmar registro
-  const confirmarFichaje = () => {
+  const confirmarFichaje = async () => {
     if (!fotoSrc) { alert("La foto es obligatoria."); return; }
     const tipo = presentes[selTrab.id]?.length%2===0 ? "entrada" : "salida";
     const reg = {
