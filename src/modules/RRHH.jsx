@@ -3903,13 +3903,11 @@ function TabContratacion() {
                                     <div style={{display:'flex',flexDirection:'column',gap:4}}>
                                       {allDocs.filter(d=>d.cat===cat).map((doc,i)=>(
                                         <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'7px 10px',background:C.bg,borderRadius:6,border:'1px solid '+C.border}}>
-                                          {isImg(doc.url) ? (
-                                            <img src={doc.url} alt={doc.label} style={{width:36,height:36,borderRadius:4,objectFit:'cover',border:'1px solid '+C.border,cursor:'pointer',flexShrink:0}} onClick={()=>window.open(doc.url,'_blank')}/>
-                                          ) : (
-                                            <div style={{width:36,height:36,borderRadius:4,background:isPdf(doc.url)?'#FEE2E2':'#EFF6FF',border:'1px solid '+C.border,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:10,fontWeight:700,color:isPdf(doc.url)?'#DC2626':'#1D4ED8'}}>
-                                              {ext(doc.url)}
-                                            </div>
-                                          )}
+                                          <><img src={doc.url} alt={doc.label}
+                                            style={{width:36,height:36,borderRadius:4,objectFit:'cover',border:'1px solid '+C.border,cursor:'pointer',flexShrink:0}}
+                                            onClick={()=>window.open(doc.url,'_blank')}
+                                            onError={e=>{e.target.style.display='none';e.target.nextSibling.style.display='flex'}}
+                                          /><div style={{display:'none',width:36,height:36,borderRadius:4,background:isPdf(doc.url)?'#FEE2E2':'#EFF6FF',border:'1px solid '+C.border,alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:10,fontWeight:700,color:isPdf(doc.url)?'#DC2626':'#1D4ED8'}}>{ext(doc.url)}</div></>
                                           <span style={{flex:1,fontSize:13,color:C.ink,fontWeight:500}}>{doc.label}</span>
                                           <div style={{display:'flex',gap:4,flexShrink:0}}>
                                             <button onClick={()=>window.open(doc.url,'_blank')} style={{padding:'4px 10px',fontSize:11,fontWeight:600,background:'#F1F5F9',border:'1px solid #CBD5E1',borderRadius:4,cursor:'pointer',color:'#334155',fontFamily:'inherit'}}>👁 Ver</button>
