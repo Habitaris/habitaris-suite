@@ -3806,23 +3806,42 @@ function TabContratacion() {
                           try { const bs = JSON.parse(p.candidato_beneficiarios); if(!bs.length) return null; return <div style={{fontSize:11,marginBottom:8}}><span style={{color:C.inkLight}}>👨‍👩‍👧 Beneficiarios:</span> {bs.map((b,i)=><span key={i} style={{background:C.bg,padding:"1px 6px",borderRadius:4,marginLeft:4,fontSize:10}}>{b.nombre} ({b.parentesco})</span>)}</div>; } catch(e) { return null; }
                         })()}
                         {/* Documentos adjuntos */}
-                        <div style={{borderTop:"1px solid "+C.border,paddingTop:10,marginTop:8}}>
-                          <div style={{fontSize:11,fontWeight:600,color:C.inkLight,marginBottom:8}}>📎 Documentos adjuntos</div>
-                          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-                            {p.candidato_cedula_url && (() => {
-                              try{const ced=JSON.parse(p.candidato_cedula_url);
-                              return <>{ced.anverso && <><img src={ced.anverso} onClick={()=>window.open(ced.anverso)} style={{width:80,height:50,objectFit:"cover",borderRadius:4,border:"1px solid "+C.border,cursor:"pointer"}} title="Cédula anverso"/><div style={{fontSize:9,color:C.inkLight,textAlign:"center"}}>Cédula anverso</div></>}
-                              {ced.reverso && <><img src={ced.reverso} onClick={()=>window.open(ced.reverso)} style={{width:80,height:50,objectFit:"cover",borderRadius:4,border:"1px solid "+C.border,cursor:"pointer"}} title="Cédula reverso"/><div style={{fontSize:9,color:C.inkLight,textAlign:"center"}}>Cédula reverso</div></>}</>;}catch(e){return null;}
-                            })()}
-                            {p.candidato_documentos_extra && (() => {
-                              try{const docs=JSON.parse(p.candidato_documentos_extra);
-                              return <>{docs.cert_eps && <span onClick={()=>window.open(docs.cert_eps)} style={{padding:"4px 8px",background:"#EFF6FF",borderRadius:4,fontSize:10,cursor:"pointer",color:"#1D4ED8"}}>📄 Certificado afiliación EPS</span>}
-                              {docs.cert_pension && <span onClick={()=>window.open(docs.cert_pension)} style={{padding:"4px 8px",background:"#EFF6FF",borderRadius:4,fontSize:10,cursor:"pointer",color:"#1D4ED8"}}>📄 Certificado afiliación pensión</span>}
-                              {docs.cert_banco && <span onClick={()=>window.open(docs.cert_banco)} style={{padding:"4px 8px",background:"#EFF6FF",borderRadius:4,fontSize:10,cursor:"pointer",color:"#1D4ED8"}}>📄 Certificación bancaria</span>}</>;}catch(e){return null;}
-                            })()}
-                          </div>
-                        </div>
-                      </div>
+                        {(()=>{
+                          try {
+                            const ced = JSON.parse(p.candidato_cedula || '{}');
+                            const extras = JSON.parse(p.candidato_documentos_extra || '{}');
+                            const allDocs = [
+                              ced.anverso  && {label:'Cédula anverso',   url:ced.anverso,   icon:'🪪'},
+                              ced.reverso  && {label:'Cédula reverso',   url:ced.reverso,   icon:'🪪'},
+                              extras.cert_eps     && {label:'Certificado EPS',        url:extras.cert_eps,     icon:'🏥'},
+                              extras.cert_pension && {label:'Certificado Pensión',    url:extras.cert_pension, icon:'💼'},
+                              extras.cert_banco   && {label:'Certificación Bancaria', url:extras.cert_banco,   icon:'🏦'},
+                              extras.hv           && {label:'Hoja de Vida',           url:extras.hv,           icon:'📄'},
+                              extras.otros && Object.entries(extras.otros||{}).map(([k,v])=>({label:k,url:v,icon:'📎'})),
+                            ].flat().filter(Boolean);
+                            if (!allDocs.length) return null;
+                            return (
+                              <div style={{borderTop:'1px solid '+C.border,paddingTop:12,marginTop:8}}>
+                                <div style={{fontSize:11,fontWeight:700,color:C.inkLight,marginBottom:10,letterSpacing:1,textTransform:'uppercase'}}>📎 Documentos adjuntos</div>
+                                <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                                  {allDocs.map((doc,i)=>(
+                                    <div key={i} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 12px',background:'#F8F7F5',borderRadius:6,border:'1px solid '+C.border}}>
+                                      <div style={{display:'flex',alignItems:'center',gap:8}}>
+                                        <span style={{fontSize:16}}>{doc.icon}</span>
+                                        <span style={{fontSize:13,color:C.ink,fontWeight:500}}>{doc.label}</span>
+                                      </div>
+                                      <div style={{display:'flex',gap:6}}>
+                                        <button onClick={()=>window.open(doc.url,'_blank')} style={{padding:'4px 10px',fontSize:11,fontWeight:600,background:'#EFF6FF',border:'1px solid #BFDBFE',borderRadius:4,cursor:'pointer',color:'#1D4ED8',fontFamily:'inherit'}}>👁 Ver</button>
+                                        <a href={doc.url} download target="_blank" rel="noreferrer" style={{padding:'4px 10px',fontSize:11,fontWeight:600,background:C.green+'15',border:'1px solid '+C.green+'40',borderRadius:4,cursor:'pointer',color:C.green,textDecoration:'none',display:'inline-flex',alignItems:'center'}}>⬇ Descargar</a>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            );
+                          } catch(e) { return null; }
+                        })()}
+   </div>
                     )}
                     <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.border}}>
                       {/* Botones según estado */}
