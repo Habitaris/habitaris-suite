@@ -22,7 +22,9 @@ export function isLoggedIn() {
   if (!isAuthConfigured()) return true
   try {
     const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null')
-    return !!(s && s.user)
+    if (!s || !s.user) return false
+    if (Date.now() - (s.ts || 0) > 28800000) { sessionStorage.removeItem(SESSION_KEY); return false }
+    return true
   } catch { return false }
 }
 
@@ -34,7 +36,7 @@ export async function login(email, password) {
     .eq('password_hash', hash)
     .maybeSingle()
   if (error || !data) throw new Error('Credenciales incorrectas')
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user: data }))
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user: data, ts: Date.now() }))
   return data
 }
 
