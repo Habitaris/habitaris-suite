@@ -1,71 +1,46 @@
-// /api/aprobar-externo.js
-// Endpoint público — aprobación externa de evaluaciones y examen médico sin login
-import { createClient } from "@supabase/supabase-js";
-const sb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
+const SB_URL = "https://xlzkasdskatnikuavefh.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhsemthc2Rza2F0bmlrdWF2ZWZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTE3NzQsImV4cCI6MjA4NzQ2Nzc3NH0.SR9tIpvL0YnV9CNrRq4T-xetifuNQOJZE0OnQpwtYLM";
 
-export default async function handler(req, res) {
-  const { token, tipo, accion } = req.method === "GET" ? req.query : req.body;
+function sbH(){return{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json","Prefer":"return=representation"};}
 
-  if (!token || !tipo || !accion) {
-    return res.status(400).send(page("Error", "Parámetros incompletos.", false));
-  }
-
-  // Buscar el proceso por token
-  const campo = tipo === "rrhh"  ? "eval_token_rrhh"
-              : tipo === "sst"   ? "eval_token_sst"
-              : tipo === "examen_sst" ? "examen_token_sst"
-              : null;
-
-  if (!campo) return res.status(400).send(page("Error", "Tipo inválido.", false));
-
-  const { data: proc, error } = await sb
-    .from("hiring_processes")
-    .select("id, estado, candidate_name, cargo, eval_aprobada_rrhh, eval_aprobada_sst, examen_apto")
-    .eq(campo, token)
-    .single();
-
-  if (error || !proc) {
-    return res.status(404).send(page("Enlace no válido", "Este enlace no existe o ya fue utilizado.", false));
-  }
-
-  const aprueba = accion === "aprobar";
-  let patch = {};
-
-  if (tipo === "rrhh")       patch = { eval_aprobada_rrhh: aprueba };
-  else if (tipo === "sst")   patch = { eval_aprobada_sst:  aprueba };
-  else if (tipo === "examen_sst") patch = { examen_apto: aprueba, examen_obs: aprueba ? "Apto — aprobado por revisor externo SST" : "No apto — rechazado por revisor externo SST" };
-
-  await sb.from("hiring_processes").update(patch).eq("id", proc.id);
-
-  // Auto-avanzar si ambas aprobaciones de evaluaciones están completas
-  if (tipo !== "examen_sst") {
-    const nuevaRRHH = tipo === "rrhh"  ? aprueba : proc.eval_aprobada_rrhh;
-    const nuevaSST  = tipo === "sst"   ? aprueba : proc.eval_aprobada_sst;
-    if (nuevaRRHH && nuevaSST && proc.estado === "evaluaciones") {
-      await sb.from("hiring_processes").update({ estado: "examen_medico" }).eq("id", proc.id);
+export default async function handler(req,res){
+  res.setHeader("Access-Control-Allow-Origin","*");
+  res.setHeader("Access-Control-Allow-Methods","GET,POST,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers","Content-Type");
+  if(req.method==="OPTIONS")return res.status(200).end();
+  try{
+    if(req.method==="GET"){
+      const {token,tipo}=req.query;
+      if(!token)return res.status(400).json({ok:false,error:"token requerido"});
+      const col=tipo==="sst"?"eval_token_sst":"eval_token_rrhh";
+      const r=await fetch(SB_URL+"/rest/v1/hiring_processes?"+col+"=eq."+token,{headers:sbH()});
+      const d=await r.json();
+      if(!d||!d.length)return res.status(404).json({ok:false,error:"Token no válido o ya procesado"});
+      const hiring=d[0];
+      const r2=await fetch(SB_URL+"/rest/v1/psicotecnico_results?hiring_id=eq."+hiring.id+"&order=created_at.desc&limit=1",{headers:sbH()});
+      const d2=await r2.json();
+      return res.status(200).json({ok:true,hiring,psicotecnico:d2[0]||null,tipo});
     }
-  } else if (tipo === "examen_sst" && aprueba && proc.estado === "examen_recibido") {
-    await sb.from("hiring_processes").update({ estado: "certificado_sst" }).eq("id", proc.id);
-  }
-
-  const msg = aprueba
-    ? `✅ Has <strong>aprobado</strong> el proceso de ${proc.candidate_name || "el candidato"} para el cargo ${proc.cargo || ""}.`
-    : `❌ Has <strong>rechazado</strong> el proceso de ${proc.candidate_name || "el candidato"} para el cargo ${proc.cargo || ""}.`;
-
-  res.status(200).send(page(aprueba ? "Aprobado" : "Rechazado", msg, aprueba));
-}
-
-function page(titulo, mensaje, ok) {
-  const color = ok ? "#1E6B42" : "#B91C1C";
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8">
-<title>${titulo} — Habitaris</title>
-<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',system-ui,sans-serif;background:#F0EEE9;display:flex;align-items:center;justify-content:center;min-height:100vh;padding:40px 20px}.card{background:#fff;border-radius:12px;padding:48px 40px;max-width:480px;width:100%;text-align:center;box-shadow:0 2px 20px rgba(0,0,0,.06)}.ico{font-size:48px;margin-bottom:20px}.h{font-size:22px;font-weight:700;color:#111;margin-bottom:12px}.msg{font-size:15px;color:#555;line-height:1.6;margin-bottom:24px}.pill{display:inline-block;padding:8px 24px;border-radius:6px;background:${color};color:#fff;font-size:14px;font-weight:600}img{height:32px;margin-bottom:24px;opacity:.7}</style>
-</head><body><div class="card">
-<img src="https://suite.habitaris.co/logo-negro.png" alt="Habitaris" onerror="this.style.display='none'">
-<div class="ico">${ok?"✅":"❌"}</div>
-<div class="h">${titulo}</div>
-<div class="msg">${mensaje}</div>
-<div class="pill">Habitaris RRHH</div>
-<div style="font-size:11px;color:#aaa;margin-top:16px">Puedes cerrar esta ventana.</div>
-</div></body></html>`;
+    if(req.method==="POST"){
+      const b=req.body;
+      const {token,tipo,accion,observaciones}=b;
+      if(!token||!accion)return res.status(400).json({ok:false,error:"token y accion requeridos"});
+      const tokenCol   =tipo==="sst"?"eval_token_sst"    :"eval_token_rrhh";
+      const aprobadaCol=tipo==="sst"?"eval_aprobada_sst" :"eval_aprobada_rrhh";
+      const notasCol   =tipo==="sst"?"eval_notas_sst"    :"eval_notas_rrhh";
+      const otherCol   =tipo==="sst"?"eval_aprobada_rrhh":"eval_aprobada_sst";
+      const r=await fetch(SB_URL+"/rest/v1/hiring_processes?"+tokenCol+"=eq."+token,{headers:sbH()});
+      const d=await r.json();
+      if(!d||!d.length)return res.status(404).json({ok:false,error:"Token no válido"});
+      const hiring=d[0];
+      const patch={[aprobadaCol]:accion==="aprobar",[tokenCol]:null};
+      if(observaciones)patch[notasCol]=observaciones;
+      const otherApproved=hiring[otherCol];
+      if(accion==="aprobar"&&otherApproved)patch.estado="examen_medico";
+      const r2=await fetch(SB_URL+"/rest/v1/hiring_processes?id=eq."+hiring.id,{method:"PATCH",headers:sbH(),body:JSON.stringify(patch)});
+      const d2=await r2.json();
+      return res.status(200).json({ok:true,decision:accion,candidato:hiring.candidato_nombre,avanzado:!!(accion==="aprobar"&&otherApproved)});
+    }
+    return res.status(405).json({error:"Method not allowed"});
+  }catch(e){return res.status(500).json({ok:false,error:e.message});}
 }
