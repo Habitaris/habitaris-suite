@@ -3439,14 +3439,14 @@ function EvaluacionesPanel({ p, onDone }) {
     setSendingExt(s=>({...s,[rol]:true}));
     // Genera token único
     const token = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2);
-    const campo = rol==="rrhh" ? "eval_token_rrhh" : "eval_token_sst";
+    const campo = rol==="rrhh" ? "approval_token_rrhh" : "approval_token_sst";
     const emailCampo = rol==="rrhh" ? "eval_email_rrhh" : "eval_email_sst";
     // Guarda token y email en DB
     await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({id:p.id,[campo]:token,[emailCampo]:email})});
     const base = window.location.origin;
-    const aprobarUrl  = base+"/aprobar-externo?token="+token+"&tipo="+rol+"&accion=aprobar";
-    const rechazarUrl = base+"/aprobar-externo?token="+token+"&tipo="+rol+"&accion=rechazar";
+    const aprobarUrl  = base+"/api/approve-token?t="+token+"&r="+rol+"&a=aprobar";
+    const rechazarUrl = base+"/api/approve-token?t="+token+"&r="+rol+"&a=rechazar";
     const resumenEval = results
       ? "Puntaje: "+(results.puntaje_general||"—")+", DISC: "+(results.perfil_disc||"—")+", Concepto: "+(results.concepto||"—")
       : "Las evaluaciones aún no han sido completadas por el candidato.";
