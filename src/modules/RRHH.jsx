@@ -3225,6 +3225,22 @@ function TabEvaluaciones() {
         </div>
       )}
     </div>
+
+      {previewUrl && (
+        <div onClick={()=>setPreviewUrl(null)} style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(0,0,0,0.88)',display:'flex',alignItems:'center',justifyContent:'center',cursor:'zoom-out'}}>
+          <div onClick={e=>e.stopPropagation()} style={{position:'relative',maxWidth:'92vw',maxHeight:'92vh',display:'flex',flexDirection:'column',alignItems:'center',gap:10}}>
+            <button onClick={()=>setPreviewUrl(null)} style={{position:'absolute',top:-40,right:0,background:'none',border:'none',color:'#fff',fontSize:26,cursor:'pointer',lineHeight:1,fontFamily:'inherit'}}>✕</button>
+            <img src={previewUrl} alt="Vista previa"
+              style={{maxWidth:'88vw',maxHeight:'78vh',borderRadius:8,objectFit:'contain',background:'#222',display:'block'}}
+              onError={e=>{e.target.style.display='none';e.target.insertAdjacentHTML('afterend','<iframe src="'+previewUrl+'" style="width:80vw;height:78vh;border:none;border-radius:8px;background:#fff"></iframe>');}}
+            />
+            <a href={previewUrl} download target="_blank" rel="noreferrer"
+               style={{padding:'7px 20px',background:'#1E6B42',color:'#fff',borderRadius:6,fontSize:12,fontWeight:600,textDecoration:'none'}}>
+              ⬇ Descargar
+            </a>
+          </div>
+        </div>
+      )}
   );
 }
 
@@ -3579,6 +3595,7 @@ function TabContratacion() {
   const [lanzarId, setLanzarId] = useState(null);
   const [sendModal, setSendModal] = useState(null);
   const [lanzarForm, setLanzarForm] = useState({abogado_nombre:"",abogado_email:"",contrato_plantilla:"tpl_contrato_laboral",descriptor_codigo:"",firmantes:[{nombre:"",email:"",rol:"Revisor legal",orden:1},{nombre:"",email:"",rol:"Trabajador",orden:2},{nombre:"Ana María Díaz Buitrago",email:"amdiaz@habitaris.co",rol:"Empleador — Rep. Legal",orden:3}]});
+  const [previewUrl, setPreviewUrl] = React.useState(null);
   const [form, setForm] = useState({
     cargo:"",area:"",nivel:"Operativo",salario_neto:0,salario_base:0,
     auxilio_transporte:0,bono_no_salarial:0,jornada_horas:48,
@@ -3910,7 +3927,7 @@ function TabContratacion() {
                                           /><div style={{display:'none',width:36,height:36,borderRadius:4,background:isPdf(doc.url)?'#FEE2E2':'#EFF6FF',border:'1px solid '+C.border,alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:10,fontWeight:700,color:isPdf(doc.url)?'#DC2626':'#1D4ED8'}}>{ext(doc.url)}</div></>
                                           <span style={{flex:1,fontSize:13,color:C.ink,fontWeight:500}}>{doc.label}</span>
                                           <div style={{display:'flex',gap:4,flexShrink:0}}>
-                                            <button onClick={()=>window.open(doc.url,'_blank')} style={{padding:'4px 10px',fontSize:11,fontWeight:600,background:'#F1F5F9',border:'1px solid #CBD5E1',borderRadius:4,cursor:'pointer',color:'#334155',fontFamily:'inherit'}}>👁 Ver</button>
+                                            <button onClick={()=>setPreviewUrl(doc.url)} style={{padding:'4px 10px',fontSize:11,fontWeight:600,background:'#F1F5F9',border:'1px solid #CBD5E1',borderRadius:4,cursor:'pointer',color:'#334155',fontFamily:'inherit'}}>👁 Ver</button>
                                             <a href={doc.url} download target="_blank" rel="noreferrer" style={{padding:'4px 10px',fontSize:11,fontWeight:600,background:C.green+'15',border:'1px solid '+C.green+'40',borderRadius:4,cursor:'pointer',color:C.green,textDecoration:'none',display:'inline-flex',alignItems:'center'}}>⬇ Descargar</a>
                                           </div>
                                         </div>
