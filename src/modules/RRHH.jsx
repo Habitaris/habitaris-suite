@@ -3900,8 +3900,6 @@ function TabContratacion() {
                             const isPdf  = url => /\.pdf/i.test(url||'');
                             const ext    = url => { const m = (url||'').match(/\.([a-zA-Z0-9]+)(?:\?|$)/); return m ? m[1].toUpperCase() : 'DOC'; };
                             const allDocs = [
-                              ced.anverso             && {label:'Cédula — anverso',       url:ced.anverso,          cat:'Identidad'},
-                              ced.reverso             && {label:'Cédula — reverso',        url:ced.reverso,          cat:'Identidad'},
                               p.candidato_foto_url    && {label:'Foto perfil',             url:p.candidato_foto_url, cat:'Identidad'},
                               extras.cert_eps         && {label:'Certificado EPS',         url:extras.cert_eps,      cat:'Seguridad Social'},
                               extras.cert_pension     && {label:'Certificado Pensión',     url:extras.cert_pension,  cat:'Seguridad Social'},
@@ -3914,6 +3912,29 @@ function TabContratacion() {
                             return (
                               <div style={{borderTop:'1px solid '+C.border,paddingTop:14,marginTop:10}}>
                                 <div style={{fontSize:11,fontWeight:700,color:C.inkLight,marginBottom:12,letterSpacing:1.5,textTransform:'uppercase'}}>Documentos adjuntos</div>
+                                {/* Bloque especial cédula */}
+                                {(ced.anverso || ced.reverso) && (
+                                  <div style={{marginBottom:14}}>
+                                    <div style={{fontSize:10,fontWeight:700,color:C.inkLight,letterSpacing:1,textTransform:'uppercase',marginBottom:6,paddingBottom:3,borderBottom:'1px solid '+C.border+'80'}}>Identidad — Cédula</div>
+                                    <div style={{display:'flex',flexDirection:'column',gap:6}}>
+                                      {[{side:'Anverso',url:ced.anverso},{side:'Reverso',url:ced.reverso}].filter(s=>s.url).map(s=>(
+                                        <div key={s.side} style={{background:C.bg,borderRadius:6,border:'1px solid '+C.border,overflow:'hidden'}}>
+                                          <div style={{padding:'4px 10px',fontSize:10,fontWeight:600,color:C.inkLight,background:C.border+'30'}}>{s.side}</div>
+                                          <img src={s.url} alt={'Cédula '+s.side}
+                                            style={{width:'100%',maxHeight:180,objectFit:'contain',display:'block',background:'#F8F8F8',cursor:'pointer'}}
+                                            onClick={()=>window.open(s.url,'_blank')}
+                                            onError={e=>{e.target.style.display='none';e.target.nextSibling.style.display='flex'}}
+                                          />
+                                          <div style={{display:'none',width:'100%',padding:'16px 10px',alignItems:'center',justifyContent:'center',fontSize:11,color:'#888',background:'#F8F8F8'}}>No se puede previsualizar — <a href={s.url} target="_blank" rel="noreferrer" style={{color:C.green,marginLeft:4}}>abrir archivo</a></div>
+                                          <div style={{display:'flex',gap:4,padding:'6px 10px',borderTop:'1px solid '+C.border}}>
+                                            <button onClick={()=>window.open(s.url,'_blank')} style={{padding:'4px 10px',fontSize:11,fontWeight:600,background:'#F1F5F9',border:'1px solid #CBD5E1',borderRadius:4,cursor:'pointer',color:'#334155',fontFamily:'inherit'}}>👁 Ver</button>
+                                            <a href={s.url} download target="_blank" rel="noreferrer" style={{padding:'4px 10px',fontSize:11,fontWeight:600,background:C.green+'15',border:'1px solid '+C.green+'40',borderRadius:4,cursor:'pointer',color:C.green,textDecoration:'none',display:'inline-flex',alignItems:'center'}}>⬇ Descargar</a>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
                                 {cats.map(cat=>(
                                   <div key={cat} style={{marginBottom:12}}>
                                     <div style={{fontSize:10,fontWeight:700,color:C.inkLight,letterSpacing:1,textTransform:'uppercase',marginBottom:6,paddingBottom:3,borderBottom:'1px solid '+C.border+'80'}}>{cat}</div>
