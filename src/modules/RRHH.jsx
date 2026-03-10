@@ -3381,9 +3381,12 @@ function EvaluacionesPanel({ p, onDone }) {
   const [loading,    setLoading]    = React.useState(true);
   const [sending,    setSending]    = React.useState({});
   const [replyTo,    setReplyTo]    = React.useState("comercial@habitaris.co");
-  const [apRRHH,     setApRRHH]     = React.useState(p.eval_aprobada_rrhh||false);
-  const [apSST,      setApSST]      = React.useState(p.eval_aprobada_sst||false);
-  const [savingAp,   setSavingAp]   = React.useState(false);
+  const [apRRHH,     setApRRHH]    = React.useState(p.eval_aprobada_rrhh||false);
+  const [apSST,      setApSST]     = React.useState(p.eval_aprobada_sst||false);
+  const [savingAp,   setSavingAp]  = React.useState(false);
+  const [emailRRHH,  setEmailRRHH] = React.useState(p.eval_email_rrhh||"");
+  const [emailSST,   setEmailSST]  = React.useState(p.eval_email_sst||"");
+  const [sendingExt, setSendingExt]= React.useState({});
 
   React.useEffect(() => {
     fetch("/api/psicotecnico?hiring_id="+p.id)
@@ -3393,13 +3396,10 @@ function EvaluacionesPanel({ p, onDone }) {
 
   const lanzar = async (template) => {
     setSending(s=>({...s,[template]:true}));
-    await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({id:p.id,estado:"evaluaciones"})});
-    const link = "https://suite.habitaris.co/psicotecnico?hiring_id="+p.id+"&template="+template;
-    const tplLabel = template==="psi_disc" ? "Evaluación DISC" : "Evaluación General / Wonderlic";
-    let emailOk = false;
+    const link = window.location.origin+"/psicotecnico?hiring_id="+p.id+"&template="+template;
     if (p.candidato_email) {
-      const er = await fetch("/api/send-email",{method:"POST",headers:{"Content-Type":"application/json"},
+      const tplLabel = template==="psi_disc" ? "Evaluación DISC" : "Evaluación General / Wonderlic";
+      await fetch("/api/send-email",{method:"POST",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({
           client_email: p.candidato_email,
           client_name:  p.candidato_nombre||"Candidato",
@@ -3408,12 +3408,12 @@ function EvaluacionesPanel({ p, onDone }) {
           link_info:    "Completar evaluación",
           from_name:    "Habitaris RRHH"
         })});
-      emailOk = er.ok;
+      alert("Link enviado a "+p.candidato_email+"\nLink también copiado.");
+    } else {
+      navigator.clipboard.writeText(link);
+      alert("Link copiado:\n"+link);
     }
-    navigator.clipboard.writeText(link).catch(()=>{});
-    alert(emailOk ? "✅ Email enviado a "+p.candidato_email+"\nLink también copiado." : "Link copiado:\n"+link);
     setSending(s=>({...s,[template]:false}));
-    onDone();
   };
 
   const aprobar = async (rol) => {
@@ -3421,10 +3421,10 @@ function EvaluacionesPanel({ p, onDone }) {
     const patch = rol==="rrhh" ? {eval_aprobada_rrhh:true} : {eval_aprobada_sst:true};
     await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({id:p.id,...patch})});
+    const newRRHH = rol==="rrhh" ? true : apRRHH;
+    const newSST  = rol==="sst"  ? true : apSST;
     if (rol==="rrhh") setApRRHH(true); else setApSST(true);
-    // Si los dos aprobaron → avanzar a examen_medico
-    const ambosOk = (rol==="rrhh" ? true : apRRHH) && (rol==="sst" ? true : apSST);
-    if (ambosOk) {
+    if (newRRHH && newSST) {
       await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({id:p.id,estado:"examen_medico"})});
       alert("✅ Evaluaciones aprobadas por RRHH y SST. Avanzando a Examen médico.");
@@ -3433,18 +3433,56 @@ function EvaluacionesPanel({ p, onDone }) {
     setSavingAp(false);
   };
 
+  const enviarExterno = async (rol) => {
+    const email = rol==="rrhh" ? emailRRHH : emailSST;
+    if (!email) { alert("Ingresa el correo del revisor "+rol.toUpperCase()); return; }
+    setSendingExt(s=>({...s,[rol]:true}));
+    // Genera token único
+    const token = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2);
+    const campo = rol==="rrhh" ? "eval_token_rrhh" : "eval_token_sst";
+    const emailCampo = rol==="rrhh" ? "eval_email_rrhh" : "eval_email_sst";
+    // Guarda token y email en DB
+    await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({id:p.id,[campo]:token,[emailCampo]:email})});
+    const base = window.location.origin;
+    const aprobarUrl  = base+"/aprobar-externo?token="+token+"&tipo="+rol+"&accion=aprobar";
+    const rechazarUrl = base+"/aprobar-externo?token="+token+"&tipo="+rol+"&accion=rechazar";
+    const resumenEval = results
+      ? "Puntaje: "+(results.puntaje_general||"—")+", DISC: "+(results.perfil_disc||"—")+", Concepto: "+(results.concepto||"—")
+      : "Las evaluaciones aún no han sido completadas por el candidato.";
+    const nombreCandidato = p.candidate_name || p.candidato_nombre || "el candidato";
+    await fetch("/api/send-email",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        client_email: email,
+        client_name:  "Revisor "+rol.toUpperCase(),
+        form_name:    "Revisión de evaluaciones — "+nombreCandidato+" / "+p.cargo,
+        form_link:    aprobarUrl,
+        link_info:    "✅ APROBAR",
+        from_name:    "Habitaris RRHH",
+        extra_html:   "<p style='margin:8px 0;font-size:13px;color:#555'><strong>Candidato:</strong> "+nombreCandidato+"<br><strong>Cargo:</strong> "+(p.cargo||"—")+"<br><strong>Resultados:</strong> "+resumenEval+"</p><p style='margin:12px 0'><a href='"+rechazarUrl+"' style='display:inline-block;padding:8px 20px;background:#B91C1C;color:#fff;text-decoration:none;border-radius:6px;font-weight:600'>❌ Rechazar</a></p>"
+      })});
+    alert("📧 Enviado a "+email+"\nPodrá aprobar o rechazar desde el correo.");
+    setSendingExt(s=>({...s,[rol]:false}));
+  };
+
   const tpls = [
     {id:"psi_general", lbl:"🧠 General / Wonderlic", desc:"Aptitud general y razonamiento"},
     {id:"psi_disc",    lbl:"🎯 DISC",                desc:"Perfil de personalidad y comportamiento"},
   ];
   const psiLanzados = p.psi_lanzados ? p.psi_lanzados.split(",") : [];
 
+  const inp = (val,setVal,ph) => (
+    <input autoComplete="off" value={val} onChange={e=>setVal(e.target.value)}
+      placeholder={ph}
+      style={{flex:1,padding:"5px 8px",fontSize:11,border:"1px solid #E0E0E0",borderRadius:4,fontFamily:"DM Sans,sans-serif",outline:"none",background:"#fff"}}/>
+  );
+
   return (
-    <div style={{marginTop:8}}>
+    <div>
       {/* Campo reply-to */}
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,padding:"5px 10px",background:"#F5F5F5",borderRadius:6,border:"1px solid #E0E0E0"}}>
         <span style={{fontSize:9,fontWeight:700,color:"#555",whiteSpace:"nowrap"}}>RESPONDER A:</span>
-        <input autoComplete="off" value={replyTo} onChange={e=>setReplyTo(e.target.value)} style={{flex:1,padding:"3px 6px",fontSize:11,border:"1px solid #E0E0E0",borderRadius:4,fontFamily:"DM Sans,sans-serif",outline:"none",background:"#fff"}} placeholder="comercial@habitaris.co"/>
+        {inp(replyTo,setReplyTo,"comercial@habitaris.co")}
       </div>
 
       {/* Lanzar evaluaciones */}
@@ -3472,7 +3510,7 @@ function EvaluacionesPanel({ p, onDone }) {
          !results ? <div style={{fontSize:10,color:"#aaa"}}>Sin resultados aún — el candidato no ha completado las evaluaciones</div> :
          <div>
            <div style={{display:"flex",gap:16,marginBottom:6,flexWrap:"wrap"}}>
-             {results.puntaje_general!==undefined && <div style={{fontSize:12,fontWeight:700}}>Puntaje: <span style={{color:"#5B3A8C"}}>{results.puntaje_general}</span></div>}
+             {results.puntaje_general && <div style={{fontSize:12,fontWeight:700}}>Puntaje: <span style={{color:"#5B3A8C"}}>{results.puntaje_general}</span></div>}
              {results.perfil_disc && <div style={{fontSize:12,fontWeight:700}}>DISC: <span style={{color:"#5B3A8C"}}>{results.perfil_disc}</span></div>}
            </div>
            {results.concepto && <div style={{padding:"6px 10px",background:"#EDE8F4",borderRadius:6,fontSize:11,color:"#333",marginBottom:6}}><strong>Concepto:</strong> {results.concepto}</div>}
@@ -3482,20 +3520,51 @@ function EvaluacionesPanel({ p, onDone }) {
         }
       </div>
 
-      {/* Aprobación dual RRHH + SST */}
+      {/* Aprobación — interna y externa */}
       <div style={{padding:"10px 12px",background:"#F0FDF4",borderRadius:8,border:"1px solid #059669",marginBottom:6}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#065F46",marginBottom:8}}>✅ Aprobación de evaluaciones (requiere ambos)</div>
-        <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-          <button disabled={apRRHH||savingAp} onClick={()=>aprobar("rrhh")}
-            style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:"none",borderRadius:6,cursor:apRRHH?"default":"pointer",fontFamily:"DM Sans,sans-serif",background:apRRHH?"#DCFCE7":"#1E6B42",color:apRRHH?"#059669":"#fff"}}>
-            {apRRHH?"✅ RRHH aprobó":"👤 Aprobar como RRHH"}
-          </button>
-          <button disabled={apSST||savingAp} onClick={()=>aprobar("sst")}
-            style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:"none",borderRadius:6,cursor:apSST?"default":"pointer",fontFamily:"DM Sans,sans-serif",background:apSST?"#DCFCE7":"#0D5E6E",color:apSST?"#059669":"#fff"}}>
-            {apSST?"✅ SST aprobó":"🦺 Aprobar como SST"}
-          </button>
+        <div style={{fontSize:11,fontWeight:700,color:"#065F46",marginBottom:10}}>✅ Aprobación de evaluaciones — ambas requeridas</div>
+
+        {/* RRHH */}
+        <div style={{marginBottom:10,padding:"8px 10px",background:"#fff",borderRadius:6,border:"1px solid #D1FAE5"}}>
+          <div style={{fontSize:10,fontWeight:700,color:"#065F46",marginBottom:6}}>👤 RRHH</div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",marginBottom:apRRHH?0:6}}>
+            <button disabled={apRRHH||savingAp} onClick={()=>aprobar("rrhh")}
+              style={{padding:"5px 12px",fontSize:10,fontWeight:600,border:"none",borderRadius:5,cursor:apRRHH?"default":"pointer",fontFamily:"DM Sans,sans-serif",background:apRRHH?"#DCFCE7":"#1E6B42",color:apRRHH?"#059669":"#fff"}}>
+              {apRRHH?"✅ RRHH aprobó":"👤 Aprobar (interno)"}
+            </button>
+          </div>
+          {!apRRHH && (
+            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+              {inp(emailRRHH,setEmailRRHH,"revisor-rrhh@empresa.com")}
+              <button disabled={sendingExt.rrhh} onClick={()=>enviarExterno("rrhh")}
+                style={{padding:"5px 10px",fontSize:10,fontWeight:600,border:"none",borderRadius:5,cursor:"pointer",fontFamily:"DM Sans,sans-serif",background:"#0D5E6E",color:"#fff",whiteSpace:"nowrap"}}>
+                {sendingExt.rrhh?"Enviando...":"📧 Enviar a revisor"}
+              </button>
+            </div>
+          )}
         </div>
-        {(apRRHH||apSST) && !(apRRHH&&apSST) && <div style={{fontSize:9,color:"#D97706",marginTop:6}}>⏳ Falta aprobación de {apRRHH?"SST":"RRHH"} para avanzar</div>}
+
+        {/* SST */}
+        <div style={{marginBottom:6,padding:"8px 10px",background:"#fff",borderRadius:6,border:"1px solid #D1FAE5"}}>
+          <div style={{fontSize:10,fontWeight:700,color:"#065F46",marginBottom:6}}>🦺 SST</div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",marginBottom:apSST?0:6}}>
+            <button disabled={apSST||savingAp} onClick={()=>aprobar("sst")}
+              style={{padding:"5px 12px",fontSize:10,fontWeight:600,border:"none",borderRadius:5,cursor:apSST?"default":"pointer",fontFamily:"DM Sans,sans-serif",background:apSST?"#DCFCE7":"#0D5E6E",color:apSST?"#059669":"#fff"}}>
+              {apSST?"✅ SST aprobó":"🦺 Aprobar (interno)"}
+            </button>
+          </div>
+          {!apSST && (
+            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+              {inp(emailSST,setEmailSST,"revisor-sst@empresa.com")}
+              <button disabled={sendingExt.sst} onClick={()=>enviarExterno("sst")}
+                style={{padding:"5px 10px",fontSize:10,fontWeight:600,border:"none",borderRadius:5,cursor:"pointer",fontFamily:"DM Sans,sans-serif",background:"#5B3A8C",color:"#fff",whiteSpace:"nowrap"}}>
+                {sendingExt.sst?"Enviando...":"📧 Enviar a revisor"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {(apRRHH||apSST) && !(apRRHH&&apSST) && <div style={{fontSize:10,color:"#555",marginTop:4}}>⏳ Falta aprobación de {apRRHH?"SST":"RRHH"} para avanzar</div>}
       </div>
     </div>
   );
