@@ -3267,6 +3267,115 @@ function ExamenPanel({ p, onDone }) {
 }
 
 /* ── EvaluacionesPanel: lanzar, ver resultados y aprobación dual RRHH+SST ── */
+/* ─── PANEL ANEXOS CONTRATO ──────────────────────────────────────────────────── */
+function AnexosPanel({p}){
+  const fecha = new Date().toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'});
+  const nombre = p.candidate_name || '________________________';
+  const cc     = p.candidate_id   || '________________________';
+
+  const DOCS = {
+    confidencialidad:{
+      titulo:'ACUERDO DE CONFIDENCIALIDAD Y NO DIVULGACIÓN DE LA INFORMACIÓN',
+      cuerpo:`<p style="text-align:justify;margin:0 0 12px">En mi condición de empleado de HABITARIS SAS de manera voluntaria suscribo el presente acuerdo de confidencialidad con base a las siguientes consideraciones:</p>
+<p style="text-align:justify;margin:0 0 12px"><strong>CONFIDENCIALIDAD:</strong> EL TRABAJADOR se obliga a no revelar a ningún tercero, sin la autorización previa, expresa y por escrito EL EMPLEADOR, cualquier información relacionada con su trabajo directa o indirectamente. EL TRABAJADOR manifiesta expresamente conocer la prohibición legal de transmitir las informaciones que tenga sobre su trabajo, especialmente sobre asuntos de naturaleza reservada o cuya divulgación puede generar perjuicios a EL EMPLEADOR, así como revelar o divulgar descubrimientos, invenciones técnicas, procesos o aplicaciones industriales llegadas a su conocimiento debido a su cargo, oficio o profesión y que deban permanecer en reserva. Igualmente conoce y acepta expresamente que su infracción puede conllevar las sanciones previstas por el Numeral 6° del Literal A) del Artículo 7° del Decreto 2351 de 1.965 que subrogó el Artículo 62 del Código Sustantivo del Trabajo, y que le son aplicables aún finalizada la relación laboral, especialmente aquellas previstas en el Artículo 308 del Código Penal y/o las normas que lo modifiquen, complementen o adicionen.</p>
+<p style="text-align:justify;margin:0 0 12px">EL TRABAJADOR se obliga a mantener en forma confidencial la información que en relación con EL EMPLEADOR y, especialmente, información de los proyectos, contratos o servicios sea entregada, utilizada y desarrollada por éste. Cualquier otro uso o destinación que se le dé a la misma tendrá que ser autorizada previamente por EL EMPLEADOR.</p>
+<p style="text-align:justify;margin:0 0 12px"><strong>PARÁGRAFO PRIMERO:</strong> Para los efectos de la presente cláusula se entenderá por información: Documentos, Facturas, Pedidos, Modelos, Contratos, Cotizaciones, Base de Datos de Clientes, Conversaciones, Estudios, Compilaciones, Datos, Análisis, Diseños, Grabaciones, Archivos, Interpretaciones de cualquier tipo, carácter o naturaleza, relativos a la factibilidad para la realización de los Proyectos, Contratos o Servicios desarrollados por EL EMPLEADOR.</p>
+<p style="text-align:justify;margin:0 0 12px"><strong>PARÁGRAFO SEGUNDO:</strong> La violación de las obligaciones o prohibiciones a que se refiere la presente cláusula, podrá dar lugar a la imposición de sanciones disciplinarias o a la terminación del contrato de trabajo con justa causa. EL EMPLEADOR podrá exigir y/o reclamar el pago de la indemnización por la totalidad de los perjuicios que le pueda generar la violación.</p>
+<p style="text-align:justify;margin:0 0 12px"><strong>PARÁGRAFO TERCERO:</strong> EL EMPLEADO reconoce que será responsable hasta la culpa levísima en cualquier caso que permita la divulgación de información de carácter confidencial o reservado, causando un perjuicio a EL EMPLEADOR que estará obligado a indemnizar económicamente, sin perjuicio de las acciones penales o laborales a que EL EMPLEADOR tenga derecho.</p>
+<p style="text-align:justify;margin:0 0 12px"><strong>PARÁGRAFO CUARTO:</strong> EL TRABAJADOR se obliga durante la vigencia del contrato de trabajo, así como después de la terminación de este, a no utilizar para su propio beneficio o ajeno y a guardar absoluta reserva frente a terceros (incluida su familia), sobre toda la información referente a EL EMPLEADOR, empleados y demás relacionados.</p>
+<p style="text-align:justify;margin:0 0 12px"><strong>PARÁGRAFO QUINTO:</strong> La obligación de confidencialidad subsistirá por DOS (2) años calendario más, después de la terminación del contrato de trabajo y sin importar la causa que haya dado lugar a dicha terminación.</p>
+<p style="text-align:justify;margin:0 0 12px"><strong>PARÁGRAFO SEXTO:</strong> En caso de que alguna autoridad requiera la presentación de información confidencial, EL TRABAJADOR deberá dar aviso oportunamente a EL EMPLEADOR antes de divulgar cualquier información, y sólo con autorización de éste podrá divulgarla.</p>
+<p style="text-align:justify;margin:0 0 12px">En señal de aceptación, se firma en Bogotá D.C., a los ${fecha}.</p>
+<div style="margin-top:60px;display:flex;gap:80px">
+  <div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">${nombre}<br>C.C. ${cc}<br><em>EL TRABAJADOR</em></div></div>
+  <div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">HABITARIS SAS<br>NIT 901.922.136-8<br><em>EL EMPLEADOR</em></div></div>
+</div>`
+    },
+    datos:{
+      titulo:'AUTORIZACIÓN DE TRATAMIENTO DE DATOS PERSONALES',
+      cuerpo:`<p style="text-align:justify;margin:0 0 12px">De conformidad con la Ley 1581 de 2012 y el Decreto 1377 de 2013, yo (titular) <strong>${nombre}</strong>, con documento de identidad No. <strong>${cc}</strong>, como titular de información personal autorizo a HABITARIS SAS, de manera voluntaria e informada, para que recolecte, almacene, use, circule, suprima, confirme y en general realice todas las actividades que constituyan tratamiento de mis datos personales, conforme con su Política de Tratamiento de Datos Personales.</p>
+<p style="text-align:justify;margin:0 0 8px">Así mismo manifiesto que:</p>
+<ul style="margin:0 0 12px;padding-left:20px">
+  <li style="margin-bottom:6px">Conozco mis derechos como titular de la información sujeta a tratamiento por parte de HABITARIS SAS.</li>
+  <li style="margin-bottom:6px">El tratamiento tiene como finalidad: el proceso de atracción y selección de talento, comunicación con mi familia en casos de emergencia, acreditar historia laboral y académica, gestión del negocio, atención de PQRS, verificación de antecedentes, seguridad informática y física, y establecer relaciones contractuales.</li>
+  <li style="margin-bottom:6px">Conozco los canales por los cuales puedo ejercer mis derechos como titular ante Talento Humano de la compañía.</li>
+  <li style="margin-bottom:6px">Reconozco que HABITARIS SAS garantiza la seguridad de mis datos contra mal uso o pérdida.</li>
+  <li style="margin-bottom:6px">La presente autorización se extiende aun después de finalizado nuestro vínculo contractual, conforme a la Política de Tratamiento de Datos de HABITARIS SAS.</li>
+  <li style="margin-bottom:6px">La información suministrada es cierta, y relevo a HABITARIS SAS de responsabilidad por información imprecisa, sin perjuicio de mi derecho a solicitar corrección, aclaración y/o supresión.</li>
+</ul>
+<p style="text-align:justify;margin:0 0 12px">Mis derechos como titular incluyen: conocer, actualizar, rectificar y suprimir mi información personal, y revocar el consentimiento otorgado, ejercibles a través de los canales dispuestos por HABITARIS SAS (comercial@habitaris.co).</p>
+<p style="text-align:justify;margin:0 0 12px">En constancia, se firma en Bogotá D.C., a los ${fecha}.</p>
+<div style="margin-top:60px;display:flex;gap:80px">
+  <div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">${nombre}<br>C.C. ${cc}<br><em>Firma del Titular</em></div></div>
+</div>`
+    },
+    politica:{
+      titulo:'POLÍTICA DE TRATAMIENTO DE DATOS PERSONALES — HABITARIS SAS',
+      cuerpo:`<p style="margin:0 0 10px"><strong>NIT:</strong> 901.922.136-8 &nbsp;|&nbsp; <strong>Domicilio:</strong> Bogotá D.C., Colombia &nbsp;|&nbsp; <strong>Vigencia:</strong> 2025</p>
+<p style="text-align:justify;margin:0 0 12px">HABITARIS SAS está comprometida con la protección de los datos personales en el desarrollo de sus actividades de diseño, arquitectura y servicios relacionados. Esta Política establece las directrices para la recolección, uso, almacenamiento, circulación, transmisión y supresión de datos personales, en cumplimiento de la Ley 1581 de 2012, el Decreto 1377 de 2013 y los lineamientos de la Superintendencia de Industria y Comercio (SIC).</p>
+<p style="margin:0 0 6px"><strong>1. Principios</strong></p>
+<p style="text-align:justify;margin:0 0 12px">Legalidad, Finalidad, Libertad, Veracidad, Transparencia, Acceso y circulación restringida, Seguridad y Confidencialidad.</p>
+<p style="margin:0 0 6px"><strong>2. Datos tratados y finalidades</strong></p>
+<p style="text-align:justify;margin:0 0 4px">Categorías de datos: identificación y contacto, laborales, financieros y de proyectos. Finalidades:</p>
+<ul style="margin:0 0 12px;padding-left:20px">
+  <li>Gestión de clientes y proyectos (cotización, contratación, ejecución, PQRS).</li>
+  <li>Gestión administrativa, contable y tributaria.</li>
+  <li>Gestión de proveedores y contratistas.</li>
+  <li>Talento humano: selección, nómina, SST, bienestar, formación.</li>
+  <li>Seguridad física y digital.</li>
+  <li>Marketing y comunicaciones (solo con autorización).</li>
+  <li>Cumplimiento legal y regulatorio.</li>
+</ul>
+<p style="margin:0 0 6px"><strong>3. Derechos de los titulares</strong></p>
+<ul style="margin:0 0 12px;padding-left:20px">
+  <li>Conocer, actualizar y rectificar sus datos.</li>
+  <li>Solicitar prueba de la autorización otorgada.</li>
+  <li>Solicitar supresión de datos o revocar autorización (salvo deber legal).</li>
+  <li>Presentar quejas ante la SIC.</li>
+</ul>
+<p style="margin:0 0 6px"><strong>4. Consultas y reclamos</strong></p>
+<p style="text-align:justify;margin:0 0 12px">Consultas: máximo 10 días hábiles. Reclamos: máximo 15 días hábiles. Canal de contacto: comercial@habitaris.co</p>
+<p style="margin:0 0 6px"><strong>5. Seguridad</strong></p>
+<p style="text-align:justify;margin:0 0 12px">Control de acceso por roles, cifrado de datos sensibles, backups periódicos, acuerdos de confidencialidad con colaboradores y contratistas, capacitación continua y gestión de incidentes.</p>
+<p style="margin:0 0 6px"><strong>6. Vigencia de los datos</strong></p>
+<p style="text-align:justify;margin:0 0 12px">Los datos se conservarán por el tiempo necesario para las finalidades descritas y el cumplimiento de obligaciones legales (fiscales, laborales, contables). Finalizado el tratamiento, se realizará supresión o anonimización salvo deber legal de conservación.</p>
+<p style="text-align:justify;margin:16px 0 0"><em>Documento entregado como soporte al proceso de vinculación laboral. Bogotá D.C., ${fecha}.</em></p>`
+    }
+  };
+
+  const abrirAnexo = (tipo) => {
+    const doc = DOCS[tipo];
+    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${doc.titulo}</title>
+<style>body{font-family:'Times New Roman',serif;max-width:800px;margin:0 auto;padding:40px 50px;font-size:12pt;line-height:1.6;color:#111}h1{text-align:center;font-size:13pt;text-transform:uppercase;margin-bottom:24px;font-weight:bold}.logo{text-align:center;margin-bottom:24px;font-size:10pt;color:#666;border-bottom:2px solid #1E6B42;padding-bottom:12px}.no-print{text-align:center;margin:30px 0;padding:16px;background:#f5f5f5;border-radius:8px}.btn{background:#1E6B42;color:#fff;border:none;padding:10px 28px;font-size:12pt;cursor:pointer;border-radius:4px;margin-right:10px}@media print{.no-print{display:none}}</style>
+</head><body>
+<div class="logo"><strong>HABITARIS SAS</strong> &nbsp;·&nbsp; NIT 901.922.136-8 &nbsp;·&nbsp; Bogotá D.C., Colombia</div>
+<h1>${doc.titulo}</h1>
+${doc.cuerpo}
+<div class="no-print">
+  <p style="color:#555;margin-bottom:12px">Para guardar: Archivo → Imprimir → "Guardar como PDF"</p>
+  <button class="btn" onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button>
+  <button class="btn" style="background:#374151" onclick="window.close()">✕ Cerrar</button>
+</div></body></html>`;
+    const blob = new Blob([html],{type:'text/html;charset=utf-8'});
+    window.open(URL.createObjectURL(blob),'_blank');
+  };
+
+  const cardStyle = {borderRadius:8,border:'1px solid #D1FAE5',padding:16,background:'#F0FDF4',marginTop:12};
+  const btnBase   = {border:'none',padding:'8px 14px',borderRadius:6,cursor:'pointer',fontSize:13,fontFamily:'DM Sans,sans-serif',fontWeight:600};
+
+  return (
+    <div style={cardStyle}>
+      <div style={{fontWeight:700,fontSize:14,color:'#065F46',marginBottom:6}}>📋 Documentos Anexos al Contrato</div>
+      <p style={{fontSize:13,color:'#555',margin:'0 0 14px'}}>Genere, revise e imprima los siguientes documentos para firmar junto al contrato laboral.</p>
+      <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+        <button style={{...btnBase,background:'#1E6B42',color:'#fff'}} onClick={()=>abrirAnexo('confidencialidad')}>📄 Acuerdo de Confidencialidad</button>
+        <button style={{...btnBase,background:'#065F46',color:'#fff'}} onClick={()=>abrirAnexo('datos')}>📄 Autorización Datos Personales</button>
+        <button style={{...btnBase,background:'#374151',color:'#fff'}} onClick={()=>abrirAnexo('politica')}>📄 Política de Tratamiento</button>
+      </div>
+    </div>
+  );
+}
+/* ────────────────────────────────────────────────────────────────────────────── */
 function EvaluacionesPanel({ p, onDone }) {
   const [results,    setResults]    = React.useState(null);
   const [loading,    setLoading]    = React.useState(true);
@@ -3745,6 +3854,7 @@ function TabContratacion() {
                       {(p.estado==="firma_pendiente") && <>
                         <span style={{padding:"6px 12px",fontSize:11,fontWeight:600,background:"#FEF3C7",borderRadius:6,color:"#D97706"}}>⏳ Esperando firmas</span>
                       </>}
+                      {(p.estado==="firma_pendiente"||p.estado==="firmado"||p.estado==="afiliaciones"||p.estado==="completado") && <AnexosPanel p={p}/>}
                       {p.estado==="firmado" && <>
                       <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"afiliaciones"})});loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #0891B2",borderRadius:6,background:"#E0F2FE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#0891B2"}}>🏛️ Registrar afiliaciones</button>
                     </>}
