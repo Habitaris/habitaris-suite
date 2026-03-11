@@ -3377,26 +3377,29 @@ ${doc.cuerpo}
 }
 /* ────────────────────────────────────────────────────────────────────────────── */
 function EvaluacionesPanel({ p, onDone }) {
-  const [results,    setResults]    = React.useState(null);
-  const [loading,    setLoading]    = React.useState(true);
-  const [sending,    setSending]    = React.useState({});
-  const [replyTo,    setReplyTo]    = React.useState("comercial@habitaris.co");
-  const [apRRHH,     setApRRHH]    = React.useState(p.eval_aprobada_rrhh||false);
-  const [apSST,      setApSST]     = React.useState(p.eval_aprobada_sst||false);
-  const [savingAp,   setSavingAp]  = React.useState(false);
-  const [emailRRHH,  setEmailRRHH] = React.useState(p.eval_email_rrhh||"");
-  const [emailSST,   setEmailSST]  = React.useState(p.eval_email_sst||"");
-  const [sendingExt, setSendingExt]= React.useState({});
+  const [results,    setResults]   = React.useState(null)
+  const [loading,    setLoading]   = React.useState(true)
+  const [sending,    setSending]   = React.useState({})
+  const [savingAp,   setSavingAp]  = React.useState(false)
+  const [apRRHH,     setApRRHH]    = React.useState(p.eval_aprobada_rrhh||false)
+  const [apSST,      setApSST]     = React.useState(p.eval_aprobada_sst||false)
+  const [emailRRHH,  setEmailRRHH] = React.useState(p.eval_rrhh_email||'')
+  const [emailSST,   setEmailSST]  = React.useState(p.eval_sst_email||'')
+  const [modoRRHH,   setModoRRHH]  = React.useState('interno')
+  const [modoSST,    setModoSST]   = React.useState('interno')
 
   React.useEffect(() => {
     fetch("/api/psicotecnico?hiring_id="+p.id)
-      .then(r=>r.json()).then(d=>{ setResults(d.data||null); setLoading(false); })
+      .then(r=>r.json()).then(d=>{ setResults(d.results||null); setLoading(false); })
       .catch(()=>setLoading(false));
   }, [p.id]);
 
   const lanzar = async (template) => {
     setSending(s=>({...s,[template]:true}));
-    const link = window.location.origin+"/psicotecnico?hiring_id="+p.id+"&template="+template;
+    const res = await fetch("/api/psicotecnico",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({hiring_id:p.id,template_id:template,candidato_nombre:p.candidato_nombre,cargo:p.cargo})});
+    const data = await res.json();
+    const link = data.link || (window.location.origin+"/psicotecnico/"+data.id);
     if (p.candidato_email) {
       const tplLabel = template==="psi_disc" ? "Evaluación DISC" : "Evaluación General / Wonderlic";
       await fetch("/api/send-email",{method:"POST",headers:{"Content-Type":"application/json"},
@@ -3423,7 +3426,8 @@ function EvaluacionesPanel({ p, onDone }) {
       body:JSON.stringify({id:p.id,...patch})});
     const newRRHH = rol==="rrhh" ? true : apRRHH;
     const newSST  = rol==="sst"  ? true : apSST;
-    if (rol==="rrhh") setApRRHH(true); else setApSST(true);
+    if (rol==="rrhh") setApRRHH(true);
+    if (rol==="sst")  setApSST(true);
     if (newRRHH && newSST) {
       await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({id:p.id,estado:"examen_medico"})});
@@ -3436,21 +3440,16 @@ function EvaluacionesPanel({ p, onDone }) {
   const enviarExterno = async (rol) => {
     const email = rol==="rrhh" ? emailRRHH : emailSST;
     if (!email) { alert("Ingresa el correo del revisor "+rol.toUpperCase()); return; }
-    setSendingExt(s=>({...s,[rol]:true}));
-    // Genera token único
-    const token = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36).slice(2);
-    const campo = rol==="rrhh" ? "approval_token_rrhh" : "approval_token_sst";
-    const emailCampo = rol==="rrhh" ? "eval_email_rrhh" : "eval_email_sst";
-    // Guarda token y email en DB
+    const campo      = rol==="rrhh" ? "eval_rrhh_token"  : "eval_sst_token";
+    const emailCampo = rol==="rrhh" ? "eval_rrhh_email"  : "eval_sst_email";
+    const token = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36)+Math.random().toString(36);
+    const aprobarUrl = window.location.origin+"/aprobar?token="+token+"&rol="+rol+"&hiring="+p.id;
+    const nombreCandidato = p.candidato_nombre||"Candidato";
     await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({id:p.id,[campo]:token,[emailCampo]:email})});
-    const base = window.location.origin;
-    const aprobarUrl  = base+"/api/approve-token?t="+token+"&r="+rol+"&a=aprobar";
-    const rechazarUrl = base+"/api/approve-token?t="+token+"&r="+rol+"&a=rechazar";
     const resumenEval = results
-      ? "Puntaje: "+(results.puntaje_general||"—")+", DISC: "+(results.perfil_disc||"—")+", Concepto: "+(results.concepto||"—")
+      ? "Puntaje: "+(results.puntaje_general||"—")+", DISC: "+(results.perfil_disc||"—")+"."
       : "Las evaluaciones aún no han sido completadas por el candidato.";
-    const nombreCandidato = p.candidate_name || p.candidato_nombre || "el candidato";
     await fetch("/api/send-email",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({
         client_email: email,
@@ -3459,518 +3458,134 @@ function EvaluacionesPanel({ p, onDone }) {
         form_link:    aprobarUrl,
         link_info:    "✅ APROBAR",
         from_name:    "Habitaris RRHH",
-        extra_html:   "<p style='margin:8px 0;font-size:13px;color:#555'><strong>Candidato:</strong> "+nombreCandidato+"<br><strong>Cargo:</strong> "+(p.cargo||"—")+"<br><strong>Resultados:</strong> "+resumenEval+"</p><p style='margin:12px 0'><a href='"+rechazarUrl+"' style='display:inline-block;padding:8px 20px;background:#B91C1C;color:#fff;text-decoration:none;border-radius:6px;font-weight:600'>❌ Rechazar</a></p>"
+        extra_info:   resumenEval
       })});
     alert("📧 Enviado a "+email+"\nPodrá aprobar o rechazar desde el correo.");
-    setSendingExt(s=>({...s,[rol]:false}));
   };
 
-  const tpls = [
-    {id:"psi_general", lbl:"🧠 General / Wonderlic", desc:"Aptitud general y razonamiento"},
-    {id:"psi_disc",    lbl:"🎯 DISC",                desc:"Perfil de personalidad y comportamiento"},
-  ];
-  const psiLanzados = p.psi_lanzados ? p.psi_lanzados.split(",") : [];
+  const paso1Lanzado = !!(p.psico_psi_general_id);
+  const paso2Habilitado = !!(results && results.puntaje_general);
+  const paso2Lanzado = !!(p.psico_psi_disc_id);
+  const sstHabilitado = apRRHH;
 
-  const inp = (val,setVal,ph) => (
-    <input autoComplete="off" value={val} onChange={e=>setVal(e.target.value)}
-      placeholder={ph}
-      style={{flex:1,padding:"5px 8px",fontSize:11,border:"1px solid #E0E0E0",borderRadius:4,fontFamily:"DM Sans,sans-serif",outline:"none",background:"#fff"}}/>
+  const Btn = ({onClick,disabled,color,children}) => (
+    <button onClick={onClick} disabled={disabled}
+      style={{padding:"5px 14px",fontSize:10,fontWeight:600,border:"none",borderRadius:5,
+        background:disabled?"#ccc":color,color:"#fff",cursor:disabled?"not-allowed":"pointer",whiteSpace:"nowrap"}}>
+      {children}
+    </button>
   );
 
-  return (
-    <div>
-      {/* Campo reply-to */}
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,padding:"5px 10px",background:"#F5F5F5",borderRadius:6,border:"1px solid #E0E0E0"}}>
-        <span style={{fontSize:9,fontWeight:700,color:"#555",whiteSpace:"nowrap"}}>RESPONDER A:</span>
-        {inp(replyTo,setReplyTo,"comercial@habitaris.co")}
-      </div>
-
-      {/* Lanzar evaluaciones */}
-      <div style={{padding:"10px 12px",background:"#EDE8F4",borderRadius:8,border:"1px solid #5B3A8C33",marginBottom:8}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#5B3A8C",marginBottom:8}}>🧠 Lanzar evaluaciones al candidato</div>
-        <div style={{display:"flex",flexDirection:"column",gap:6}}>
-          {tpls.map(t => {
-            const yaLanzado = psiLanzados.includes(t.id);
-            return (
-              <div key={t.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 10px",background:"#fff",borderRadius:6,border:"1px solid #E0E0E0"}}>
-                <div><div style={{fontSize:11,fontWeight:600}}>{t.lbl}</div><div style={{fontSize:9,color:"#888"}}>{t.desc}</div></div>
-                <button disabled={sending[t.id]} onClick={()=>lanzar(t.id)} style={{padding:"4px 12px",fontSize:10,fontWeight:600,border:"none",borderRadius:4,cursor:"pointer",fontFamily:"DM Sans,sans-serif",background:yaLanzado?"#DCFCE7":"#5B3A8C",color:yaLanzado?"#059669":"#fff"}}>
-                  {sending[t.id]?"Enviando...":yaLanzado?"✅ Relanzar":"Enviar link"}
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Resultados */}
-      <div style={{padding:"10px 12px",background:"#F8F8F8",borderRadius:8,border:"1px solid #E0E0E0",marginBottom:8}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#333",marginBottom:6}}>📊 Resultados de evaluaciones</div>
-        {loading ? <div style={{fontSize:10,color:"#aaa"}}>Cargando...</div> :
-         !results ? <div style={{fontSize:10,color:"#aaa"}}>Sin resultados aún — el candidato no ha completado las evaluaciones</div> :
-         <div>
-           <div style={{display:"flex",gap:16,marginBottom:6,flexWrap:"wrap"}}>
-             {results.puntaje_general && <div style={{fontSize:12,fontWeight:700}}>Puntaje: <span style={{color:"#5B3A8C"}}>{results.puntaje_general}</span></div>}
-             {results.perfil_disc && <div style={{fontSize:12,fontWeight:700}}>DISC: <span style={{color:"#5B3A8C"}}>{results.perfil_disc}</span></div>}
-           </div>
-           {results.concepto && <div style={{padding:"6px 10px",background:"#EDE8F4",borderRadius:6,fontSize:11,color:"#333",marginBottom:6}}><strong>Concepto:</strong> {results.concepto}</div>}
-           {results.observaciones && <div style={{fontSize:10,color:"#555",marginBottom:4}}>{results.observaciones}</div>}
-           <div style={{fontSize:9,color:"#aaa"}}>Completado: {results.created_at ? new Date(results.created_at).toLocaleDateString("es-CO") : "—"}</div>
-         </div>
-        }
-      </div>
-
-      {/* Aprobación — interna y externa */}
-      <div style={{padding:"10px 12px",background:"#F0FDF4",borderRadius:8,border:"1px solid #059669",marginBottom:6}}>
-        <div style={{fontSize:11,fontWeight:700,color:"#065F46",marginBottom:10}}>✅ Aprobación de evaluaciones — ambas requeridas</div>
-
-        {/* RRHH */}
-        <div style={{marginBottom:10,padding:"8px 10px",background:"#fff",borderRadius:6,border:"1px solid #D1FAE5"}}>
-          <div style={{fontSize:10,fontWeight:700,color:"#065F46",marginBottom:6}}>👤 RRHH</div>
-          <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",marginBottom:apRRHH?0:6}}>
-            <button disabled={apRRHH||savingAp} onClick={()=>aprobar("rrhh")}
-              style={{padding:"5px 12px",fontSize:10,fontWeight:600,border:"none",borderRadius:5,cursor:apRRHH?"default":"pointer",fontFamily:"DM Sans,sans-serif",background:apRRHH?"#DCFCE7":"#1E6B42",color:apRRHH?"#059669":"#fff"}}>
-              {apRRHH?"✅ RRHH aprobó":"👤 Aprobar (interno)"}
-            </button>
-          </div>
-          {!apRRHH && (
-            <div style={{display:"flex",gap:6,alignItems:"center"}}>
-              {inp(emailRRHH,setEmailRRHH,"revisor-rrhh@empresa.com")}
-              <button disabled={sendingExt.rrhh} onClick={()=>enviarExterno("rrhh")}
-                style={{padding:"5px 10px",fontSize:10,fontWeight:600,border:"none",borderRadius:5,cursor:"pointer",fontFamily:"DM Sans,sans-serif",background:"#0D5E6E",color:"#fff",whiteSpace:"nowrap"}}>
-                {sendingExt.rrhh?"Enviando...":"📧 Enviar a revisor"}
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* SST */}
-        <div style={{marginBottom:6,padding:"8px 10px",background:"#fff",borderRadius:6,border:"1px solid #D1FAE5"}}>
-          <div style={{fontSize:10,fontWeight:700,color:"#065F46",marginBottom:6}}>🦺 SST</div>
-          <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",marginBottom:apSST?0:6}}>
-            <button disabled={apSST||savingAp} onClick={()=>aprobar("sst")}
-              style={{padding:"5px 12px",fontSize:10,fontWeight:600,border:"none",borderRadius:5,cursor:apSST?"default":"pointer",fontFamily:"DM Sans,sans-serif",background:apSST?"#DCFCE7":"#0D5E6E",color:apSST?"#059669":"#fff"}}>
-              {apSST?"✅ SST aprobó":"🦺 Aprobar (interno)"}
-            </button>
-          </div>
-          {!apSST && (
-            <div style={{display:"flex",gap:6,alignItems:"center"}}>
-              {inp(emailSST,setEmailSST,"revisor-sst@empresa.com")}
-              <button disabled={sendingExt.sst} onClick={()=>enviarExterno("sst")}
-                style={{padding:"5px 10px",fontSize:10,fontWeight:600,border:"none",borderRadius:5,cursor:"pointer",fontFamily:"DM Sans,sans-serif",background:"#5B3A8C",color:"#fff",whiteSpace:"nowrap"}}>
-                {sendingExt.sst?"Enviando...":"📧 Enviar a revisor"}
-              </button>
-            </div>
-          )}
-        </div>
-
-        {(apRRHH||apSST) && !(apRRHH&&apSST) && <div style={{fontSize:10,color:"#555",marginTop:4}}>⏳ Falta aprobación de {apRRHH?"SST":"RRHH"} para avanzar</div>}
-      </div>
+  const ToggleModo = ({modo,setModo,disabled}) => (
+    <div style={{display:"flex",gap:4,marginBottom:6}}>
+      {["interno","externo"].map(m => (
+        <button key={m} disabled={disabled} onClick={()=>setModo(m)}
+          style={{padding:"3px 10px",fontSize:9,fontWeight:600,border:"1px solid #1E6B42",borderRadius:4,
+            background:modo===m?"#1E6B42":"#fff",color:modo===m?"#fff":"#1E6B42",cursor:disabled?"not-allowed":"pointer"}}>
+          {m==="interno"?"👤 Interno":"📧 Externo"}
+        </button>
+      ))}
     </div>
   );
-}
-
-
-function TabContratacion() {
-  const [procesos, setProcesos] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [selProceso, setSelProceso] = useState(null);
-  const [lanzarId, setLanzarId] = useState(null);
-  const [sendModal, setSendModal] = useState(null);
-  const [lanzarForm, setLanzarForm] = useState({abogado_nombre:"",abogado_email:"",contrato_plantilla:"tpl_contrato_laboral",descriptor_codigo:"",firmantes:[{nombre:"",email:"",rol:"Revisor legal",orden:1},{nombre:"",email:"",rol:"Trabajador",orden:2},{nombre:"Ana María Díaz Buitrago",email:"amdiaz@habitaris.co",rol:"Empleador — Rep. Legal",orden:3}]});
-  const [form, setForm] = useState({
-    cargo:"",area:"",nivel:"Operativo",salario_neto:0,salario_base:0,
-    auxilio_transporte:0,bono_no_salarial:0,jornada_horas:48,
-    horario:"8:00 a.m. a 5:00 p.m.",dias_laborales:"Lunes a viernes",
-    tipo_contrato:"fijo",duracion_meses:6,ciudad:"Bogotá D.C.",
-    fecha_inicio:"",periodo_prueba:"Dos (2) meses",descriptor_codigo:"",
-    
-  });
-
-  const loadProcesos = async () => {
-    try {
-      const r = await fetch("/api/hiring");
-      const d = await r.json();
-      if (d.ok) setProcesos(d.data || []);
-    } catch(e) { console.error(e); }
-    setLoading(false);
-  };
-
-  useEffect(() => { loadProcesos(); }, []);
-
-  const crearPropuesta = async () => {
-    if (!form.cargo) { alert("El cargo es obligatorio"); return; }
-    if (!form.salario_neto) { alert("El salario neto es obligatorio"); return; }
-    try {
-      const r = await fetch("/api/hiring", {
-        method: "POST", headers: {"Content-Type":"application/json"},
-        body: JSON.stringify(form)
-      });
-      const d = await r.json();
-      if (d.ok) {
-        alert("Propuesta creada: " + d.data.codigo + "\n\nLink propuesta:\n" + d.links.propuesta + "\n\nLink datos:\n" + d.links.datos);
-        setShowForm(false);
-        setForm({cargo:"",area:"",nivel:"Operativo",salario_neto:0,salario_base:0,auxilio_transporte:0,bono_no_salarial:0,jornada_horas:48,horario:"8:00 a.m. a 5:00 p.m.",dias_laborales:"Lunes a viernes",tipo_contrato:"fijo",duracion_meses:6,ciudad:"Bogotá D.C.",fecha_inicio:"",periodo_prueba:"Dos (2) meses",descriptor_codigo:"",});
-        loadProcesos();
-      }
-    } catch(e) { alert("Error: " + e.message); }
-  };
-
-  const ESTADOS = {
-    propuesta:          {label:"Propuesta enviada",       color:"#8C6A00",bg:"#FFF8EE",  icon:"📩"},
-    aceptada:           {label:"Aceptada",                color:"#059669",bg:"#DCFCE7",  icon:"✅"},
-    datos_pendientes:   {label:"Datos pendientes",        color:"#D97706",bg:"#FEF3C7",  icon:"📋"},
-    datos_recibidos:    {label:"Datos recibidos",         color:"#1D4ED8",bg:"#EFF6FF",  icon:"📄"},
-    evaluaciones:       {label:"Evaluaciones",            color:"#5B3A8C",bg:"#EDE8F4",  icon:"🧠"},
-    eval_revision:      {label:"Revisión evaluaciones",   color:"#7C3AED",bg:"#F3E8FF",  icon:"🔍"},
-    examen_medico:      {label:"Examen médico",           color:"#0D5E6E",bg:"#CFFAFE",  icon:"🏥"},
-    examen_recibido:    {label:"Resultados examen",       color:"#0369A1",bg:"#E0F2FE",  icon:"📋"},
-    certificado_sst:    {label:"Certificado SST",         color:"#065F46",bg:"#D1FAE5",  icon:"🦺"},
-    firma_pendiente:    {label:"Firma pendiente",         color:"#D97706",bg:"#FEF3C7",  icon:"✍️"},
-    firmado:            {label:"Firmado",                 color:"#059669",bg:"#DCFCE7",  icon:"✅"},
-    afiliaciones:       {label:"Afiliaciones",            color:"#0891B2",bg:"#E0F2FE",  icon:"🏛️"},
-    completado:         {label:"Completado",              color:"#111",   bg:"#E8E8E8",  icon:"🏁"},
-    cancelado:          {label:"Cancelado",               color:"#B91C1C",bg:"#FEE2E2",  icon:"❌"},
-  };
-
-  const fmtMoney = (n) => n ? new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n) : "$0";
-  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("es-CO") : "-";
-
-
-  const lanzarContratacion = async () => {
-    const hasFirmantes = lanzarForm.firmantes.some(f=>f.nombre&&f.email||f.rol==="Trabajador"); if(!hasFirmantes){alert("Configure al menos un firmante.");return;}
-    const proc = procesos.find(p=>p.id===lanzarId);
-    if(!proc) return;
-    try {
-      // 1. Update hiring process
-      await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({id:proc.id,estado:"firma_pendiente",abogado_nombre:lanzarForm.abogado_nombre,abogado_email:lanzarForm.abogado_email,contrato_plantilla:lanzarForm.contrato_plantilla,descriptor_codigo:lanzarForm.descriptor_codigo||proc.descriptor_codigo,fecha_contrato:new Date().toISOString()})});
-      // 2. Create signing links
-      // Generate contract
-      const ctr = await fetch("/api/generate-contract?hiring_id="+proc.id);
-      const ctrData = await ctr.json();
-      const docCode = ctrData.ok ? ctrData.code : "HAB-CTR-"+new Date().getFullYear()+"-001";
-      // Build signers from form - auto-fill trabajador
-      const ff = lanzarForm.firmantes.map((f,i) => {
-        if(f.rol==="Trabajador") return {name:proc.candidato_nombre,email:proc.candidato_email,role:f.rol,id_number:proc.candidato_cc,order:f.orden};
-        return {name:f.nombre,email:f.email,role:f.rol,id_number:"",order:f.orden};
-      }).filter(f=>f.name&&f.email);
-      if(!ff.length){alert("Configure al menos un firmante.");return;}
-      const signers = ff;
-      const r = await fetch("/api/firma",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({action:"create_pending",doc_code:docCode,doc_title:"Contrato Individual de Trabajo - "+proc.candidato_nombre,doc_hash:"pending",signers:signers})});
-      // 2. Descriptor de cargo
-      const descSgn = [{name:proc.candidato_nombre,email:proc.candidato_email,role:"Trabajador",id_number:proc.candidato_cc,order:1}];
-      await fetch("/api/firma",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({action:"create_pending",doc_code:lanzarForm.descriptor_codigo||proc.descriptor_codigo||"HAB-DC-001",doc_title:"Descriptor de Cargo - "+proc.cargo,doc_hash:"pending",signers:descSgn})});
-      // 3. Recomendaciones SST
-      const sstSgn = [{name:proc.candidato_nombre,email:proc.candidato_email,role:"Trabajador",id_number:proc.candidato_cc,order:1}];
-      await fetch("/api/firma",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({action:"create_pending",doc_code:"HAB-SST-"+new Date().getFullYear()+"-001",doc_title:"Recomendaciones SST - "+proc.candidato_nombre,doc_hash:"pending",signers:sstSgn})});
-      const d = await r.json();
-      if(d.ok){
-        let msg = "Links de firma generados:\n\n";
-        d.data.forEach(s => { msg += s.signer + ":\n" + s.link + "\n\n"; });
-        alert(msg);
-        setLanzarId(null);
-        loadProcesos();
-      }
-    } catch(e) { alert("Error: "+e.message); }
-  };
 
   return (
-    <div>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-        <div style={{fontSize:16,fontWeight:700,color:C.ink}}>Procesos de contratación ({procesos.length})</div>
-        <Btn icon={Plus} onClick={() => setShowForm(!showForm)}>{showForm ? "Cancelar" : "Nueva propuesta"}</Btn>
+    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+
+      {/* PASO 1 — Wonderlic */}
+      <div style={{padding:"10px 12px",background:"#EDE8F4",borderRadius:8,border:"1px solid #C4B5E8"}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#5B3A8C",marginBottom:6}}>
+          Paso 1 · 🧠 Evaluación General / Wonderlic
+        </div>
+        <div style={{fontSize:10,color:"#666",marginBottom:8}}>Aptitud general y razonamiento lógico</div>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:6}}>
+          <Btn onClick={()=>lanzar("psi_general")} disabled={sending["psi_general"]} color="#5B3A8C">
+            {sending["psi_general"]?"Enviando...":paso1Lanzado?"✅ Relanzar link":"Enviar link al candidato"}
+          </Btn>
+          {results && results.puntaje_general && (
+            <div style={{fontSize:10,color:"#333"}}>
+              <b>Puntaje:</b> {results.puntaje_general} &nbsp;
+              {results.nivel_general && <span style={{background:"#5B3A8C",color:"#fff",padding:"2px 6px",borderRadius:3}}>{results.nivel_general}</span>}
+            </div>
+          )}
+          {!results && !loading && <div style={{fontSize:10,color:"#aaa"}}>Sin resultados aún</div>}
+          {loading && <div style={{fontSize:10,color:"#aaa"}}>Cargando...</div>}
+        </div>
       </div>
 
-      {showForm && (
-        <Card style={{marginBottom:16,border:"1px solid "+C.green}}>
-          <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:12}}>Nueva propuesta de empleo</div>
-          <Row gap={14} wrap>
-            <Col><Inp label="Cargo *" value={form.cargo} onChange={e=>setForm({...form,cargo:e.target.value})}/></Col>
-            <Col><Inp label="Área" value={form.area} onChange={e=>setForm({...form,area:e.target.value})}/></Col>
-            <Col><Sel label="Tipo contrato" value={form.tipo_contrato} onChange={e=>setForm({...form,tipo_contrato:e.target.value})} options={[{value:"fijo",label:"Término fijo"},{value:"indefinido",label:"Indefinido"},{value:"obra_labor",label:"Obra o labor"}]}/></Col>
-          </Row>
-          {form.tipo_contrato==="fijo" && (
-            <Row gap={14} wrap>
-              <Col><Inp label="Duración (meses)" type="number" value={form.duracion_meses} onChange={e=>setForm({...form,duracion_meses:parseInt(e.target.value)||0})}/></Col>
-              <Col><Inp label="Periodo de prueba" value={form.periodo_prueba} onChange={e=>setForm({...form,periodo_prueba:e.target.value})}/></Col>
-            </Row>
+      {/* PASO 2 — DISC */}
+      <div style={{padding:"10px 12px",background:paso2Habilitado?"#EDE8F4":"#F5F5F5",borderRadius:8,
+        border:"1px solid "+(paso2Habilitado?"#C4B5E8":"#ddd"),opacity:paso2Habilitado?1:0.6}}>
+        <div style={{fontSize:11,fontWeight:700,color:paso2Habilitado?"#5B3A8C":"#aaa",marginBottom:6}}>
+          Paso 2 · 🎯 Evaluación DISC {!paso2Habilitado && <span style={{fontSize:9,fontWeight:400}}> — se habilita al recibir resultados del Paso 1</span>}
+        </div>
+        <div style={{fontSize:10,color:"#666",marginBottom:8}}>Perfil de personalidad y comportamiento</div>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:6}}>
+          <Btn onClick={()=>lanzar("psi_disc")} disabled={!paso2Habilitado||sending["psi_disc"]} color="#5B3A8C">
+            {sending["psi_disc"]?"Enviando...":paso2Lanzado?"✅ Relanzar link":"Enviar link al candidato"}
+          </Btn>
+          {results && results.perfil_disc && (
+            <div style={{fontSize:10,color:"#333"}}>
+              <b>DISC:</b> {results.perfil_disc}
+            </div>
           )}
-          <Row gap={14} wrap>
-            <Col><Inp label="Salario neto mensual *" type="number" value={form.salario_neto} onChange={e=>setForm({...form,salario_neto:parseFloat(e.target.value)||0})}/></Col>
-            <Col><Inp label="Salario base" type="number" value={form.salario_base} onChange={e=>setForm({...form,salario_base:parseFloat(e.target.value)||0})}/></Col>
-          </Row>
-          <Row gap={14} wrap>
-            <Col><Inp label="Auxilio transporte" type="number" value={form.auxilio_transporte} onChange={e=>setForm({...form,auxilio_transporte:parseFloat(e.target.value)||0})}/></Col>
-            <Col><Inp label="Bono no salarial" type="number" value={form.bono_no_salarial} onChange={e=>setForm({...form,bono_no_salarial:parseFloat(e.target.value)||0})}/></Col>
-          </Row>
-          <Row gap={14} wrap>
-            <Col><Inp label="Jornada (horas/semana)" type="number" value={form.jornada_horas} onChange={e=>setForm({...form,jornada_horas:parseInt(e.target.value)||0})}/></Col>
-            <Col><Inp label="Horario" value={form.horario} onChange={e=>setForm({...form,horario:e.target.value})}/></Col>
-          </Row>
-          <Row gap={14} wrap>
-            <Col><Inp label="Días laborales" value={form.dias_laborales} onChange={e=>setForm({...form,dias_laborales:e.target.value})}/></Col>
-            <Col><Inp label="Ciudad" value={form.ciudad} onChange={e=>setForm({...form,ciudad:e.target.value})}/></Col>
-          </Row>
-          <Row gap={14} wrap>
-            <Col><Inp label="Fecha inicio" type="date" value={form.fecha_inicio} onChange={e=>setForm({...form,fecha_inicio:e.target.value})}/></Col>
-            
-          </Row>
-          <div style={{display:"flex",gap:8,marginTop:12}}>
-            <Btn icon={Check} onClick={crearPropuesta}>Generar propuesta</Btn>
-            <Btn variant="secondary" onClick={() => setShowForm(false)}>Cancelar</Btn>
-          </div>
-        </Card>
-      )}
-
-      {lanzarId && (() => {
-        const proc = procesos.find(p=>p.id===lanzarId);
-        if(!proc) return null;
-        return (
-          <Card style={{marginBottom:16,border:"1px solid #059669"}}>
-            <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:4}}>📝 Lanzar a contratación</div>
-            <div style={{fontSize:12,color:C.inkLight,marginBottom:12}}>{proc.cargo} — {proc.candidato_nombre}</div>
-            <Row gap={14} wrap>
-              <Col>
-                <Sel label="Plantilla de contrato *" value={lanzarForm.contrato_plantilla} onChange={e=>setLanzarForm({...lanzarForm,contrato_plantilla:e.target.value})} options={[
-                  {value:"tpl_contrato_laboral",label:"Contrato laboral a término fijo"},
-                  {value:"tpl_contrato_indefinido",label:"Contrato laboral indefinido"},
-                  {value:"tpl_contrato_obra",label:"Contrato de obra o labor"},
-                  {value:"tpl_contrato_prest_serv",label:"Contrato de prestación de servicios"},
-                ]}/>
-              </Col>
-              <Col>
-                <Sel label="Descriptor de cargo *" value={lanzarForm.descriptor_codigo||proc.descriptor_codigo||""} onChange={e=>setLanzarForm({...lanzarForm,descriptor_codigo:e.target.value})} options={[
-                  {value:"HAB-DC-SGC-01",label:"Aux. Servicios Generales y Cafetería"},
-                  {value:"HAB-DC-ARQ-01",label:"Arquitecto/a"},
-                  {value:"HAB-DC-ADM-01",label:"Administrativo/a"},
-                  {value:"HAB-DC-OBR-01",label:"Obrero/a de obra"},
-                  {value:"HAB-DC-DIS-01",label:"Diseñador/a interior"},
-                ]}/>
-              </Col>
-            </Row>
-            <div style={{marginTop:12,borderTop:"1px solid "+C.border,paddingTop:12}}>
-              <div style={{fontSize:12,fontWeight:700,color:C.ink,marginBottom:8}}>✍️ Firmantes (en orden de firma)</div>
-              {lanzarForm.firmantes.map((f,i) => (
-                <div key={i} style={{display:"flex",gap:8,alignItems:"center",marginBottom:8,padding:8,background:C.bg,borderRadius:6}}>
-                  <span style={{fontSize:18,width:28,textAlign:"center"}}>{f.rol==="Revisor legal"?"⚖️":f.rol==="Trabajador"?"👤":"🏢"}</span>
-                  <div style={{flex:1,display:"flex",gap:6,flexWrap:"wrap"}}>
-                    {f.rol==="Trabajador" ? (
-                      <div style={{fontSize:11,color:C.inkLight}}><strong>{proc.candidato_nombre||"Candidato"}</strong> · {proc.candidato_email||"email pendiente"} · <em>Se rellena automáticamente</em></div>
-                    ) : (<>
-                      <input placeholder="Nombre" value={f.nombre} onChange={e=>{const nf=[...lanzarForm.firmantes];nf[i]={...nf[i],nombre:e.target.value};setLanzarForm({...lanzarForm,firmantes:nf});}} style={{flex:1,minWidth:120,padding:"6px 8px",fontSize:11,border:"1px solid "+C.border,borderRadius:4,fontFamily:"DM Sans,sans-serif"}}/>
-                      <input placeholder="Email" value={f.email} onChange={e=>{const nf=[...lanzarForm.firmantes];nf[i]={...nf[i],email:e.target.value};setLanzarForm({...lanzarForm,firmantes:nf});}} style={{flex:1,minWidth:150,padding:"6px 8px",fontSize:11,border:"1px solid "+C.border,borderRadius:4,fontFamily:"DM Sans,sans-serif"}}/>
-                    </>)}
-                    <select value={f.rol} onChange={e=>{const nf=[...lanzarForm.firmantes];nf[i]={...nf[i],rol:e.target.value};setLanzarForm({...lanzarForm,firmantes:nf});}} style={{padding:"6px 8px",fontSize:11,border:"1px solid "+C.border,borderRadius:4,fontFamily:"DM Sans,sans-serif",minWidth:120}}>
-                      <option value="Revisor legal">⚖️ Revisor legal</option>
-                      <option value="Trabajador">👤 Trabajador</option>
-                      <option value="Empleador — Rep. Legal">🏢 Empleador</option>
-                      <option value="Testigo">👁 Testigo</option>
-                    </select>
-                  </div>
-                  {lanzarForm.firmantes.length>1 && <button onClick={()=>{const nf=lanzarForm.firmantes.filter((_,j)=>j!==i);setLanzarForm({...lanzarForm,firmantes:nf});}} style={{background:"#FEE2E2",border:"none",borderRadius:4,color:"#DC2626",fontSize:10,padding:"4px 8px",cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>✕</button>}
-                </div>
-              ))}
-              <button onClick={()=>setLanzarForm({...lanzarForm,firmantes:[...lanzarForm.firmantes,{nombre:"",email:"",rol:"Testigo",orden:lanzarForm.firmantes.length+1}]})} style={{background:"none",border:"1px dashed "+C.border,borderRadius:6,padding:"6px 12px",fontSize:11,color:C.inkLight,cursor:"pointer",fontFamily:"DM Sans,sans-serif",width:"100%"}}>+ Añadir firmante</button>
-            </div>
-            <div style={{display:"flex",gap:8,marginTop:14}}>
-              <Btn icon={Check} onClick={lanzarContratacion}>Generar contrato y enviar a firma</Btn>
-              <Btn variant="secondary" onClick={()=>setLanzarId(null)}>Cancelar</Btn>
-            </div>
-          </Card>
-        );
-      })()}
-
-      {sendModal && (
-        <div style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setSendModal(null)}>
-          <div onClick={e=>e.stopPropagation()} style={{maxWidth:420,width:"100%",background:"#fff",borderRadius:12,padding:24,boxShadow:"0 8px 30px rgba(0,0,0,.2)"}}>
-            <div style={{textAlign:"center",marginBottom:16}}>
-              <div style={{fontSize:32,marginBottom:8}}>{"\ud83d\udce8"}</div>
-              <div style={{fontSize:16,fontWeight:700,color:C.ink}}>Enviar {sendModal.titulo}</div>
-              <div style={{fontSize:12,color:C.inkLight,marginTop:4}}>{sendModal.nombre || "Candidato"}</div>
-            </div>
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
-              <button onClick={()=>{navigator.clipboard.writeText(sendModal.link);if(sendModal.hiringId&&sendModal.nextEstado){fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:sendModal.hiringId,estado:sendModal.nextEstado})}).then(()=>loadProcesos());}setSendModal(null);}} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",border:"1px solid "+C.border,borderRadius:8,background:C.card,cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:600,color:C.ink,textAlign:"left"}}>
-                <span style={{fontSize:20}}>{"\ud83d\udccb"}</span><div><div>Copiar link</div><div style={{fontSize:10,fontWeight:400,color:C.inkLight}}>Para pegar donde quiera</div></div>
-              </button>
-              <button onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent(sendModal.titulo+" - Habitaris\n"+sendModal.link));if(sendModal.hiringId&&sendModal.nextEstado){fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:sendModal.hiringId,estado:sendModal.nextEstado})}).then(()=>loadProcesos());}setSendModal(null);}} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",border:"1px solid #059669",borderRadius:8,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:600,color:"#059669",textAlign:"left"}}>
-                <span style={{fontSize:20}}>{"\ud83d\udcf1"}</span><div><div>Enviar por WhatsApp</div><div style={{fontSize:10,fontWeight:400,color:"#059669"}}>Se abre WhatsApp con el link</div></div>
-              </button>
-              {sendModal.email && <button onClick={()=>{fetch("/api/send-email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:sendModal.email,subject:sendModal.titulo+" - Habitaris",message:"Hola,\n\nPor favor complete el siguiente proceso:\n\n"+sendModal.link+"\n\nGracias,\nEquipo Habitaris"})}).then(r=>r.json()).then(d=>{if(d.ok)alert("Email enviado a "+sendModal.email);else alert("Error enviando email");}).catch(()=>alert("Error enviando email"));setSendModal(null);}} style={{display:"flex",alignItems:"center",gap:12,padding:"12px 16px",border:"1px solid #1D4ED8",borderRadius:8,background:"#EFF6FF",cursor:"pointer",fontFamily:"DM Sans,sans-serif",fontSize:13,fontWeight:600,color:"#1D4ED8",textAlign:"left"}}>
-                <span style={{fontSize:20}}>{"\u2709\ufe0f"}</span><div><div>Enviar por email</div><div style={{fontSize:10,fontWeight:400,color:"#1D4ED8"}}>{sendModal.email}</div></div>
-              </button>}
-            </div>
-            <div style={{textAlign:"center",marginTop:12}}>
-              <button onClick={()=>setSendModal(null)} style={{background:"none",border:"none",color:C.inkLight,fontSize:12,cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>Cancelar</button>
-            </div>
-          </div>
         </div>
-      )}
+      </div>
 
-      {loading ? (
-        <div style={{textAlign:"center",padding:40,color:C.inkLight}}>Cargando...</div>
-      ) : procesos.length === 0 ? (
-        <Card style={{textAlign:"center",padding:40}}>
-          <div style={{fontSize:32,marginBottom:8}}>📋</div>
-          <div style={{fontSize:14,fontWeight:600,color:C.ink}}>Sin procesos de contratación</div>
-          <div style={{fontSize:12,color:C.inkLight,marginTop:4}}>Crea una propuesta de empleo para iniciar</div>
-        </Card>
-      ) : (
-        <div style={{display:"flex",flexDirection:"column",gap:8}}>
-          {procesos.map(p => {
-            const est = ESTADOS[p.estado] || {label:p.estado,color:"#888",bg:"#F5F5F5"};
-            const isOpen = selProceso === p.id;
-            const linkProp = "https://suite.habitaris.co/propuesta?token=" + p.token_propuesta;
-            const linkDatos = "https://suite.habitaris.co/contratacion?token=" + p.token_datos;
-            return (
-              <Card key={p.id} style={{padding:0,overflow:"hidden"}}>
-                <div style={{padding:"14px 18px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}} onClick={() => setSelProceso(isOpen?null:p.id)}>
-                  <div>
-                    <div style={{fontWeight:700,fontSize:13,color:C.ink}}>{p.cargo}</div>
-                    <div style={{fontSize:11,color:C.inkLight}}>{p.codigo} · {p.candidato_nombre || "Sin candidato"} · {fmtMoney(p.salario_neto)}</div>
-                  </div>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{padding:"3px 10px",borderRadius:12,fontSize:10,fontWeight:600,color:est.color,background:est.bg}}>{est.label}</span>
-                    <span style={{fontSize:16,color:C.inkLight}}>{isOpen?"▲":"▼"}</span>
-                  </div>
-                </div>
-                {isOpen && (
-                  <div style={{padding:"0 18px 16px",borderTop:"1px solid "+C.border}}>
-                    {/* Datos propuesta */}
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 16px",padding:"12px 0",fontSize:12}}>
-                      <div><span style={{color:C.inkLight}}>Tipo:</span> <strong>{p.tipo_contrato==="fijo"?"Término fijo"+(p.duracion_meses?" ("+p.duracion_meses+" meses)":""):p.tipo_contrato}</strong></div>
-                      <div><span style={{color:C.inkLight}}>Ciudad:</span> <strong>{p.ciudad}</strong></div>
-                      <div><span style={{color:C.inkLight}}>Jornada:</span> <strong>{p.jornada_horas}h / {p.dias_laborales}</strong></div>
-                      <div><span style={{color:C.inkLight}}>Horario:</span> <strong>{p.horario}</strong></div>
-                      <div><span style={{color:C.inkLight}}>Inicio:</span> <strong>{p.fecha_inicio || "Pendiente"}</strong></div>
-                      <div><span style={{color:C.inkLight}}>Salario neto:</span> <strong>{fmtMoney(p.salario_neto)}</strong></div>
-                    </div>
-                    {/* Expediente candidato */}
-                    {p.candidato_nombre && (
-                      <div style={{borderTop:"1px solid "+C.border,paddingTop:12,marginTop:4}}>
-                        <div style={{fontSize:12,fontWeight:700,color:C.ink,marginBottom:10}}>📋 Expediente del candidato</div>
-                        <div style={{display:"flex",gap:16,alignItems:"start",marginBottom:12}}>
-                          {p.candidato_foto_url && <img src={p.candidato_foto_url} style={{width:60,height:60,borderRadius:"50%",objectFit:"cover",border:"2px solid "+C.border}}/>}
-                          <div style={{flex:1}}>
-                            <div style={{fontWeight:700,fontSize:14,color:C.ink}}>{p.candidato_nombre}</div>
-                            <div style={{fontSize:11,color:C.inkLight}}>{p.candidato_cc}</div>
-                            <div style={{fontSize:11,color:C.inkLight}}>{p.candidato_email} · {p.candidato_celular}</div>
-                            <div style={{fontSize:11,color:C.inkLight}}>{p.candidato_direccion}</div>
-                          </div>
-                        </div>
-                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"6px 16px",fontSize:11,marginBottom:8}}>
-                          {p.candidato_eps && <div><span style={{color:C.inkLight}}>EPS:</span> <strong>{p.candidato_eps}</strong></div>}
-                          {p.candidato_pension && <div><span style={{color:C.inkLight}}>Pensión:</span> <strong>{p.candidato_pension}</strong></div>}
-                          {p.candidato_banco && <div><span style={{color:C.inkLight}}>Banco:</span> <strong>{p.candidato_banco}</strong></div>}
-                          {p.candidato_numero_cuenta && <div><span style={{color:C.inkLight}}>Cuenta:</span> <strong>{p.candidato_tipo_cuenta} {p.candidato_numero_cuenta}</strong></div>}
-                        </div>
-                        {p.candidato_contacto_emergencia && (() => {
-                          try { const ce = JSON.parse(p.candidato_contacto_emergencia); return <div style={{fontSize:11,color:C.inkLight,marginBottom:8}}>🚨 Emergencia: <strong>{ce.nombre}</strong> ({ce.parentesco}) — {ce.telefono}</div>; } catch(e) { return null; }
-                        })()}
-                        {p.candidato_beneficiarios && p.candidato_beneficiarios !== "[]" && (() => {
-                          try { const bs = JSON.parse(p.candidato_beneficiarios); if(!bs.length) return null; return <div style={{fontSize:11,marginBottom:8}}><span style={{color:C.inkLight}}>👨‍👩‍👧 Beneficiarios:</span> {bs.map((b,i)=><span key={i} style={{background:C.bg,padding:"1px 6px",borderRadius:4,marginLeft:4,fontSize:10}}>{b.nombre} ({b.parentesco})</span>)}</div>; } catch(e) { return null; }
-                        })()}
-                        {/* Documentos adjuntos */}
-                        {(()=>{
-                          try {
-                            const ced    = JSON.parse(p.candidato_cedula             || '{}');
-                            const extras = JSON.parse(p.candidato_documentos_extra   || '{}');
-                            const isImg  = url => /\.(jpg|jpeg|png|gif|webp)/i.test(url||'');
-                            const isPdf  = url => /\.pdf/i.test(url||'');
-                            const ext    = url => { const m = (url||'').match(/\.([a-zA-Z0-9]+)(?:\?|$)/); return m ? m[1].toUpperCase() : 'DOC'; };
-                            const allDocs = [
-                              ced.anverso             && {label:'Cédula — anverso',       url:ced.anverso,          cat:'Identidad'},
-                              ced.reverso             && {label:'Cédula — reverso',        url:ced.reverso,          cat:'Identidad'},
-                              p.candidato_foto_url    && {label:'Foto perfil',             url:p.candidato_foto_url, cat:'Identidad'},
-                              extras.cert_eps         && {label:'Certificado EPS',         url:extras.cert_eps,      cat:'Seguridad Social'},
-                              extras.cert_pension     && {label:'Certificado Pensión',     url:extras.cert_pension,  cat:'Seguridad Social'},
-                              extras.cert_banco       && {label:'Certificación Bancaria',  url:extras.cert_banco,    cat:'Financiero'},
-                              extras.hv               && {label:'Hoja de Vida',            url:extras.hv,            cat:'Laboral'},
-                              extras.otros && Object.entries(extras.otros||{}).map(([k,v])=>({label:k,url:v,cat:'Otros'})),
-                            ].flat().filter(Boolean);
-                            if (!allDocs.length) return null;
-                            const cats = [...new Set(allDocs.map(d=>d.cat))];
-                            return (
-                              <div style={{borderTop:'1px solid '+C.border,paddingTop:14,marginTop:10}}>
-                                <div style={{fontSize:11,fontWeight:700,color:C.inkLight,marginBottom:12,letterSpacing:1.5,textTransform:'uppercase'}}>Documentos adjuntos</div>
-                                {cats.map(cat=>(
-                                  <div key={cat} style={{marginBottom:12}}>
-                                    <div style={{fontSize:10,fontWeight:700,color:C.inkLight,letterSpacing:1,textTransform:'uppercase',marginBottom:6,paddingBottom:3,borderBottom:'1px solid '+C.border+'80'}}>{cat}</div>
-                                    <div style={{display:'flex',flexDirection:'column',gap:4}}>
-                                      {allDocs.filter(d=>d.cat===cat).map((doc,i)=>(
-                                        <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'7px 10px',background:C.bg,borderRadius:6,border:'1px solid '+C.border}}>
-                                          <><img src={doc.url} alt={doc.label}
-                                            style={{width:36,height:36,borderRadius:4,objectFit:'cover',border:'1px solid '+C.border,cursor:'pointer',flexShrink:0}}
-                                            onClick={()=>window.open(doc.url,'_blank')}
-                                            onError={e=>{e.target.style.display='none';e.target.nextSibling.style.display='flex'}}
-                                          /><div style={{display:'none',width:36,height:36,borderRadius:4,background:isPdf(doc.url)?'#FEE2E2':'#EFF6FF',border:'1px solid '+C.border,alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:10,fontWeight:700,color:isPdf(doc.url)?'#DC2626':'#1D4ED8'}}>{ext(doc.url)}</div></>
-                                          <span style={{flex:1,fontSize:13,color:C.ink,fontWeight:500}}>{doc.label}</span>
-                                          <div style={{display:'flex',gap:4,flexShrink:0}}>
-                                            <button onClick={()=>window.open(doc.url,'_blank')} style={{padding:'4px 10px',fontSize:11,fontWeight:600,background:'#F1F5F9',border:'1px solid #CBD5E1',borderRadius:4,cursor:'pointer',color:'#334155',fontFamily:'inherit'}}>👁 Ver</button>
-                                            <a href={doc.url} download target="_blank" rel="noreferrer" style={{padding:'4px 10px',fontSize:11,fontWeight:600,background:C.green+'15',border:'1px solid '+C.green+'40',borderRadius:4,cursor:'pointer',color:C.green,textDecoration:'none',display:'inline-flex',alignItems:'center'}}>⬇ Descargar</a>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            );
-                          } catch(e) { return null; }
-                        })()}
-                        </div>
-                    )}
-                    <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.border}}>
-                      {/* Botones según estado */}
-                      {(p.estado==="propuesta") && <>
-                        <button onClick={()=>{navigator.clipboard.writeText(linkProp);alert("Link copiado al portapapeles");}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:C.card,cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:C.ink}}>📋 Copiar link</button>
-                        <button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("Propuesta de empleo Habitaris — "+p.cargo+"\n"+linkProp),"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📱 Enviar WhatsApp</button>
-                      </>}
-                      {(p.estado==="aceptada") && <>
-                        <button onClick={()=>{navigator.clipboard.writeText(linkDatos);alert("Link de formulario copiado");}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #1D4ED8",borderRadius:6,background:"#EFF6FF",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#1D4ED8"}}>📋 Copiar link formulario</button>
-                        <button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("Complete sus datos para la contratación en Habitaris:\n"+linkDatos),"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📱 Recordar por WhatsApp</button>
-                      </>}
-                      {(p.estado==="datos_recibidos") && <>
-                        <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"evaluaciones"})});var psiLink="https://suite.habitaris.co/psicotecnico?hiring_id="+p.id;setSendModal({link:psiLink,email:p.candidato_email,titulo:"Evaluaci\u00f3n psicot\u00e9cnica",nombre:p.candidato_nombre});loadProcesos;loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #5B3A8C",borderRadius:6,background:"#EDE8F4",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#5B3A8C"}}>🧠 Enviar a psicotécnico</button>
-                        <button onClick={()=>setLanzarId(p.id)} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>⏩ Saltar a contratación</button>
-                      </>}
-                      {p.estado==="evaluaciones" && <EvaluacionesPanel p={p} onDone={loadProcesos}/>}
-                      {p.estado==="examen_medico" && <>
-                      <span style={{fontSize:10,color:"#0D5E6E",fontStyle:"italic"}}>Solicita el examen médico al candidato y carga los resultados cuando los tengas.</span>
-                      <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"examen_recibido"})});onDone&&onDone();window.location.reload();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #0369A1",borderRadius:6,background:"#E0F2FE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#0369A1"}}>📋 Cargar resultados examen</button>
-                    </>}
-                    {p.estado==="examen_recibido" && <ExamenPanel p={p} onDone={loadProcesos}/>}
-                    {p.estado==="certificado_sst" && <>
-                      <span style={{padding:"6px 10px",fontSize:11,fontWeight:600,background:"#D1FAE5",borderRadius:6,color:"#065F46"}}>🦺 Certificado SST emitido — listo para firma</span>
-                      <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"firma_pendiente"})});loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #D97706",borderRadius:6,background:"#FEF3C7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#D97706"}}>✍️ Lanzar firma</button>
-                    </>}
-                      {(p.estado==="validacion_sst") && <>
-                        <button onClick={()=>setLanzarId(p.id)} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📝 SST OK → Lanzar a contratación</button>
-                      </>}
-                      {(p.estado==="firma_pendiente") && <>
-                        <span style={{padding:"6px 12px",fontSize:11,fontWeight:600,background:"#FEF3C7",borderRadius:6,color:"#D97706"}}>⏳ Esperando firmas</span>
-                      </>}
-                      {(p.estado==="firma_pendiente"||p.estado==="firmado"||p.estado==="afiliaciones"||p.estado==="completado") && <AnexosPanel p={p}/>}
-                      {p.estado==="firmado" && <>
-                      <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"afiliaciones"})});loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #0891B2",borderRadius:6,background:"#E0F2FE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#0891B2"}}>🏛️ Registrar afiliaciones</button>
-                    </>}
-                    {(p.estado==="afiliaciones"||p.estado==="firma_pendiente"||p.estado==="firmado") && <AfiliacionesPanel p={p} onDone={loadProcesos}/>}
-                    {p.estado==="completado" && <>
-                      <span style={{padding:"6px 12px",fontSize:11,fontWeight:600,background:"#DCFCE7",borderRadius:6,color:"#059669"}}>✅ Proceso completo{p.expediente_num ? " · Exp. "+p.expediente_num : ""}</span>
-                    </>}
-                      <button onClick={async()=>{if(!confirm("¿Cancelar esta propuesta?"))return;try{const r=await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"cancelado"})});if(r.ok)loadProcesos();}catch(e){alert(e.message);}}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #DC2626",borderRadius:6,background:"#FEE2E2",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#DC2626"}}>🗑 Cancelar</button>
-                    </div>
-                  </div>
-                )}
-              </Card>
-            );
-          })}
+      {/* APROBACIÓN RRHH */}
+      <div style={{padding:"10px 12px",background:"#F0FDF4",borderRadius:8,border:"1px solid #BBF7D0"}}>
+        <div style={{fontSize:11,fontWeight:700,color:"#065F46",marginBottom:8}}>✅ Aprobación RRHH</div>
+        {apRRHH ? (
+          <div style={{fontSize:10,color:"#065F46",fontWeight:600}}>✅ RRHH aprobó las evaluaciones</div>
+        ) : (
+          <>
+            <ToggleModo modo={modoRRHH} setModo={setModoRRHH} disabled={savingAp}/>
+            {modoRRHH==="interno" ? (
+              <Btn onClick={()=>aprobar("rrhh")} disabled={savingAp} color="#1E6B42">
+                {savingAp?"Guardando...":"👤 Aprobar ahora"}
+              </Btn>
+            ) : (
+              <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                <input autoComplete="off" value={emailRRHH} onChange={e=>setEmailRRHH(e.target.value)}
+                  placeholder="revisor-rrhh@empresa.com"
+                  style={{flex:1,padding:"5px 8px",fontSize:11,border:"1px solid #ddd",borderRadius:5,outline:"none"}}/>
+                <Btn onClick={()=>enviarExterno("rrhh")} disabled={savingAp} color="#1E6B42">
+                  📧 Enviar
+                </Btn>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* APROBACIÓN SST — bloqueada hasta que RRHH apruebe */}
+      <div style={{padding:"10px 12px",background:sstHabilitado?"#F0FDF4":"#F5F5F5",borderRadius:8,
+        border:"1px solid "+(sstHabilitado?"#BBF7D0":"#ddd"),opacity:sstHabilitado?1:0.6}}>
+        <div style={{fontSize:11,fontWeight:700,color:sstHabilitado?"#065F46":"#aaa",marginBottom:8}}>
+          ✅ Aprobación SST {!sstHabilitado && <span style={{fontSize:9,fontWeight:400}}> — se habilita luego de aprobación RRHH</span>}
         </div>
-      )}
+        {apSST ? (
+          <div style={{fontSize:10,color:"#065F46",fontWeight:600}}>✅ SST aprobó las evaluaciones</div>
+        ) : (
+          <>
+            <ToggleModo modo={modoSST} setModo={setModoSST} disabled={!sstHabilitado||savingAp}/>
+            {modoSST==="interno" ? (
+              <Btn onClick={()=>aprobar("sst")} disabled={!sstHabilitado||savingAp} color="#1E6B42">
+                {savingAp?"Guardando...":"👤 Aprobar ahora"}
+              </Btn>
+            ) : (
+              <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                <input autoComplete="off" value={emailSST} onChange={e=>setEmailSST(e.target.value)}
+                  placeholder="revisor-sst@empresa.com"
+                  style={{flex:1,padding:"5px 8px",fontSize:11,border:"1px solid #ddd",borderRadius:5,outline:"none"}}/>
+                <Btn onClick={()=>enviarExterno("sst")} disabled={!sstHabilitado||savingAp} color="#1E6B42">
+                  📧 Enviar
+                </Btn>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+
     </div>
   );
 }
