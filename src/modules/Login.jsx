@@ -15,17 +15,13 @@ async function sha256(str) {
 const SESSION_KEY = 'hab:session'
 
 export function isAuthConfigured() {
-  return !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
+  return true
 }
 
 export function isLoggedIn() {
-  if (!isAuthConfigured()) return true
-  if (!window.__habitarisSessionActive) return false
   try {
     const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null')
-    if (!s || !s.user) return false
-    if (Date.now() - (s.ts || 0) > 28800000) { sessionStorage.removeItem(SESSION_KEY); return false }
-    return true
+    return !!(s && s.user)
   } catch { return false }
 }
 
