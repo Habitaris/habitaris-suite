@@ -28,7 +28,7 @@ export function isLoggedIn() {
 export async function login(email, password) {
   const hash = await sha256(password)
   const { data, error } = await sb.from('users')
-    .select('id,email,name,role')
+    .select('id,email,nombre,rol')
     .eq('email', email.toLowerCase().trim())
     .eq('password_hash', hash)
     .maybeSingle()
