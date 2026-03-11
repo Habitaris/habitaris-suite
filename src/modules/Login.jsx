@@ -20,6 +20,7 @@ export function isAuthConfigured() {
 
 export function isLoggedIn() {
   if (!isAuthConfigured()) return true
+  if (!window.__habitarisSessionActive) return false
   try {
     const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null')
     if (!s || !s.user) return false
@@ -37,11 +38,13 @@ export async function login(email, password) {
     .maybeSingle()
   if (error || !data) throw new Error('Credenciales incorrectas')
   sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user: data, ts: Date.now() }))
+  window.__habitarisSessionActive = true
   return data
 }
 
 export function logout() {
   sessionStorage.removeItem(SESSION_KEY)
+  window.__habitarisSessionActive = false
 }
 
 // ─── LoginScreen ──────────────────────────────────────────────────────────────
