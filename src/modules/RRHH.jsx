@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { store } from "../core/store.js";
+import { TabNomina } from "./TabNomina.jsx";
 
 const DEF_EQUIPO = () => ({
   id: uid(), nombre: "", descripcion: "", tipo: "obra",
@@ -4147,6 +4148,7 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                   {tab==="asistencia"&& <TabAsistencia equipo={equipos} asistencia={asistencia} setAsistencia={saveAsistencia} pais={currentUser?.pais||"CO"}/>}
                   {tab==="partes"    && <TabPartes    partes={partes}    setPartes={savePartes}    equipo={equipos} cargos={cargos} currentUser={null} pais={currentUser?.pais||"CO"}/>}
                   {tab==="novedades" && <TabNovedades novedades={novedades} saveNovedades={saveNovedades}/>}
+                  {tab==="nomina"       && <TabNomina/>}
                   {tab==="contratacion" && <TabContratacion/>}
                   {tab==="evaluaciones" && <TabEvaluaciones/>}
                   {tab==="docs"      && <TabDocumentos docs={docs}       saveDocs={saveDocs}        fichas={fichas} cargos={cargos}/>}
