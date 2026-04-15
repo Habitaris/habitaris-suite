@@ -10,9 +10,29 @@
     <meta property="og:image" content="/logo-habitaris-negro.svg">
     <meta property="og:type" content="website">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect x='3' y='5' width='22' height='22' fill='none' stroke='%23111' stroke-width='1.5'/><rect x='7' y='10' width='4' height='11' fill='%23111'/><rect x='7' y='14' width='12' height='3' fill='%23111'/><rect x='15' y='10' width='4' height='11' fill='%23111'/></svg>" />
+    <style>
+      /* Habitaris Suite — Global form styles */
+      input[type="text"], input:not([type]), textarea {
+        text-transform: uppercase;
+        -webkit-spellcheck: true;
+      }
+      input[type="text"]::placeholder, input:not([type])::placeholder, textarea::placeholder {
+        text-transform: none;
+      }
+      input[type="email"] { text-transform: lowercase; }
+      input[type="number"], input[type="date"], input[type="password"], select { text-transform: none; }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      // Enable spellcheck and autocapitalize on all inputs
+      new MutationObserver(function(){
+        document.querySelectorAll('input[type="text"],input:not([type]),textarea').forEach(function(el){
+          if(!el.dataset.hbInit){el.spellcheck=true;el.autocapitalize='characters';el.dataset.hbInit='1';}
+        });
+      }).observe(document.body||document.documentElement,{childList:true,subtree:true});
+    </script>
   </body>
 </html>
