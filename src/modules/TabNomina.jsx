@@ -33,10 +33,6 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 const fmt = n => n == null || isNaN(n) ? "$0" : "$" + Math.round(n).toLocaleString("es-CO");
 const fPct = n => (n * 100).toFixed(2) + "%";
 
-const SB = "https://xlzkasdskatnikuavefh.supabase.co";
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhsemthc2Rzc2thdG5pa3VhdmVmaCIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzQwMTUyOTk3LCJleHAiOjIwNTU3Mjg5OTd9.DP5x1hNbnTSzIFRMFOG7tYbykaAJMc6BRXYC_dFNFgE";
-const SBH = { "Content-Type":"application/json", apikey:KEY, Authorization:"Bearer "+KEY };
-
 async function fetchEmps(){try{
   const results=[];
   for(const est of["firmado","afiliaciones","completado"]){
@@ -45,8 +41,8 @@ async function fetchEmps(){try{
   }
   return results;
 }catch{return[];}}
-async function loadN(a,m){try{const r=await fetch(SB+"/rest/v1/kv_store?key=eq.hab:nomina:"+a+":"+m+"&select=value",{headers:SBH});const d=await r.json();return d&&d[0]?.value?JSON.parse(d[0].value):[];}catch{return[];}}
-async function saveN(a,m,data){await fetch(SB+"/rest/v1/kv_store",{method:"POST",headers:{...SBH,Prefer:"resolution=merge-duplicates"},body:JSON.stringify({key:"hab:nomina:"+a+":"+m,value:JSON.stringify(data),tenant_id:"habitaris"})});}
+async function loadN(a,m){try{const r=await fetch("/api/nomina?anio="+a+"&mes="+m);const d=await r.json();return d.ok?d.data:[];}catch{return[];}}
+async function saveN(a,m,data){await fetch("/api/nomina?anio="+a+"&mes="+m,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data})});}
 
 function calcN(n) {
   const dias=n.dias||30, ratio=dias/30, sal=n.sal||0;
