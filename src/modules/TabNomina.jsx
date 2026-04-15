@@ -176,6 +176,7 @@ export function TabNomina(){
                 Object.values(nDias).forEach(v=>{if(counts[v]!==undefined)counts[v]++;});
                 const diasNoLab=counts.incapacidad+counts.vacaciones+counts.licencia+counts.licNoRem+counts.ausencia;
                 const diasLab=Math.max(0,30-diasNoLab);
+                const diasSalario=Math.max(0,30-(counts.incapacidad+counts.vacaciones+counts.licNoRem+counts.ausencia)); // Lic rem NO reduce salario
 
                 const toggleDay=(day)=>{
                   if(!ed)return;
@@ -185,7 +186,10 @@ export function TabNomina(){
                   // Update counts
                   const nc={incapacidad:0,vacaciones:0,licencia:0,licNoRem:0,ausencia:0};
                   Object.values(cur).forEach(v=>{if(nc[v]!==undefined)nc[v]++;});
-                  u({novDias:cur,dias:Math.max(0,30-(nc.incapacidad+nc.vacaciones+nc.licencia+nc.licNoRem+nc.ausencia)),diasIncap:nc.incapacidad,diasVac:nc.vacaciones,diasLicRem:nc.licencia,diasLicNoRem:nc.licNoRem});
+                  // Licencia remunerada NO reduce días (trabajador sigue cobrando)
+                  // Solo reducen: incapacidad, lic NO rem, ausencia, vacaciones
+                  const diasRed = nc.incapacidad + nc.vacaciones + nc.licNoRem + nc.ausencia;
+                  u({novDias:cur,dias:Math.max(0,30-diasRed),diasIncap:nc.incapacidad,diasVac:nc.vacaciones,diasLicRem:nc.licencia,diasLicNoRem:nc.licNoRem});
                 };
 
                 return <>
@@ -226,7 +230,8 @@ export function TabNomina(){
                     </div>
                     <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                       {NOV_TIPOS.filter(n=>n.id!=="normal").map(n=>{const c=counts[n.id]||0;return c>0?<span key={n.id} style={{fontSize:9,background:n.color,padding:"2px 6px",borderRadius:4,fontWeight:600}}>{n.icon} {n.label}: {c}d</span>:null;})}
-                      <span style={{fontSize:9,background:T.greenBg,padding:"2px 6px",borderRadius:4,fontWeight:700,color:T.green}}>Días lab: {diasLab}/30</span>
+                      <span style={{fontSize:9,background:T.greenBg,padding:"2px 6px",borderRadius:4,fontWeight:700,color:T.green}}>Sal: {diasSalario}d</span>
+                      {diasSalario!==diasLab&&<span style={{fontSize:9,background:T.accent,padding:"2px 6px",borderRadius:4,color:T.inkLight}}>Asist: {diasLab}d</span>}
                     </div>
                   </div>
                 </>;
