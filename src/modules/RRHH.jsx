@@ -4065,6 +4065,13 @@ function TabContratacion({onNuevaPropuesta}) {
                       const $=n=>"$"+Math.round(n||0).toLocaleString("es-CO");
                       const cond=p._condiciones;
                       const openCond=(tipo)=>{
+                        // Use saved full HTML from calculator if available
+                        const savedHtml = tipo==="trabajador" ? cond?.html_trabajador : cond?.html_empleador;
+                        if(savedHtml){
+                          window.open(URL.createObjectURL(new Blob([savedHtml],{type:"text/html;charset=utf-8"})),"_blank");
+                          return;
+                        }
+                        // Fallback: generate basic document from saved data
                         const t=cond?.trabajador||{},e=cond?.empleador||{},nombre=p.candidato_nombre||"Candidato",cc=p.candidato_cc||"",fecha=new Date(cond?.generado||p.created_at||Date.now()).toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
                         const css=`body{font-family:Helvetica,Arial,sans-serif;max-width:740px;margin:0 auto;padding:30px 40px;font-size:10pt;color:#111;line-height:1.5}.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #1E6B42;padding-bottom:10px;margin-bottom:16px}.logo{font-weight:800;font-size:18px}h1{font-size:13pt;text-align:center;margin-bottom:16px}table{width:100%;border-collapse:collapse;margin-bottom:14px}th{background:#111;color:#fff;text-align:left;padding:5px 8px;font-size:8pt}td{padding:4px 8px;border-bottom:1px solid #eee;font-size:9.5pt}td.l{color:#666;width:45%}td.v{font-weight:700;text-align:right;font-family:monospace}.total{background:#f5f4f1;font-weight:800}.green{color:#1E6B42}.red{color:#dc2626}.blue{color:#2563eb}.np{text-align:center;margin:30px 0;padding:16px;background:#f5f5f5;border-radius:8px}.btn{background:#1E6B42;color:#fff;border:none;padding:10px 28px;font-size:12pt;cursor:pointer;border-radius:4px;margin-right:10px}@media print{.np{display:none}}`;
                         let html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>${css}</style></head><body>`;

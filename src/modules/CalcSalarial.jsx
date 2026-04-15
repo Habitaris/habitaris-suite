@@ -770,6 +770,8 @@ window.onload=function(){
       _condiciones: {
         trabajador: { salario_base:neg.salario, auxilio_transporte:neg.auxDev, bono:neg.bono, bono_concepto:bonoConcepto, bono_prestacional:bonoPrest, bono_tratamiento:bonoTrat, devengado:neg.devTotal, eps_empleado:neg.sE, pension_empleado:neg.pE, fsp:neg.fspV, total_deducciones:neg.totDed, neto:neg.neto, modo_salario:modoSal, jornada_horas:hSem, jornada_dias:DL.filter((_,i)=>workDays[i]).join(", "), horario:`${hIni}:00 a ${hFin}:00`, tipo_jornada:tipoJornada, dias_mes:neg.dm, regimen:regimenSalud },
         empleador: { salario_base:neg.salario, ibc:neg.ibc, eps_empleador:neg.sEr, pension_empleador:neg.pEr, arl:neg.arlV, arl_nivel:ARL[Math.max(0,arlIdx)]?.l||"I", caja:neg.caja, icbf:neg.icbf, sena:neg.sena, total_aportes:neg.totAp, prima:neg.pri, cesantias:neg.ces, int_cesantias:neg.intC, vacaciones:neg.vac, total_provisiones:neg.totPr, costo_total_mes:neg.costoT, costo_indirecto:neg.costoInd, factor:neg.salario>0?(neg.costoT/neg.salario).toFixed(2):"—", exoneracion_114:art114, duracion_meses:durMode==="meses"?durMeses:Math.round((contrato.durDias||180)/30), costo_contrato:neg.costoT*(durMode==="meses"?durMeses:Math.round((contrato.durDias||180)/30)) },
+        html_trabajador: printDoc("propuesta")?.doc||"",
+        html_empleador: printDoc("empleador")?.doc||"",
         generado: new Date().toISOString()
       },
       _docs_requeridos: selDocs,
