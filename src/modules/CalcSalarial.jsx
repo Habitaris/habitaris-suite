@@ -837,7 +837,7 @@ window.onload=function(){
             </select><input value={propForm.candidato_celular} onChange={e=>upP("candidato_celular",e.target.value)} placeholder="Número celular" style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:"0 6px 6px 0",fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div></div>
             <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>EPS</label><input value={propForm.candidato_eps} onChange={e=>upP("candidato_eps",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
             <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Fondo pensión</label><input value={propForm.candidato_pension} onChange={e=>upP("candidato_pension",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
-            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Banco</label><select value={propForm.entidadBancaria} onChange={e=>upP("entidadBancaria",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Banco</label><select value={propForm.entidadBancaria} onChange={e=>{const v=e.target.value;const digital=["Nequi","DaviPlata","Nu Colombia","Rappipay","Movii","Dale!","Lulo Bank"].includes(v);upP("entidadBancaria",v);if(digital)upP("tipoCuenta","deposito");else if(propForm.tipoCuenta==="deposito")upP("tipoCuenta","ahorros");}} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>
               <option value="">— Seleccionar —</option>
               <option value="Bancolombia">Bancolombia</option>
               <option value="Davivienda">Davivienda</option>
@@ -864,7 +864,7 @@ window.onload=function(){
               <option value="Otro">Otro</option>
             </select></div>
             <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Tipo cuenta</label><div style={{display:"flex",gap:0}}><select value={propForm.tipoCuenta} onChange={e=>upP("tipoCuenta",e.target.value)} style={{padding:"7px 6px",border:"1px solid #E5E3DE",borderRadius:"6px 0 0 6px",borderRight:"none",fontSize:11,fontFamily:"'DM Sans',sans-serif",background:"#F5F4F1"}}>
-              <option value="ahorros">Ahorros</option><option value="corriente">Corriente</option>
+              <option value="ahorros">Ahorros</option><option value="corriente">Corriente</option><option value="deposito">Depósito electrónico</option>
             </select><input value={propForm.cuentaBancaria} onChange={e=>upP("cuentaBancaria",e.target.value)} placeholder="Nº de cuenta" style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:"0 6px 6px 0",fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div></div>
           </div>
           <div style={{marginTop:10}}>
