@@ -3295,7 +3295,7 @@ function AnexosPanel({p}){
   const subirDoc = (key) => {
     const input = document.createElement('input');
     input.type='file'; input.accept='.pdf,.jpg,.jpeg,.png,.doc,.docx';
-    input.onchange=(e)=>processFile(key, e.target.files[0]);
+    input.onchange=(e)=>{processFile(key, e.target.files[0]);setDragKey(null);};
     input.click();
   };
 
@@ -3403,22 +3403,30 @@ function AnexosPanel({p}){
                   {cat.docs.map(d=>{
                     const uploaded=docs[d.key];
                     const isPending=uploaded&&uploaded.pendiente;
-                    const isDrag=dragKey===d.key;
-                    return <div key={d.key}
-                      onDragOver={e=>{e.preventDefault();e.stopPropagation();setDragKey(d.key);}}
-                      onDragLeave={()=>setDragKey(null)}
-                      onDrop={e=>{e.preventDefault();e.stopPropagation();setDragKey(null);const f=e.dataTransfer.files[0];if(f)processFile(d.key,f);}}
-                      style={{display:'flex',alignItems:'center',gap:8,padding:'4px 8px',borderBottom:'1px solid #F0EEE9',background:isDrag?'#DBEAFE':uploaded?(isPending?'#FFFBEB':'#FAFFF9'):'transparent',transition:'background .15s',borderRadius:isDrag?4:0,border:isDrag?'2px dashed #2563EB':'2px solid transparent'}}>
-                      <span style={{fontSize:11,width:18,textAlign:'center'}}>{uploaded?(isPending?'⏳':'✅'):'⬜'}</span>
-                      <span style={{flex:1,fontSize:11,color:'#111'}}>{d.label}</span>
-                      {uploaded && !isPending && <>
-                        <span style={{fontSize:9,color:'#1E6B42'}}>{uploaded.nombre}</span>
-                        {uploaded.data && <a href={uploaded.data} download={uploaded.nombre} style={{...btnS,background:'#E8F4EE',color:'#1E6B42'}}>↓</a>}
-                      </>}
-                      {isPending && <span style={{fontSize:9,color:'#D97706',fontWeight:600}}>Pendiente</span>}
-                      {d.gen && <button style={{...btnS,background:'#1E6B42',color:'#fff'}} onClick={d.gen}>Generar</button>}
-                      {!uploaded && <button style={{...btnS,background:'#FFFBEB',color:'#D97706',border:'1px solid #FDE68A'}} onClick={()=>{const nd={...docs,[d.key]:{pendiente:true,fecha:new Date().toISOString()}};setDocs(nd);fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,_expediente:nd})}).catch(()=>{});}}>Pendiente</button>}
-                      <button style={{...btnS,background:isDrag?'#2563EB':'#F5F4F1',color:isDrag?'#fff':'#555',border:'1px solid '+(isDrag?'#2563EB':'#E5E3DE')}} onClick={()=>subirDoc(d.key)}>{isDrag?'Soltar aquí':uploaded&&!isPending?'Reemplazar':'📂 Subir'}</button>
+                    const isOpen=dragKey===d.key;
+                    return <div key={d.key}>
+                      <div style={{display:'flex',alignItems:'center',gap:8,padding:'4px 8px',borderBottom:'1px solid #F0EEE9',background:uploaded?(isPending?'#FFFBEB':'#FAFFF9'):'transparent'}}>
+                        <span style={{fontSize:11,width:18,textAlign:'center'}}>{uploaded?(isPending?'⏳':'✅'):'⬜'}</span>
+                        <span style={{flex:1,fontSize:11,color:'#111'}}>{d.label}</span>
+                        {uploaded && !isPending && <>
+                          <span style={{fontSize:9,color:'#1E6B42'}}>{uploaded.nombre}</span>
+                          {uploaded.data && <a href={uploaded.data} download={uploaded.nombre} style={{...btnS,background:'#E8F4EE',color:'#1E6B42'}}>↓</a>}
+                        </>}
+                        {isPending && <span style={{fontSize:9,color:'#D97706',fontWeight:600}}>Pendiente</span>}
+                        {d.gen && <button style={{...btnS,background:'#1E6B42',color:'#fff'}} onClick={d.gen}>Generar</button>}
+                        {!uploaded && <button style={{...btnS,background:'#FFFBEB',color:'#D97706',border:'1px solid #FDE68A'}} onClick={()=>{const nd={...docs,[d.key]:{pendiente:true,fecha:new Date().toISOString()}};setDocs(nd);fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,_expediente:nd})}).catch(()=>{});}}>Pendiente</button>}
+                        <button style={{...btnS,background:isOpen?'#2563EB':'#F5F4F1',color:isOpen?'#fff':'#555',border:'1px solid '+(isOpen?'#2563EB':'#E5E3DE')}} onClick={()=>setDragKey(isOpen?null:d.key)}>{uploaded&&!isPending?'Reemplazar':'📂 Subir'}</button>
+                      </div>
+                      {isOpen && <div
+                        onDragOver={e=>{e.preventDefault();e.currentTarget.style.background='#DBEAFE';e.currentTarget.style.borderColor='#2563EB';}}
+                        onDragLeave={e=>{e.currentTarget.style.background='#FAFAF8';e.currentTarget.style.borderColor='#E5E3DE';}}
+                        onDrop={e=>{e.preventDefault();const f=e.dataTransfer.files[0];if(f){processFile(d.key,f);setDragKey(null);}}}
+                        onClick={()=>subirDoc(d.key)}
+                        style={{margin:'4px 8px 8px 34px',padding:'16px',border:'2px dashed #E5E3DE',borderRadius:8,background:'#FAFAF8',textAlign:'center',cursor:'pointer',transition:'all .15s'}}>
+                        <div style={{fontSize:20,marginBottom:4}}>📂</div>
+                        <div style={{fontSize:11,color:'#555',fontWeight:600}}>Arrastra un archivo aquí</div>
+                        <div style={{fontSize:10,color:'#999',marginTop:2}}>o haz clic para buscar · PDF, JPG, PNG, DOC</div>
+                      </div>}
                     </div>;
                   })}
                 </div>;
