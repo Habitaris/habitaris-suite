@@ -759,9 +759,15 @@ window.onload=function(){
     <div style={{padding:"0 0 6px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
       <div style={{display:"inline-block",fontSize:10,fontWeight:700,color:"#1E6B42",background:"#E8F4EE",padding:"3px 12px",borderRadius:14}}>🇨🇴 COLOMBIA 2026 · SMLMV {$(SMLMV_DEF)} · Aux. {$(AUX_DEF)}</div>
       {neg&&neg.salario>0&&<div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-        <button type="button" onClick={()=>openDoc("propuesta",false)} style={{padding:"8px 14px",background:"#E8F4EE",color:"#1E6B42",border:"1px solid #1E6B42",borderRadius:8,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:4}}>📋 Condiciones trabajador</button>
-        <button type="button" onClick={()=>openDoc("empleador",false)} style={{padding:"8px 14px",background:"#EFF6FF",color:"#2563EB",border:"1px solid #2563EB",borderRadius:8,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:4}}>💼 Condiciones empleador</button>
-        <button type="button" onClick={()=>setShowProp(true)} style={{padding:"8px 18px",background:"#1E6B42",color:"#fff",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:6}}>📤 Generar propuesta</button>
+        <div style={{display:"flex",gap:0}}>
+          <button type="button" onClick={()=>openDoc("propuesta",false)} style={{padding:"8px 12px",background:"#E8F4EE",color:"#1E6B42",border:"1px solid #1E6B42",borderRadius:"8px 0 0 8px",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>📋 Condiciones trabajador</button>
+          <button type="button" onClick={()=>openDoc("propuesta",true)} style={{padding:"8px 8px",background:"#1E6B42",color:"#fff",border:"1px solid #1E6B42",borderRadius:"0 8px 8px 0",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>PDF</button>
+        </div>
+        <div style={{display:"flex",gap:0}}>
+          <button type="button" onClick={()=>openDoc("empleador",false)} style={{padding:"8px 12px",background:"#EFF6FF",color:"#2563EB",border:"1px solid #2563EB",borderRadius:"8px 0 0 8px",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>💼 Condiciones empleador</button>
+          <button type="button" onClick={()=>openDoc("empleador",true)} style={{padding:"8px 8px",background:"#2563EB",color:"#fff",border:"1px solid #2563EB",borderRadius:"0 8px 8px 0",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>PDF</button>
+        </div>
+        <button type="button" onClick={()=>setShowProp(true)} style={{padding:"8px 18px",background:"#1E6B42",color:"#fff",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📤 Generar propuesta</button>
       </div>}
     </div>
 
@@ -1336,17 +1342,6 @@ window.onload=function(){
             </>
           })()}
         </Card>
-
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:10}} className="no-print">
-          <div style={{display:"flex",gap:4}}>
-            <button type="button" onClick={()=>openDoc("empleado",false)} style={{flex:1,padding:"10px 8px",background:"#fff",color:"#059669",border:"2px solid #059669",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>👁️ Ver Empleado</button>
-            <button type="button" onClick={()=>openDoc("empleado",true)} style={{flex:1,padding:"10px 8px",background:"#059669",color:"#fff",border:"none",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📄 PDF</button>
-          </div>
-          <div style={{display:"flex",gap:4}}>
-            <button type="button" onClick={()=>openDoc("empleador",false)} style={{flex:1,padding:"10px 8px",background:"#fff",color:"#111111",border:"2px solid #111111",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>👁️ Ver Empleador</button>
-            <button type="button" onClick={()=>openDoc("empleador",true)} style={{flex:1,padding:"10px 8px",background:"#111111",color:"#fff",border:"none",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📄 PDF</button>
-          </div>
-        </div>
       </>}
 
       {/* ══════════════════════════════════════════
