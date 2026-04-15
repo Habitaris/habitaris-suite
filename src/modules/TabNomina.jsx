@@ -303,6 +303,41 @@ export function TabNomina(){
                 <div style={{fontSize:10,color:T.inkLight,marginTop:4}}>{fPct(selN.q1Pct||0.5)} × {fmt(selN.sal)}</div>
               </div>
               <div style={{fontSize:10,color:T.inkLight,marginTop:10}}>📅 Pago: 15 de {MESES[mes]}</div>
+              <Btn small style={{marginTop:8,width:"100%",justifyContent:"center"}} onClick={()=>{
+                const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;font-size:10pt;color:#111}
+.hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
+.logo{font-weight:800;font-size:16px}.nit{font-size:8pt;color:#999}
+h1{font-size:11pt;text-align:center;margin:8px 0}
+.row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #eee;font-size:10pt}
+.row b{font-family:monospace}.total{border-top:2px solid #111;font-weight:800;font-size:12pt;padding:6px 0}
+.sig{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center;font-size:9pt}
+.sig div{border-top:1px solid #111;padding-top:6px}
+.np{text-align:center;margin:20px 0}
+.btn{background:#111;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
+@media print{.np{display:none}}
+</style></head><body>
+<div class="hdr"><div class="logo">HABITARIS S.A.S</div><div class="nit">NIT: 901.922.136-8</div></div>
+<h1>COMPROBANTE DE PAGO — PRIMERA QUINCENA</h1>
+<div style="text-align:center;font-size:9pt;color:#666;margin-bottom:12px">${MESES[mes]} ${anio} · Anticipo Q1</div>
+<div class="row"><span>Empleado</span><b>${selN.nombre}</b></div>
+<div class="row"><span>Documento</span><b>${selN.cc}</b></div>
+<div class="row"><span>Cargo</span><b>${selN.cargo}</b></div>
+<div class="row"><span>EPS</span><b>${selN.eps||"—"}</b></div>
+<div class="row"><span>Banco</span><b>${selN.banco||"—"} · ${selN.cuenta||""}</b></div>
+<div style="height:8px"></div>
+<div class="row"><span>Salario base mensual</span><b>${fmt(selN.sal)}</b></div>
+<div class="row"><span>Porcentaje anticipo Q1</span><b>${((selN.q1Pct||0.5)*100).toFixed(0)}%</b></div>
+<div style="height:4px"></div>
+<div class="row total"><span>VALOR A PAGAR</span><b style="font-size:16pt">${fmt(calc.q1)}</b></div>
+<div style="font-size:9pt;color:#666;text-align:center;margin:8px 0">Anticipo fijo: ${fPct(selN.q1Pct||0.5)} × ${fmt(selN.sal)} = ${fmt(calc.q1)}</div>
+<div style="font-size:9pt;color:#666;text-align:center">Fecha de pago: 15 de ${MESES[mes].toLowerCase()} de ${anio}</div>
+<div class="sig"><div>Empleador<br><span style="font-size:8pt;color:#999">Habitaris S.A.S</span></div><div>Trabajador<br><span style="font-size:8pt;color:#999">${selN.nombre}</span></div></div>
+<div style="font-size:7pt;color:#ccc;text-align:center;margin-top:12px">Generado por Habitaris Suite · ${new Date().toLocaleDateString("es-CO")}</div>
+<div class="np"><button class="btn" onclick="window.print()">🖨️ Imprimir</button></div>
+</body></html>`;
+                window.open(URL.createObjectURL(new Blob([html],{type:"text/html;charset=utf-8"})),"_blank");
+              }}>🧾 Tirilla Q1</Btn>
             </Card>
             <Card accent={T.green}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><STit color={T.green}>Q2 — Segunda quincena</STit><Pill e="ajuste real"/></div>
@@ -316,6 +351,50 @@ export function TabNomina(){
                 {calc.q2<0&&<div style={{fontSize:10,color:T.red,marginTop:4,fontWeight:600}}>⚠ Saldo negativo</div>}
               </div>
               <div style={{fontSize:10,color:T.inkLight,marginTop:10}}>📅 Pago: último día hábil de {MESES[mes]}</div>
+              <Btn small style={{marginTop:8,width:"100%",justifyContent:"center"}} onClick={()=>{
+                const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;font-size:10pt;color:#111}
+.hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
+.logo{font-weight:800;font-size:16px}.nit{font-size:8pt;color:#999}
+h1{font-size:11pt;text-align:center;margin:8px 0}
+.row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #eee;font-size:10pt}
+.row b{font-family:monospace}.total{border-top:2px solid #111;font-weight:800;font-size:12pt;padding:6px 0}
+.red{color:#dc2626}.green{color:#16a34a}.blue{color:#2563eb}
+.sig{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center;font-size:9pt}
+.sig div{border-top:1px solid #111;padding-top:6px}
+.np{text-align:center;margin:20px 0}
+.btn{background:#111;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
+@media print{.np{display:none}}
+</style></head><body>
+<div class="hdr"><div class="logo">HABITARIS S.A.S</div><div class="nit">NIT: 901.922.136-8</div></div>
+<h1>COMPROBANTE DE PAGO — SEGUNDA QUINCENA</h1>
+<div style="text-align:center;font-size:9pt;color:#666;margin-bottom:12px">${MESES[mes]} ${anio} · Ajuste real Q2</div>
+<div class="row"><span>Empleado</span><b>${selN.nombre}</b></div>
+<div class="row"><span>Documento</span><b>${selN.cc}</b></div>
+<div class="row"><span>Cargo</span><b>${selN.cargo}</b></div>
+<div class="row"><span>Banco</span><b>${selN.banco||"—"} · ${selN.cuenta||""}</b></div>
+<div style="height:8px"></div>
+<div class="row"><span>Salario proporcional (${calc.dias}d)</span><b>${fmt(calc.salProp)}</b></div>
+${calc.aux>0?`<div class="row"><span>Auxilio transporte (${calc.diasAsist}d)</span><b>${fmt(calc.aux)}</b></div>`:""}
+${calc.bono>0?`<div class="row"><span>${selN.bonoConcepto||"Bono"} (${calc.diasAsist}d)</span><b>${fmt(calc.bono)}</b></div>`:""}
+${calc.totHex>0?`<div class="row"><span>Horas extra</span><b>${fmt(calc.totHex)}</b></div>`:""}
+<div class="row" style="font-weight:700"><span>Total devengado</span><b>${fmt(calc.dev)}</b></div>
+<div style="height:4px"></div>
+${calc.epsE>0?`<div class="row"><span>EPS (4%)</span><b class="red">−${fmt(calc.epsE)}</b></div>`:""}
+<div class="row"><span>Pensión (4%)</span><b class="red">−${fmt(calc.penE)}</b></div>
+${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b class="red">−${fmt(calc.rteF)}</b></div>`:""}
+<div class="row"><span>Total deducciones</span><b class="red">−${fmt(calc.totD)}</b></div>
+<div style="height:4px"></div>
+<div class="row"><span>Neto mes</span><b>${fmt(calc.neto)}</b></div>
+<div class="row"><span>(−) Q1 ya pagado</span><b class="blue">−${fmt(calc.q1)}</b></div>
+<div style="height:4px"></div>
+<div class="row total"><span>VALOR A PAGAR Q2</span><b style="font-size:16pt" class="${calc.q2>=0?"green":"red"}">${fmt(calc.q2)}</b></div>
+<div class="sig"><div>Empleador<br><span style="font-size:8pt;color:#999">Habitaris S.A.S</span></div><div>Trabajador<br><span style="font-size:8pt;color:#999">${selN.nombre}</span></div></div>
+<div style="font-size:7pt;color:#ccc;text-align:center;margin-top:12px">Generado por Habitaris Suite · ${new Date().toLocaleDateString("es-CO")}</div>
+<div class="np"><button class="btn" onclick="window.print()">🖨️ Imprimir</button></div>
+</body></html>`;
+                window.open(URL.createObjectURL(new Blob([html],{type:"text/html;charset=utf-8"})),"_blank");
+              }}>🧾 Tirilla Q2</Btn>
             </Card>
             <Card style={{gridColumn:"1/3",textAlign:"center"}}>
               <div style={{display:"flex",justifyContent:"center",gap:40,alignItems:"center"}}>
