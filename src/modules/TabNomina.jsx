@@ -156,12 +156,10 @@ export function TabNomina(){
             <Card accent={T.ink} style={{marginBottom:12}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                 <STit>📅 Calendario {MESES[mes]} {anio}</STit>
-                <div style={{display:"flex",gap:4,alignItems:"center"}}>
-                  <span style={{fontSize:9,color:T.inkLight}}>Clic en día:</span>
-                  <select value={selNovTipo} onChange={e=>setSelNovTipo(e.target.value)} style={{padding:"3px 8px",fontSize:10,border:`1px solid ${T.border}`,borderRadius:4,fontFamily:"'DM Sans',sans-serif"}}>
-                    {NOV_TIPOS.filter(n=>n.id!=="normal").map(n=><option key={n.id} value={n.id}>{n.icon} {n.label}</option>)}
-                  </select>
-                </div>
+              </div>
+              <div style={{display:"flex",gap:4,marginBottom:8,flexWrap:"wrap"}}>
+                <span style={{fontSize:9,color:T.inkLight,padding:"4px 0"}}>Clic en día →</span>
+                {NOV_TIPOS.filter(n=>n.id!=="normal").map(n=><button key={n.id} type="button" onClick={()=>setSelNovTipo(n.id)} style={{padding:"3px 8px",fontSize:10,fontWeight:selNovTipo===n.id?700:400,border:selNovTipo===n.id?"2px solid #111":"1px solid "+T.border,borderRadius:4,background:selNovTipo===n.id?n.color:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",opacity:selNovTipo===n.id?1:0.6}}>{n.icon} {n.label}</button>)}
               </div>
               {/* Calendar grid */}
               {(()=>{
