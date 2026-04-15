@@ -719,7 +719,7 @@ td{padding:4px 8px;border-bottom:1px solid #ddd}
 @media print{.np{display:none}}
 </style></head><body>
 <div id="content">
-<div class="hdr"><div class="logo"><img src="${Ps}" alt="Habitaris"/></div><span style="font-size:8pt;color:#999">NIT: 901.922.136-8</span></div>
+<div class="hdr"><div class="logo"><img src="${Ps}" alt="Habitaris" style="height:28px;width:auto;display:block;margin:0 auto"/></div><span style="font-size:8pt;color:#999">NIT: 901.922.136-8</span></div>
 <h1>REPORTE DE NOVEDADES DE NÓMINA</h1>
 <div class="sub">${ki[n]} ${i} · Ref: ${B}</div>
 
@@ -796,7 +796,7 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
 @media print{.np{display:none}}
 </style></head><body>
 <div id="content">
-<div class="hdr"><img src="${Ps}" alt="Habitaris"/><div class="nit">NIT: 901.922.136-8</div></div>
+<div class="hdr"><img src="${Ps}" alt="Habitaris" style="height:28px;width:auto;display:block;margin:0 auto"/><div class="nit">NIT: 901.922.136-8</div></div>
 <h1>COMPROBANTE DE PAGO — PRIMERA QUINCENA</h1>
 <div style="text-align:center;font-size:9pt;color:#666;margin-bottom:12px">${ki[n]} ${i} · Anticipo Q1</div>
 <div class="row"><span>Empleado</span><b>${f.nombre}</b></div>
@@ -835,7 +835,7 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
 @media print{.np{display:none}}
 </style></head><body>
 <div id="content">
-<div class="hdr"><img src="${Ps}" alt="Habitaris"/><div class="nit">NIT: 901.922.136-8</div></div>
+<div class="hdr"><img src="${Ps}" alt="Habitaris" style="height:28px;width:auto;display:block;margin:0 auto"/><div class="nit">NIT: 901.922.136-8</div></div>
 <h1>COMPROBANTE DE PAGO — SEGUNDA QUINCENA</h1>
 <div style="text-align:center;font-size:9pt;color:#666;margin-bottom:12px">${ki[n]} ${i} · ${ae}</div>
 <div class="row"><span>Empleado</span><b>${f.nombre}</b></div>
@@ -885,7 +885,7 @@ td{padding:4px 8px;border-bottom:1px solid #eee}.r{text-align:right;font-family:
 .foot{font-size:7pt;color:#999;text-align:center;margin-top:12px}
 @media print{.np{display:none}}</style></head><body>
 <div id="content">
-<div class="hdr"><img src="${Ps}" alt="Habitaris"/><div style="font-size:8pt;color:#999">NIT: 901.922.136-8</div></div>
+<div class="hdr"><img src="${Ps}" alt="Habitaris" style="height:28px;width:auto;display:block;margin:0 auto"/><div style="font-size:8pt;color:#999">NIT: 901.922.136-8</div></div>
 <h1>COMPROBANTE DE NÓMINA</h1>
 <div style="text-align:center;font-size:9pt;color:#666;margin-bottom:12px">${ki[n]} ${i}</div>
 <div class="info">
