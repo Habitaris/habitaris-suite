@@ -47,8 +47,9 @@ export default async function handler(req,res){
     if(req.method==="POST"){
       var b=req.body||{};
 
-      // Delete action
+      // Delete action — cascade: psicotecnico_results → hiring_processes
       if(b.action==="delete"&&b.id){
+        await fetch(SB_URL+"/rest/v1/psicotecnico_results?hiring_id=eq."+b.id,{method:"DELETE",headers:sbH()});
         var rd=await fetch(SB_URL+"/rest/v1/hiring_processes?id=eq."+b.id,{method:"DELETE",headers:sbH()});
         if(rd.ok)return res.status(200).json({ok:true});
         var dd=await rd.text();
