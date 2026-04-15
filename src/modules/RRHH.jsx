@@ -3671,6 +3671,155 @@ function EvaluacionesPanel({ p, onDone }) {
 
 
 
+/* ═══════════════════════════════════════════════════════════════════
+   TAB PERSONAL — Fichas de empleados con expediente permanente
+   ═══════════════════════════════════════════════════════════════════ */
+function TabPersonal() {
+  const [empleados, setEmpleados] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selEmp, setSelEmp] = useState(null);
+  const [buscar, setBuscar] = useState("");
+
+  const loadEmpleados = async () => {
+    try {
+      const r = await fetch("/api/hiring?estado=completado");
+      const d = await r.json();
+      // Also fetch firmado and afiliaciones
+      const r2 = await fetch("/api/hiring?estado=firmado");
+      const d2 = await r2.json();
+      const r3 = await fetch("/api/hiring?estado=afiliaciones");
+      const d3 = await r3.json();
+      const all = [...(d.data||[]),...(d2.data||[]),...(d3.data||[])];
+      setEmpleados(all);
+    } catch(e) { console.error(e); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadEmpleados(); }, []);
+
+  const fmtMoney = (n) => n ? new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n) : "$0";
+
+  const filtrados = empleados.filter(e => {
+    if(!buscar) return true;
+    const b = buscar.toLowerCase();
+    return (e.candidato_nombre||"").toLowerCase().includes(b) || (e.cargo||"").toLowerCase().includes(b) || (e.candidato_cc||"").includes(b);
+  });
+
+  return (
+    <div>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+        <div style={{fontSize:16,fontWeight:700,color:C.ink}}>Empleados activos ({filtrados.length})</div>
+        <div style={{display:"flex",gap:8}}>
+          <input value={buscar} onChange={e=>setBuscar(e.target.value)} placeholder="Buscar empleado..." style={{padding:"6px 12px",border:"1px solid "+C.border,borderRadius:6,fontSize:12,fontFamily:"DM Sans,sans-serif",width:200}}/>
+        </div>
+      </div>
+
+      {loading && <div style={{textAlign:"center",padding:32,color:C.inkLight}}>Cargando...</div>}
+
+      {!loading && filtrados.length===0 && (
+        <div style={{textAlign:"center",padding:40,color:C.inkLight,fontSize:13}}>
+          Sin empleados. Los empleados aparecen cuando un proceso de contratación llega a estado "Firmado" o "Completado".
+        </div>
+      )}
+
+      {filtrados.map(emp => {
+        const isOpen = selEmp === emp.id;
+        const cond = emp._condiciones;
+        const t = cond?.trabajador || {};
+        const e = cond?.empleador || {};
+
+        return (
+          <Card key={emp.id} style={{marginBottom:12,border:isOpen?"2px solid #1E6B42":"1px solid "+C.border}}>
+            {/* Header del empleado */}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",cursor:"pointer"}} onClick={()=>setSelEmp(isOpen?null:emp.id)}>
+              <div>
+                <div style={{fontSize:14,fontWeight:700,color:C.ink}}>{emp.candidato_nombre||"Sin nombre"}</div>
+                <div style={{fontSize:11,color:C.inkLight,marginTop:2}}>
+                  {emp.tipo_documento||"CC"} {emp.candidato_cc} · {emp.cargo||""}
+                </div>
+                <div style={{fontSize:11,color:C.inkLight}}>
+                  {emp.candidato_email} · {emp.candidato_celular}
+                </div>
+              </div>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <div style={{textAlign:"right"}}>
+                  <div style={{fontSize:12,fontWeight:700,color:"#1E6B42"}}>{fmtMoney(emp.salario_neto)}</div>
+                  <div style={{fontSize:10,color:C.inkLight}}>{emp.cargo} · {emp.tipo_contrato||"fijo"}</div>
+                </div>
+                <span style={{fontSize:18,color:C.inkLight}}>{isOpen?"▾":"▸"}</span>
+              </div>
+            </div>
+
+            {/* Detalle expandido */}
+            {isOpen && (
+              <div style={{marginTop:14,borderTop:"1px solid "+C.border,paddingTop:14}}>
+                {/* Info personal */}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:14}}>
+                  <div style={{background:C.bg,borderRadius:6,padding:"8px 10px"}}>
+                    <div style={{fontSize:9,fontWeight:700,color:C.inkLight,letterSpacing:1,textTransform:"uppercase"}}>Contrato</div>
+                    <div style={{fontSize:12,fontWeight:600,color:C.ink}}>{emp.tipo_contrato||"fijo"} {emp.duracion_meses?emp.duracion_meses+"m":""}</div>
+                    <div style={{fontSize:10,color:C.inkLight}}>Inicio: {emp.fecha_inicio||"—"}</div>
+                  </div>
+                  <div style={{background:C.bg,borderRadius:6,padding:"8px 10px"}}>
+                    <div style={{fontSize:9,fontWeight:700,color:C.inkLight,letterSpacing:1,textTransform:"uppercase"}}>Jornada</div>
+                    <div style={{fontSize:12,fontWeight:600,color:C.ink}}>{emp.jornada_horas||42}h/sem</div>
+                    <div style={{fontSize:10,color:C.inkLight}}>{emp.horario||"—"} · {emp.dias_laborales||"—"}</div>
+                  </div>
+                  <div style={{background:C.bg,borderRadius:6,padding:"8px 10px"}}>
+                    <div style={{fontSize:9,fontWeight:700,color:C.inkLight,letterSpacing:1,textTransform:"uppercase"}}>Seguridad social</div>
+                    <div style={{fontSize:11,color:C.ink}}>EPS: <strong>{emp.candidato_eps||"—"}</strong></div>
+                    <div style={{fontSize:11,color:C.ink}}>Pensión: <strong>{emp.candidato_pension||"—"}</strong></div>
+                  </div>
+                </div>
+
+                {/* Salario */}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8,marginBottom:14}}>
+                  <div style={{background:"#E8F4EE",borderRadius:6,padding:"8px 10px",textAlign:"center"}}>
+                    <div style={{fontSize:8,fontWeight:700,color:"#1E6B42",letterSpacing:1}}>SALARIO BASE</div>
+                    <div style={{fontSize:14,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#1E6B42"}}>{fmtMoney(emp.salario_base)}</div>
+                  </div>
+                  <div style={{background:"#F5F4F1",borderRadius:6,padding:"8px 10px",textAlign:"center"}}>
+                    <div style={{fontSize:8,fontWeight:700,color:"#666",letterSpacing:1}}>AUX. TRANSPORTE</div>
+                    <div style={{fontSize:14,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{fmtMoney(emp.auxilio_transporte)}</div>
+                  </div>
+                  <div style={{background:"#EDE8F4",borderRadius:6,padding:"8px 10px",textAlign:"center"}}>
+                    <div style={{fontSize:8,fontWeight:700,color:"#5B3A8C",letterSpacing:1}}>{emp.bono_concepto||"BONO"}</div>
+                    <div style={{fontSize:14,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#5B3A8C"}}>{fmtMoney(emp.bono_no_salarial)}</div>
+                  </div>
+                  <div style={{background:"#111",borderRadius:6,padding:"8px 10px",textAlign:"center"}}>
+                    <div style={{fontSize:8,fontWeight:700,color:"#fff",letterSpacing:1}}>NETO</div>
+                    <div style={{fontSize:14,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#fff"}}>{fmtMoney(emp.salario_neto)}</div>
+                  </div>
+                </div>
+
+                {/* Condiciones + Banco */}
+                <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
+                  {(()=>{
+                    const openCond=(tipo)=>{
+                      const savedHtml = tipo==="trabajador" ? cond?.html_trabajador : cond?.html_empleador;
+                      if(savedHtml){window.open(URL.createObjectURL(new Blob([savedHtml],{type:"text/html;charset=utf-8"})),"_blank");return;}
+                      alert("Documento no disponible — regenera desde la calculadora");
+                    };
+                    return <>
+                      <button onClick={()=>openCond("trabajador")} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #1E6B42",borderRadius:6,background:"#E8F4EE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#1E6B42"}}>📋 Condiciones trabajador</button>
+                      <button onClick={()=>openCond("empleador")} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #2563EB",borderRadius:6,background:"#EFF6FF",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#2563EB"}}>💼 Condiciones empleador</button>
+                    </>;
+                  })()}
+                  {emp.entidadBancaria && <span style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:C.bg,color:C.ink}}>🏦 {emp.entidadBancaria} · {emp.tipoCuenta||""} · {emp.cuentaBancaria||""}</span>}
+                </div>
+
+                {/* Expediente completo */}
+                <AnexosPanel p={emp}/>
+              </div>
+            )}
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+
 function TabContratacion({onNuevaPropuesta}) {
   const [procesos, setProcesos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -4227,6 +4376,7 @@ const TABS = [
   { id:"partes",    lbl:"Partes de Trabajo",    I:ClipboardList,desc:"Vista admin — empleados imputan desde Portal" },
   { id:"novedades", lbl:"Novedades Nómina",     I:FileText,     desc:"Vacaciones, bajas, permisos y horas extra" },
   { id:"nomina",     lbl:"Liquidador Nómina",    I:DollarSign,   desc:"Nómina mensual Colombia 2026" },
+  { id:"personal",   lbl:"Personal",             I:Users,        desc:"Fichas de empleados, expediente y condiciones" },
   { id:"calculadora", lbl:"Calculadora Salarial", I:BarChart2,    desc:"Simulador neto/bruto, costes y propuesta de empleo" },
   { id:"contratacion", lbl:"Contratación",      I:FileText,     desc:"Propuestas, datos candidato y firma de contratos" },
   { id:"evaluaciones", lbl:"Evaluaciones",       I:ClipboardList,desc:"Plantillas psicotécnicas y DISC por cargo" },
@@ -4361,6 +4511,7 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                   {tab==="partes"    && <TabPartes    partes={partes}    setPartes={savePartes}    equipo={equipos} cargos={cargos} currentUser={null} pais={currentUser?.pais||"CO"}/>}
                   {tab==="novedades" && <TabNovedades novedades={novedades} saveNovedades={saveNovedades}/>}
                   {tab==="nomina"       && <TabNomina/>}
+                  {tab==="personal"    && <TabPersonal/>}
                   {tab==="calculadora"  && <CalcSalarial/>}
                   {tab==="contratacion" && <TabContratacion onNuevaPropuesta={()=>setTab("calculadora")}/>}
                   {tab==="evaluaciones" && <TabEvaluaciones/>}
