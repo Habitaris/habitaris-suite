@@ -4095,6 +4095,7 @@ function TabContratacion({onNuevaPropuesta}) {
                       <span style={{padding:"6px 12px",fontSize:11,fontWeight:600,background:"#DCFCE7",borderRadius:6,color:"#059669"}}>✅ Proceso completo{p.expediente_num ? " · Exp. "+p.expediente_num : ""}</span>
                     </>}
                       <button onClick={async()=>{if(!confirm("¿Cancelar esta propuesta?"))return;try{const r=await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"cancelado"})});if(r.ok)loadProcesos();}catch(e){alert(e.message);}}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #DC2626",borderRadius:6,background:"#FEE2E2",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#DC2626"}}>🗑 Cancelar</button>
+                      <button onClick={async()=>{if(!confirm("¿ELIMINAR DEFINITIVAMENTE esta propuesta? Esta acción no se puede deshacer."))return;try{const r=await fetch("/api/hiring?id="+p.id,{method:"DELETE"});if(r.ok){loadProcesos();}else{alert("Error al eliminar");}}catch(e){alert(e.message);}}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #991B1B",borderRadius:6,background:"#991B1B",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#fff"}}>✕ Eliminar</button>
                     </div>
                   </div>
                 )}

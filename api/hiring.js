@@ -6,7 +6,7 @@ function genToken(){var c="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";var t="";for(var i=
 
 export default async function handler(req,res){
   res.setHeader("Access-Control-Allow-Origin","*");
-  res.setHeader("Access-Control-Allow-Methods","GET,POST,PATCH,OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods","GET,POST,PATCH,DELETE,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers","Content-Type");
   if(req.method==="OPTIONS")return res.status(200).end();
 
@@ -91,6 +91,15 @@ export default async function handler(req,res){
       var d7=await r7.json();
       if(r7.ok)return res.status(200).json({ok:true,data:d7[0]||d7});
       return res.status(r7.status).json({ok:false,error:d7.message||"Update failed"});
+    }
+
+    // DELETE
+    if(req.method==="DELETE"){
+      var did=req.query.id||req.body?.id||"";
+      if(!did)return res.status(400).json({ok:false,error:"id required"});
+      var r8=await fetch(SB_URL+"/rest/v1/hiring_processes?id=eq."+did,{method:"DELETE",headers:sbH()});
+      if(r8.ok)return res.status(200).json({ok:true});
+      return res.status(r8.status).json({ok:false,error:"Delete failed"});
     }
 
     return res.status(405).json({error:"Method not allowed"});
