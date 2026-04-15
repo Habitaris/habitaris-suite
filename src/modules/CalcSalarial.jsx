@@ -741,7 +741,10 @@ window.onload=function(){
       {key:"examen_medico",label:"Examen médico",def:true},
       {key:"recomendaciones_sst",label:"Recomendaciones SST",def:true},
       {key:"psicotecnico",label:"Psicotécnicos / DISC",def:true},
-      {key:"antecedentes",label:"Antecedentes",def:true},
+      {key:"antecedentes_policia",label:"Antecedentes Policía",def:true},
+      {key:"antecedentes_procuraduria",label:"Antecedentes Procuraduría",def:true},
+      {key:"antecedentes_contraloria",label:"Antecedentes Contraloría",def:true},
+      {key:"antecedentes_medidas",label:"Medidas correctivas",def:true},
       {key:"cert_arl",label:"ARL",def:true},
       {key:"cert_caja",label:"Caja compensación",def:true},
     ]

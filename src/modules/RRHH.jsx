@@ -3356,7 +3356,10 @@ function AnexosPanel({p}){
       {key:"examen_medico",label:"Examen médico ocupacional de ingreso"},
       {key:"recomendaciones_sst",label:"Recomendaciones SST",gen:()=>abrirAnexo('sst')},
       {key:"psicotecnico",label:"Resultados psicotécnicos / DISC"},
-      {key:"antecedentes",label:"Antecedentes (policía/procuraduría)"},
+      {key:"antecedentes_policia",label:"Antecedentes judiciales (Policía Nacional)"},
+      {key:"antecedentes_procuraduria",label:"Antecedentes disciplinarios (Procuraduría)"},
+      {key:"antecedentes_contraloria",label:"Antecedentes fiscales (Contraloría)"},
+      {key:"antecedentes_medidas",label:"Medidas correctivas (RNMC)"},
     ]},
     {id:"emp_afil",section:"empresa",label:"Afiliaciones empresa",icon:"🏢",color:"#2563EB",docs:[
       {key:"cert_arl",label:"ARL (gestión empleador)"},
