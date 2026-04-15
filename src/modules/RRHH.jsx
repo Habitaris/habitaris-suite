@@ -3356,10 +3356,10 @@ function AnexosPanel({p}){
       {key:"examen_medico",label:"Examen médico ocupacional de ingreso"},
       {key:"recomendaciones_sst",label:"Recomendaciones SST",gen:()=>abrirAnexo('sst')},
       {key:"psicotecnico",label:"Resultados psicotécnicos / DISC"},
-      {key:"antecedentes_policia",label:"Antecedentes judiciales (Policía Nacional)",url:"https://antecedentes.policia.gov.co"},
+      {key:"antecedentes_policia",label:"Antecedentes judiciales (Policía Nacional)",url:"https://antecedentes.policia.gov.co:7005/WebJudicial/"},
       {key:"antecedentes_procuraduria",label:"Antecedentes disciplinarios (Procuraduría)",url:"https://www.procuraduria.gov.co/Pages/Consulta-de-Antecedentes.aspx"},
       {key:"antecedentes_contraloria",label:"Antecedentes fiscales (Contraloría)",url:"https://www.contraloria.gov.co/control-fiscal/responsabilidad-fiscal/certificado-de-antecedentes-fiscales"},
-      {key:"antecedentes_medidas",label:"Medidas correctivas (RNMC)",url:"https://srvpsi.policia.gov.co/PSC/frm_cnp_consulta.aspx"},
+      {key:"antecedentes_medidas",label:"Medidas correctivas (RNMC)",url:"https://srvcnpc.policia.gov.co/PSC/frm_cnp_consulta.aspx"},
     ]},
     {id:"emp_afil",section:"empresa",label:"Afiliaciones empresa",icon:"🏢",color:"#2563EB",docs:[
       {key:"cert_arl",label:"ARL (gestión empleador)"},
