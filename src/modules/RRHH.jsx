@@ -3331,16 +3331,59 @@ ${doc.cuerpo}
 
   const cardStyle = {borderRadius:8,border:'1px solid #D1FAE5',padding:16,background:'#F0FDF4',marginTop:12};
   const btnBase   = {border:'none',padding:'8px 14px',borderRadius:6,cursor:'pointer',fontSize:13,fontFamily:'DM Sans,sans-serif',fontWeight:600};
+  const [uploads, setUploads] = React.useState({contrato:p.doc_contrato||null,descriptor:p.doc_descriptor||null,centro:p.doc_centro||null});
+
+  const generarContrato = async () => {
+    try {
+      const r = await fetch("/api/generate-contract?hiring_id="+p.id);
+      const d = await r.json();
+      if(d.ok && d.html){
+        const blob = new Blob([d.html],{type:'text/html;charset=utf-8'});
+        window.open(URL.createObjectURL(blob),'_blank');
+      } else {
+        alert("Error generando contrato: "+(d.error||"sin datos"));
+      }
+    } catch(e) { alert("Error: "+e.message); }
+  };
+
+  const subirDoc = (tipo) => {
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx';
+    input.onchange = (e) => {
+      const file = e.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setUploads(prev => ({...prev, [tipo]: {nombre: file.name, data: ev.target.result, fecha: new Date().toISOString()}}));
+        // TODO: persist to Supabase
+      };
+      reader.readAsDataURL(file);
+    };
+    input.click();
+  };
+
+  const docRow = (tipo, label, emoji, genFn) => {
+    const doc = uploads[tipo];
+    return <div style={{display:'flex',alignItems:'center',gap:8,padding:'6px 0',borderBottom:'1px solid #D1FAE5'}}>
+      <span style={{fontSize:16}}>{emoji}</span>
+      <span style={{flex:1,fontSize:12,fontWeight:600,color:'#111'}}>{label}</span>
+      {doc ? (
+        <div style={{display:'flex',alignItems:'center',gap:6}}>
+          <span style={{fontSize:10,color:'#059669'}}>✅ {doc.nombre||'Subido'}</span>
+          {doc.data && <a href={doc.data} download={doc.nombre} style={{fontSize:10,color:'#2563EB',textDecoration:'none'}}>↓</a>}
+        </div>
+      ) : null}
+      {genFn && <button style={{...btnBase,background:'#1E6B42',color:'#fff',padding:'5px 10px',fontSize:11}} onClick={genFn}>Generar</button>}
+      <button style={{...btnBase,background:'#F5F4F1',color:'#555',padding:'5px 10px',fontSize:11,border:'1px solid #E5E3DE'}} onClick={()=>subirDoc(tipo)}>{doc?'Reemplazar':'Subir'}</button>
+    </div>;
+  };
 
   return (
     <div style={cardStyle}>
       <div style={{fontWeight:700,fontSize:14,color:'#065F46',marginBottom:6}}>📋 Documentos Contractuales</div>
-      <p style={{fontSize:13,color:'#555',margin:'0 0 14px'}}>Los siguientes documentos se firman junto al contrato laboral. La confidencialidad y tratamiento de datos van dentro del contrato.</p>
-      <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
-        <button style={{...btnBase,background:'#1E6B42',color:'#fff'}} onClick={()=>{window.open("/api/generate-contract?hiring_id="+p.id,"_blank")}}>📄 Contrato Laboral</button>
-        <button style={{...btnBase,background:'#065F46',color:'#fff'}} onClick={()=>abrirAnexo('descriptor')}>📄 Descriptor de Cargo</button>
-        <button style={{...btnBase,background:'#374151',color:'#fff'}} onClick={()=>abrirAnexo('centro')}>📄 Asignación Centro de Trabajo</button>
-      </div>
+      <p style={{fontSize:12,color:'#555',margin:'0 0 10px'}}>Genere o suba los documentos del contrato. La confidencialidad y tratamiento de datos van dentro del contrato.</p>
+      {docRow('contrato', 'Contrato Laboral', '📄', generarContrato)}
+      {docRow('descriptor', 'Descriptor de Cargo', '📋', ()=>abrirAnexo('descriptor'))}
+      {docRow('centro', 'Asignación Centro de Trabajo', '📍', ()=>abrirAnexo('centro'))}
     </div>
   );
 }
