@@ -85,6 +85,7 @@ export default async function handler(req,res){
       // Add JSONB fields if provided (require column in Supabase)
       if(b._condiciones)rec._condiciones=b._condiciones;
       if(b._expediente)rec._expediente=b._expediente;
+      if(b._docs_requeridos)rec._docs_requeridos=b._docs_requeridos;
       var r6=await fetch(SB_URL+"/rest/v1/hiring_processes",{method:"POST",headers:sbH(),body:JSON.stringify(rec)});
       var d6=await r6.json();
       if(!r6.ok)return res.status(r6.status).json({ok:false,error:d6.message||"Insert failed"});
