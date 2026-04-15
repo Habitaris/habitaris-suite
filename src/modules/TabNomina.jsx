@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { HAB_LOGO } from "./habLogo.js";
 
 const SMLMV = 1_750_905, AUX_TR = 249_095, UVT = 49_799;
 const ARL_OPTS = [
@@ -146,7 +147,7 @@ export function TabNomina(){
             const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;margin:0;padding:0;font-size:10pt;color:#111;line-height:1.5}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:700px;margin:0 auto;padding:30px 40px;font-size:10pt;color:#111;line-height:1.5}
 .hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:16px}.logo img{height:28px}
 h1{font-size:13pt;text-align:center;margin-bottom:4px}h2{font-size:11pt;margin:16px 0 8px;color:#111;border-bottom:1px solid #ccc;padding-bottom:4px}
 .sub{font-size:9pt;color:#666;text-align:center;margin-bottom:16px}
@@ -167,7 +168,7 @@ td{padding:4px 8px;border-bottom:1px solid #ddd}
 @media print{.np{display:none}}
 </style></head><body>
 <div id="content">
-<div class="hdr"><div class="logo"><img src="https://suite.habitaris.co/logo-habitaris-negro.svg" alt="Habitaris"/></div><span style="font-size:8pt;color:#999">NIT: 901.922.136-8</span></div>
+<div class="hdr"><div class="logo"><img src="${HAB_LOGO}" alt="Habitaris"/></div><span style="font-size:8pt;color:#999">NIT: 901.922.136-8</span></div>
 <h1>REPORTE DE NOVEDADES DE NÓMINA</h1>
 <div class="sub">${MESES[mes]} ${anio} · Ref: ${fileName}</div>
 
@@ -224,7 +225,7 @@ ${selN.nov?`<tr><td colspan="3" style="font-size:9pt;color:#666">Notas: ${selN.n
 <div class="foot">Habitaris Suite · ${new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" id="dlBtn" onclick="html2pdf().set({margin:[15,15,15,15],filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
+<button class="btn" id="dlBtn" onclick="html2pdf().set({margin:[15,20,15,20],filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
@@ -416,7 +417,7 @@ ${selN.nov?`<tr><td colspan="3" style="font-size:9pt;color:#666">Notas: ${selN.n
                 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;margin:0;padding:0;font-size:10pt;color:#111}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;font-size:10pt;color:#111}
 .hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
 .hdr img{height:24px;margin-bottom:4px}.nit{font-size:8pt;color:#999}
 h1{font-size:11pt;text-align:center;margin:8px 0}
@@ -430,7 +431,7 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
 @media print{.np{display:none}}
 </style></head><body>
 <div id="content">
-<div class="hdr"><img src="https://suite.habitaris.co/logo-habitaris-negro.svg" alt="Habitaris"/><div class="nit">NIT: 901.922.136-8</div></div>
+<div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris"/><div class="nit">NIT: 901.922.136-8</div></div>
 <h1>COMPROBANTE DE PAGO — PRIMERA QUINCENA</h1>
 <div style="text-align:center;font-size:9pt;color:#666;margin-bottom:12px">${MESES[mes]} ${anio} · Anticipo Q1</div>
 <div class="row"><span>Empleado</span><b>${selN.nombre}</b></div>
@@ -449,7 +450,7 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
 <div style="font-size:7pt;color:#999;text-align:center;margin-top:12px">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" onclick="html2pdf().set({margin:[20,25,20,25],filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
+<button class="btn" onclick="html2pdf().set({margin:[10,15,10,15],filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:[140,216],orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
@@ -479,7 +480,7 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
                 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;margin:0;padding:0;font-size:10pt;color:#111}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;font-size:10pt;color:#111}
 .hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
 .hdr img{height:24px;margin-bottom:4px}.nit{font-size:8pt;color:#999}
 h1{font-size:11pt;text-align:center;margin:8px 0}
@@ -493,7 +494,7 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
 @media print{.np{display:none}}
 </style></head><body>
 <div id="content">
-<div class="hdr"><img src="https://suite.habitaris.co/logo-habitaris-negro.svg" alt="Habitaris"/><div class="nit">NIT: 901.922.136-8</div></div>
+<div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris"/><div class="nit">NIT: 901.922.136-8</div></div>
 <h1>COMPROBANTE DE PAGO — SEGUNDA QUINCENA</h1>
 <div style="text-align:center;font-size:9pt;color:#666;margin-bottom:12px">${MESES[mes]} ${anio} · ${fileName}</div>
 <div class="row"><span>Empleado</span><b>${selN.nombre}</b></div>
@@ -520,7 +521,7 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
 <div style="font-size:7pt;color:#999;text-align:center;margin-top:12px">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" onclick="html2pdf().set({margin:[20,25,20,25],filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
+<button class="btn" onclick="html2pdf().set({margin:[10,15,10,15],filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:[140,216],orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
@@ -623,6 +624,60 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
             <div style={{marginTop:18,display:"grid",gridTemplateColumns:"1fr 1fr",gap:24}}>
               <div style={{textAlign:"center",paddingTop:24,borderTop:`1px solid ${T.ink}`}}><div style={{fontSize:9,fontWeight:600}}>Empleador</div><div style={{fontSize:8,color:T.inkLight}}>Habitaris S.A.S</div></div>
               <div style={{textAlign:"center",paddingTop:24,borderTop:`1px solid ${T.ink}`}}><div style={{fontSize:9,fontWeight:600}}>Trabajador</div><div style={{fontSize:8,color:T.inkLight}}>{selN.nombre}</div></div>
+            </div>
+            <div style={{marginTop:12,display:"flex",gap:8,justifyContent:"center"}}>
+              <Btn small onClick={()=>{
+                const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
+                const fileName=`COLILLA-${mAbr}${a2}-${ape}`;
+                const items=[{c:"Salario básico",d:calc.salProp,dd:0},calc.aux>0&&{c:`Auxilio transporte (${calc.diasComm}d)`,d:calc.aux,dd:0},calc.bono>0&&{c:`Bono asistencia Art.128 (${calc.diasAsist}d)`,d:calc.bono,dd:0},calc.totHex>0&&{c:"Horas extra",d:calc.totHex,dd:0},calc.recFest>0&&{c:"Recargo festivos",d:calc.recFest,dd:0},{c:"EPS (4%)",d:0,dd:calc.epsE},{c:"Pensión (4%)",d:0,dd:calc.penE},calc.rteF>0&&{c:"Retención fuente",d:0,dd:calc.rteF},calc.otrasDed>0&&{c:"Otras deducciones",d:0,dd:calc.otrasDed}].filter(Boolean);
+                const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;padding:30px 40px;font-size:10pt;color:#111}
+.hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:12px}.hdr img{height:28px;margin-bottom:4px}
+h1{font-size:12pt;text-align:center;margin:6px 0;letter-spacing:1px}
+.info{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:12px;font-size:10pt}.info span{color:#666}
+table{width:100%;border-collapse:collapse;font-size:10pt}th{padding:5px 8px;text-align:left;font-size:8pt;font-weight:700;letter-spacing:.5px;border-bottom:2px solid #111;border-top:1px solid #ccc}
+td{padding:4px 8px;border-bottom:1px solid #eee}.r{text-align:right;font-family:monospace}
+.tot td{border-top:2px solid #111;font-weight:700;font-size:11pt;padding:6px 8px}
+.neto{background:#111;color:#fff;border-radius:4px;padding:12px 16px;margin:12px 0;display:flex;justify-content:space-between;align-items:center}
+.neto .v{font-size:22pt;font-weight:800;font-family:monospace}
+.q{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.qb{border:1px solid #ccc;border-radius:4px;padding:8px;text-align:center}
+.qb .v{font-size:16pt;font-weight:800;font-family:monospace}.qb .l{font-size:7pt;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.sig{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center;font-size:9pt}.sig div{border-top:1px solid #111;padding-top:6px}
+.np{text-align:center;margin:20px 0;display:flex;gap:8px;justify-content:center}
+.btn{background:#111;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
+.btn2{background:#fff;color:#111;border:1px solid #111;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
+.foot{font-size:7pt;color:#999;text-align:center;margin-top:12px}
+@media print{.np{display:none}}</style></head><body>
+<div id="content">
+<div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris"/><div style="font-size:8pt;color:#999">NIT: 901.922.136-8</div></div>
+<h1>COMPROBANTE DE NÓMINA</h1>
+<div style="text-align:center;font-size:9pt;color:#666;margin-bottom:12px">${MESES[mes]} ${anio}</div>
+<div class="info">
+<div><span>Nombre: </span><b>${selN.nombre}</b></div>
+<div><span>Documento: </span><b>${selN.cc}</b></div>
+<div><span>Cargo: </span>${selN.cargo}</div>
+<div><span>Contrato: </span>${selN.tipoContrato}</div>
+<div><span>Ingreso: </span>${selN.fechaIngreso}</div>
+<div><span>Días: </span><b>${calc.dias}/30</b></div>
+<div><span>Banco: </span><b>${selN.banco||"—"}</b></div>
+<div><span>Cuenta: </span><b>${selN.cuenta||"—"}</b></div>
+</div>
+<table><thead><tr><th>CONCEPTO</th><th class="r">DEVENGADO</th><th class="r">DEDUCCIÓN</th></tr></thead><tbody>
+${items.map(r=>`<tr><td>${r.c}</td><td class="r">${r.d>0?fmt(r.d):"—"}</td><td class="r">${r.dd>0?fmt(r.dd):"—"}</td></tr>`).join("")}
+<tr class="tot"><td>TOTALES</td><td class="r">${fmt(calc.dev)}</td><td class="r">${fmt(calc.totD)}</td></tr>
+</tbody></table>
+<div class="neto"><div><div style="font-size:9pt;font-weight:700;letter-spacing:1px">NETO A PAGAR</div><div style="font-size:8pt;opacity:.5;margin-top:2px">Q1: ${fmt(calc.q1)} + Q2: ${fmt(calc.q2)}</div></div><div class="v">${fmt(calc.neto)}</div></div>
+<div class="q"><div class="qb"><div class="l">Q1 — 15/${MESES[mes].slice(0,3)}</div><div class="v">${fmt(calc.q1)}</div></div><div class="qb"><div class="l">Q2 — Fin/${MESES[mes].slice(0,3)}</div><div class="v">${fmt(calc.q2)}</div></div></div>
+<div class="sig"><div>Empleador<br><span style="color:#999">Habitaris S.A.S</span></div><div>Trabajador<br><span style="color:#999">${selN.nombre}</span></div></div>
+<div class="foot">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
+</div>
+<div class="np">
+<button class="btn" onclick="html2pdf().set({margin:[15,20,15,20],filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
+<button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
+</div></body></html>`;
+                window.open(URL.createObjectURL(new Blob([html],{type:"text/html;charset=utf-8"})),"_blank");
+              }}>📥 Descargar colilla</Btn>
             </div>
           </Card>
         )}
