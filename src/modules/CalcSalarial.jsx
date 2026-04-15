@@ -715,7 +715,7 @@ window.onload=function(){
 
   // ★ Generate Proposal — modal with candidate data
   const [showProp,setShowProp]=useState(false);
-  const [propForm,setPropForm]=useState({modo:"link",ciudad:"Bogotá D.C.",centro:"",candidato_nombre:"",candidato_cc:"",candidato_email:"",candidato_celular:"",candidato_eps:"",candidato_pension:"",entidadBancaria:"",cuentaBancaria:"",estado_inicial:"propuesta"});
+  const [propForm,setPropForm]=useState({modo:"link",ciudad:"Bogotá D.C.",centro:"",candidato_nombre:"",tipo_documento:"CC",candidato_cc:"",candidato_email:"",candidato_celular:"",candidato_eps:"",candidato_pension:"",entidadBancaria:"",cuentaBancaria:"",estado_inicial:"propuesta"});
   const upP=(k,v)=>setPropForm(p=>({...p,[k]:v}));
 
   const generarPropuesta = async () => {
@@ -731,7 +731,7 @@ window.onload=function(){
       fecha_inicio:fechaIniCont||"", periodo_prueba:contrato.ppDias?contrato.ppDias+" días":"Dos (2) meses",
       regimen_salud:regimenSalud, arl_nivel:arlIdx>=0?arlIdx:0, exoneracion_114:art114,
       inicio_manual:propForm.modo==="manual", estado_inicial:propForm.modo==="manual"?propForm.estado_inicial:"propuesta",
-      candidato_nombre:propForm.candidato_nombre, candidato_cc:propForm.candidato_cc,
+      candidato_nombre:propForm.candidato_nombre, candidato_cc:propForm.tipo_documento+" "+propForm.candidato_cc,
       candidato_email:propForm.candidato_email, candidato_celular:propForm.candidato_celular,
       candidato_eps:propForm.candidato_eps, candidato_pension:propForm.candidato_pension,
       entidadBancaria:propForm.entidadBancaria, cuentaBancaria:propForm.cuentaBancaria,
@@ -796,7 +796,7 @@ window.onload=function(){
           <div style={{fontSize:11,fontWeight:700,color:"#666",letterSpacing:1,textTransform:"uppercase",margin:"12px 0 8px"}}>Datos del candidato</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
             <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Nombre completo *</label><input value={propForm.candidato_nombre} onChange={e=>upP("candidato_nombre",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
-            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Cédula *</label><input value={propForm.candidato_cc} onChange={e=>upP("candidato_cc",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Documento *</label><div style={{display:"flex",gap:4}}><select value={propForm.tipo_documento} onChange={e=>upP("tipo_documento",e.target.value)} style={{padding:"7px 6px",border:"1px solid #E5E3DE",borderRadius:"6px 0 0 6px",fontSize:11,fontFamily:"'DM Sans',sans-serif",background:"#F5F4F1",color:"#111"}}><option value="CC">CC</option><option value="CE">CE</option><option value="TI">TI</option><option value="PP">PP</option><option value="NIT">NIT</option><option value="PEP">PEP</option><option value="PPT">PPT</option></select><input placeholder="Número" value={propForm.candidato_cc} onChange={e=>upP("candidato_cc",e.target.value)} style={{flex:1,padding:"7px 10px",border:"1px solid #E5E3DE",borderLeft:"none",borderRadius:"0 6px 6px 0",fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div></div>
             <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Email</label><input value={propForm.candidato_email} onChange={e=>upP("candidato_email",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
             <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Celular</label><input value={propForm.candidato_celular} onChange={e=>upP("candidato_celular",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
             <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>EPS</label><input value={propForm.candidato_eps} onChange={e=>upP("candidato_eps",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
