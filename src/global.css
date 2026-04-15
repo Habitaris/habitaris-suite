@@ -1,23 +1,5 @@
 /* Habitaris Suite — Global Form Styles */
 
-/* Uppercase for all text inputs (visual) */
-input[type="text"],
-input:not([type]),
-textarea {
-  text-transform: uppercase;
-  -webkit-text-transform: uppercase;
-}
-
-/* Exceptions: email, password, search, url — keep lowercase */
-input[type="email"],
-input[type="password"],
-input[type="search"],
-input[type="url"],
-input[type="number"],
-input[type="date"] {
-  text-transform: none;
-}
-
 /* Spellcheck indicator */
 input[spellcheck="true"]:focus,
 textarea[spellcheck="true"]:focus {
