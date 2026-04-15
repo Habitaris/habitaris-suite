@@ -744,7 +744,6 @@ window.onload=function(){
       {key:"antecedentes_policia",label:"Antecedentes Policía",def:true},
       {key:"antecedentes_procuraduria",label:"Antecedentes Procuraduría",def:true},
       {key:"antecedentes_contraloria",label:"Antecedentes Contraloría",def:true},
-      {key:"antecedentes_medidas",label:"Medidas correctivas",def:true},
       {key:"cert_arl",label:"ARL",def:true},
       {key:"cert_caja",label:"Caja compensación",def:true},
     ]

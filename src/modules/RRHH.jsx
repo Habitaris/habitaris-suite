@@ -3356,10 +3356,9 @@ function AnexosPanel({p}){
       {key:"examen_medico",label:"Examen médico ocupacional de ingreso"},
       {key:"recomendaciones_sst",label:"Recomendaciones SST",gen:()=>abrirAnexo('sst')},
       {key:"psicotecnico",label:"Resultados psicotécnicos / DISC"},
-      {key:"antecedentes_policia",label:"Antecedentes judiciales (Policía Nacional)",url:"https://antecedentes.policia.gov.co:7005/WebJudicial/"},
-      {key:"antecedentes_procuraduria",label:"Antecedentes disciplinarios (Procuraduría)",url:"https://www.procuraduria.gov.co/Pages/Consulta-de-Antecedentes.aspx"},
+      {key:"antecedentes_policia",label:"Antecedentes judiciales (Policía Nacional)",url:"https://antecedentes.policia.gov.co:7005/WebJudicial/",urlNote:"Cmd+P → Guardar como PDF"},
+      {key:"antecedentes_procuraduria",label:"Antecedentes disciplinarios (Procuraduría)",url:"https://www.procuraduria.gov.co/Pages/Consulta-de-Antecedentes.aspx",urlNote:"Cmd+P → Guardar como PDF"},
       {key:"antecedentes_contraloria",label:"Antecedentes fiscales (Contraloría)",url:"https://www.contraloria.gov.co/control-fiscal/responsabilidad-fiscal/certificado-de-antecedentes-fiscales"},
-      {key:"antecedentes_medidas",label:"Medidas correctivas (RNMC)",url:"https://srvcnpc.policia.gov.co/PSC/frm_cnp_consulta.aspx"},
     ]},
     {id:"emp_afil",section:"empresa",label:"Afiliaciones empresa",icon:"🏢",color:"#2563EB",docs:[
       {key:"cert_arl",label:"ARL (gestión empleador)"},
@@ -3429,7 +3428,7 @@ function AnexosPanel({p}){
                         {uploaded && uploaded.auto && <span style={{fontSize:9,color:'#1E6B42',fontStyle:'italic'}}>Digital</span>}
                         {isPending && <span style={{fontSize:9,color:'#D97706',fontWeight:600}}>Pendiente</span>}
                         {d.gen && <button style={{...btnS,background:uploaded?.auto?'#1E6B42':'#1E6B42',color:'#fff'}} onClick={d.gen}>{uploaded?.auto?'Ver':'Generar'}</button>}
-                        {d.url && <button style={{...btnS,background:'#EFF6FF',color:'#2563EB',border:'1px solid #2563EB'}} onClick={()=>window.open(d.url,'_blank')}>🔍 Consultar</button>}
+                        {d.url && <><button style={{...btnS,background:'#EFF6FF',color:'#2563EB',border:'1px solid #2563EB'}} onClick={()=>window.open(d.url,'_blank')}>🔍 Consultar</button>{d.urlNote&&<span style={{fontSize:8,color:'#999',fontStyle:'italic'}}>{d.urlNote}</span>}</>}
                         {!uploaded && <button style={{...btnS,background:'#FFFBEB',color:'#D97706',border:'1px solid #FDE68A'}} onClick={()=>{const nd={...docs,[d.key]:{pendiente:true,fecha:new Date().toISOString()}};setDocs(nd);fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,_expediente:nd})}).catch(()=>{});}}>Pendiente</button>}
                         {!uploaded?.auto && <button style={{...btnS,background:isOpen?'#2563EB':'#F5F4F1',color:isOpen?'#fff':'#555',border:'1px solid '+(isOpen?'#2563EB':'#E5E3DE')}} onClick={()=>setDragKey(isOpen?null:d.key)}>{uploaded&&!isPending?'Reemplazar':'📂 Subir'}</button>}
                       </div>
