@@ -46,14 +46,17 @@ async function saveN(a,m,data){await fetch("/api/hiring?kv=nomina&anio="+a+"&mes
 
 function calcN(n) {
   const dias=n.dias||30, ratio=dias/30, sal=n.sal||0;
-  // Festivos en días laborales (para bono de asistencia)
   const festMes=n.festMes||0;
-  const diasAsist=Math.max(0,dias-festMes);
+  const licRem=n.diasLicRem||0;
+  // Días que se transportó = días laborados - licencias rem (festivos SÍ incluidos — Concepto 219821/2020)
+  const diasComm=Math.max(0,dias-licRem);
+  const ratioComm=diasComm/30;
+  // Días asistidos = días que se transportó - festivos (para bono asistencia)
+  const diasAsist=Math.max(0,diasComm-festMes);
   const ratioAsist=diasAsist/30;
-  // Aux transporte: 30 días completos (incluye festivos — Concepto 219821/2020 Función Pública)
-  // Solo se reduce por novedades (incapacidad, licencia, falta)
-  const aplA=sal<=2*SMLMV, aux=aplA?AUX_TR*ratio:0;
-  // Bono de asistencia: por día asistido (excluye festivos)
+  // Aux transporte: por días que se transportó (excluye lic rem, incluye festivos)
+  const aplA=sal<=2*SMLMV, aux=aplA?AUX_TR*ratioComm:0;
+  // Bono asistencia: por días asistidos (excluye festivos y lic rem)
   const bono=(n.bono||0)*ratioAsist;
   const vH=sal/240;
   const hexD=(n.hexD||0)*vH*1.25, hexN=(n.hexN||0)*vH*1.75, hexDD=(n.hexDD||0)*vH*2, hexDN=(n.hexDN||0)*vH*2.5;
@@ -71,7 +74,7 @@ function calcN(n) {
   const totAp=epsEr+penEr+arlV+caja+icbf+sena;
   const bPr=salProp+aux, prima=bPr/12, ces=bPr/12, intC=ces*0.12/12, vac=salProp*15/360;
   const totPr=prima+ces+intC+vac, costoT=dev+totAp+totPr;
-  return {sal,salProp,bono,aux,aplA,dev,ibc,eSub,vH,totHex,hexD,hexN,hexDD,hexDN,recFest,epsE,penE,rteF,otrasDed:n.otrasDed||0,totD,neto,q1,q2,q1Pct,epsEr,penEr,arlV,caja,icbf,sena,totAp,exS,tasa,prima,ces,intC,vac,totPr,costoT,ratio,dias,festMes,diasAsist,ratioAsist};
+  return {sal,salProp,bono,aux,aplA,dev,ibc,eSub,vH,totHex,hexD,hexN,hexDD,hexDN,recFest,epsE,penE,rteF,otrasDed:n.otrasDed||0,totD,neto,q1,q2,q1Pct,epsEr,penEr,arlV,caja,icbf,sena,totAp,exS,tasa,prima,ces,intC,vac,totPr,costoT,ratio,dias,festMes,diasComm,ratioComm,diasAsist,ratioAsist};
 }
 
 const T={bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#666",inkLight:"#999",inkXLight:"#CCC",border:"#E5E3DE",accent:"#F5F5F3",green:"#16A34A",greenBg:"#F0FDF4",red:"#DC2626",redBg:"#FEF2F2",blue:"#2563EB",blueBg:"#EFF6FF",amber:"#D97706",amberBg:"#FFFBEB",purple:"#7C3AED",purpleBg:"#F5F3FF",shadow:"0 1px 3px rgba(0,0,0,.06)"};
@@ -270,9 +273,9 @@ export function TabNomina(){
               {calc.recFest>0&&<Row lbl="Recargo festivos" val={calc.recFest}/>}
               <Div/><Row lbl="IBC (Base Cotización)" val={calc.ibc} bold bg={T.accent}/>
               <div style={{height:10}}/><div style={{fontSize:10,fontWeight:600,color:T.inkMid,marginBottom:4}}>NO SALARIAL</div>
-              {calc.aplA&&<Row lbl={"Auxilio transporte ("+calc.dias+"d)"} val={calc.aux}/>}
+              {calc.aplA&&<Row lbl={"Auxilio transporte ("+calc.diasComm+"d)"} val={calc.aux}/>}
               {calc.bono>0&&<Row lbl={(selN.bonoConcepto||"Bono asistencia")+" ("+calc.diasAsist+"d)"} val={calc.bono}/>}
-              {calc.festMes>0&&<div style={{fontSize:8,color:T.amber,fontStyle:"italic",marginTop:2}}>Aux: 30d incluye festivos · Bono: {calc.diasAsist}d asistidos ({calc.festMes} fest. excluidos)</div>}
+              {(calc.festMes>0||(selN.diasLicRem||0)>0)&&<div style={{fontSize:8,color:T.amber,fontStyle:"italic",marginTop:2}}>Aux: {calc.diasComm}d (−{selN.diasLicRem||0} lic.rem) · Bono: {calc.diasAsist}d (−{calc.festMes} fest −{selN.diasLicRem||0} lic.rem)</div>}
               <Div/><Row lbl="TOTAL DEVENGADO" val={calc.dev} bold color={T.green} bg={T.greenBg}/>
             </Card>
             <div>
@@ -532,7 +535,7 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b class="red">−
                   ["","",""],
                   ["Salario proporcional",fmt(calc.salProp),fmt(selN.sal)+" × "+selN.dias+"/30"],
                   ["Bono "+(selN.bonoConcepto||"Art.128"),fmt(calc.bono),fmt(selN.bono)+" × "+calc.diasAsist+"/30 (días asistidos)"],
-                  ["Auxilio transporte",fmt(calc.aux),selN.sal<=2*SMLMV?fmt(AUX_TR)+" × "+selN.dias+"/30 (incluye festivos — Concepto 219821/2020)":"No aplica (sal > 2 SMLMV)"],
+                  ["Auxilio transporte",fmt(calc.aux),selN.sal<=2*SMLMV?fmt(AUX_TR)+" × "+calc.diasComm+"/30 (fest. incluidos, lic.rem excluidas)":"No aplica (sal > 2 SMLMV)"],
                   ["","",""],
                   ["TOTAL DEVENGADO",fmt(calc.dev),"Sal + Bono + Aux + HE + Otros"],
                 ].map(([l,v,f],i)=>l===""?<tr key={i}><td colSpan={3} style={{borderBottom:`1px solid ${T.border}`,height:8}}/></tr>:
