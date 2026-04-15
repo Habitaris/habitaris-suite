@@ -713,25 +713,36 @@ window.onload=function(){
 
 
 
-  // ★ Generate Proposal → creates hiring process via API
+  // ★ Generate Proposal — modal with candidate data
+  const [showProp,setShowProp]=useState(false);
+  const [propForm,setPropForm]=useState({modo:"link",ciudad:"Bogotá D.C.",centro:"",candidato_nombre:"",candidato_cc:"",candidato_email:"",candidato_celular:"",candidato_eps:"",candidato_pension:"",entidadBancaria:"",cuentaBancaria:"",estado_inicial:"propuesta"});
+  const upP=(k,v)=>setPropForm(p=>({...p,[k]:v}));
+
   const generarPropuesta = async () => {
     if(!cargo){alert("El cargo es obligatorio");return;}
     if(!valorSal){alert("Ingresa el salario");return;}
+    if(propForm.modo==="manual"&&!propForm.candidato_nombre){alert("Nombre del candidato es obligatorio");return;}
     const body = {
       cargo, area:"", tipo_contrato:tipoCon||"fijo", duracion_meses:durMode==="meses"?durMeses:Math.round((contrato.durDias||180)/30),
       modo_salario:modoSal, salario_neto:neg.neto, salario_base:neg.salario, auxilio_transporte:neg.auxDev,
       bono_no_salarial:neg.bono, bono_es_salarial:bonoPrest, bono_por_asistencia:bonoTrat==="asistencia",
       bono_concepto:bonoConcepto, jornada_horas:hSem, horario:`${hIni}:00 a ${hFin}:00`,
-      dias_laborales:DL.filter((_,i)=>workDays[i]).join(", "), ciudad:"Bogotá D.C.",
+      dias_laborales:DL.filter((_,i)=>workDays[i]).join(", "), ciudad:propForm.ciudad,
       fecha_inicio:fechaIniCont||"", periodo_prueba:contrato.ppDias?contrato.ppDias+" días":"Dos (2) meses",
       regimen_salud:regimenSalud, arl_nivel:arlIdx>=0?arlIdx:0, exoneracion_114:art114,
-      inicio_manual:false, estado_inicial:"propuesta",
+      inicio_manual:propForm.modo==="manual", estado_inicial:propForm.modo==="manual"?propForm.estado_inicial:"propuesta",
+      candidato_nombre:propForm.candidato_nombre, candidato_cc:propForm.candidato_cc,
+      candidato_email:propForm.candidato_email, candidato_celular:propForm.candidato_celular,
+      candidato_eps:propForm.candidato_eps, candidato_pension:propForm.candidato_pension,
+      entidadBancaria:propForm.entidadBancaria, cuentaBancaria:propForm.cuentaBancaria,
     };
     try {
       const r = await fetch("/api/hiring",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
       const d = await r.json();
-      if(d.ok){alert("✅ Propuesta creada: "+d.data.codigo+"\n\nNeto: "+$(neg.neto)+"\nCosto empresa: "+$(neg.costoT)+"/mes\n\nLink:\n"+d.links.propuesta);}
-      else{alert("Error: "+(d.error||"desconocido"));}
+      if(d.ok){
+        setShowProp(false);
+        alert("✅ Propuesta creada: "+d.data.codigo+"\n\nNeto: "+$(neg.neto)+"\nCosto empresa: "+$(neg.costoT)+"/mes"+(d.links?.propuesta?"\n\nLink:\n"+d.links.propuesta:""));
+      }else{alert("Error: "+(d.error||"desconocido"));}
     }catch(e){alert("Error: "+e.message);}
   };
 
@@ -741,8 +752,68 @@ window.onload=function(){
   return <div style={{fontFamily:"'DM Sans',sans-serif",color:"#111111"}}>
     <div style={{padding:"0 0 6px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
       <div style={{display:"inline-block",fontSize:10,fontWeight:700,color:"#1E6B42",background:"#E8F4EE",padding:"3px 12px",borderRadius:14}}>🇨🇴 COLOMBIA 2026 · SMLMV {$(SMLMV_DEF)} · Aux. {$(AUX_DEF)}</div>
-      {neg&&neg.salario>0&&<button type="button" onClick={generarPropuesta} style={{padding:"8px 18px",background:"#1E6B42",color:"#fff",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:6}}>📤 Generar propuesta de empleo</button>}
+      {neg&&neg.salario>0&&<button type="button" onClick={()=>setShowProp(true)} style={{padding:"8px 18px",background:"#1E6B42",color:"#fff",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:6}}>📤 Generar propuesta de empleo</button>}
     </div>
+
+    {/* ★ Modal completar datos propuesta */}
+    {showProp&&<div style={{position:"fixed",inset:0,zIndex:300,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setShowProp(false)}>
+      <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:12,maxWidth:560,width:"100%",maxHeight:"85vh",overflow:"auto",padding:24,boxShadow:"0 8px 30px rgba(0,0,0,.2)"}}>
+        <div style={{fontSize:16,fontWeight:800,color:"#111",marginBottom:4}}>📤 Generar propuesta de empleo</div>
+        <div style={{fontSize:11,color:"#666",marginBottom:14}}>
+          {cargo} · {tipoCon==="fijo"?`Fijo ${durMeses||contrato.durMeses||""}m`:"Indefinido"} · Neto <strong>{$(neg.neto)}</strong> · Costo empresa <strong>{$(neg.costoT)}/mes</strong>
+        </div>
+
+        {/* Modo */}
+        <div style={{display:"flex",gap:6,marginBottom:14}}>
+          <button type="button" onClick={()=>upP("modo","link")} style={{flex:1,padding:"8px 12px",borderRadius:6,border:propForm.modo==="link"?"2px solid #111":"1px solid #E5E3DE",background:propForm.modo==="link"?"#111":"#fff",color:propForm.modo==="link"?"#fff":"#666",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>📤 Enviar link al candidato</button>
+          <button type="button" onClick={()=>upP("modo","manual")} style={{flex:1,padding:"8px 12px",borderRadius:6,border:propForm.modo==="manual"?"2px solid #1E6B42":"1px solid #E5E3DE",background:propForm.modo==="manual"?"#E8F4EE":"#fff",color:propForm.modo==="manual"?"#1E6B42":"#666",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>✅ Ingresar manualmente</button>
+        </div>
+
+        {/* Ciudad */}
+        <div style={{marginBottom:10}}>
+          <label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Ciudad</label>
+          <input value={propForm.ciudad} onChange={e=>upP("ciudad",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/>
+        </div>
+
+        {/* Candidato (siempre visible en manual, opcional en link) */}
+        {propForm.modo==="manual"&&<>
+          <div style={{fontSize:11,fontWeight:700,color:"#666",letterSpacing:1,textTransform:"uppercase",margin:"12px 0 8px"}}>Datos del candidato</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Nombre completo *</label><input value={propForm.candidato_nombre} onChange={e=>upP("candidato_nombre",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Cédula *</label><input value={propForm.candidato_cc} onChange={e=>upP("candidato_cc",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Email</label><input value={propForm.candidato_email} onChange={e=>upP("candidato_email",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Celular</label><input value={propForm.candidato_celular} onChange={e=>upP("candidato_celular",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>EPS</label><input value={propForm.candidato_eps} onChange={e=>upP("candidato_eps",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Fondo pensión</label><input value={propForm.candidato_pension} onChange={e=>upP("candidato_pension",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Banco</label><input value={propForm.entidadBancaria} onChange={e=>upP("entidadBancaria",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Nº cuenta</label><input value={propForm.cuentaBancaria} onChange={e=>upP("cuentaBancaria",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
+          </div>
+          <div style={{marginTop:10}}>
+            <label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Estado inicial</label>
+            <select value={propForm.estado_inicial} onChange={e=>upP("estado_inicial",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>
+              <option value="aceptada">Aceptada (pendiente datos)</option>
+              <option value="datos_recibidos">Datos recibidos</option>
+              <option value="completado">Contrato firmado y completo</option>
+            </select>
+          </div>
+        </>}
+
+        {/* Resumen */}
+        <div style={{background:"#F5F4F1",borderRadius:8,padding:"10px 14px",margin:"14px 0",fontSize:11,color:"#555",display:"grid",gridTemplateColumns:"1fr 1fr",gap:4}}>
+          <span>Salario base: <strong>{$(neg.salario)}</strong></span>
+          <span>Aux. transporte: <strong>{$(neg.auxDev)}</strong></span>
+          <span>Bono: <strong>{$(neg.bono)}</strong></span>
+          <span>Neto: <strong style={{color:"#1E6B42"}}>{$(neg.neto)}</strong></span>
+          <span>Aportes empl.: <strong>{$(neg.totAp)}</strong></span>
+          <span>Costo total: <strong style={{color:"#111"}}>{$(neg.costoT)}/mes</strong></span>
+        </div>
+
+        <div style={{display:"flex",gap:8}}>
+          <button type="button" onClick={generarPropuesta} style={{flex:1,padding:"10px",background:"#1E6B42",color:"#fff",border:"none",borderRadius:8,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{propForm.modo==="manual"?"✅ Registrar proceso":"📤 Generar y enviar propuesta"}</button>
+          <button type="button" onClick={()=>setShowProp(false)} style={{padding:"10px 18px",background:"#F5F4F1",color:"#666",border:"1px solid #E5E3DE",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Cancelar</button>
+        </div>
+      </div>
+    </div>}
 
     <div style={{maxWidth:860,padding:"0 0 40px"}}>
       <div className="no-print"><TabBar tabs={[{i:"🧮",l:"Calculadora"},{i:"🚪",l:"Liquidación Final"}]} active={tab} set={setTab}/></div>

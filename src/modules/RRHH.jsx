@@ -3605,7 +3605,7 @@ function EvaluacionesPanel({ p, onDone }) {
 
 
 
-function TabContratacion() {
+function TabContratacion({onNuevaPropuesta}) {
   const [procesos, setProcesos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -3730,7 +3730,7 @@ function TabContratacion() {
     <div>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
         <div style={{fontSize:16,fontWeight:700,color:C.ink}}>Procesos de contratación ({procesos.length})</div>
-        <Btn icon={Plus} onClick={() => setShowForm(!showForm)}>{showForm ? "Cancelar" : "Nueva propuesta"}</Btn>
+        <Btn icon={Plus} onClick={onNuevaPropuesta}>Nueva propuesta</Btn>
       </div>
 
       {showForm && (
@@ -4247,7 +4247,7 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                   {tab==="novedades" && <TabNovedades novedades={novedades} saveNovedades={saveNovedades}/>}
                   {tab==="nomina"       && <TabNomina/>}
                   {tab==="calculadora"  && <CalcSalarial/>}
-                  {tab==="contratacion" && <TabContratacion/>}
+                  {tab==="contratacion" && <TabContratacion onNuevaPropuesta={()=>setTab("calculadora")}/>}
                   {tab==="evaluaciones" && <TabEvaluaciones/>}
                   {tab==="docs"      && <TabDocumentos docs={docs}       saveDocs={saveDocs}        fichas={fichas} cargos={cargos}/>}
                 </div>
