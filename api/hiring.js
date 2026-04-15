@@ -65,19 +65,26 @@ export default async function handler(req,res){
       var newCode="HAB-PROP-"+year+"-"+String(lastNum+1).padStart(3,"0");
 
       var rec={
-        codigo:newCode,estado:"propuesta",
+        codigo:newCode,estado:b.inicio_manual?b.estado_inicial||"aceptada":"propuesta",
         cargo:b.cargo||"",descriptor_codigo:b.descriptor_codigo||null,
         area:b.area||"",nivel:b.nivel||"",
         salario_neto:b.salario_neto||0,salario_base:b.salario_base||0,
         auxilio_transporte:b.auxilio_transporte||0,bono_no_salarial:b.bono_no_salarial||0,
+        bono_concepto:b.bono_concepto||null,bono_es_salarial:b.bono_es_salarial||false,
         jornada_horas:b.jornada_horas||0,horario:b.horario||"",
         dias_laborales:b.dias_laborales||"",tipo_contrato:b.tipo_contrato||"fijo",
         duracion_meses:b.duracion_meses||0,ciudad:b.ciudad||"Bogota D.C.",
         fecha_inicio:b.fecha_inicio||null,periodo_prueba:b.periodo_prueba||"",
+        regimen_salud:b.regimen_salud||"contributivo",arl_nivel:b.arl_nivel||0,
         candidato_nombre:b.candidato_nombre||null,candidato_email:b.candidato_email||null,
+        candidato_cc:b.candidato_cc||null,candidato_celular:b.candidato_celular||null,
+        candidato_eps:b.candidato_eps||null,candidato_pension:b.candidato_pension||null,
         token_propuesta:genToken(),token_datos:genToken(),
         creado_por:b.creado_por||"admin",
       };
+      // Add JSONB fields if provided (require column in Supabase)
+      if(b._condiciones)rec._condiciones=b._condiciones;
+      if(b._expediente)rec._expediente=b._expediente;
       var r6=await fetch(SB_URL+"/rest/v1/hiring_processes",{method:"POST",headers:sbH(),body:JSON.stringify(rec)});
       var d6=await r6.json();
       if(!r6.ok)return res.status(r6.status).json({ok:false,error:d6.message||"Insert failed"});

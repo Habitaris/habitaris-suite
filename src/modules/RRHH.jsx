@@ -3336,6 +3336,8 @@ function AnexosPanel({p}){
       {key:"psicotecnico",label:"Resultados psicotécnicos / DISC"},
     ]},
     {id:"contrato",label:"Documentos contractuales",icon:"📄",color:"#1E6B42",docs:[
+      {key:"condiciones_trabajador",label:"Condiciones laborales — trabajador"},
+      {key:"condiciones_empleador",label:"Condiciones laborales — empleador"},
       {key:"contrato",label:"Contrato laboral firmado",gen:generarContrato},
       {key:"descriptor",label:"Descriptor de cargo",gen:()=>abrirAnexo('descriptor')},
       {key:"centro_trabajo",label:"Asignación centro de trabajo",gen:()=>abrirAnexo('centro')},
@@ -4040,6 +4042,47 @@ function TabContratacion({onNuevaPropuesta}) {
                         })()}
                         </div>
                     )}
+                    {/* ── Condiciones laborales ── */}
+                    {(()=>{
+                      const $=n=>"$"+Math.round(n||0).toLocaleString("es-CO");
+                      const cond=p._condiciones;
+                      const openCond=(tipo)=>{
+                        const t=cond?.trabajador||{},e=cond?.empleador||{},nombre=p.candidato_nombre||"Candidato",cc=p.candidato_cc||"",fecha=new Date(cond?.generado||p.created_at||Date.now()).toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
+                        const css=`body{font-family:Helvetica,Arial,sans-serif;max-width:740px;margin:0 auto;padding:30px 40px;font-size:10pt;color:#111;line-height:1.5}.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #1E6B42;padding-bottom:10px;margin-bottom:16px}.logo{font-weight:800;font-size:18px}h1{font-size:13pt;text-align:center;margin-bottom:16px}table{width:100%;border-collapse:collapse;margin-bottom:14px}th{background:#111;color:#fff;text-align:left;padding:5px 8px;font-size:8pt}td{padding:4px 8px;border-bottom:1px solid #eee;font-size:9.5pt}td.l{color:#666;width:45%}td.v{font-weight:700;text-align:right;font-family:monospace}.total{background:#f5f4f1;font-weight:800}.green{color:#1E6B42}.red{color:#dc2626}.blue{color:#2563eb}.np{text-align:center;margin:30px 0;padding:16px;background:#f5f5f5;border-radius:8px}.btn{background:#1E6B42;color:#fff;border:none;padding:10px 28px;font-size:12pt;cursor:pointer;border-radius:4px;margin-right:10px}@media print{.np{display:none}}`;
+                        let html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>${css}</style></head><body>`;
+                        html+=`<div class="hdr"><span class="logo">Habitaris</span><span style="font-size:8pt;color:#999">${p.codigo||""}</span></div>`;
+                        if(tipo==="trabajador"){
+                          html+=`<h1>CONDICIONES LABORALES — TRABAJADOR</h1>`;
+                          html+=`<table><tr><td class="l">Trabajador</td><td class="v">${nombre}</td></tr><tr><td class="l">Documento</td><td class="v">${cc}</td></tr><tr><td class="l">Cargo</td><td class="v">${p.cargo||""}</td></tr><tr><td class="l">Tipo contrato</td><td class="v">${p.tipo_contrato||""} ${p.duracion_meses?p.duracion_meses+"m":""}</td></tr><tr><td class="l">Jornada</td><td class="v">${t.jornada_horas||p.jornada_horas||""}h/sem · ${t.jornada_dias||p.dias_laborales||""}</td></tr><tr><td class="l">Horario</td><td class="v">${t.horario||p.horario||""}</td></tr><tr><td class="l">Ciudad</td><td class="v">${p.ciudad||""}</td></tr><tr><td class="l">Inicio</td><td class="v">${p.fecha_inicio||""}</td></tr></table>`;
+                          html+=`<h2 style="font-size:11pt;margin:12px 0 6px">Remuneración mensual</h2>`;
+                          html+=`<table><th colspan="2">DEVENGADO</th><tr><td class="l">Salario base</td><td class="v">${$(t.salario_base||p.salario_base)}</td></tr><tr><td class="l">Auxilio transporte</td><td class="v">${$(t.auxilio_transporte||p.auxilio_transporte)}</td></tr>`;
+                          if((t.bono||p.bono_no_salarial)>0) html+=`<tr><td class="l">${t.bono_concepto||p.bono_concepto||"Bono"} (Art.128 — no salarial)</td><td class="v">${$(t.bono||p.bono_no_salarial)}</td></tr>`;
+                          html+=`<tr class="total"><td class="l">TOTAL DEVENGADO</td><td class="v green">${$(t.devengado||(t.salario_base||0)+(t.auxilio_transporte||0)+(t.bono||0))}</td></tr>`;
+                          html+=`<th colspan="2">DEDUCCIONES</th>`;
+                          if(t.eps_empleado>0) html+=`<tr><td class="l">EPS (4%)</td><td class="v red">${$(t.eps_empleado)}</td></tr>`;
+                          html+=`<tr><td class="l">Pensión (4%)</td><td class="v red">${$(t.pension_empleado)}</td></tr>`;
+                          if(t.fsp>0) html+=`<tr><td class="l">FSP</td><td class="v red">${$(t.fsp)}</td></tr>`;
+                          html+=`<tr class="total"><td class="l">TOTAL DEDUCCIONES</td><td class="v red">${$(t.total_deducciones)}</td></tr>`;
+                          html+=`<tr class="total" style="font-size:12pt"><td class="l" style="font-size:12pt">NETO A RECIBIR</td><td class="v green" style="font-size:14pt">${$(t.neto||p.salario_neto)}</td></tr></table>`;
+                        }else{
+                          html+=`<h1>CONDICIONES LABORALES — EMPLEADOR</h1>`;
+                          html+=`<table><tr><td class="l">Trabajador</td><td class="v">${nombre} · ${cc}</td></tr><tr><td class="l">Cargo</td><td class="v">${p.cargo||""}</td></tr><tr><td class="l">Contrato</td><td class="v">${p.tipo_contrato||""} ${e.duracion_meses?e.duracion_meses+"m":""}</td></tr></table>`;
+                          html+=`<h2 style="font-size:11pt;margin:12px 0 6px">Aportes empleador (mensual)</h2>`;
+                          html+=`<table><tr><td class="l">IBC</td><td class="v">${$(e.ibc)}</td></tr><tr><td class="l">EPS empleador ${e.exoneracion_114?"(exonerado Art.114-1)":"(8.5%)"}</td><td class="v">${$(e.eps_empleador)}</td></tr><tr><td class="l">Pensión (12%)</td><td class="v">${$(e.pension_empleador)}</td></tr><tr><td class="l">ARL nivel ${e.arl_nivel||""}</td><td class="v">${$(e.arl)}</td></tr><tr><td class="l">Caja compensación (4%)</td><td class="v">${$(e.caja)}</td></tr><tr><td class="l">ICBF ${e.exoneracion_114?"(exonerado)":"(3%)"}</td><td class="v">${$(e.icbf)}</td></tr><tr><td class="l">SENA ${e.exoneracion_114?"(exonerado)":"(2%)"}</td><td class="v">${$(e.sena)}</td></tr><tr class="total"><td class="l">TOTAL APORTES</td><td class="v blue">${$(e.total_aportes)}</td></tr></table>`;
+                          html+=`<h2 style="font-size:11pt;margin:12px 0 6px">Provisiones (mensual)</h2>`;
+                          html+=`<table><tr><td class="l">Prima (8.33%)</td><td class="v">${$(e.prima)}</td></tr><tr><td class="l">Cesantías (8.33%)</td><td class="v">${$(e.cesantias)}</td></tr><tr><td class="l">Int. cesantías (1%)</td><td class="v">${$(e.int_cesantias)}</td></tr><tr><td class="l">Vacaciones (4.17%)</td><td class="v">${$(e.vacaciones)}</td></tr><tr class="total"><td class="l">TOTAL PROVISIONES</td><td class="v blue">${$(e.total_provisiones)}</td></tr></table>`;
+                          html+=`<h2 style="font-size:11pt;margin:12px 0 6px">Resumen de costos</h2>`;
+                          html+=`<table><tr><td class="l">Devengado trabajador</td><td class="v">${$((e.salario_base||0)+(p.auxilio_transporte||0)+(p.bono_no_salarial||0))}</td></tr><tr><td class="l">Aportes empleador</td><td class="v">${$(e.total_aportes)}</td></tr><tr><td class="l">Provisiones</td><td class="v">${$(e.total_provisiones)}</td></tr><tr class="total" style="font-size:12pt"><td class="l" style="font-size:12pt">COSTO TOTAL / MES</td><td class="v" style="font-size:14pt">${$(e.costo_total_mes)}</td></tr><tr><td class="l">Factor prestacional</td><td class="v">${e.factor}×</td></tr><tr class="total"><td class="l">COSTO TOTAL CONTRATO (${e.duracion_meses||""}m)</td><td class="v" style="font-size:13pt">${$(e.costo_contrato)}</td></tr></table>`;
+                        }
+                        html+=`<p style="font-size:8pt;color:#999;margin-top:20px">Generado: ${fecha} · Habitaris Suite</p>`;
+                        html+=`<div class="np"><button class="btn" onclick="window.print()">🖨️ Imprimir / PDF</button><button class="btn" style="background:#374151" onclick="window.close()">✕ Cerrar</button></div></body></html>`;
+                        window.open(URL.createObjectURL(new Blob([html],{type:"text/html;charset=utf-8"})),"_blank");
+                      };
+                      return <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingTop:6,marginBottom:4}}>
+                        <button onClick={()=>openCond("trabajador")} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #1E6B42",borderRadius:6,background:"#E8F4EE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#1E6B42"}}>📋 Condiciones trabajador</button>
+                        <button onClick={()=>openCond("empleador")} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #2563EB",borderRadius:6,background:"#EFF6FF",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#2563EB"}}>💼 Condiciones empleador</button>
+                      </div>;
+                    })()}
                     <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.border,alignItems:"center"}}>
                       {/* Avanzar manualmente */}
                       {(()=>{
