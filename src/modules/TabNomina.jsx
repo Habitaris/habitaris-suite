@@ -136,7 +136,7 @@ export function TabNomina(){
           ))}
         </div>
         <div style={{display:"flex",gap:0,marginBottom:14,borderBottom:`1px solid ${T.border}`}}>
-          {[{id:"liquidacion",lbl:"📋 Liquidación"},{id:"quincenal",lbl:"💵 Quincenal Q1/Q2"},{id:"empleador",lbl:"🏢 Costo empleador"},{id:"colilla",lbl:"🧾 Colilla"}].map(t=>(
+          {[{id:"liquidacion",lbl:"📋 Liquidación"},{id:"quincenal",lbl:"💵 Quincenal Q1/Q2"},{id:"empleador",lbl:"🏢 Costo empleador"},{id:"colilla",lbl:"🧾 Colilla"},{id:"auditoria",lbl:"🔍 Auditoría"}].map(t=>(
             <button key={t.id} onClick={()=>setSubTab(t.id)} style={{padding:"8px 16px",fontSize:11,fontWeight:subTab===t.id?700:400,border:"none",borderBottom:subTab===t.id?`2px solid ${T.ink}`:"2px solid transparent",background:"transparent",color:subTab===t.id?T.ink:T.inkLight,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{t.lbl}</button>
           ))}
         </div>
@@ -189,20 +189,22 @@ export function TabNomina(){
                       const dow=date.getDay(); // 0=Sun
                       const isSun=dow===0;
                       const hol=holidays.find(h=>sameDay(h.date,date));
+                      const isRest=isSun||!!hol; // Festivos = descanso remunerado
                       const nov=nDias[k];
                       const novInfo=nov?NOV_TIPOS.find(n=>n.id===nov):null;
                       const isToday=sameDay(date,new Date());
 
-                      return <div key={day} onClick={()=>!isSun&&toggleDay(day)} title={hol?hol.name:(novInfo?novInfo.label:"")} style={{
+                      return <div key={day} onClick={()=>!isRest&&toggleDay(day)} title={hol?("🔶 "+hol.name+" — Descanso remunerado"):(novInfo?novInfo.label:"")} style={{
                         textAlign:"center",padding:"4px 2px",borderRadius:4,fontSize:11,fontWeight:isToday?800:(hol?700:400),
-                        cursor:isSun||!ed?"default":"pointer",
-                        background:novInfo?novInfo.color:hol?"#FEF3C7":isSun?"#F5F4F1":"transparent",
-                        color:isSun?"#ccc":hol?"#D97706":isToday?"#1E6B42":"#111",
+                        cursor:isRest||!ed?"default":"pointer",
+                        background:novInfo?novInfo.color:hol?"#FDE68A":isSun?"#F5F4F1":"transparent",
+                        color:isRest?"#999":isToday?"#1E6B42":"#111",
                         border:isToday?`2px solid #1E6B42`:"2px solid transparent",
-                        position:"relative"
+                        position:"relative",opacity:isSun?0.4:1
                       }}>
                         {day}
                         {hol&&<div style={{fontSize:6,color:"#D97706",lineHeight:1,marginTop:1}}>🔶</div>}
+                        {isSun&&!hol&&<div style={{fontSize:6,color:"#ccc",lineHeight:1,marginTop:1}}>—</div>}
                         {novInfo&&<div style={{fontSize:7,lineHeight:1,marginTop:1}}>{novInfo.icon}</div>}
                       </div>;
                     })}
@@ -402,6 +404,115 @@ export function TabNomina(){
               <div style={{textAlign:"center",paddingTop:24,borderTop:`1px solid ${T.ink}`}}><div style={{fontSize:9,fontWeight:600}}>Trabajador</div><div style={{fontSize:8,color:T.inkLight}}>{selN.nombre}</div></div>
             </div>
           </Card>
+        )}
+
+        {subTab==="auditoria"&&(
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+            <Card accent={T.ink}>
+              <STit>📐 Base de cálculo</STit>
+              <table style={{width:"100%",fontSize:11,borderCollapse:"collapse"}}>
+                <tbody>
+                {[
+                  ["SMLMV 2026",fmt(SMLMV),"Decreto 1469/2025"],
+                  ["Auxilio transporte",fmt(AUX_TR),"Decreto 1470/2025"],
+                  ["UVT 2026",fmt(UVT),"DIAN"],
+                  ["","",""],
+                  ["Salario base mes",fmt(selN.sal),"Pactado en contrato"],
+                  ["Salario/día",fmt(selN.sal/30),"Sal ÷ 30"],
+                  ["Días laborados",selN.dias+"/30","Calendario − novedades"],
+                  ["Ratio",((selN.dias/30)*100).toFixed(1)+"%","Días ÷ 30"],
+                  ["","",""],
+                  ["Salario proporcional",fmt(calc.salProp),fmt(selN.sal)+" × "+selN.dias+"/30"],
+                  ["Bono "+(selN.bonoConcepto||"Art.128"),fmt(calc.bono),fmt(selN.bono)+" × "+selN.dias+"/30"],
+                  ["Auxilio transporte",fmt(calc.aux),selN.sal<=2*SMLMV?fmt(AUX_TR)+" × "+selN.dias+"/30":"No aplica (sal > 2 SMLMV)"],
+                  ["","",""],
+                  ["TOTAL DEVENGADO",fmt(calc.dev),"Sal + Bono + Aux + HE + Otros"],
+                ].map(([l,v,f],i)=>l===""?<tr key={i}><td colSpan={3} style={{borderBottom:`1px solid ${T.border}`,height:8}}/></tr>:
+                  <tr key={i}><td style={{padding:"4px 0",color:T.inkMid}}>{l}</td><td style={{padding:"4px 8px",fontWeight:700,fontFamily:"'DM Mono',monospace",textAlign:"right"}}>{v}</td><td style={{padding:"4px 0",fontSize:9,color:T.inkLight,fontStyle:"italic"}}>{f}</td></tr>
+                )}
+                </tbody>
+              </table>
+            </Card>
+
+            <Card accent={T.red}>
+              <STit color={T.red}>📊 Deducciones y aportes</STit>
+              <table style={{width:"100%",fontSize:11,borderCollapse:"collapse"}}>
+                <tbody>
+                {[
+                  ["IBC (Base cotización)",fmt(calc.ibc),"Max(SalProp + HE, SMLMV×ratio)"],
+                  ["IBC en SMLMV",(calc.ibc/(SMLMV*(selN.dias/30))).toFixed(2)+"×","Para FSP y exoneración"],
+                  ["","",""],
+                  ["— DEDUCCIONES EMPLEADO —","",""],
+                  [calc.eSub?"EPS (SISBEN — $0)":"EPS empleado (4%)",fmt(calc.epsE),calc.eSub?"Subsidiado":fmt(calc.ibc)+" × 4%"],
+                  ["Pensión empleado (4%)",fmt(calc.penE),fmt(calc.ibc)+" × 4%"],
+                  calc.rteF>0?["Retención fuente",fmt(calc.rteF),"Proc. 1 Art.383 ET"]:null,
+                  calc.otrasDed>0?["Otras deducciones",fmt(calc.otrasDed),"Manual"]:null,
+                  ["TOTAL DEDUCCIONES",fmt(calc.totD),""],
+                  ["","",""],
+                  ["— APORTES EMPLEADOR —","",""],
+                  [calc.exS?"EPS empleador (exonerado Art.114-1)":"EPS empleador (8.5%)",fmt(calc.epsEr),calc.exS?"Exonerado <10 SMLMV":fmt(calc.ibc)+" × 8.5%"],
+                  ["Pensión empleador (12%)",fmt(calc.penEr),fmt(calc.ibc)+" × 12%"],
+                  ["ARL nivel "+ARL_OPTS[selN.arl||0]?.n+" ("+fPct(calc.tasa)+")",fmt(calc.arlV),"Max(IBC,SMLMV) × "+fPct(calc.tasa)],
+                  ["Caja compensación (4%)",fmt(calc.caja),fmt(calc.ibc)+" × 4%"],
+                  [calc.exS?"ICBF (exonerado)":"ICBF (3%)",fmt(calc.icbf),calc.exS?"Exonerado":fmt(calc.ibc)+" × 3%"],
+                  [calc.exS?"SENA (exonerado)":"SENA (2%)",fmt(calc.sena),calc.exS?"Exonerado":fmt(calc.ibc)+" × 2%"],
+                  ["TOTAL APORTES",fmt(calc.totAp),""],
+                ].filter(Boolean).map(([l,v,f],i)=>l===""?<tr key={i}><td colSpan={3} style={{borderBottom:`1px solid ${T.border}`,height:8}}/></tr>:
+                  l.startsWith("—")?<tr key={i}><td colSpan={3} style={{padding:"6px 0 2px",fontWeight:700,fontSize:10,color:T.inkMid}}>{l}</td></tr>:
+                  <tr key={i}><td style={{padding:"3px 0",color:l.includes("TOTAL")?T.ink:T.inkMid,fontWeight:l.includes("TOTAL")?700:400}}>{l}</td><td style={{padding:"3px 8px",fontWeight:l.includes("TOTAL")?800:600,fontFamily:"'DM Mono',monospace",textAlign:"right",color:l.includes("TOTAL")?T.red:T.ink}}>{v}</td><td style={{padding:"3px 0",fontSize:9,color:T.inkLight,fontStyle:"italic"}}>{f}</td></tr>
+                )}
+                </tbody>
+              </table>
+            </Card>
+
+            <Card accent={T.purple}>
+              <STit color={T.purple}>📦 Provisiones mensuales</STit>
+              <table style={{width:"100%",fontSize:11,borderCollapse:"collapse"}}>
+                <tbody>
+                {[
+                  ["Base prestaciones",fmt(calc.salProp+calc.aux),"Sal.prop + Aux.transporte"],
+                  ["","",""],
+                  ["Prima servicios (8.33%)",fmt(calc.prima),fmt(calc.salProp+calc.aux)+" × 30/360"],
+                  ["Cesantías (8.33%)",fmt(calc.ces),fmt(calc.salProp+calc.aux)+" × 30/360"],
+                  ["Int. cesantías (1%)",fmt(calc.intC),"Cesantías × 12% ÷ 12"],
+                  ["Vacaciones (4.17%)",fmt(calc.vac),fmt(calc.salProp)+" × 15/360 (sobre sal, sin aux)"],
+                  ["","",""],
+                  ["TOTAL PROVISIONES",fmt(calc.totPr),""],
+                ].map(([l,v,f],i)=>l===""?<tr key={i}><td colSpan={3} style={{borderBottom:`1px solid ${T.border}`,height:8}}/></tr>:
+                  <tr key={i}><td style={{padding:"3px 0",color:l.includes("TOTAL")?T.ink:T.inkMid,fontWeight:l.includes("TOTAL")?700:400}}>{l}</td><td style={{padding:"3px 8px",fontWeight:l.includes("TOTAL")?800:600,fontFamily:"'DM Mono',monospace",textAlign:"right",color:l.includes("TOTAL")?T.purple:T.ink}}>{v}</td><td style={{padding:"3px 0",fontSize:9,color:T.inkLight,fontStyle:"italic"}}>{f}</td></tr>
+                )}
+                </tbody>
+              </table>
+            </Card>
+
+            <Card accent={T.green}>
+              <STit color={T.green}>✅ Resumen final</STit>
+              <table style={{width:"100%",fontSize:11,borderCollapse:"collapse"}}>
+                <tbody>
+                {[
+                  ["Devengado bruto",fmt(calc.dev),"Lo que se genera"],
+                  ["(-) Deducciones empleado",fmt(calc.totD),"EPS + Pen + RteF"],
+                  ["= NETO A PAGAR",fmt(calc.neto),"Lo que recibe el trabajador"],
+                  ["","",""],
+                  ["Q1 — Anticipo fijo",fmt(calc.q1),fmt(selN.sal)+" × "+((selN.q1Pct||0.5)*100)+"%"],
+                  ["Q2 — Ajuste real",fmt(calc.q2),"Neto − Q1"],
+                  ["","",""],
+                  ["(+) Aportes empleador",fmt(calc.totAp),"Lo que paga la empresa adicional"],
+                  ["(+) Provisiones",fmt(calc.totPr),"Reserva mensual obligatoria"],
+                  ["","",""],
+                  ["COSTO TOTAL EMPRESA",fmt(calc.costoT),"Devengado + Aportes + Provisiones"],
+                  ["Factor prestacional",calc.salProp>0?(calc.costoT/calc.salProp).toFixed(3)+"×":"—","Costo ÷ Sal.prop"],
+                  ["Costo/hora (240h/mes)",fmt(calc.costoT/240),"Costo ÷ 240"],
+                ].map(([l,v,f],i)=>l===""?<tr key={i}><td colSpan={3} style={{borderBottom:`1px solid ${T.border}`,height:8}}/></tr>:
+                  <tr key={i} style={{background:l.includes("NETO")?"#E8F4EE":l.includes("COSTO TOTAL")?"#F5F4F1":"transparent"}}><td style={{padding:"4px 6px",color:l.includes("NETO")||l.includes("COSTO")?T.ink:T.inkMid,fontWeight:l.includes("=")||l.includes("COSTO")?700:400}}>{l}</td><td style={{padding:"4px 8px",fontWeight:l.includes("=")||l.includes("COSTO")?800:600,fontFamily:"'DM Mono',monospace",textAlign:"right",color:l.includes("NETO")?T.green:l.includes("COSTO")?T.ink:T.ink,fontSize:l.includes("NETO")||l.includes("COSTO")?14:12}}>{v}</td><td style={{padding:"4px 0",fontSize:9,color:T.inkLight,fontStyle:"italic"}}>{f}</td></tr>
+                )}
+                </tbody>
+              </table>
+              <div style={{marginTop:10,padding:"8px 10px",background:T.accent,borderRadius:4,fontSize:9,color:T.inkLight,lineHeight:1.6}}>
+                <strong>Normativa:</strong> CST Arts. 127-128 (salario/no salarial) · Ley 100/93 (IBC, aportes) · Art. 114-1 ET (exoneración) · Ley 1393/2010 (límite 40%) · Decretos 1469-1470/2025 (SMLMV, Aux.T)
+              </div>
+            </Card>
+          </div>
         )}
       </div>
     );
