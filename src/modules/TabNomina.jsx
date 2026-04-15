@@ -308,6 +308,11 @@ export function TabNomina(){
                 <div style={{fontSize:10,color:T.inkLight,marginTop:4}}>{fPct(selN.q1Pct||0.5)} × {fmt(selN.sal)}</div>
               </div>
               <div style={{fontSize:10,color:T.inkLight,marginTop:10}}>📅 Pago: 15 de {MESES[mes]}</div>
+              {(()=>{const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);const ape=(selN.nombre||"").split(" ").slice(-2).join(" ").toUpperCase();const ref=`NOM ${mAbr}${a2} Q1 - ${ape}`;return <div style={{display:"flex",alignItems:"center",gap:6,marginTop:6,background:"#F5F4F1",borderRadius:4,padding:"6px 10px"}}>
+                <span style={{fontSize:9,color:T.inkLight}}>Ref:</span>
+                <code style={{flex:1,fontSize:11,fontFamily:"'DM Mono',monospace",color:T.ink,fontWeight:600}}>{ref}</code>
+                <button onClick={()=>{navigator.clipboard.writeText(ref);}} style={{padding:"2px 8px",fontSize:9,border:"1px solid "+T.border,borderRadius:4,background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>📋 Copiar</button>
+              </div>;})()}
               <Btn small style={{marginTop:8,width:"100%",justifyContent:"center"}} onClick={()=>{
                 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 *{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;font-size:10pt;color:#111}
@@ -356,6 +361,11 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
                 {calc.q2<0&&<div style={{fontSize:10,color:T.red,marginTop:4,fontWeight:600}}>⚠ Saldo negativo</div>}
               </div>
               <div style={{fontSize:10,color:T.inkLight,marginTop:10}}>📅 Pago: último día hábil de {MESES[mes]}</div>
+              {(()=>{const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);const ape=(selN.nombre||"").split(" ").slice(-2).join(" ").toUpperCase();const ref=`NOM ${mAbr}${a2} Q2 - ${ape}`;return <div style={{display:"flex",alignItems:"center",gap:6,marginTop:6,background:"#F5F4F1",borderRadius:4,padding:"6px 10px"}}>
+                <span style={{fontSize:9,color:T.inkLight}}>Ref:</span>
+                <code style={{flex:1,fontSize:11,fontFamily:"'DM Mono',monospace",color:T.ink,fontWeight:600}}>{ref}</code>
+                <button onClick={()=>{navigator.clipboard.writeText(ref);}} style={{padding:"2px 8px",fontSize:9,border:"1px solid "+T.border,borderRadius:4,background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>📋 Copiar</button>
+              </div>;})()}
               <Btn small style={{marginTop:8,width:"100%",justifyContent:"center"}} onClick={()=>{
                 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 *{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;font-size:10pt;color:#111}
