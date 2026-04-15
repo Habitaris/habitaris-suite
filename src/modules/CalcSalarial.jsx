@@ -718,6 +718,37 @@ window.onload=function(){
   const [propForm,setPropForm]=useState({modo:"link",ciudad:"Bogotá D.C.",centro:"",candidato_nombre:"",tipo_documento:"CC",candidato_cc:"",candidato_email:"",candidato_celular:"",candidato_eps:"",candidato_pension:"",entidadBancaria:"",cuentaBancaria:"",estado_inicial:"propuesta"});
   const upP=(k,v)=>setPropForm(p=>({...p,[k]:v}));
 
+  // Document checklist for expediente
+  const ALL_DOCS = {
+    candidato: [
+      {key:"cedula_anverso",label:"Cédula anverso",def:true},
+      {key:"cedula_reverso",label:"Cédula reverso",def:true},
+      {key:"contrasena",label:"Contraseña",def:false},
+      {key:"cert_eps",label:"Certificado EPS",def:true},
+      {key:"cert_pension",label:"Certificado Pensiones",def:true},
+      {key:"cert_banco",label:"Certificado cuenta bancaria",def:true},
+      {key:"hoja_vida",label:"Hoja de vida",def:false},
+      {key:"cert_estudio",label:"Certificados estudio",def:false},
+      {key:"libreta_militar",label:"Libreta militar",def:false},
+      {key:"rut",label:"RUT",def:false},
+    ],
+    empresa: [
+      {key:"condiciones_trabajador",label:"Condiciones trabajador",def:true},
+      {key:"condiciones_empleador",label:"Condiciones empleador",def:true},
+      {key:"contrato",label:"Contrato laboral",def:true},
+      {key:"descriptor",label:"Descriptor de cargo",def:true},
+      {key:"centro_trabajo",label:"Centro de trabajo",def:true},
+      {key:"examen_medico",label:"Examen médico",def:true},
+      {key:"recomendaciones_sst",label:"Recomendaciones SST",def:true},
+      {key:"psicotecnico",label:"Psicotécnicos / DISC",def:true},
+      {key:"antecedentes",label:"Antecedentes",def:true},
+      {key:"cert_arl",label:"ARL",def:true},
+      {key:"cert_caja",label:"Caja compensación",def:true},
+    ]
+  };
+  const [selDocs,setSelDocs]=useState(()=>{const s={};[...ALL_DOCS.candidato,...ALL_DOCS.empresa].forEach(d=>{s[d.key]=d.def});return s;});
+  const toggleDoc=(key)=>setSelDocs(p=>({...p,[key]:!p[key]}));
+
   const generarPropuesta = async () => {
     if(!cargo){alert("El cargo es obligatorio");return;}
     if(!valorSal){alert("Ingresa el salario");return;}
@@ -741,6 +772,7 @@ window.onload=function(){
         empleador: { salario_base:neg.salario, ibc:neg.ibc, eps_empleador:neg.sEr, pension_empleador:neg.pEr, arl:neg.arlV, arl_nivel:ARL[Math.max(0,arlIdx)]?.l||"I", caja:neg.caja, icbf:neg.icbf, sena:neg.sena, total_aportes:neg.totAp, prima:neg.pri, cesantias:neg.ces, int_cesantias:neg.intC, vacaciones:neg.vac, total_provisiones:neg.totPr, costo_total_mes:neg.costoT, costo_indirecto:neg.costoInd, factor:neg.salario>0?(neg.costoT/neg.salario).toFixed(2):"—", exoneracion_114:art114, duracion_meses:durMode==="meses"?durMeses:Math.round((contrato.durDias||180)/30), costo_contrato:neg.costoT*(durMode==="meses"?durMeses:Math.round((contrato.durDias||180)/30)) },
         generado: new Date().toISOString()
       },
+      _docs_requeridos: selDocs,
     };
     try {
       const r = await fetch("/api/hiring",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
@@ -815,6 +847,28 @@ window.onload=function(){
             </select>
           </div>
         </>}
+
+        {/* Documentos requeridos */}
+        <div style={{margin:"12px 0 0"}}>
+          <div style={{fontSize:11,fontWeight:700,color:"#666",letterSpacing:1,textTransform:"uppercase",marginBottom:6}}>Documentos del expediente</div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,border:"1px solid #E5E3DE",borderRadius:8,overflow:"hidden"}}>
+            <div style={{padding:"8px 10px",borderRight:"1px solid #E5E3DE"}}>
+              <div style={{fontSize:10,fontWeight:700,color:"#111",marginBottom:4}}>👤 Candidato</div>
+              {ALL_DOCS.candidato.map(d=><label key={d.key} style={{display:"flex",alignItems:"center",gap:5,fontSize:10,color:"#555",padding:"2px 0",cursor:"pointer"}}>
+                <input type="checkbox" checked={!!selDocs[d.key]} onChange={()=>toggleDoc(d.key)} style={{margin:0,accentColor:"#1E6B42"}}/>
+                {d.label}
+              </label>)}
+            </div>
+            <div style={{padding:"8px 10px"}}>
+              <div style={{fontSize:10,fontWeight:700,color:"#111",marginBottom:4}}>🏢 Empresa</div>
+              {ALL_DOCS.empresa.map(d=><label key={d.key} style={{display:"flex",alignItems:"center",gap:5,fontSize:10,color:"#555",padding:"2px 0",cursor:"pointer"}}>
+                <input type="checkbox" checked={!!selDocs[d.key]} onChange={()=>toggleDoc(d.key)} style={{margin:0,accentColor:"#1E6B42"}}/>
+                {d.label}
+              </label>)}
+            </div>
+          </div>
+          <div style={{fontSize:9,color:"#999",marginTop:4}}>{Object.values(selDocs).filter(Boolean).length} documentos seleccionados</div>
+        </div>
 
         {/* Resumen */}
         <div style={{background:"#F5F4F1",borderRadius:8,padding:"10px 14px",margin:"14px 0",fontSize:11,color:"#555",display:"grid",gridTemplateColumns:"1fr 1fr",gap:4}}>
