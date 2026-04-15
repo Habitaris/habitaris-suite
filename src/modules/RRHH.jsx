@@ -3350,7 +3350,8 @@ function AnexosPanel({p}){
   ];
 
   const total = CATS.reduce((s,c)=>s+c.docs.length,0);
-  const subidos = CATS.reduce((s,c)=>s+c.docs.filter(d=>docs[d.key]).length,0);
+  const subidos = CATS.reduce((s,c)=>s+c.docs.filter(d=>docs[d.key]&&!docs[d.key].pendiente).length,0);
+  const pendientes = CATS.reduce((s,c)=>s+c.docs.filter(d=>docs[d.key]&&docs[d.key].pendiente).length,0);
 
   const sCard = {borderRadius:8,border:'1px solid #D1FAE5',padding:16,background:'#F0FDF4',marginTop:12};
   const btnS = {border:'none',padding:'4px 10px',borderRadius:5,cursor:'pointer',fontSize:10,fontFamily:'DM Sans,sans-serif',fontWeight:600};
@@ -3360,13 +3361,14 @@ function AnexosPanel({p}){
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer'}} onClick={()=>setExpanded(!expanded)}>
         <div>
           <div style={{fontWeight:700,fontSize:14,color:'#065F46'}}>📁 Expediente del empleado</div>
-          <div style={{fontSize:11,color:'#555',marginTop:2}}>{nombre} · {subidos}/{total} documentos</div>
+          <div style={{fontSize:11,color:'#555',marginTop:2}}>{nombre} · {subidos}✅ {pendientes>0?pendientes+"⏳ ":""}{total-(subidos+pendientes)}⬜ de {total}</div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:8}}>
-          <div style={{width:80,height:6,background:'#D1FAE5',borderRadius:3,overflow:'hidden'}}>
-            <div style={{height:'100%',width:(subidos/total*100)+'%',background:'#1E6B42',borderRadius:3,transition:'width .3s'}}/>
+          <div style={{width:80,height:6,background:'#E5E3DE',borderRadius:3,overflow:'hidden',display:'flex'}}>
+            <div style={{height:'100%',width:((subidos/total)*100)+'%',background:'#1E6B42',transition:'width .3s'}}/>
+            <div style={{height:'100%',width:((pendientes/total)*100)+'%',background:'#D97706',transition:'width .3s'}}/>
           </div>
-          <span style={{fontSize:11,fontWeight:700,color:'#1E6B42'}}>{Math.round(subidos/total*100)}%</span>
+          <span style={{fontSize:11,fontWeight:700,color:subidos===total?'#1E6B42':pendientes>0?'#D97706':'#999'}}>{Math.round((subidos+pendientes)/total*100)}%</span>
           <span style={{fontSize:16,color:'#999'}}>{expanded?'▾':'▸'}</span>
         </div>
       </div>
@@ -3381,15 +3383,18 @@ function AnexosPanel({p}){
             </div>
             {cat.docs.map(d=>{
               const uploaded=docs[d.key];
-              return <div key={d.key} style={{display:'flex',alignItems:'center',gap:8,padding:'5px 8px',borderBottom:'1px solid #E8F4EE',background:uploaded?'#FAFFF9':'transparent'}}>
-                <span style={{fontSize:12,width:20,textAlign:'center'}}>{uploaded?'✅':'⬜'}</span>
+              const isPending=uploaded&&uploaded.pendiente;
+              return <div key={d.key} style={{display:'flex',alignItems:'center',gap:8,padding:'5px 8px',borderBottom:'1px solid #E8F4EE',background:uploaded?(isPending?'#FFFBEB':'#FAFFF9'):'transparent'}}>
+                <span style={{fontSize:12,width:20,textAlign:'center'}}>{uploaded?(isPending?'⏳':'✅'):'⬜'}</span>
                 <span style={{flex:1,fontSize:12,color:'#111'}}>{d.label}</span>
-                {uploaded && <>
+                {uploaded && !isPending && <>
                   <span style={{fontSize:9,color:'#1E6B42'}}>{uploaded.nombre}</span>
                   {uploaded.data && <a href={uploaded.data} download={uploaded.nombre} style={{...btnS,background:'#E8F4EE',color:'#1E6B42'}}>↓</a>}
                 </>}
+                {isPending && <span style={{fontSize:9,color:'#D97706',fontWeight:600}}>Pendiente</span>}
                 {d.gen && <button style={{...btnS,background:'#1E6B42',color:'#fff'}} onClick={d.gen}>Generar</button>}
-                <button style={{...btnS,background:'#F5F4F1',color:'#555',border:'1px solid #E5E3DE'}} onClick={()=>subirDoc(d.key)}>{uploaded?'Reemplazar':'Subir'}</button>
+                {!uploaded && <button style={{...btnS,background:'#FFFBEB',color:'#D97706',border:'1px solid #FDE68A'}} onClick={()=>{const nd={...docs,[d.key]:{pendiente:true,fecha:new Date().toISOString()}};setDocs(nd);fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,_expediente:nd})}).catch(()=>{});}}>Pendiente</button>}
+                <button style={{...btnS,background:'#F5F4F1',color:'#555',border:'1px solid #E5E3DE'}} onClick={()=>subirDoc(d.key)}>{uploaded&&!isPending?'Reemplazar':'Subir'}</button>
               </div>;
             })}
           </div>;
@@ -4081,11 +4086,11 @@ function TabContratacion({onNuevaPropuesta}) {
                       {(p.estado==="firma_pendiente") && <>
                         <span style={{padding:"6px 12px",fontSize:11,fontWeight:600,background:"#FEF3C7",borderRadius:6,color:"#D97706"}}>⏳ Esperando firmas</span>
                       </>}
-                      {(p.estado==="firma_pendiente"||p.estado==="firmado"||p.estado==="afiliaciones"||p.estado==="completado") && <AnexosPanel p={p}/>}
+                      {p.estado!=="cancelado" && <AnexosPanel p={p}/>}
                       {p.estado==="firmado" && <>
                       <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"afiliaciones"})});loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #0891B2",borderRadius:6,background:"#E0F2FE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#0891B2"}}>🏛️ Registrar afiliaciones</button>
                     </>}
-                    {(p.estado==="afiliaciones"||p.estado==="firma_pendiente"||p.estado==="firmado") && <span style={{fontSize:10,color:"#0891B2",fontStyle:"italic"}}>Las afiliaciones se gestionan en el expediente del empleado ↑</span>}
+                    {false /* afiliaciones now in expediente panel */}
                     {p.estado==="completado" && <>
                       <span style={{padding:"6px 12px",fontSize:11,fontWeight:600,background:"#DCFCE7",borderRadius:6,color:"#059669"}}>✅ Proceso completo{p.expediente_num ? " · Exp. "+p.expediente_num : ""}</span>
                     </>}
