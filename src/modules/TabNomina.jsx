@@ -136,6 +136,90 @@ export function TabNomina(){
           <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selN.nombre}</div><div style={{fontSize:11,color:T.inkLight}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio}</div></div>
           {ed&&<Btn pri small onClick={()=>u({estado:"aprobada"})}>✓ Aprobar</Btn>}
           <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
+          <Btn small onClick={()=>{
+            const nDias=selN.novDias||{};
+            const novList=Object.entries(nDias).sort().map(([k,v])=>{const d=new Date(k+"T12:00:00");const info=NOV_TIPOS.find(n=>n.id===v);return{fecha:d.toLocaleDateString("es-CO",{weekday:"long",day:"numeric",month:"long"}),tipo:info?.label||v,icon:info?.icon||""};});
+            const festList=festivosMes.map(h=>({fecha:h.date.toLocaleDateString("es-CO",{weekday:"long",day:"numeric",month:"long"}),name:h.name}));
+            const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);
+            const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:700px;margin:0 auto;padding:30px 40px;font-size:10pt;color:#111;line-height:1.5}
+.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #1E6B42;padding-bottom:10px;margin-bottom:16px}.logo{font-weight:800;font-size:18px;color:#1E6B42}
+h1{font-size:13pt;text-align:center;margin-bottom:4px}h2{font-size:11pt;margin:16px 0 8px;color:#1E6B42;border-bottom:1px solid #E5E3DE;padding-bottom:4px}
+.sub{font-size:9pt;color:#666;text-align:center;margin-bottom:16px}
+.info{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:16px;font-size:10pt}.info span{color:#666}.info b{color:#111}
+table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:9.5pt}
+th{background:#111;color:#fff;text-align:left;padding:5px 8px;font-size:8pt;text-transform:uppercase;letter-spacing:.5px}
+td{padding:4px 8px;border-bottom:1px solid #eee}
+.fest{background:#FEF3C7}.nov{background:#FEE2E2}
+.summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:16px 0}
+.sbox{border:1px solid #E5E3DE;border-radius:6px;padding:10px;text-align:center}
+.sbox .n{font-size:20pt;font-weight:800;font-family:monospace}.sbox .l{font-size:8pt;color:#666;text-transform:uppercase;letter-spacing:.5px}
+.green{color:#1E6B42}.red{color:#dc2626}.blue{color:#2563eb}
+.sig{margin-top:40px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;text-align:center;font-size:9pt}
+.sig div{border-top:1px solid #111;padding-top:6px}
+.np{text-align:center;margin:20px 0}.btn{background:#111;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
+.foot{font-size:7pt;color:#ccc;text-align:center;margin-top:20px}
+@media print{.np{display:none}}
+</style></head><body>
+<div class="hdr"><span class="logo">HABITARIS S.A.S</span><span style="font-size:8pt;color:#999">NIT: 901.922.136-8</span></div>
+<h1>REPORTE DE NOVEDADES DE NÓMINA</h1>
+<div class="sub">${MESES[mes]} ${anio} · Ref: NOV-${mAbr}${a2}</div>
+
+<div class="info">
+<div><span>Empleado: </span><b>${selN.nombre}</b></div>
+<div><span>Documento: </span><b>${selN.cc}</b></div>
+<div><span>Cargo: </span><b>${selN.cargo}</b></div>
+<div><span>Contrato: </span><b>${selN.tipoContrato||"fijo"}</b></div>
+<div><span>EPS: </span><b>${selN.eps||"—"}</b></div>
+<div><span>Fondo pensión: </span><b>${selN.pen||"—"}</b></div>
+<div><span>Banco: </span><b>${selN.banco||"—"}</b></div>
+<div><span>Cuenta: </span><b>${selN.cuenta||"—"}</b></div>
+</div>
+
+<h2>Festivos del mes</h2>
+<table><thead><tr><th>Fecha</th><th>Motivo</th></tr></thead><tbody>
+${festList.length>0?festList.map(f=>`<tr class="fest"><td>${f.fecha}</td><td>🔶 ${f.name} — Descanso remunerado</td></tr>`).join(""):`<tr><td colspan="2" style="color:#999;text-align:center">Sin festivos este mes</td></tr>`}
+</tbody></table>
+
+<h2>Novedades registradas</h2>
+<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Observación</th></tr></thead><tbody>
+${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.icon} ${n.tipo}</td><td></td></tr>`).join(""):`<tr><td colspan="3" style="color:#999;text-align:center">Sin novedades este mes</td></tr>`}
+${selN.nov?`<tr><td colspan="3" style="font-size:9pt;color:#666">Notas: ${selN.nov}</td></tr>`:""}
+</tbody></table>
+
+<h2>Resumen del período</h2>
+<div class="summary">
+<div class="sbox"><div class="n">${calc.dias}</div><div class="l">Días salario</div></div>
+<div class="sbox"><div class="n">${calc.festMes}</div><div class="l">Festivos (L-S)</div></div>
+<div class="sbox"><div class="n">${selN.diasLicRem||0}</div><div class="l">Lic. remunerada</div></div>
+<div class="sbox"><div class="n green">${calc.diasComm}</div><div class="l">Días transporte</div></div>
+<div class="sbox"><div class="n green">${calc.diasAsist}</div><div class="l">Días asistidos</div></div>
+<div class="sbox"><div class="n">${selN.diasIncap||0}</div><div class="l">Incapacidad</div></div>
+</div>
+
+<h2>Impacto en nómina</h2>
+<table><thead><tr><th>Concepto</th><th>Días</th><th>Valor</th><th>Observación</th></tr></thead><tbody>
+<tr><td>Salario base</td><td>${calc.dias}/30</td><td style="font-family:monospace;text-align:right">${fmt(calc.salProp)}</td><td>Lic.rem NO reduce salario</td></tr>
+<tr><td>Auxilio transporte</td><td>${calc.diasComm}/30</td><td style="font-family:monospace;text-align:right">${fmt(calc.aux)}</td><td>Incluye festivos, excluye novedades</td></tr>
+<tr><td>Bono asistencia (Art.128)</td><td>${calc.diasAsist}/30</td><td style="font-family:monospace;text-align:right">${fmt(calc.bono)}</td><td>Excluye festivos y novedades</td></tr>
+<tr style="font-weight:700;border-top:2px solid #111"><td>Total devengado</td><td></td><td style="font-family:monospace;text-align:right">${fmt(calc.dev)}</td><td></td></tr>
+<tr><td>EPS empleado (4%)</td><td></td><td style="font-family:monospace;text-align:right;color:#dc2626">-${fmt(calc.epsE)}</td><td>IBC: ${fmt(calc.ibc)}</td></tr>
+<tr><td>Pensión empleado (4%)</td><td></td><td style="font-family:monospace;text-align:right;color:#dc2626">-${fmt(calc.penE)}</td><td>IBC: ${fmt(calc.ibc)}</td></tr>
+<tr style="font-weight:700;background:#E8F4EE"><td>Neto a pagar</td><td></td><td style="font-family:monospace;text-align:right;color:#1E6B42;font-size:12pt">${fmt(calc.neto)}</td><td></td></tr>
+<tr><td style="padding-left:20px">Q1 anticipo (${((selN.q1Pct||0.5)*100).toFixed(0)}%)</td><td></td><td style="font-family:monospace;text-align:right;color:#2563eb">${fmt(calc.q1)}</td><td>Pago: 15 ${MESES[mes].toLowerCase()}</td></tr>
+<tr><td style="padding-left:20px">Q2 ajuste</td><td></td><td style="font-family:monospace;text-align:right;color:#1E6B42">${fmt(calc.q2)}</td><td>Pago: fin de mes</td></tr>
+</tbody></table>
+
+<div class="sig">
+<div>Elaborado por<br><span style="color:#999">RRHH Habitaris</span></div>
+<div>Revisado por<br><span style="color:#999">Contador</span></div>
+<div>Aprobado por<br><span style="color:#999">Gerencia</span></div>
+</div>
+<div class="foot">Generado por Habitaris Suite · ${new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})} · Ref: NOV-${mAbr}${a2}-${(selN.cc||"").slice(-4)}</div>
+<div class="np"><button class="btn" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button></div>
+</body></html>`;
+            window.open(URL.createObjectURL(new Blob([html],{type:"text/html;charset=utf-8"})),"_blank");
+          }}>📄 Reporte novedades</Btn>
           <Pill e={selN.estado}/>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:14}}>
