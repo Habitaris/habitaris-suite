@@ -752,7 +752,17 @@ window.onload=function(){
   const generarPropuesta = async () => {
     if(!cargo){alert("El cargo es obligatorio");return;}
     if(!valorSal){alert("Ingresa el salario");return;}
-    if(propForm.modo==="manual"&&!propForm.candidato_nombre){alert("Nombre del candidato es obligatorio");return;}
+    if(propForm.modo==="manual"){
+      const f=propForm;
+      if(!f.candidato_nombre){alert("Nombre del candidato es obligatorio");return;}
+      if(!f.candidato_cc){alert("Número de documento es obligatorio");return;}
+      if(!f.candidato_email){alert("Email es obligatorio");return;}
+      if(!f.candidato_celular){alert("Celular es obligatorio");return;}
+      if(!f.candidato_eps){alert("EPS es obligatoria");return;}
+      if(!f.candidato_pension){alert("Fondo de pensión es obligatorio");return;}
+      if(!f.entidadBancaria){alert("Banco es obligatorio");return;}
+      if(!f.cuentaBancaria){alert("Número de cuenta es obligatorio");return;}
+    }
     const body = {
       cargo, area:"", tipo_contrato:tipoCon||"fijo", duracion_meses:durMode==="meses"?durMeses:Math.round((contrato.durDias||180)/30),
       modo_salario:modoSal, salario_neto:neg.neto, salario_base:neg.salario, auxilio_transporte:neg.auxDev,
@@ -831,13 +841,43 @@ window.onload=function(){
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
             <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Nombre completo *</label><input value={propForm.candidato_nombre} onChange={e=>upP("candidato_nombre",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
             <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Documento *</label><div style={{display:"flex",gap:4}}><select value={propForm.tipo_documento} onChange={e=>upP("tipo_documento",e.target.value)} style={{padding:"7px 6px",border:"1px solid #E5E3DE",borderRadius:"6px 0 0 6px",fontSize:11,fontFamily:"'DM Sans',sans-serif",background:"#F5F4F1",color:"#111"}}><option value="CC">CC</option><option value="CE">CE</option><option value="TI">TI</option><option value="PP">PP</option><option value="NIT">NIT</option><option value="PEP">PEP</option><option value="PPT">PPT</option></select><input placeholder="Número" value={propForm.candidato_cc} onChange={e=>upP("candidato_cc",e.target.value)} style={{flex:1,padding:"7px 10px",border:"1px solid #E5E3DE",borderLeft:"none",borderRadius:"0 6px 6px 0",fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div></div>
-            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Email</label><input value={propForm.candidato_email} onChange={e=>upP("candidato_email",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
-            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Celular</label><div style={{display:"flex"}}><select value={propForm.cod_pais||"+57"} onChange={e=>upP("cod_pais",e.target.value)} style={{padding:"7px 4px",border:"1px solid #E5E3DE",borderRadius:"6px 0 0 6px",borderRight:"none",fontSize:11,fontFamily:"'DM Sans',sans-serif",background:"#F5F4F1",color:"#555"}}>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Email *</label><input value={propForm.candidato_email} onChange={e=>upP("candidato_email",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Celular *</label><div style={{display:"flex"}}><select value={propForm.cod_pais||"+57"} onChange={e=>upP("cod_pais",e.target.value)} style={{padding:"7px 4px",border:"1px solid #E5E3DE",borderRadius:"6px 0 0 6px",borderRight:"none",fontSize:11,fontFamily:"'DM Sans',sans-serif",background:"#F5F4F1",color:"#555"}}>
               <option value="+57">+57 🇨🇴</option><option value="+1">+1 🇺🇸</option><option value="+34">+34 🇪🇸</option><option value="+52">+52 🇲🇽</option><option value="+56">+56 🇨🇱</option><option value="+51">+51 🇵🇪</option><option value="+58">+58 🇻🇪</option><option value="+593">+593 🇪🇨</option>
             </select><input value={propForm.candidato_celular} onChange={e=>upP("candidato_celular",e.target.value)} placeholder="Número celular" style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:"0 6px 6px 0",fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div></div>
-            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>EPS</label><input value={propForm.candidato_eps} onChange={e=>upP("candidato_eps",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
-            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Fondo pensión</label><input value={propForm.candidato_pension} onChange={e=>upP("candidato_pension",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
-            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Banco</label><select value={propForm.entidadBancaria} onChange={e=>{const v=e.target.value;const digital=["Nequi","DaviPlata","Nu Colombia","Movii","Dale!"].includes(v);upP("entidadBancaria",v);if(digital)upP("tipoCuenta","deposito");else if(propForm.tipoCuenta==="deposito")upP("tipoCuenta","ahorros");}} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>EPS *</label><select value={propForm.candidato_eps} onChange={e=>upP("candidato_eps",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>
+              <option value="">— Seleccionar —</option>
+              <option value="Sanitas">Sanitas</option>
+              <option value="Sura">Sura (Suramericana)</option>
+              <option value="Nueva EPS">Nueva EPS</option>
+              <option value="Compensar">Compensar</option>
+              <option value="Famisanar">Famisanar</option>
+              <option value="Salud Total">Salud Total</option>
+              <option value="Coomeva">Coomeva</option>
+              <option value="Medimás">Medimás</option>
+              <option value="Aliansalud">Aliansalud</option>
+              <option value="Coosalud">Coosalud</option>
+              <option value="Mutual Ser">Mutual Ser</option>
+              <option value="Comfenalco Valle">Comfenalco Valle</option>
+              <option value="SOS">SOS</option>
+              <option value="Capital Salud">Capital Salud</option>
+              <option value="Savia Salud">Savia Salud</option>
+              <option value="Emssanar">Emssanar</option>
+              <option value="Asmet Salud">Asmet Salud</option>
+              <option value="Ecoopsos">Ecoopsos</option>
+              <option value="SISBEN">SISBEN (subsidiado)</option>
+              <option value="Otra">Otra</option>
+            </select></div>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Fondo pensión *</label><select value={propForm.candidato_pension} onChange={e=>upP("candidato_pension",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>
+              <option value="">— Seleccionar —</option>
+              <option value="Porvenir">Porvenir</option>
+              <option value="Protección">Protección</option>
+              <option value="Colfondos">Colfondos</option>
+              <option value="Skandia">Skandia</option>
+              <option value="Colpensiones">Colpensiones (RPM)</option>
+              <option value="Otro">Otro</option>
+            </select></div>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Banco *</label><select value={propForm.entidadBancaria} onChange={e=>{const v=e.target.value;const digital=["Nequi","DaviPlata","Nu Colombia","Movii","Dale!"].includes(v);upP("entidadBancaria",v);if(digital)upP("tipoCuenta","deposito");else if(propForm.tipoCuenta==="deposito")upP("tipoCuenta","ahorros");}} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>
               <option value="">— Seleccionar —</option>
               <option value="Bancolombia">Bancolombia</option>
               <option value="Davivienda">Davivienda</option>
@@ -863,7 +903,7 @@ window.onload=function(){
               <option value="Dale!">Dale!</option>
               <option value="Otro">Otro</option>
             </select></div>
-            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Tipo cuenta</label><div style={{display:"flex",gap:0}}><select value={propForm.tipoCuenta} onChange={e=>upP("tipoCuenta",e.target.value)} style={{padding:"7px 6px",border:"1px solid #E5E3DE",borderRadius:"6px 0 0 6px",borderRight:"none",fontSize:11,fontFamily:"'DM Sans',sans-serif",background:"#F5F4F1"}}>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Tipo cuenta / Nº *</label><div style={{display:"flex",gap:0}}><select value={propForm.tipoCuenta} onChange={e=>upP("tipoCuenta",e.target.value)} style={{padding:"7px 6px",border:"1px solid #E5E3DE",borderRadius:"6px 0 0 6px",borderRight:"none",fontSize:11,fontFamily:"'DM Sans',sans-serif",background:"#F5F4F1"}}>
               <option value="ahorros">Ahorros</option><option value="corriente">Corriente</option><option value="deposito">Depósito electrónico</option>
             </select><input value={propForm.cuentaBancaria} onChange={e=>upP("cuentaBancaria",e.target.value)} placeholder="Nº de cuenta" style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:"0 6px 6px 0",fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div></div>
           </div>
