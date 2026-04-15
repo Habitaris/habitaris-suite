@@ -752,7 +752,11 @@ window.onload=function(){
   return <div style={{fontFamily:"'DM Sans',sans-serif",color:"#111111"}}>
     <div style={{padding:"0 0 6px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
       <div style={{display:"inline-block",fontSize:10,fontWeight:700,color:"#1E6B42",background:"#E8F4EE",padding:"3px 12px",borderRadius:14}}>🇨🇴 COLOMBIA 2026 · SMLMV {$(SMLMV_DEF)} · Aux. {$(AUX_DEF)}</div>
-      {neg&&neg.salario>0&&<button type="button" onClick={()=>setShowProp(true)} style={{padding:"8px 18px",background:"#1E6B42",color:"#fff",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:6}}>📤 Generar propuesta de empleo</button>}
+      {neg&&neg.salario>0&&<div style={{display:"flex",gap:6}}>
+        <button type="button" onClick={()=>openDoc("propuesta",false)} style={{padding:"8px 14px",background:"#fff",color:"#111",border:"1px solid #E5E3DE",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:4}}>📄 Ver propuesta</button>
+        <button type="button" onClick={()=>openDoc("propuesta",true)} style={{padding:"8px 14px",background:"#fff",color:"#111",border:"1px solid #E5E3DE",borderRadius:8,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:4}}>⬇ PDF</button>
+        <button type="button" onClick={()=>setShowProp(true)} style={{padding:"8px 18px",background:"#1E6B42",color:"#fff",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:6}}>📤 Generar propuesta de empleo</button>
+      </div>}
     </div>
 
     {/* ★ Modal completar datos propuesta */}
@@ -802,7 +806,7 @@ window.onload=function(){
         <div style={{background:"#F5F4F1",borderRadius:8,padding:"10px 14px",margin:"14px 0",fontSize:11,color:"#555",display:"grid",gridTemplateColumns:"1fr 1fr",gap:4}}>
           <span>Salario base: <strong>{$(neg.salario)}</strong></span>
           <span>Aux. transporte: <strong>{$(neg.auxDev)}</strong></span>
-          <span>Bono: <strong>{$(neg.bono)}</strong></span>
+          <span>{bonoConcepto||"Bono"}: <strong>{$(neg.bono)}</strong></span>
           <span>Neto: <strong style={{color:"#1E6B42"}}>{$(neg.neto)}</strong></span>
           <span>Aportes empl.: <strong>{$(neg.totAp)}</strong></span>
           <span>Costo total: <strong style={{color:"#111"}}>{$(neg.costoT)}/mes</strong></span>
