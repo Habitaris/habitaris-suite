@@ -43,9 +43,18 @@ export default async function handler(req,res){
       return res.status(200).json({ok:true,data:d4||[]});
     }
 
-    // POST - create new hiring process
+    // POST - create new hiring process or delete
     if(req.method==="POST"){
       var b=req.body||{};
+
+      // Delete action
+      if(b.action==="delete"&&b.id){
+        var rd=await fetch(SB_URL+"/rest/v1/hiring_processes?id=eq."+b.id,{method:"DELETE",headers:sbH()});
+        if(rd.ok)return res.status(200).json({ok:true});
+        var dd=await rd.text();
+        return res.status(rd.status).json({ok:false,error:dd||"Delete failed"});
+      }
+
       // Generate consecutive code
       var r5=await fetch(SB_URL+"/rest/v1/hiring_processes?select=codigo&order=created_at.desc&limit=1",{headers:sbH()});
       var d5=await r5.json();
