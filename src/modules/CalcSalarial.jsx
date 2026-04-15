@@ -715,7 +715,7 @@ window.onload=function(){
 
   // ★ Generate Proposal — modal with candidate data
   const [showProp,setShowProp]=useState(false);
-  const [propForm,setPropForm]=useState({modo:"link",ciudad:"Bogotá D.C.",centro:"",candidato_nombre:"",tipo_documento:"CC",candidato_cc:"",candidato_email:"",candidato_celular:"",candidato_eps:"",candidato_pension:"",entidadBancaria:"",cuentaBancaria:"",estado_inicial:"propuesta"});
+  const [propForm,setPropForm]=useState({modo:"link",ciudad:"Bogotá D.C.",centro:"",candidato_nombre:"",tipo_documento:"CC",candidato_cc:"",candidato_email:"",candidato_celular:"",candidato_eps:"",candidato_pension:"",entidadBancaria:"",tipoCuenta:"ahorros",cuentaBancaria:"",estado_inicial:"propuesta"});
   const upP=(k,v)=>setPropForm(p=>({...p,[k]:v}));
 
   // Document checklist for expediente
@@ -837,8 +837,35 @@ window.onload=function(){
             </select><input value={propForm.candidato_celular} onChange={e=>upP("candidato_celular",e.target.value)} placeholder="Número celular" style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:"0 6px 6px 0",fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div></div>
             <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>EPS</label><input value={propForm.candidato_eps} onChange={e=>upP("candidato_eps",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
             <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Fondo pensión</label><input value={propForm.candidato_pension} onChange={e=>upP("candidato_pension",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
-            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Banco</label><input value={propForm.entidadBancaria} onChange={e=>upP("entidadBancaria",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
-            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Nº cuenta</label><input value={propForm.cuentaBancaria} onChange={e=>upP("cuentaBancaria",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Banco</label><select value={propForm.entidadBancaria} onChange={e=>upP("entidadBancaria",e.target.value)} style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>
+              <option value="">— Seleccionar —</option>
+              <option value="Bancolombia">Bancolombia</option>
+              <option value="Davivienda">Davivienda</option>
+              <option value="BBVA">BBVA</option>
+              <option value="Banco de Bogotá">Banco de Bogotá</option>
+              <option value="Banco de Occidente">Banco de Occidente</option>
+              <option value="Banco Popular">Banco Popular</option>
+              <option value="Banco Caja Social">Banco Caja Social</option>
+              <option value="Scotiabank Colpatria">Scotiabank Colpatria</option>
+              <option value="Banco Agrario">Banco Agrario</option>
+              <option value="Banco AV Villas">Banco AV Villas</option>
+              <option value="Banco Itaú">Banco Itaú</option>
+              <option value="Banco GNB Sudameris">Banco GNB Sudameris</option>
+              <option value="Banco Falabella">Banco Falabella</option>
+              <option value="Banco Pichincha">Banco Pichincha</option>
+              <option value="Banco Serfinanza">Banco Serfinanza</option>
+              <option value="Lulo Bank">Lulo Bank</option>
+              <option value="Nequi">Nequi</option>
+              <option value="DaviPlata">DaviPlata</option>
+              <option value="Nu Colombia">Nu Colombia</option>
+              <option value="Rappipay">Rappipay</option>
+              <option value="Movii">Movii</option>
+              <option value="Dale!">Dale!</option>
+              <option value="Otro">Otro</option>
+            </select></div>
+            <div><label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Tipo cuenta</label><div style={{display:"flex",gap:0}}><select value={propForm.tipoCuenta} onChange={e=>upP("tipoCuenta",e.target.value)} style={{padding:"7px 6px",border:"1px solid #E5E3DE",borderRadius:"6px 0 0 6px",borderRight:"none",fontSize:11,fontFamily:"'DM Sans',sans-serif",background:"#F5F4F1"}}>
+              <option value="ahorros">Ahorros</option><option value="corriente">Corriente</option>
+            </select><input value={propForm.cuentaBancaria} onChange={e=>upP("cuentaBancaria",e.target.value)} placeholder="Nº de cuenta" style={{width:"100%",padding:"7px 10px",border:"1px solid #E5E3DE",borderRadius:"0 6px 6px 0",fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/></div></div>
           </div>
           <div style={{marginTop:10}}>
             <label style={{display:"block",fontSize:10,fontWeight:600,color:"#666",marginBottom:2}}>Estado inicial</label>
