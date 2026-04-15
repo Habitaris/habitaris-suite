@@ -3371,7 +3371,7 @@ function AnexosPanel({p}){
   const catsEmp = CATS.filter(c=>c.section==="empresa");
   // Filter by required docs (if defined in process)
   const reqDocs = p._docs_requeridos;
-  const filterCats = (cats) => reqDocs ? cats.map(c=>({...c,docs:c.docs.filter(d=>reqDocs[d.key])})).filter(c=>c.docs.length>0) : cats;
+  const filterCats = (cats) => reqDocs ? cats.map(c=>({...c,docs:c.docs.filter(d=>reqDocs[d.key]===true||!(d.key in reqDocs))})).filter(c=>c.docs.length>0) : cats;
   const filtCand = filterCats(catsCand);
   const filtEmp = filterCats(catsEmp);
 
