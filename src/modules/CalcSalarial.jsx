@@ -8,9 +8,9 @@ export class ErrorBoundary extends Component{
   render(){
     if(this.state.error)return <div style={{padding:20,fontFamily:"system-ui",maxWidth:600,margin:"40px auto"}}>
       <h2 style={{color:"#dc2626"}}>⚠️ Error en la calculadora</h2>
-      <p style={{color:"#64748b",margin:"10px 0"}}>Algo falló. Recarga la página (Cmd+R) o revisa los datos ingresados.</p>
+      <p style={{color:"#666666",margin:"10px 0"}}>Algo falló. Recarga la página (Cmd+R) o revisa los datos ingresados.</p>
       <pre style={{background:"#fef2f2",padding:12,borderRadius:8,fontSize:11,overflow:"auto",color:"#dc2626",border:"1px solid #fecaca"}}>{this.state.error.toString()}{this.state.info&&this.state.info.componentStack}</pre>
-      <button onClick={()=>this.setState({error:null,info:null})} style={{marginTop:10,padding:"8px 16px",background:"#0ea5e9",color:"#fff",border:"none",borderRadius:6,cursor:"pointer",fontWeight:700}}>🔄 Reintentar</button>
+      <button onClick={()=>this.setState({error:null,info:null})} style={{marginTop:10,padding:"8px 16px",background:"#111111",color:"#fff",border:"none",borderRadius:6,cursor:"pointer",fontWeight:700}}>🔄 Reintentar</button>
     </div>;
     return this.props.children;
   }
@@ -24,7 +24,7 @@ const INTEGRAL_F=13;
 const ARL=[{n:"I",t:0.522,d:"Mínimo"},{n:"II",t:1.044,d:"Bajo"},{n:"III",t:2.436,d:"Medio"},{n:"IV",t:4.350,d:"Alto"},{n:"V",t:6.960,d:"Máximo"}];
 const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const DL=["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
-const NOV=[{id:"none",l:"Trabajó",c:"#059669",i:"✓"},{id:"vac",l:"Vacaciones",c:"#0891b2",i:"🏖️"},{id:"eg",l:"Incap. EG",c:"#d97706",i:"🏥"},{id:"at",l:"Accid. trabajo",c:"#dc2626",i:"🚑"},{id:"lr",l:"Lic. remunerada",c:"#2563eb",i:"📋"},{id:"lnr",l:"Lic. NO rem.",c:"#6b7280",i:"⏸"},{id:"sus",l:"Suspensión",c:"#dc2626",i:"🚫"},{id:"aus",l:"Ausencia inj.",c:"#991b1b",i:"✗"}];
+const NOV=[{id:"none",l:"Trabajó",c:"#059669",i:"✓"},{id:"vac",l:"Vacaciones",c:"#0D5E6E",i:"🏖️"},{id:"eg",l:"Incap. EG",c:"#d97706",i:"🏥"},{id:"at",l:"Accid. trabajo",c:"#dc2626",i:"🚑"},{id:"lr",l:"Lic. remunerada",c:"#1E6B42",i:"📋"},{id:"lnr",l:"Lic. NO rem.",c:"#6b7280",i:"⏸"},{id:"sus",l:"Suspensión",c:"#dc2626",i:"🚫"},{id:"aus",l:"Ausencia inj.",c:"#991b1b",i:"✗"}];
 const MOTIVOS=[{id:"renuncia",l:"Renuncia voluntaria"},{id:"mutuo",l:"Mutuo acuerdo"},{id:"justa",l:"Justa causa (empleador)"},{id:"injusta",l:"Sin justa causa"},{id:"fin_fijo",l:"Fin de término fijo"}];
 
 // Horas extras y recargos (Arts. 168-171 CST, Ley 789/2002)
@@ -92,18 +92,18 @@ function getFSP(s,sm){const v=s/sm;if(v<4)return 0;if(v<16)return 1;if(v<17)retu
 /* ══════════════════════════════════════════════════════════════════
    UI PRIMITIVES
    ══════════════════════════════════════════════════════════════════ */
-function Card({t,icon,badge,accent,children}){return <div style={{background:"#fff",borderRadius:10,border:"1px solid #e2e8f0",marginBottom:10,overflow:"hidden",boxShadow:"0 1px 2px rgba(0,0,0,0.04)"}}><div style={{padding:"9px 14px",background:accent||"#f8fafc",borderBottom:"1px solid #e2e8f0",display:"flex",alignItems:"center",justifyContent:"space-between"}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{icon}</span><span style={{fontSize:12,fontWeight:700,color:"#1e293b"}}>{t}</span></div>{badge&&<span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:10,background:badge.bg,color:badge.c}}>{badge.t}</span>}</div><div style={{padding:"12px 14px"}}>{children}</div></div>}
-function In({label,value,onChange,type,suffix,prefix,help,disabled,w}){return <div style={{marginBottom:10}}>{label&&<label style={{display:"block",fontSize:11,fontWeight:600,color:"#64748b",marginBottom:2}}>{label}</label>}<div style={{display:"flex"}}>{prefix&&<span style={{padding:"7px 6px",background:"#f1f5f9",color:"#64748b",fontSize:12,fontWeight:700,border:"1px solid #e2e8f0",borderRight:"none",borderRadius:"6px 0 0 6px",display:"flex",alignItems:"center"}}>{prefix}</span>}<input type={type||"text"} value={value} onChange={onChange} disabled={disabled} style={{width:w||"100%",padding:"7px 10px",background:disabled?"#f8fafc":"#fff",border:"1px solid #e2e8f0",borderRadius:prefix&&suffix?0:prefix?"0 6px 6px 0":suffix?"6px 0 0 6px":6,color:"#1e293b",fontSize:13,fontFamily:"monospace",outline:"none",boxSizing:"border-box",opacity:disabled?.5:1}}/>{suffix&&<span style={{padding:"7px 6px",background:"#f1f5f9",color:"#94a3b8",fontSize:10,fontWeight:600,border:"1px solid #e2e8f0",borderLeft:"none",borderRadius:"0 6px 6px 0",display:"flex",alignItems:"center",whiteSpace:"nowrap"}}>{suffix}</span>}</div>{help&&<span style={{fontSize:9,color:"#94a3b8",display:"block",marginTop:1}}>{help}</span>}</div>}
-function Sel({label,value,onChange,options,help}){return <div style={{marginBottom:10}}>{label&&<label style={{display:"block",fontSize:11,fontWeight:600,color:"#64748b",marginBottom:2}}>{label}</label>}<select value={value} onChange={onChange} style={{width:"100%",padding:"7px 10px",background:"#fff",border:"1px solid #e2e8f0",borderRadius:6,color:"#1e293b",fontSize:12,outline:"none"}}>{options.map((o,i)=><option key={i} value={o.v}>{o.l}</option>)}</select>{help&&<span style={{fontSize:9,color:"#94a3b8",display:"block",marginTop:1}}>{help}</span>}</div>}
-function Tg({label,on,set,help}){return <div style={{display:"flex",alignItems:"flex-start",gap:8,marginBottom:8}}><button type="button" onClick={()=>set(!on)} style={{width:36,minWidth:36,height:20,borderRadius:10,cursor:"pointer",border:"none",padding:0,outline:"none",background:on?"#0ea5e9":"#cbd5e1",flexShrink:0,position:"relative"}}><div style={{width:14,height:14,borderRadius:7,background:"#fff",position:"absolute",top:3,left:on?19:3,transition:"left .15s"}}/></button><div><span style={{fontSize:11,fontWeight:600,color:"#334155",cursor:"pointer"}} onClick={()=>set(!on)}>{label}</span>{help&&<div style={{fontSize:9,color:"#94a3b8"}}>{help}</div>}</div></div>}
-function Rw({l,v,bold,hl,tasa,note}){const hc={green:"#059669",red:"#dc2626",blue:"#2563eb",purple:"#7c3aed",cyan:"#0891b2"};return <div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 0",borderBottom:"1px solid #f1f5f9"}}><div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}><span style={{fontSize:12,color:bold?"#0f172a":"#475569",fontWeight:bold?700:400}}>{l}</span>{tasa!=null&&<span style={{fontSize:8,background:"#dbeafe",color:"#1d4ed8",padding:"0 4px",borderRadius:4,fontWeight:600}}>{pc(tasa)}</span>}</div><span style={{fontSize:13,fontWeight:bold?800:600,fontFamily:"monospace",whiteSpace:"nowrap",color:hl?hc[hl]:bold?"#0f172a":"#334155"}}>{typeof v==="string"?v:$(v)}</span></div>{note&&<div style={{fontSize:9,color:"#94a3b8",margin:"-1px 0 2px"}}>{note}</div>}</div>}
-function Dv(){return <div style={{borderTop:"2px solid #e2e8f0",margin:"5px 0"}}/>}
-function Al({c:color,children}){const bg={y:"#fefce8",g:"#ecfdf5",b:"#eff6ff",r:"#fef2f2",p:"#faf5ff"};const bc={y:"#fde68a",g:"#a7f3d0",b:"#bfdbfe",r:"#fecaca",p:"#e9d5ff"};const tc={y:"#92400e",g:"#065f46",b:"#1e40af",r:"#991b1b",p:"#5b21b6"};return <div style={{background:bg[color],border:`1px solid ${bc[color]}`,borderRadius:8,padding:"7px 11px",marginTop:8,marginBottom:10,fontSize:11,color:tc[color],lineHeight:1.4}}>{children}</div>}
-function Bar({l,v,total,color}){const p=total>0?(v/total)*100:0;return <div style={{marginBottom:7}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}><span style={{fontSize:10,color:"#64748b"}}>{l}</span><span style={{fontSize:10,fontWeight:700,fontFamily:"monospace",color:"#334155"}}>{$(v)} ({p.toFixed(1)}%)</span></div><div style={{height:5,background:"#f1f5f9",borderRadius:3}}><div style={{height:"100%",width:Math.min(100,p)+"%",background:color,borderRadius:3,transition:"width .3s"}}/></div></div>}
-function BigBox({bg,children}){return <div style={{borderRadius:10,padding:14,marginBottom:10,color:"#fff",background:bg}}>{children}</div>}
+function Card({t,icon,badge,accent,children}){return <div style={{background:"#fff",borderRadius:8,border:"1px solid #E5E3DE",marginBottom:10,overflow:"hidden",boxShadow:"0 1px 2px rgba(0,0,0,0.04)"}}><div style={{padding:"9px 14px",background:accent||"#FAFAF8",borderBottom:"1px solid #E5E3DE",display:"flex",alignItems:"center",justifyContent:"space-between"}}><div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:14}}>{icon}</span><span style={{fontSize:12,fontWeight:700,color:"#111111"}}>{t}</span></div>{badge&&<span style={{fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:8,background:badge.bg,color:badge.c}}>{badge.t}</span>}</div><div style={{padding:"12px 14px"}}>{children}</div></div>}
+function In({label,value,onChange,type,suffix,prefix,help,disabled,w}){return <div style={{marginBottom:10}}>{label&&<label style={{display:"block",fontSize:11,fontWeight:600,color:"#666666",marginBottom:2}}>{label}</label>}<div style={{display:"flex"}}>{prefix&&<span style={{padding:"7px 6px",background:"#F5F4F1",color:"#666666",fontSize:12,fontWeight:700,border:"1px solid #E5E3DE",borderRight:"none",borderRadius:"6px 0 0 6px",display:"flex",alignItems:"center"}}>{prefix}</span>}<input type={type||"text"} value={value} onChange={onChange} disabled={disabled} style={{width:w||"100%",padding:"7px 10px",background:disabled?"#FAFAF8":"#fff",border:"1px solid #E5E3DE",borderRadius:prefix&&suffix?0:prefix?"0 6px 6px 0":suffix?"6px 0 0 6px":6,color:"#111111",fontSize:13,fontFamily:"'DM Mono',monospace",outline:"none",boxSizing:"border-box",opacity:disabled?.5:1}}/>{suffix&&<span style={{padding:"7px 6px",background:"#F5F4F1",color:"#999999",fontSize:10,fontWeight:600,border:"1px solid #E5E3DE",borderLeft:"none",borderRadius:"0 6px 6px 0",display:"flex",alignItems:"center",whiteSpace:"nowrap"}}>{suffix}</span>}</div>{help&&<span style={{fontSize:9,color:"#999999",display:"block",marginTop:1}}>{help}</span>}</div>}
+function Sel({label,value,onChange,options,help}){return <div style={{marginBottom:10}}>{label&&<label style={{display:"block",fontSize:11,fontWeight:600,color:"#666666",marginBottom:2}}>{label}</label>}<select value={value} onChange={onChange} style={{width:"100%",padding:"7px 10px",background:"#fff",border:"1px solid #E5E3DE",borderRadius:6,color:"#111111",fontSize:12,outline:"none"}}>{options.map((o,i)=><option key={i} value={o.v}>{o.l}</option>)}</select>{help&&<span style={{fontSize:9,color:"#999999",display:"block",marginTop:1}}>{help}</span>}</div>}
+function Tg({label,on,set,help}){return <div style={{display:"flex",alignItems:"flex-start",gap:8,marginBottom:8}}><button type="button" onClick={()=>set(!on)} style={{width:36,minWidth:36,height:20,borderRadius:8,cursor:"pointer",border:"none",padding:0,outline:"none",background:on?"#111111":"#CCCCCC",flexShrink:0,position:"relative"}}><div style={{width:14,height:14,borderRadius:7,background:"#fff",position:"absolute",top:3,left:on?19:3,transition:"left .15s"}}/></button><div><span style={{fontSize:11,fontWeight:600,color:"#111111",cursor:"pointer"}} onClick={()=>set(!on)}>{label}</span>{help&&<div style={{fontSize:9,color:"#999999"}}>{help}</div>}</div></div>}
+function Rw({l,v,bold,hl,tasa,note}){const hc={green:"#059669",red:"#dc2626",blue:"#1E6B42",purple:"#5B3A8C",cyan:"#0D5E6E"};return <div><div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 0",borderBottom:"1px solid #F5F4F1"}}><div style={{display:"flex",alignItems:"center",gap:4,flexWrap:"wrap"}}><span style={{fontSize:12,color:bold?"#111111":"#555555",fontWeight:bold?700:400}}>{l}</span>{tasa!=null&&<span style={{fontSize:8,background:"#E8F4EE",color:"#1E6B42",padding:"0 4px",borderRadius:4,fontWeight:600}}>{pc(tasa)}</span>}</div><span style={{fontSize:13,fontWeight:bold?800:600,fontFamily:"'DM Mono',monospace",whiteSpace:"nowrap",color:hl?hc[hl]:bold?"#111111":"#111111"}}>{typeof v==="string"?v:$(v)}</span></div>{note&&<div style={{fontSize:9,color:"#999999",margin:"-1px 0 2px"}}>{note}</div>}</div>}
+function Dv(){return <div style={{borderTop:"2px solid #E5E3DE",margin:"5px 0"}}/>}
+function Al({c:color,children}){const bg={y:"#fefce8",g:"#ecfdf5",b:"#E8F4EE",r:"#fef2f2",p:"#EDE8F4"};const bc={y:"#fde68a",g:"#a7f3d0",b:"#C8E6D0",r:"#fecaca",p:"#D4C4E8"};const tc={y:"#92400e",g:"#1E6B42",b:"#111111",r:"#991b1b",p:"#3B1F6E"};return <div style={{background:bg[color],border:`1px solid ${bc[color]}`,borderRadius:8,padding:"7px 11px",marginTop:8,marginBottom:10,fontSize:11,color:tc[color],lineHeight:1.4}}>{children}</div>}
+function Bar({l,v,total,color}){const p=total>0?(v/total)*100:0;return <div style={{marginBottom:7}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:2}}><span style={{fontSize:10,color:"#666666"}}>{l}</span><span style={{fontSize:10,fontWeight:700,fontFamily:"'DM Mono',monospace",color:"#111111"}}>{$(v)} ({p.toFixed(1)}%)</span></div><div style={{height:5,background:"#F5F4F1",borderRadius:3}}><div style={{height:"100%",width:Math.min(100,p)+"%",background:color,borderRadius:3,transition:"width .3s"}}/></div></div>}
+function BigBox({bg,children}){return <div style={{borderRadius:8,padding:14,marginBottom:10,color:"#fff",background:bg}}>{children}</div>}
 const G2=({children})=><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 12px"}}>{children}</div>;
 const G3=({children})=><div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:"0 10px"}}>{children}</div>;
-function TabBar({tabs,active,set}){return <div style={{display:"flex",gap:0,background:"#f1f5f9",borderRadius:8,padding:2,marginBottom:10,border:"1px solid #e2e8f0"}}>{tabs.map((t,i)=><button key={i} type="button" onClick={()=>set(i)} style={{flex:1,padding:"8px 3px",border:"none",borderRadius:6,cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit",background:active===i?"#0ea5e9":"transparent",color:active===i?"#fff":"#64748b",appearance:"none",outline:"none",transition:"all .15s"}}><span style={{display:"block",fontSize:13}}>{t.i}</span>{t.l}</button>)}</div>}
+function TabBar({tabs,active,set}){return <div style={{display:"flex",gap:0,background:"#F5F4F1",borderRadius:8,padding:2,marginBottom:10,border:"1px solid #E5E3DE"}}>{tabs.map((t,i)=><button key={i} type="button" onClick={()=>set(i)} style={{flex:1,padding:"8px 3px",border:"none",borderRadius:6,cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit",background:active===i?"#111111":"transparent",color:active===i?"#fff":"#666666",appearance:"none",outline:"none",transition:"all .15s"}}><span style={{display:"block",fontSize:13}}>{t.i}</span>{t.l}</button>)}</div>}
 
 /* ══════════════════════════════════════════════════════════════════
    CALCULATION ENGINES
@@ -504,41 +504,41 @@ export default function CalcSalarial(){
     const titulo=isEmp?`Resumen Empleador — ${cargo||"Sin cargo"}`:`Propuesta Salarial — ${cargo||"Sin cargo"}`;
 
     const css=`*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:system-ui,-apple-system,sans-serif;color:#1e293b;font-size:11.5px;line-height:1.5;padding:28px 40px;max-width:780px;margin:0 auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-h1{font-size:20px;font-weight:800;letter-spacing:-0.5px}h2{font-size:12px;font-weight:700;margin-bottom:6px;padding-bottom:4px;border-bottom:2px solid #e2e8f0}
-.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #0ea5e9;padding-bottom:10px;margin-bottom:14px}
+body{font-family:system-ui,-apple-system,sans-serif;color:#111111;font-size:11.5px;line-height:1.5;padding:28px 40px;max-width:780px;margin:0 auto;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+h1{font-size:20px;font-weight:800;letter-spacing:-0.5px}h2{font-size:12px;font-weight:700;margin-bottom:6px;padding-bottom:4px;border-bottom:2px solid #E5E3DE}
+.hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #111111;padding-bottom:10px;margin-bottom:14px}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .box{border:1px solid #d1d5db;border-radius:8px;padding:10px 12px;margin-bottom:8px}
 .tag{display:inline-block;font-size:8px;font-weight:600;padding:1px 6px;border-radius:8px;margin-left:4px}
-.row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #f1f5f9}.row b{font-family:monospace;font-size:12px}
-.lbl{font-size:8px;color:#64748b;text-transform:uppercase;letter-spacing:0.5px}.sub{font-size:9px;color:#94a3b8}
-.big{font-size:30px;font-weight:800;font-family:monospace}.sep{border-top:2px solid #e2e8f0;margin:5px 0}
-.neto{background:#059669!important;border-radius:10px;padding:14px 18px;color:#fff!important;text-align:center;margin:10px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact;border:3px solid #059669}
-.cost{background:#1e3a8a!important;border-radius:10px;padding:14px 18px;color:#fff!important;margin:10px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact;border:3px solid #1e3a8a}
+.row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #F5F4F1}.row b{font-family:monospace;font-size:12px}
+.lbl{font-size:8px;color:#666666;text-transform:uppercase;letter-spacing:0.5px}.sub{font-size:9px;color:#999999}
+.big{font-size:30px;font-weight:800;font-family:monospace}.sep{border-top:2px solid #E5E3DE;margin:5px 0}
+.neto{background:#059669!important;border-radius:8px;padding:14px 18px;color:#fff!important;text-align:center;margin:10px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact;border:3px solid #059669}
+.cost{background:#111111!important;border-radius:8px;padding:14px 18px;color:#fff!important;margin:10px 0;-webkit-print-color-adjust:exact;print-color-adjust:exact;border:3px solid #111111}
 .q{border-radius:8px;padding:12px;text-align:center;border:1px solid #d1d5db}
-.sig{border-top:1.5px solid #1e293b;padding-top:6px;text-align:center;margin-top:40px}
-.ft{font-size:8px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:6px;margin-top:16px}
+.sig{border-top:1.5px solid #111111;padding-top:6px;text-align:center;margin-top:40px}
+.ft{font-size:8px;color:#999999;border-top:1px solid #E5E3DE;padding-top:6px;margin-top:16px}
 table{width:100%;font-size:11px;border-collapse:collapse}td{padding:2px 0}td:last-child{font-weight:700}
-.hl{background:#f8fafc;border-radius:6px;padding:8px 10px;text-align:center}
+.hl{background:#FAFAF8;border-radius:6px;padding:8px 10px;text-align:center}
 @media print{@page{margin:1cm 1.5cm;size:A4}body{padding:0}*{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}.neto,.cost,.hdr,.box{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}}`+
 `.no-print{display:none}@media screen{.no-print{display:block}}`;
 
     // Header
-    let h=`<div class="hdr"><div><h1>${isEmp?"RESUMEN EMPLEADOR":"PROPUESTA SALARIAL"}</h1><div style="font-size:10px;color:#64748b">Colombia 2026 · Decretos 1469-1470/2025</div></div><div style="text-align:right;font-size:10px;color:#64748b"><b style="font-size:11px;color:#1e293b">${new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b></div></div>`;
+    let h=`<div class="hdr"><div><h1>${isEmp?"RESUMEN EMPLEADOR":"PROPUESTA SALARIAL"}</h1><div style="font-size:10px;color:#666666">Colombia 2026 · Decretos 1469-1470/2025</div></div><div style="text-align:right;font-size:10px;color:#666666"><b style="font-size:11px;color:#111111">${new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b></div></div>`;
 
     // Contract info
     h+=`<div class="g3" style="margin-bottom:10px">${[{l:"Cargo",v:cargo||"\u2014"},{l:"Contrato",v:tipoCon==="fijo"?"T\u00e9rmino fijo \u2014 "+(contrato.label||durCon+"m"):tipoCon==="indefinido"?"Indefinido":"Obra o labor"},{l:"Frecuencia",v:freqPago==="quincenal"?"Quincenal ("+pctQ1+"/"+String(100-pctQ1)+")":"Mensual"}].map(x=>'<div class="box" style="padding:6px 10px"><div class="lbl">'+x.l+'</div><div style="font-size:13px;font-weight:700">'+x.v+'</div></div>').join("")}</div>`;
 
     // Jornada + Conditions
-    h+=`<div class="g2" style="margin-bottom:10px"><div class="box"><h2>\ud83d\udd50 Jornada Laboral</h2><table><tr><td>D\u00edas/semana:</td><td>${dSem} \u2014 ${diasTrabajo}</td></tr><tr><td>Horario:</td><td>${hIni}:00 \u2014 ${hFin}:00 (${almuerzo}h almuerzo)</td></tr><tr><td>Horas/d\u00eda:</td><td>${hDia}h</td></tr><tr><td>Horas/semana:</td><td>${hSem}h</td></tr><tr><td>Horas/mes:</td><td>~${Math.round(hDia*dmLab)}h (${dmLab} d\u00edas)</td></tr>${hCont?"<tr><td>Total horas contrato:</td><td style='color:#0891b2;font-size:13px'>~"+hCont+"h</td></tr>":""}${tipoJornada==="parcial"&&dmDom>0?"<tr><td>Dominical (Art.172):</td><td>"+dmDom+"d/mes \u2014 Base salario: <b>"+dmProm+"d/mes</b></td></tr>":""}</table></div><div class="box"><h2>\ud83d\udccb Condiciones</h2><table><tr><td>Per\u00edodo de prueba:</td><td>${contrato.ppDias||60} d\u00edas</td></tr><tr><td>Vacaciones:</td><td>${contrato.vacDias||(tipoCon==="fijo"?(15*durCon/12).toFixed(1):"15")} d\u00edas h\u00e1biles</td></tr><tr><td>Salario m\u00ednimo:</td><td>${$(smlmv)}</td></tr><tr><td>Aux. transporte:</td><td>${$(auxTr)}</td></tr>${isEmp?"<tr><td>ARL:</td><td>Nivel "+ARL[Math.max(0,arlIdx)].n+" ("+pc(ARL[Math.max(0,arlIdx)].t)+")</td></tr>":""}${isEmp&&art114?"<tr><td colspan='2' style='color:#059669;font-weight:700'>\u2705 Exoneraci\u00f3n Art. 114-1</td></tr>":""}</table></div></div>`;
+    h+=`<div class="g2" style="margin-bottom:10px"><div class="box"><h2>\ud83d\udd50 Jornada Laboral</h2><table><tr><td>D\u00edas/semana:</td><td>${dSem} \u2014 ${diasTrabajo}</td></tr><tr><td>Horario:</td><td>${hIni}:00 \u2014 ${hFin}:00 (${almuerzo}h almuerzo)</td></tr><tr><td>Horas/d\u00eda:</td><td>${hDia}h</td></tr><tr><td>Horas/semana:</td><td>${hSem}h</td></tr><tr><td>Horas/mes:</td><td>~${Math.round(hDia*dmLab)}h (${dmLab} d\u00edas)</td></tr>${hCont?"<tr><td>Total horas contrato:</td><td style='color:#0D5E6E;font-size:13px'>~"+hCont+"h</td></tr>":""}${tipoJornada==="parcial"&&dmDom>0?"<tr><td>Dominical (Art.172):</td><td>"+dmDom+"d/mes \u2014 Base salario: <b>"+dmProm+"d/mes</b></td></tr>":""}</table></div><div class="box"><h2>\ud83d\udccb Condiciones</h2><table><tr><td>Per\u00edodo de prueba:</td><td>${contrato.ppDias||60} d\u00edas</td></tr><tr><td>Vacaciones:</td><td>${contrato.vacDias||(tipoCon==="fijo"?(15*durCon/12).toFixed(1):"15")} d\u00edas h\u00e1biles</td></tr><tr><td>Salario m\u00ednimo:</td><td>${$(smlmv)}</td></tr><tr><td>Aux. transporte:</td><td>${$(auxTr)}</td></tr>${isEmp?"<tr><td>ARL:</td><td>Nivel "+ARL[Math.max(0,arlIdx)].n+" ("+pc(ARL[Math.max(0,arlIdx)].t)+")</td></tr>":""}${isEmp&&art114?"<tr><td colspan='2' style='color:#059669;font-weight:700'>\u2705 Exoneraci\u00f3n Art. 114-1</td></tr>":""}</table></div></div>`;
 
     // Salary breakdown
     h+=`<div class="box"><h2>Composici\u00f3n Salarial Mensual</h2><div class="row"><span>Salario base</span><b>${$(neg.salario)}</b></div><div class="sub">${neg.dias}d \u00d7 ${$(neg.salDia)}/d\u00eda</div>`;
-    if(neg.bono>0)h+=`<div class="row"><span>${bonoConcepto} <span class="tag" style="background:#f3e8ff;color:#7c3aed">No salarial Art.128</span></span><b>${$(neg.bono)}</b></div>`;
+    if(neg.bono>0)h+=`<div class="row"><span>${bonoConcepto} <span class="tag" style="background:#EDE8F4;color:#5B3A8C">No salarial Art.128</span></span><b>${$(neg.bono)}</b></div>`;
     conceptos.filter(c=>c.valor>0).forEach(c=>{h+=`<div class="row"><span>${c.nombre||"Concepto"} <span class="tag" style="background:${c.esSalarial?"#fee2e2;color:#dc2626":"#dcfce7;color:#16a34a"}">${c.esSalarial?"Salarial":"No salarial"}</span></span><b>${$((c.valor/30)*neg.dias)}</b></div>`});
     if(neg.auxDev>0)h+=`<div class="row"><span>Auxilio de transporte</span><b>${$(neg.auxDev)}</b></div>`;
     h+=`<div class="sep"></div><div class="row"><span style="font-weight:700">TOTAL BRUTO MENSUAL</span><b style="font-size:14px">${$(neg.devTotal)}</b></div>`;
-    if(isEmp)h+=`<div class="row"><span style="font-weight:700">IBC</span><b style="color:#0891b2">${$(neg.ibc)}</b></div><div class="sub">${neg.esSub?"Tipo 51 PILA: "+neg.tramo:"Contributivo: SMLMV completo"}</div>`;
+    if(isEmp)h+=`<div class="row"><span style="font-weight:700">IBC</span><b style="color:#0D5E6E">${$(neg.ibc)}</b></div><div class="sub">${neg.esSub?"Tipo 51 PILA: "+neg.tramo:"Contributivo: SMLMV completo"}</div>`;
     h+=`</div>`;
 
     // Deductions
@@ -561,22 +561,22 @@ table{width:100%;font-size:11px;border-collapse:collapse}td{padding:2px 0}td:las
       if(remT>0&&noSalT>0){const pct40=noSalT/remT*100;h+=`<div class="box" style="background:${pct40>40?"#fef2f2":"#f0fdf4"}"><div class="row"><span style="font-weight:700">${pct40>40?"\u26a0\ufe0f":"\u2705"} L\u00edmite 40% no salarial (Ley 1393/2010)</span><b>${pct40.toFixed(1)}%</b></div><div class="sub">No salarial: ${$(noSalT)} · L\u00edmite: ${$(remT*0.4)} · Salarial: ${$(remT-noSalT)}</div></div>`}
 
       // Employer costs
-      h+=`<div class="g2"><div class="box"><h2 style="color:#1d4ed8">Costos Empleador \u2014 ${$(neg.totAp)}</h2>`;
+      h+=`<div class="g2"><div class="box"><h2 style="color:#1E6B42">Costos Empleador \u2014 ${$(neg.totAp)}</h2>`;
       h+=`<div class="row"><span>${neg.exS?"EPS empl. \u2705 Exonerado":"EPS empleador 8.5%"}</span><b>${$(neg.sEr)}</b></div>`;
       h+=`<div class="row"><span>Pensi\u00f3n empl. 12%</span><b>${$(neg.pEr)}</b></div>`;
       h+=`<div class="row"><span>ARL ${ARL[Math.max(0,arlIdx)].n} ${pc(ARL[Math.max(0,arlIdx)].t)}</span><b>${$(neg.arlV)}</b></div>`;
       h+=`<div class="row"><span>Caja 4%</span><b>${$(neg.caja)}</b></div>`;
       h+=`<div class="row"><span>${neg.exPF?"ICBF \u2705":"ICBF 3%"}</span><b>${$(neg.icbf)}</b></div>`;
       h+=`<div class="row"><span>${neg.exPF?"SENA \u2705":"SENA 2%"}</span><b>${$(neg.sena)}</b></div>`;
-      h+=`<div class="sep"></div><div class="row"><span style="font-weight:700">TOTAL</span><b style="color:#2563eb">${$(neg.totAp)}</b></div></div>`;
+      h+=`<div class="sep"></div><div class="row"><span style="font-weight:700">TOTAL</span><b style="color:#1E6B42">${$(neg.totAp)}</b></div></div>`;
 
       // Prestaciones
-      h+=`<div class="box"><h2 style="color:#7c3aed">Prestaciones \u2014 ${$(neg.totPr)}</h2>`;
+      h+=`<div class="box"><h2 style="color:#5B3A8C">Prestaciones \u2014 ${$(neg.totPr)}</h2>`;
       h+=`<div class="row"><span>Prima 8.33%</span><b>${$(neg.pri)}</b></div>`;
       h+=`<div class="row"><span>Cesant\u00edas 8.33%</span><b>${$(neg.ces)}</b></div>`;
       h+=`<div class="row"><span>Int. cesant\u00edas 1%</span><b>${$(neg.intC)}</b></div>`;
       h+=`<div class="row"><span>Vacaciones 4.17%</span><b>${$(neg.vac)}</b></div>`;
-      h+=`<div class="sep"></div><div class="row"><span style="font-weight:700">TOTAL</span><b style="color:#7c3aed">${$(neg.totPr)}</b></div></div></div>`;
+      h+=`<div class="sep"></div><div class="row"><span style="font-weight:700">TOTAL</span><b style="color:#5B3A8C">${$(neg.totPr)}</b></div></div></div>`;
 
       // Cost total
       h+=`<div class="cost"><div style="font-size:10px;opacity:.8">COSTO TOTAL EMPRESA</div><div class="g3" style="margin-top:6px"><div><div style="font-size:9px;opacity:.7">Devengado</div><div style="font-size:15px;font-weight:800;font-family:monospace">${$(neg.devTotal)}</div></div><div><div style="font-size:9px;opacity:.7">Costo/mes</div><div style="font-size:18px;font-weight:800;font-family:monospace">${$(neg.costoT)}</div></div><div><div style="font-size:9px;opacity:.7">Costo contrato (${tipoCon==="fijo"?(contrato.label||durCon+"m"):"anual"})</div><div style="font-size:15px;font-weight:800;font-family:monospace">${$(neg.costoT*(tipoCon==="fijo"?(contrato.durMeses||durCon):12))}</div></div></div></div>`;
@@ -586,7 +586,7 @@ table{width:100%;font-size:11px;border-collapse:collapse}td{padding:2px 0}td:las
 
       // ★ Gastos vs Costos
       const gastoMes=neg.devTotal+neg.totAp;
-      h+=`<div class="g2" style="margin-bottom:8px"><div class="box" style="background:#fef2f2;border-color:#fecaca"><h2 style="color:#dc2626">\ud83d\udcb8 Gasto mensual (tesorer\u00eda)</h2><div class="row"><span>N\u00f3mina</span><b>${$(neg.devTotal)}</b></div><div class="row"><span>SS + parafiscales empl.</span><b>${$(neg.totAp)}</b></div><div class="sep"></div><div class="row"><span style="font-weight:700">TOTAL GASTO/MES</span><b style="color:#dc2626">${$(gastoMes)}</b></div></div><div class="box" style="background:#eff6ff;border-color:#bfdbfe"><h2 style="color:#1d4ed8">\ud83d\udccb Provisi\u00f3n mensual (costo)</h2><div class="row"><span>Prima</span><b>${$(neg.pri)}</b></div><div class="row"><span>Cesant\u00edas</span><b>${$(neg.ces)}</b></div><div class="row"><span>Int. cesant\u00edas</span><b>${$(neg.intC)}</b></div><div class="row"><span>Vacaciones</span><b>${$(neg.vac)}</b></div><div class="sep"></div><div class="row"><span style="font-weight:700">TOTAL PROVISI\u00d3N/MES</span><b style="color:#1d4ed8">${$(neg.totPr)}</b></div></div></div>`;
+      h+=`<div class="g2" style="margin-bottom:8px"><div class="box" style="background:#fef2f2;border-color:#fecaca"><h2 style="color:#dc2626">\ud83d\udcb8 Gasto mensual (tesorer\u00eda)</h2><div class="row"><span>N\u00f3mina</span><b>${$(neg.devTotal)}</b></div><div class="row"><span>SS + parafiscales empl.</span><b>${$(neg.totAp)}</b></div><div class="sep"></div><div class="row"><span style="font-weight:700">TOTAL GASTO/MES</span><b style="color:#dc2626">${$(gastoMes)}</b></div></div><div class="box" style="background:#E8F4EE;border-color:#C8E6D0"><h2 style="color:#1E6B42">\ud83d\udccb Provisi\u00f3n mensual (costo)</h2><div class="row"><span>Prima</span><b>${$(neg.pri)}</b></div><div class="row"><span>Cesant\u00edas</span><b>${$(neg.ces)}</b></div><div class="row"><span>Int. cesant\u00edas</span><b>${$(neg.intC)}</b></div><div class="row"><span>Vacaciones</span><b>${$(neg.vac)}</b></div><div class="sep"></div><div class="row"><span style="font-weight:700">TOTAL PROVISI\u00d3N/MES</span><b style="color:#1E6B42">${$(neg.totPr)}</b></div></div></div>`;
 
       // ★ Contract total + liquidation scenarios (only for fixed term)
       if(tipoCon==="fijo"&&durCon>0){
@@ -631,7 +631,7 @@ table{width:100%;font-size:11px;border-collapse:collapse}td{padding:2px 0}td:las
         // ★ Indemnización por tramos
         h+=`<div class="box"><h2 style="color:#dc2626">\u26a0\ufe0f Indemnizaci\u00f3n seg\u00fan momento del despido (Art. 64 CST)</h2>`;
         h+=`<div class="sub" style="margin-bottom:6px">Salario diario: ${$(salDia)} \u00d7 d\u00edas restantes del contrato</div>`;
-        h+=`<table style="font-size:10px;border-collapse:collapse"><tr style="border-bottom:2px solid #e2e8f0"><th style="text-align:left;padding:3px 6px;color:#64748b">Mes</th><th style="text-align:right;padding:3px 6px;color:#64748b">D\u00edas rest.</th><th style="text-align:right;padding:3px 6px;color:#64748b">Indemnizaci\u00f3n</th></tr>`;
+        h+=`<table style="font-size:10px;border-collapse:collapse"><tr style="border-bottom:2px solid #E5E3DE"><th style="text-align:left;padding:3px 6px;color:#666666">Mes</th><th style="text-align:right;padding:3px 6px;color:#666666">D\u00edas rest.</th><th style="text-align:right;padding:3px 6px;color:#666666">Indemnizaci\u00f3n</th></tr>`;
         const totalM=Math.ceil(meses);
         for(let m=0;m<=totalM;m++){
           const dt=Math.min(dsCon,Math.round(m*30));
@@ -639,7 +639,7 @@ table{width:100%;font-size:11px;border-collapse:collapse}td{padding:2px 0}td:las
           const ind=salDia*dr;
           const bg=m%2?"#fef2f2":"transparent";
           const color=dr===0?"#059669":"#dc2626";
-          h+=`<tr style="background:${bg}"><td style="padding:3px 6px;font-weight:700">Mes ${m}</td><td style="padding:3px 6px;text-align:right;font-family:monospace;color:#64748b">${dr}d</td><td style="padding:3px 6px;text-align:right;font-weight:700;font-family:monospace;color:${color}">${$(ind)}</td></tr>`;
+          h+=`<tr style="background:${bg}"><td style="padding:3px 6px;font-weight:700">Mes ${m}</td><td style="padding:3px 6px;text-align:right;font-family:monospace;color:#666666">${dr}d</td><td style="padding:3px 6px;text-align:right;font-weight:700;font-family:monospace;color:${color}">${$(ind)}</td></tr>`;
         }
         h+=`</table></div>`;
       }
@@ -650,7 +650,7 @@ table{width:100%;font-size:11px;border-collapse:collapse}td{padding:2px 0}td:las
         h+=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center;font-size:10px">`;
         [{n:1,mes:"30 Abr",m:4},{n:2,mes:"31 Ago",m:8},{n:3,mes:"20 Dic",m:12}].forEach(e=>{
           const aplica=tipoCon==="fijo"?(contrato.durMeses||durCon)>=e.m-3+3:true;
-          h+=`<div style="background:${aplica?"#fefce8":"#f8fafc"};border:1px solid ${aplica?"#fde68a":"#e2e8f0"};border-radius:6px;padding:8px 4px"><div style="font-weight:700">${aplica?"\ud83d\udc5f":"\u274c"} Entrega ${e.n}</div><div style="font-weight:700;margin:2px 0">${e.mes}</div><div style="font-size:9px;color:#94a3b8">Calzado + vestido</div></div>`;
+          h+=`<div style="background:${aplica?"#fefce8":"#FAFAF8"};border:1px solid ${aplica?"#fde68a":"#E5E3DE"};border-radius:6px;padding:8px 4px"><div style="font-weight:700">${aplica?"\ud83d\udc5f":"\u274c"} Entrega ${e.n}</div><div style="font-weight:700;margin:2px 0">${e.mes}</div><div style="font-size:9px;color:#999999">Calzado + vestido</div></div>`;
         });
         h+=`</div><div class="sub" style="margin-top:4px">\ud83d\udca1 La dotaci\u00f3n NO es salario ni se descuenta al trabajador. Es un gasto adicional del empleador (aprox. $150.000\u2013$300.000 por entrega).</div></div>`;
       }
@@ -660,7 +660,7 @@ table{width:100%;font-size:11px;border-collapse:collapse}td{padding:2px 0}td:las
     if(freqPago==="quincenal"){
       const sq1=Math.round(neg.salario*(pctQ1/100)),sq2=neg.salario-sq1;
       const q1=sq1,q2=sq2+neg.bono+neg.auxDev-neg.totDed-retV;
-      h+=`<div class="g2" style="margin-bottom:10px"><div class="q" style="background:#f0f9ff"><div class="lbl">Quincena 1 \u2014 D\u00eda 15 (${pctQ1}%)</div><div style="font-size:20px;font-weight:800;font-family:monospace;margin:4px 0">${$(q1)}</div><div class="sub">Anticipo fijo (solo salario)</div></div><div class="q" style="background:#f0fdf4"><div class="lbl">Quincena 2 \u2014 \u00daltimo d\u00eda (${100-pctQ1}%)</div><div style="font-size:20px;font-weight:800;font-family:monospace;margin:4px 0">${$(q2)}</div><div class="sub">Saldo + bono + aux \u2212 deducciones</div></div></div>`;
+      h+=`<div class="g2" style="margin-bottom:10px"><div class="q" style="background:#E8F4EE"><div class="lbl">Quincena 1 \u2014 D\u00eda 15 (${pctQ1}%)</div><div style="font-size:20px;font-weight:800;font-family:monospace;margin:4px 0">${$(q1)}</div><div class="sub">Anticipo fijo (solo salario)</div></div><div class="q" style="background:#f0fdf4"><div class="lbl">Quincena 2 \u2014 \u00daltimo d\u00eda (${100-pctQ1}%)</div><div style="font-size:20px;font-weight:800;font-family:monospace;margin:4px 0">${$(q2)}</div><div class="sub">Saldo + bono + aux \u2212 deducciones</div></div></div>`;
     }
 
     // Signatures — only for employee proposal
@@ -668,7 +668,7 @@ table{width:100%;font-size:11px;border-collapse:collapse}td{padding:2px 0}td:las
       h+=`<div class="g2 sig"><div><b>Empleador</b><div class="sub">Firma, nombre y NIT</div></div><div><b>Trabajador</b><div class="sub">Firma, nombre y c\u00e9dula</div></div></div>`;
     }
     if(isEmp){
-      h+=`<div style="margin-top:20px;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:9px;color:#64748b;text-align:center">Documento interno \u2014 Resumen de costos para la empresa. No requiere firma.</div>`;
+      h+=`<div style="margin-top:20px;padding:10px 14px;background:#FAFAF8;border:1px solid #E5E3DE;border-radius:8px;font-size:9px;color:#666666;text-align:center">Documento interno \u2014 Resumen de costos para la empresa. No requiere firma.</div>`;
     }
 
     // Footer
@@ -685,7 +685,7 @@ table{width:100%;font-size:11px;border-collapse:collapse}td{padding:2px 0}td:las
       if(download){
         // Inject html2pdf script + auto-download into the document
         const pdfDoc=doc.replace("</body>",`
-<div id="pdf-status" style="position:fixed;top:0;left:0;right:0;padding:12px;background:#0ea5e9;color:#fff;text-align:center;font-size:14px;font-weight:700;z-index:9999;font-family:system-ui">⏳ Generando PDF... espera un momento</div>
+<div id="pdf-status" style="position:fixed;top:0;left:0;right:0;padding:12px;background:#111111;color:#fff;text-align:center;font-size:14px;font-weight:700;z-index:9999;font-family:system-ui">⏳ Generando PDF... espera un momento</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"><\/script>
 <script>
 window.onload=function(){
@@ -738,9 +738,9 @@ window.onload=function(){
   /* ══════════════════════════════════════════════════════════════
      RENDER
      ══════════════════════════════════════════════════════════════ */
-  return <div style={{fontFamily:"system-ui,sans-serif",color:"#334155"}}>
+  return <div style={{fontFamily:"'DM Sans',sans-serif",color:"#111111"}}>
     <div style={{padding:"0 0 6px",display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
-      <div style={{display:"inline-block",fontSize:10,fontWeight:700,color:"#1d4ed8",background:"#dbeafe",padding:"3px 12px",borderRadius:14}}>🇨🇴 COLOMBIA 2026 · SMLMV {$(SMLMV_DEF)} · Aux. {$(AUX_DEF)}</div>
+      <div style={{display:"inline-block",fontSize:10,fontWeight:700,color:"#1E6B42",background:"#E8F4EE",padding:"3px 12px",borderRadius:14}}>🇨🇴 COLOMBIA 2026 · SMLMV {$(SMLMV_DEF)} · Aux. {$(AUX_DEF)}</div>
       {neg&&neg.salario>0&&<button type="button" onClick={generarPropuesta} style={{padding:"8px 18px",background:"#1E6B42",color:"#fff",border:"none",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:6}}>📤 Generar propuesta de empleo</button>}
     </div>
 
@@ -748,7 +748,7 @@ window.onload=function(){
       <div className="no-print"><TabBar tabs={[{i:"🧮",l:"Calculadora"},{i:"📅",l:"Liquidador"},{i:"🚪",l:"Liquidación Final"}]} active={tab} set={setTab}/></div>
 
       {/* ══════ CONFIG ══════ */}
-      <Card t="Parámetros Legales 2026" icon="⚙️" accent="#f0f4f8">
+      <Card t="Parámetros Legales 2026" icon="⚙️" accent="#F5F4F1">
         <G3>
           <In label="SMLMV" prefix="$" value={smlmv.toLocaleString("es-CO")} onChange={e=>setSmlmv(Number(e.target.value.replace(/\D/g,""))||0)} help={`Día: ${$(smlmv/30)}`}/>
           <In label="Aux. Transporte" prefix="$" value={auxTr.toLocaleString("es-CO")} onChange={e=>setAuxTr(Number(e.target.value.replace(/\D/g,""))||0)} help={`Día: ${$(auxTr/30)}`}/>
@@ -758,14 +758,14 @@ window.onload=function(){
           <div style={{background:art114?"#ecfdf5":"#fef2f2",borderRadius:8,padding:"8px 10px",border:art114?"1px solid #a7f3d0":"1px solid #fecaca"}}>
             <Tg label={art114?"✅ Exoneración Art. 114-1":"❌ Sin exoneración"} on={art114} set={setArt114} help={art114?"Ahorro: Salud 8.5%, SENA 2%, ICBF 3%":"Paga todos los aportes"}/>
           </div>
-          <div style={{background:regimenSalud==="subsidiado"?"#eff6ff":"#fff",borderRadius:8,padding:"8px 10px",border:regimenSalud==="subsidiado"?"1px solid #bfdbfe":"1px solid #e2e8f0"}}>
+          <div style={{background:regimenSalud==="subsidiado"?"#E8F4EE":"#fff",borderRadius:8,padding:"8px 10px",border:regimenSalud==="subsidiado"?"1px solid #C8E6D0":"1px solid #E5E3DE"}}>
             <Sel label="Régimen salud" value={regimenSalud} onChange={e=>setRegimenSalud(e.target.value)} options={[{v:"",l:"— Seleccionar —"},{v:"contributivo",l:"Contributivo (EPS — 4%)"},{v:"subsidiado",l:"Subsidiado (SISBEN — $0)"}]}/>
           </div>
         </G2>
       </Card>
 
       {/* ══════ CONTRATO ══════ */}
-      <Card t="Contrato" icon="📄" accent="#eff6ff">
+      <Card t="Contrato" icon="📄" accent="#E8F4EE">
         <In label="Cargo" value={cargo} onChange={e=>setCargo(e.target.value)} type="text"/>
         <G3>
           <Sel label="Tipo contrato" value={tipoCon} onChange={e=>setTipoCon(e.target.value)} options={[{v:"",l:"— Seleccionar —"},{v:"fijo",l:"Término fijo"},{v:"indefinido",l:"Indefinido"},{v:"obra",l:"Obra o labor"}]}/>
@@ -773,9 +773,9 @@ window.onload=function(){
           {freqPago==="quincenal"?<Sel label="Anticipo Q1" value={pctQ1} onChange={e=>setPctQ1(+e.target.value)} options={[{v:40,l:"40% / 60%"},{v:45,l:"45% / 55%"},{v:50,l:"50% / 50%"}]} help="% salario en Q1"/>:<div/>}
         </G3>
         {tipoCon==="fijo"&&<>
-          <div style={{display:"flex",gap:0,background:"#f1f5f9",borderRadius:8,border:"1px solid #e2e8f0",overflow:"hidden",marginBottom:8}}>
-            <button type="button" onClick={()=>setDurMode("meses")} style={{flex:1,padding:"6px",border:"none",cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit",background:durMode==="meses"?"#0ea5e9":"transparent",color:durMode==="meses"?"#fff":"#64748b"}}>Por meses</button>
-            <button type="button" onClick={()=>setDurMode("fechas")} style={{flex:1,padding:"6px",border:"none",cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit",background:durMode==="fechas"?"#0ea5e9":"transparent",color:durMode==="fechas"?"#fff":"#64748b"}}>Por fechas</button>
+          <div style={{display:"flex",gap:0,background:"#F5F4F1",borderRadius:8,border:"1px solid #E5E3DE",overflow:"hidden",marginBottom:8}}>
+            <button type="button" onClick={()=>setDurMode("meses")} style={{flex:1,padding:"6px",border:"none",cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit",background:durMode==="meses"?"#111111":"transparent",color:durMode==="meses"?"#fff":"#666666"}}>Por meses</button>
+            <button type="button" onClick={()=>setDurMode("fechas")} style={{flex:1,padding:"6px",border:"none",cursor:"pointer",fontSize:10,fontWeight:700,fontFamily:"inherit",background:durMode==="fechas"?"#111111":"transparent",color:durMode==="fechas"?"#fff":"#666666"}}>Por fechas</button>
           </div>
           {durMode==="meses"?
             <In label="Duración" type="number" value={durMeses} onChange={e=>setDurMeses(Math.max(1,+e.target.value||1))} suffix="meses"/>
@@ -783,47 +783,47 @@ window.onload=function(){
             <In label="Fecha inicio contrato" type="date" value={fechaIniCont} onChange={e=>setFechaIniCont(e.target.value)}/>
             <In label="Fecha fin contrato" type="date" value={fechaFinCont} onChange={e=>setFechaFinCont(e.target.value)}/>
           </G2>}
-          {contrato.durDias&&durMode==="fechas"&&<div style={{fontSize:11,color:"#1d4ed8",fontWeight:600,marginBottom:6}}>📅 Duración: <strong>{contrato.durDias} días</strong> ({contrato.durMeses} meses)</div>}
+          {contrato.durDias&&durMode==="fechas"&&<div style={{fontSize:11,color:"#1E6B42",fontWeight:600,marginBottom:6}}>📅 Duración: <strong>{contrato.durDias} días</strong> ({contrato.durMeses} meses)</div>}
         </>}
         {/* Summary boxes */}
         <div style={{display:"grid",gridTemplateColumns:tipoCon==="fijo"?"1fr 1fr":"1fr",gap:8,marginTop:4}}>
-          {tipoCon==="fijo"&&<div style={{background:"#eff6ff",borderRadius:6,padding:"6px 10px",border:"1px solid #bfdbfe"}}>
-            <div style={{fontSize:10,color:"#1e40af",fontWeight:600}}>📋 Período de prueba</div>
-            <div style={{fontSize:14,fontWeight:800,color:"#0f172a",fontFamily:"monospace"}}>{contrato.ppDias} días</div>
-            <div style={{fontSize:8,color:"#64748b"}}>{contrato.ppDias<60?`1/5 de ${contrato.label} · Arts. 76-80 CST`:"Máximo legal · Arts. 76-80 CST"}</div>
+          {tipoCon==="fijo"&&<div style={{background:"#E8F4EE",borderRadius:6,padding:"6px 10px",border:"1px solid #C8E6D0"}}>
+            <div style={{fontSize:10,color:"#111111",fontWeight:600}}>📋 Período de prueba</div>
+            <div style={{fontSize:14,fontWeight:800,color:"#111111",fontFamily:"'DM Mono',monospace"}}>{contrato.ppDias} días</div>
+            <div style={{fontSize:8,color:"#666666"}}>{contrato.ppDias<60?`1/5 de ${contrato.label} · Arts. 76-80 CST`:"Máximo legal · Arts. 76-80 CST"}</div>
           </div>}
-          <div style={{background:"#ecfeff",borderRadius:6,padding:"6px 10px",border:"1px solid #a5f3fc"}}>
-            <div style={{fontSize:10,color:"#0e7490",fontWeight:600}}>🏖️ Vacaciones (Art. 186)</div>
-            <div style={{fontSize:14,fontWeight:800,color:"#0f172a",fontFamily:"monospace"}}>{tipoCon==="fijo"?`${contrato.vacDias} días háb.`:"15 días háb./año"}</div>
-            <div style={{fontSize:8,color:"#64748b"}}>{tipoCon==="fijo"?`15d × ${contrato.durDias||durMeses*30}/360 días`:"Se acumulan de forma continua"}</div>
+          <div style={{background:"#E8F4EE",borderRadius:6,padding:"6px 10px",border:"1px solid #C8E6D0"}}>
+            <div style={{fontSize:10,color:"#1E6B42",fontWeight:600}}>🏖️ Vacaciones (Art. 186)</div>
+            <div style={{fontSize:14,fontWeight:800,color:"#111111",fontFamily:"'DM Mono',monospace"}}>{tipoCon==="fijo"?`${contrato.vacDias} días háb.`:"15 días háb./año"}</div>
+            <div style={{fontSize:8,color:"#666666"}}>{tipoCon==="fijo"?`15d × ${contrato.durDias||durMeses*30}/360 días`:"Se acumulan de forma continua"}</div>
           </div>
         </div>
       </Card>
 
       {/* ══════ JORNADA + HORAS ══════ */}
       <Card t="Jornada Laboral" icon="🕐">
-        <div style={{display:"flex",gap:0,background:"#f1f5f9",borderRadius:8,border:"1px solid #e2e8f0",overflow:"hidden",marginBottom:8}}>
-          <button type="button" onClick={()=>setTipoJornada("completa")} style={{flex:1,padding:"7px",border:"none",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"inherit",background:tipoJornada==="completa"?"#0ea5e9":"transparent",color:tipoJornada==="completa"?"#fff":"#64748b"}}>📅 Completa (30d/mes)</button>
-          <button type="button" onClick={()=>setTipoJornada("parcial")} style={{flex:1,padding:"7px",border:"none",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"inherit",background:tipoJornada==="parcial"?"#0ea5e9":"transparent",color:tipoJornada==="parcial"?"#fff":"#64748b"}}>⏱️ Parcial ({Math.round(dSem*4.33)}d/mes)</button>
+        <div style={{display:"flex",gap:0,background:"#F5F4F1",borderRadius:8,border:"1px solid #E5E3DE",overflow:"hidden",marginBottom:8}}>
+          <button type="button" onClick={()=>setTipoJornada("completa")} style={{flex:1,padding:"7px",border:"none",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"inherit",background:tipoJornada==="completa"?"#111111":"transparent",color:tipoJornada==="completa"?"#fff":"#666666"}}>📅 Completa (30d/mes)</button>
+          <button type="button" onClick={()=>setTipoJornada("parcial")} style={{flex:1,padding:"7px",border:"none",cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"inherit",background:tipoJornada==="parcial"?"#111111":"transparent",color:tipoJornada==="parcial"?"#fff":"#666666"}}>⏱️ Parcial ({Math.round(dSem*4.33)}d/mes)</button>
         </div>
-        <div style={{fontSize:11,color:"#64748b",marginBottom:6}}>Días que trabaja:</div>
+        <div style={{fontSize:11,color:"#666666",marginBottom:6}}>Días que trabaja:</div>
         <div style={{display:"flex",gap:4,marginBottom:8}} className="no-print">
-          {DL.map((d,i)=><button key={i} type="button" onClick={()=>{const n=[...workDays];n[i]=!n[i];setWorkDays(n)}} style={{flex:1,padding:"8px 2px",border:"none",borderRadius:8,cursor:"pointer",fontSize:11,fontWeight:700,background:workDays[i]?"#0ea5e9":"#f1f5f9",color:workDays[i]?"#fff":"#94a3b8",fontFamily:"inherit",appearance:"none",outline:"none"}}>{d}</button>)}
+          {DL.map((d,i)=><button key={i} type="button" onClick={()=>{const n=[...workDays];n[i]=!n[i];setWorkDays(n)}} style={{flex:1,padding:"8px 2px",border:"none",borderRadius:8,cursor:"pointer",fontSize:11,fontWeight:700,background:workDays[i]?"#111111":"#F5F4F1",color:workDays[i]?"#fff":"#999999",fontFamily:"inherit",appearance:"none",outline:"none"}}>{d}</button>)}
         </div>
         <G3><In label="Inicio" type="number" value={hIni} onChange={e=>setHIni(Math.min(23,Math.max(0,+e.target.value||0)))} suffix="h"/><In label="Fin" type="number" value={hFin} onChange={e=>setHFin(Math.min(23,Math.max(1,+e.target.value||0)))} suffix="h"/><In label="Almuerzo" type="number" value={almuerzo} onChange={e=>setAlm(Math.max(0,+e.target.value||0))} suffix="h"/></G3>
         {/* ★ RESUMEN DE HORAS */}
-        <div style={{display:"grid",gridTemplateColumns:tipoCon==="fijo"?"repeat(5,1fr)":"repeat(4,1fr)",gap:6,textAlign:"center",background:"#f8fafc",borderRadius:8,padding:"10px 6px",border:"1px solid #e2e8f0"}}>
-          {[{l:"Días/sem",v:`${dSem}`,c:"#0ea5e9"},
-            {l:"Horas/día",v:`${hDia}h`,c:"#0ea5e9"},
+        <div style={{display:"grid",gridTemplateColumns:tipoCon==="fijo"?"repeat(5,1fr)":"repeat(4,1fr)",gap:6,textAlign:"center",background:"#FAFAF8",borderRadius:8,padding:"10px 6px",border:"1px solid #E5E3DE"}}>
+          {[{l:"Días/sem",v:`${dSem}`,c:"#111111"},
+            {l:"Horas/día",v:`${hDia}h`,c:"#111111"},
             {l:"Horas/sem",v:`${hSem}h`,c:jOk?"#059669":"#dc2626"},
-            {l:"Horas/mes",v:`~${Math.round(hDia*dmLab)}h`,c:"#7c3aed"},
-            ...(tipoCon==="fijo"?[{l:"Total contrato",v:`~${Math.round(hDia*dmLab*(contrato.durMeses||durMeses))}h`,c:"#0891b2"}]:[])
-          ].map((x,i)=><div key={i}><div style={{fontSize:8,color:"#94a3b8",fontWeight:600}}>{x.l}</div><div style={{fontSize:15,fontWeight:800,fontFamily:"monospace",color:x.c}}>{x.v}</div></div>)}
+            {l:"Horas/mes",v:`~${Math.round(hDia*dmLab)}h`,c:"#5B3A8C"},
+            ...(tipoCon==="fijo"?[{l:"Total contrato",v:`~${Math.round(hDia*dmLab*(contrato.durMeses||durMeses))}h`,c:"#0D5E6E"}]:[])
+          ].map((x,i)=><div key={i}><div style={{fontSize:8,color:"#999999",fontWeight:600}}>{x.l}</div><div style={{fontSize:15,fontWeight:800,fontFamily:"'DM Mono',monospace",color:x.c}}>{x.v}</div></div>)}
         </div>
-        <div style={{marginTop:4,fontSize:10,color:"#64748b"}}>
+        <div style={{marginTop:4,fontSize:10,color:"#666666"}}>
           Días: <b>{DL.filter((_,i)=>workDays[i]).join(", ")}</b>
-          {tipoJornada==="parcial"&&dmDom>0&&<> · <span style={{color:"#0891b2"}}>Dominical proporcional: <b>{dmDom}d/mes</b> (Art. 172 CST)</span></>}
-          {" · "}Base salario: <b style={{color:"#7c3aed"}}>{dmProm}d/mes</b>{tipoJornada==="parcial"&&dmDom>0&&<span style={{color:"#94a3b8"}}> ({dmLab} lab + {dmDom} dom)</span>}
+          {tipoJornada==="parcial"&&dmDom>0&&<> · <span style={{color:"#0D5E6E"}}>Dominical proporcional: <b>{dmDom}d/mes</b> (Art. 172 CST)</span></>}
+          {" · "}Base salario: <b style={{color:"#5B3A8C"}}>{dmProm}d/mes</b>{tipoJornada==="parcial"&&dmDom>0&&<span style={{color:"#999999"}}> ({dmLab} lab + {dmDom} dom)</span>}
         </div>
         {jOk?<Al c="g">✅ Cumple {MAX_HRS}h/sem (Ley 2101/2021)</Al>:<Al c="r">⚠️ Supera {MAX_HRS}h/sem: {hSem}h</Al>}
       </Card>
@@ -833,8 +833,8 @@ window.onload=function(){
          ══════════════════════════════════════════ */}
       {tab===0&&<>
         <Card t="Salario y Compensación" icon="💵" accent="#ecfdf5">
-          <div style={{display:"flex",gap:0,background:"#f1f5f9",borderRadius:8,border:"1px solid #e2e8f0",overflow:"hidden",marginBottom:10}} className="no-print">
-            {[{v:"neto",l:"💵 NETO"},{v:"bruto",l:"📄 BRUTO"},{v:"integral",l:"💼 INTEGRAL"}].map(o=><button key={o.v} type="button" onClick={()=>handleModoSal(o.v)} style={{flex:1,padding:"9px 6px",border:"none",borderRadius:0,cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"inherit",background:modoSal===o.v?"#0ea5e9":"transparent",color:modoSal===o.v?"#fff":"#64748b",appearance:"none",outline:"none",borderRight:"1px solid #e2e8f0"}}>{o.l}</button>)}
+          <div style={{display:"flex",gap:0,background:"#F5F4F1",borderRadius:8,border:"1px solid #E5E3DE",overflow:"hidden",marginBottom:10}} className="no-print">
+            {[{v:"neto",l:"💵 NETO"},{v:"bruto",l:"📄 BRUTO"},{v:"integral",l:"💼 INTEGRAL"}].map(o=><button key={o.v} type="button" onClick={()=>handleModoSal(o.v)} style={{flex:1,padding:"9px 6px",border:"none",borderRadius:0,cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"inherit",background:modoSal===o.v?"#111111":"transparent",color:modoSal===o.v?"#fff":"#666666",appearance:"none",outline:"none",borderRight:"1px solid #E5E3DE"}}>{o.l}</button>)}
           </div>
           <In label={modoSal==="neto"?"Neto deseado":modoSal==="integral"?"Salario integral":"Salario bruto"} prefix="$" value={valorSal.toLocaleString("es-CO")} onChange={e=>setValorSal(Number(e.target.value.replace(/\D/g,""))||0)} help={modoSal==="integral"?`Mínimo: ${$(smlmv*INTEGRAL_F)} (13 SMLMV)`:modoSal==="neto"?`${dmProm}d · Día: ${$(neg.netoDia)} · Hora: ${$(neg.netoHora)}`:`${dmProm} días`}/>
           {modoSal==="integral"&&valorSal<smlmv*INTEGRAL_F&&<Al c="r">⚠️ Mínimo integral: {$(smlmv*INTEGRAL_F)}</Al>}
@@ -846,17 +846,17 @@ window.onload=function(){
         </Card>
 
         {/* ★ CONCEPTOS PERSONALIZABLES — predefinidos por ley */}
-        {modoSal!=="integral"&&<Card t="Conceptos Adicionales" icon="📝" accent="#faf5ff">
-          <div style={{fontSize:10,color:"#64748b",marginBottom:8}}>Selecciona conceptos con su tratamiento legal. Puedes ajustar salarial/prestacional si aplica.</div>
+        {modoSal!=="integral"&&<Card t="Conceptos Adicionales" icon="📝" accent="#EDE8F4">
+          <div style={{fontSize:10,color:"#666666",marginBottom:8}}>Selecciona conceptos con su tratamiento legal. Puedes ajustar salarial/prestacional si aplica.</div>
           {conceptos.map((c,idx)=><div key={c.id} style={{background:c.esSalarial?"#fef2f2":"#f0fdf4",border:`1px solid ${c.esSalarial?"#fecaca":"#bbf7d0"}`,borderRadius:8,padding:"8px 10px",marginBottom:6,position:"relative"}}>
             <button type="button" onClick={()=>delC(c.id)} style={{position:"absolute",top:4,right:8,background:"none",border:"none",color:"#dc2626",cursor:"pointer",fontSize:16,fontWeight:700,padding:0}}>×</button>
             <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-              <span style={{fontSize:12,fontWeight:700,color:"#1e293b"}}>{c.custom?`#${idx+1}`:c.nombre}</span>
-              <span style={{fontSize:8,background:"#e2e8f0",color:"#475569",padding:"1px 6px",borderRadius:4,fontWeight:600}}>{c.art}</span>
+              <span style={{fontSize:12,fontWeight:700,color:"#111111"}}>{c.custom?`#${idx+1}`:c.nombre}</span>
+              <span style={{fontSize:8,background:"#E5E3DE",color:"#555555",padding:"1px 6px",borderRadius:4,fontWeight:600}}>{c.art}</span>
               {c.esSalarial?<span style={{fontSize:8,background:"#fee2e2",color:"#dc2626",padding:"1px 6px",borderRadius:4,fontWeight:600}}>Salarial</span>:<span style={{fontSize:8,background:"#dcfce7",color:"#16a34a",padding:"1px 6px",borderRadius:4,fontWeight:600}}>No salarial</span>}
-              {c.esPrestacional&&<span style={{fontSize:8,background:"#f3e8ff",color:"#7c3aed",padding:"1px 6px",borderRadius:4,fontWeight:600}}>Prestacional</span>}
+              {c.esPrestacional&&<span style={{fontSize:8,background:"#EDE8F4",color:"#5B3A8C",padding:"1px 6px",borderRadius:4,fontWeight:600}}>Prestacional</span>}
             </div>
-            {c.desc&&!c.custom&&<div style={{fontSize:9,color:"#94a3b8",marginBottom:4}}>{c.desc}</div>}
+            {c.desc&&!c.custom&&<div style={{fontSize:9,color:"#999999",marginBottom:4}}>{c.desc}</div>}
             <G2>
               {c.custom&&<In label="Nombre" value={c.nombre} onChange={e=>updC(c.id,"nombre",e.target.value)}/>}
               <In label="Valor mensual" prefix="$" value={c.valor.toLocaleString("es-CO")} onChange={e=>updC(c.id,"valor",Number(e.target.value.replace(/\D/g,""))||0)}/>
@@ -864,18 +864,18 @@ window.onload=function(){
             </G2>
             {c.custom&&<div style={{display:"flex",gap:4}}>
               <button type="button" onClick={()=>updC(c.id,"esSalarial",!c.esSalarial)} style={{flex:1,padding:"5px",border:"none",borderRadius:6,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit",background:c.esSalarial?"#dc2626":"#059669",color:"#fff"}}>{c.esSalarial?"🔴 Salarial":"🟢 No salarial"}</button>
-              <button type="button" onClick={()=>updC(c.id,"esPrestacional",!c.esPrestacional)} style={{flex:1,padding:"5px",border:"none",borderRadius:6,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit",background:c.esPrestacional?"#7c3aed":"#64748b",color:"#fff"}}>{c.esPrestacional?"🟣 Prestacional":"⚪ No prest."}</button>
+              <button type="button" onClick={()=>updC(c.id,"esPrestacional",!c.esPrestacional)} style={{flex:1,padding:"5px",border:"none",borderRadius:6,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit",background:c.esPrestacional?"#5B3A8C":"#666666",color:"#fff"}}>{c.esPrestacional?"🟣 Prestacional":"⚪ No prest."}</button>
             </div>}
           </div>)}
           <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-            {CONCEPTOS_LEY.map(cl=><button key={cl.id} type="button" onClick={()=>addC(cl.id)} style={{padding:"6px 10px",border:"1px solid #e2e8f0",borderRadius:8,background:"#fff",cursor:"pointer",fontSize:10,fontWeight:600,color:"#475569",fontFamily:"inherit"}}>+ {cl.nombre}</button>)}
+            {CONCEPTOS_LEY.map(cl=><button key={cl.id} type="button" onClick={()=>addC(cl.id)} style={{padding:"6px 10px",border:"1px solid #E5E3DE",borderRadius:8,background:"#fff",cursor:"pointer",fontSize:10,fontWeight:600,color:"#555555",fontFamily:"inherit"}}>+ {cl.nombre}</button>)}
           </div>
-          {conceptos.length>0&&<div style={{marginTop:6,fontSize:10,color:"#64748b"}}>Sal: <b style={{color:"#dc2626"}}>{$(cSums.sal)}</b> · NoSal: <b style={{color:"#059669"}}>{$(cSums.noSal)}</b> · Prest. extra: <b style={{color:"#7c3aed"}}>{$(cSums.prest)}</b></div>}
+          {conceptos.length>0&&<div style={{marginTop:6,fontSize:10,color:"#666666"}}>Sal: <b style={{color:"#dc2626"}}>{$(cSums.sal)}</b> · NoSal: <b style={{color:"#059669"}}>{$(cSums.noSal)}</b> · Prest. extra: <b style={{color:"#5B3A8C"}}>{$(cSums.prest)}</b></div>}
         </Card>}
 
         {/* ★ RETENCIÓN EN LA FUENTE */}
         {/* Retención: solo aparece cuando el ingreso puede generar retención (>95 UVT) */}
-        {neg.devTotal>uvt*95*0.75&&<Card t="Retención en la Fuente" icon="🏛️" accent={calcRet?"#fef2f2":"#f8fafc"}>
+        {neg.devTotal>uvt*95*0.75&&<Card t="Retención en la Fuente" icon="🏛️" accent={calcRet?"#fef2f2":"#FAFAF8"}>
           <Tg label={calcRet?"✅ Calcular retención (Proc. 1 — Art. 383 E.T.)":"Calcular retención en la fuente"} on={calcRet} set={setCalcRet} help="Procedimiento 1: tabla Art. 383 sobre ingreso mensual"/>
           {calcRet&&<>
             <G3><In label="UVT 2026" prefix="$" value={uvt.toLocaleString("es-CO")} onChange={e=>setUvt(Number(e.target.value.replace(/\D/g,""))||0)} help="Resolución DIAN"/>
@@ -902,7 +902,7 @@ window.onload=function(){
         </Card>}
 
         {/* ① BRUTO */}
-        <Card t="① SALARIO BRUTO" icon="📄" badge={{t:$(neg.devTotal),bg:"#dbeafe",c:"#1d4ed8"}}>
+        <Card t="① SALARIO BRUTO" icon="📄" badge={{t:$(neg.devTotal),bg:"#E8F4EE",c:"#1E6B42"}}>
           <Rw l="Salario" v={neg.salario} bold note={`${neg.dias}d × ${$(neg.salDia)}/día · Mens: ${$(neg.salMes30)}`}/>
           {neg.bono>0&&<Rw l={`${bonoConcepto} (Art.128)`} v={neg.bono} hl="purple"/>}
           {conceptos.filter(c=>c.valor>0).map(c=><Rw key={c.id} l={`${c.nombre||"Concepto"} ${c.esSalarial?"🔴":"🟢"}${c.esPrestacional?" 🟣":""}`} v={(c.valor/30)*neg.dias} hl={c.esSalarial?"red":"purple"} note={`${c.esSalarial?"Salarial":"No sal."} · ${c.esPrestacional?"Prestacional":"No prest."} · ${$(c.valor)}/mes`}/>)}
@@ -921,12 +921,12 @@ window.onload=function(){
             return <div style={{marginTop:6,background:ok?"#f0fdf4":"#fef2f2",border:`1px solid ${ok?"#bbf7d0":"#fecaca"}`,borderRadius:8,padding:"8px 12px"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
                 <span style={{fontSize:11,fontWeight:700,color:ok?"#059669":"#dc2626"}}>{ok?"✅":"⚠️"} Límite 40% no salarial (Ley 1393/2010)</span>
-                <span style={{fontSize:12,fontWeight:800,fontFamily:"monospace",color:ok?"#059669":"#dc2626"}}>{pct.toFixed(1)}%</span>
+                <span style={{fontSize:12,fontWeight:800,fontFamily:"'DM Mono',monospace",color:ok?"#059669":"#dc2626"}}>{pct.toFixed(1)}%</span>
               </div>
-              <div style={{height:6,background:"#e2e8f0",borderRadius:3,overflow:"hidden",marginBottom:4}}>
+              <div style={{height:6,background:"#E5E3DE",borderRadius:3,overflow:"hidden",marginBottom:4}}>
                 <div style={{height:"100%",width:Math.min(100,pct/0.4)+"%",background:pct>40?"#dc2626":pct>35?"#f59e0b":"#059669",borderRadius:3,transition:"width .3s"}}/>
               </div>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#64748b"}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:"#666666"}}>
                 <span>No salarial: <b>{$(noSalTotal)}</b></span>
                 <span>Límite 40%: <b>{$(limite)}</b></span>
                 <span>Salarial: <b>{$(remTotal-noSalTotal)}</b></span>
@@ -949,14 +949,14 @@ window.onload=function(){
         {/* ③ NETO */}
         <BigBox bg="linear-gradient(135deg,#059669,#047857)">
           <div style={{fontSize:10,opacity:.8,fontWeight:600}}>③ NETO DEL TRABAJADOR</div>
-          <div style={{fontSize:28,fontWeight:800,fontFamily:"monospace"}}>{$(neg.neto-(ret?ret.retencion:0))}</div>
-          <G3><div><div style={{fontSize:9,opacity:.7}}>Neto/día</div><div style={{fontSize:16,fontWeight:800,fontFamily:"monospace"}}>{$((neg.neto-(ret?ret.retencion:0))/neg.dias)}</div></div>
-          <div><div style={{fontSize:9,opacity:.7}}>Neto/hora</div><div style={{fontSize:16,fontWeight:800,fontFamily:"monospace"}}>{$(hDia>0?(neg.neto-(ret?ret.retencion:0))/neg.dias/hDia:0)}</div></div>
-          <div><div style={{fontSize:9,opacity:.7}}>Días</div><div style={{fontSize:16,fontWeight:800,fontFamily:"monospace"}}>{neg.dias}</div></div></G3>
+          <div style={{fontSize:28,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{$(neg.neto-(ret?ret.retencion:0))}</div>
+          <G3><div><div style={{fontSize:9,opacity:.7}}>Neto/día</div><div style={{fontSize:16,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{$((neg.neto-(ret?ret.retencion:0))/neg.dias)}</div></div>
+          <div><div style={{fontSize:9,opacity:.7}}>Neto/hora</div><div style={{fontSize:16,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{$(hDia>0?(neg.neto-(ret?ret.retencion:0))/neg.dias/hDia:0)}</div></div>
+          <div><div style={{fontSize:9,opacity:.7}}>Días</div><div style={{fontSize:16,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{neg.dias}</div></div></G3>
         </BigBox>
 
         {/* Quincenal */}
-        {freqPago==="quincenal"&&<Card t="Distribución Quincenal" icon="📆" accent="#eff6ff">{(()=>{
+        {freqPago==="quincenal"&&<Card t="Distribución Quincenal" icon="📆" accent="#E8F4EE">{(()=>{
           const salQ1=Math.round(neg.salario*(pctQ1/100));
           const salQ2=neg.salario-salQ1;
           const bonoQ2=neg.bono;
@@ -968,38 +968,38 @@ window.onload=function(){
           const pctReal1=total>0?Math.round(q1/total*100):0;
           const pctReal2=total>0?100-pctReal1:0;
           return <>
-            <div style={{fontSize:10,color:"#64748b",marginBottom:6}}>Anticipo: <strong>{pctQ1}% del salario base</strong> en Q1 · Bono, aux y SS se liquidan en Q2</div>
+            <div style={{fontSize:10,color:"#666666",marginBottom:6}}>Anticipo: <strong>{pctQ1}% del salario base</strong> en Q1 · Bono, aux y SS se liquidan en Q2</div>
             {/* Visual bar */}
             <div style={{display:"flex",height:8,borderRadius:4,overflow:"hidden",marginBottom:10}}>
-              <div style={{width:pctReal1+"%",background:"#0ea5e9"}}/>
+              <div style={{width:pctReal1+"%",background:"#111111"}}/>
               <div style={{width:pctReal2+"%",background:"#059669"}}/>
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-              <div style={{background:"#f0f9ff",borderRadius:8,padding:10,border:"1px solid #bae6fd"}}>
-                <div style={{fontSize:10,fontWeight:700,color:"#0369a1"}}>Q1 — Día 15</div>
-                <div style={{fontSize:22,fontWeight:800,fontFamily:"monospace"}}>{$(q1)}</div>
+              <div style={{background:"#E8F4EE",borderRadius:8,padding:10,border:"1px solid #C8E6D0"}}>
+                <div style={{fontSize:10,fontWeight:700,color:"#1E6B42"}}>Q1 — Día 15</div>
+                <div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{$(q1)}</div>
                 <div style={{display:"flex",justifyContent:"space-between",fontSize:10,marginTop:2}}>
-                  <span style={{color:"#94a3b8"}}>Anticipo fijo ({pctQ1}% sal.)</span>
-                  <span style={{fontWeight:700,color:"#0369a1"}}>{pctReal1}% del neto</span>
+                  <span style={{color:"#999999"}}>Anticipo fijo ({pctQ1}% sal.)</span>
+                  <span style={{fontWeight:700,color:"#1E6B42"}}>{pctReal1}% del neto</span>
                 </div>
               </div>
               <div style={{background:"#ecfdf5",borderRadius:8,padding:10,border:"1px solid #a7f3d0"}}>
-                <div style={{fontSize:10,fontWeight:700,color:"#065f46"}}>Q2 — Último día</div>
-                <div style={{fontSize:22,fontWeight:800,fontFamily:"monospace"}}>{$(q2)}</div>
+                <div style={{fontSize:10,fontWeight:700,color:"#1E6B42"}}>Q2 — Último día</div>
+                <div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{$(q2)}</div>
                 <div style={{display:"flex",justifyContent:"space-between",fontSize:10,marginTop:2}}>
-                  <span style={{color:"#94a3b8"}}>Liquidada con novedades</span>
-                  <span style={{fontWeight:700,color:"#065f46"}}>{pctReal2}% del neto</span>
+                  <span style={{color:"#999999"}}>Liquidada con novedades</span>
+                  <span style={{fontWeight:700,color:"#1E6B42"}}>{pctReal2}% del neto</span>
                 </div>
               </div>
             </div>
-            <div style={{marginTop:8,fontSize:10,color:"#64748b",borderTop:"1px solid #e2e8f0",paddingTop:6}}>
+            <div style={{marginTop:8,fontSize:10,color:"#666666",borderTop:"1px solid #E5E3DE",paddingTop:6}}>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:4,textAlign:"center"}}>
                 <div>Salario Q2<br/><b>{$(salQ2)}</b></div>
-                <div>Bono<br/><b style={{color:"#7c3aed"}}>{$(bonoQ2)}</b></div>
+                <div>Bono<br/><b style={{color:"#5B3A8C"}}>{$(bonoQ2)}</b></div>
                 <div>Aux. transp.<br/><b>{$(auxQ2)}</b></div>
                 <div>SS + Ded.<br/><b style={{color:"#dc2626"}}>-{$(dedQ2)}</b></div>
               </div>
-              <div style={{display:"flex",justifyContent:"space-between",fontWeight:700,marginTop:6,paddingTop:4,borderTop:"1px solid #e2e8f0"}}><span>Total mes (Q1+Q2):</span><span style={{fontFamily:"monospace",color:"#059669",fontSize:14}}>{$(total)}</span></div>
+              <div style={{display:"flex",justifyContent:"space-between",fontWeight:700,marginTop:6,paddingTop:4,borderTop:"1px solid #E5E3DE"}}><span>Total mes (Q1+Q2):</span><span style={{fontFamily:"'DM Mono',monospace",color:"#059669",fontSize:14}}>{$(total)}</span></div>
             </div>
           </>
         })()}</Card>}
@@ -1033,7 +1033,7 @@ window.onload=function(){
         </Card>
 
         {/* ④ COSTOS EMPLEADOR */}
-        <Card t="④ COSTOS EMPLEADOR" icon="🏥" badge={{t:$(neg.totAp),bg:"#dbeafe",c:"#1d4ed8"}}>
+        <Card t="④ COSTOS EMPLEADOR" icon="🏥" badge={{t:$(neg.totAp),bg:"#E8F4EE",c:"#1E6B42"}}>
           <Rw l={neg.esSub?"EPS empl. SISBEN $0":neg.exS?"EPS empl. ✅ EXONERADO":"EPS empleador"} v={neg.sEr} tasa={(neg.esSub||neg.exS)?0:8.5}/>
           <Rw l="Pensión empleador" v={neg.pEr} tasa={12}/><Rw l={`ARL ${ARL[Math.max(0,arlIdx)].n}`} v={neg.arlV} tasa={ARL[Math.max(0,arlIdx)].t}/>
           <Rw l="Caja" v={neg.caja} tasa={4}/><Rw l={neg.exPF?"ICBF ✅":"ICBF"} v={neg.icbf} tasa={neg.exPF?0:3}/><Rw l={neg.exPF?"SENA ✅":"SENA"} v={neg.sena} tasa={neg.exPF?0:2}/>
@@ -1041,15 +1041,15 @@ window.onload=function(){
         </Card>
 
         {/* ⑤ PRESTACIONES */}
-        <Card t="⑤ PRESTACIONES" icon="🎁" badge={{t:$(neg.totPr),bg:"#f3e8ff",c:"#7c3aed"}}>
+        <Card t="⑤ PRESTACIONES" icon="🎁" badge={{t:$(neg.totPr),bg:"#EDE8F4",c:"#5B3A8C"}}>
           <Rw l="Prima" v={neg.pri} tasa={8.33}/><Rw l="Cesantías" v={neg.ces} tasa={8.33}/><Rw l="Int. cesantías" v={neg.intC} tasa={1}/><Rw l="Vacaciones" v={neg.vac} tasa={4.17}/><Dv/><Rw l="TOTAL" v={neg.totPr} bold hl="purple"/>
         </Card>
 
 
         {/* ⑥ COSTO TOTAL */}
-        <BigBox bg="linear-gradient(135deg,#1e40af,#1e3a8a)"><div style={{fontSize:10,opacity:.8}}>⑥ COSTO TOTAL EMPRESA</div><G2><div><div style={{fontSize:9,opacity:.6}}>Devengado</div><div style={{fontSize:14,fontWeight:700,fontFamily:"monospace"}}>{$(neg.devTotal)}</div></div><div><div style={{fontSize:9,opacity:.6}}>Costo indirecto</div><div style={{fontSize:14,fontWeight:700,fontFamily:"monospace",color:"#fbbf24"}}>{$(neg.costoInd)}</div></div></G2><div style={{borderTop:"2px solid rgba(255,255,255,.2)",marginTop:8,paddingTop:8,display:"flex",justifyContent:"space-between"}}><span style={{fontSize:12,fontWeight:700}}>COSTO / MES</span><span style={{fontSize:24,fontWeight:800,fontFamily:"monospace"}}>{$(neg.costoT)}</span></div><div style={{display:"flex",justifyContent:"space-between",marginTop:4}}><span style={{fontSize:11,opacity:.7}}>COSTO / CONTRATO ({tipoCon==="fijo"?(contrato.label||durCon+"m"):"anual"})</span><span style={{fontSize:18,fontWeight:800,fontFamily:"monospace"}}>{$(neg.costoT*(tipoCon==="fijo"?(contrato.durMeses||durCon):12))}</span></div></BigBox>
+        <BigBox bg="linear-gradient(135deg,#111111,#111111)"><div style={{fontSize:10,opacity:.8}}>⑥ COSTO TOTAL EMPRESA</div><G2><div><div style={{fontSize:9,opacity:.6}}>Devengado</div><div style={{fontSize:14,fontWeight:700,fontFamily:"'DM Mono',monospace"}}>{$(neg.devTotal)}</div></div><div><div style={{fontSize:9,opacity:.6}}>Costo indirecto</div><div style={{fontSize:14,fontWeight:700,fontFamily:"'DM Mono',monospace",color:"#fbbf24"}}>{$(neg.costoInd)}</div></div></G2><div style={{borderTop:"2px solid rgba(255,255,255,.2)",marginTop:8,paddingTop:8,display:"flex",justifyContent:"space-between"}}><span style={{fontSize:12,fontWeight:700}}>COSTO / MES</span><span style={{fontSize:24,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{$(neg.costoT)}</span></div><div style={{display:"flex",justifyContent:"space-between",marginTop:4}}><span style={{fontSize:11,opacity:.7}}>COSTO / CONTRATO ({tipoCon==="fijo"?(contrato.label||durCon+"m"):"anual"})</span><span style={{fontSize:18,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{$(neg.costoT*(tipoCon==="fijo"?(contrato.durMeses||durCon):12))}</span></div></BigBox>
 
-        <Card t="Distribución" icon="📊"><Bar l="Neto" v={neg.neto-(ret?ret.retencion:0)} total={neg.costoT} color="#059669"/>{ret&&ret.retencion>0&&<Bar l="Retención" v={ret.retencion} total={neg.costoT} color="#92400e"/>}<Bar l="SS trabajador" v={neg.totDed} total={neg.costoT} color="#dc2626"/>{neg.auxDev>0&&<Bar l="Aux. transp." v={neg.auxDev} total={neg.costoT} color="#d97706"/>}<Bar l="SS empleador" v={neg.sEr+neg.pEr+neg.arlV} total={neg.costoT} color="#2563eb"/><Bar l="Parafiscales" v={neg.caja+neg.icbf+neg.sena} total={neg.costoT} color="#7c3aed"/><Bar l="Prestaciones" v={neg.totPr} total={neg.costoT} color="#db2777"/></Card>
+        <Card t="Distribución" icon="📊"><Bar l="Neto" v={neg.neto-(ret?ret.retencion:0)} total={neg.costoT} color="#059669"/>{ret&&ret.retencion>0&&<Bar l="Retención" v={ret.retencion} total={neg.costoT} color="#92400e"/>}<Bar l="SS trabajador" v={neg.totDed} total={neg.costoT} color="#dc2626"/>{neg.auxDev>0&&<Bar l="Aux. transp." v={neg.auxDev} total={neg.costoT} color="#d97706"/>}<Bar l="SS empleador" v={neg.sEr+neg.pEr+neg.arlV} total={neg.costoT} color="#1E6B42"/><Bar l="Parafiscales" v={neg.caja+neg.icbf+neg.sena} total={neg.costoT} color="#5B3A8C"/><Bar l="Prestaciones" v={neg.totPr} total={neg.costoT} color="#B91C1C"/></Card>
 
         {/* ★ GASTOS vs COSTOS (PROVISIONES) */}
         <Card t="Gastos vs Costos — Flujo de Caja" icon="🏦" accent="#f0fdf4">
@@ -1057,7 +1057,7 @@ window.onload=function(){
             {/* GASTO MENSUAL — sale de caja cada mes */}
             <div style={{background:"#fef2f2",borderRadius:8,padding:"10px 12px",border:"1px solid #fecaca"}}>
               <div style={{fontSize:11,fontWeight:700,color:"#dc2626",marginBottom:6}}>💸 GASTO MENSUAL (tesorería)</div>
-              <div style={{fontSize:9,color:"#94a3b8",marginBottom:6}}>Sale de caja cada mes vía nómina y PILA</div>
+              <div style={{fontSize:9,color:"#999999",marginBottom:6}}>Sale de caja cada mes vía nómina y PILA</div>
               <Rw l="Nómina (sal+bono+aux)" v={neg.devTotal}/>
               {neg.pEr>0&&<Rw l="Pensión empleador 12%" v={neg.pEr}/>}
               {neg.arlV>0&&<Rw l={`ARL ${ARL[Math.max(0,arlIdx)].n}`} v={neg.arlV}/>}
@@ -1070,9 +1070,9 @@ window.onload=function(){
             </div>
 
             {/* COSTO/PROVISIÓN — se acumula, se paga después */}
-            <div style={{background:"#eff6ff",borderRadius:8,padding:"10px 12px",border:"1px solid #bfdbfe"}}>
-              <div style={{fontSize:11,fontWeight:700,color:"#1d4ed8",marginBottom:6}}>📋 PROVISIÓN MENSUAL (costo)</div>
-              <div style={{fontSize:9,color:"#94a3b8",marginBottom:6}}>Se acumula cada mes, se paga en fechas específicas</div>
+            <div style={{background:"#E8F4EE",borderRadius:8,padding:"10px 12px",border:"1px solid #C8E6D0"}}>
+              <div style={{fontSize:11,fontWeight:700,color:"#1E6B42",marginBottom:6}}>📋 PROVISIÓN MENSUAL (costo)</div>
+              <div style={{fontSize:9,color:"#999999",marginBottom:6}}>Se acumula cada mes, se paga en fechas específicas</div>
               <Rw l="Prima" v={neg.pri} note="Pago: 30 Jun y 20 Dic"/>
               <Rw l="Cesantías" v={neg.ces} note="Pago: 14 Feb año siguiente"/>
               <Rw l="Int. cesantías" v={neg.intC} note="Pago: 31 Ene año siguiente"/>
@@ -1084,9 +1084,9 @@ window.onload=function(){
 
           {/* Resumen mensual */}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,textAlign:"center",marginBottom:10}}>
-            <div style={{background:"#fef2f2",borderRadius:8,padding:"8px 6px",border:"1px solid #fecaca"}}><div style={{fontSize:9,color:"#dc2626",fontWeight:600}}>Gasto real/mes</div><div style={{fontSize:18,fontWeight:800,fontFamily:"monospace",color:"#dc2626"}}>{$(neg.devTotal+neg.totAp)}</div></div>
-            <div style={{background:"#eff6ff",borderRadius:8,padding:"8px 6px",border:"1px solid #bfdbfe"}}><div style={{fontSize:9,color:"#1d4ed8",fontWeight:600}}>Provisión/mes</div><div style={{fontSize:18,fontWeight:800,fontFamily:"monospace",color:"#1d4ed8"}}>{$(neg.totPr)}</div></div>
-            <div style={{background:"#f8fafc",borderRadius:8,padding:"8px 6px",border:"1px solid #e2e8f0"}}><div style={{fontSize:9,color:"#475569",fontWeight:600}}>Costo total/mes</div><div style={{fontSize:18,fontWeight:800,fontFamily:"monospace",color:"#0f172a"}}>{$(neg.costoT)}</div></div>
+            <div style={{background:"#fef2f2",borderRadius:8,padding:"8px 6px",border:"1px solid #fecaca"}}><div style={{fontSize:9,color:"#dc2626",fontWeight:600}}>Gasto real/mes</div><div style={{fontSize:18,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#dc2626"}}>{$(neg.devTotal+neg.totAp)}</div></div>
+            <div style={{background:"#E8F4EE",borderRadius:8,padding:"8px 6px",border:"1px solid #C8E6D0"}}><div style={{fontSize:9,color:"#1E6B42",fontWeight:600}}>Provisión/mes</div><div style={{fontSize:18,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#1E6B42"}}>{$(neg.totPr)}</div></div>
+            <div style={{background:"#FAFAF8",borderRadius:8,padding:"8px 6px",border:"1px solid #E5E3DE"}}><div style={{fontSize:9,color:"#555555",fontWeight:600}}>Costo total/mes</div><div style={{fontSize:18,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#111111"}}>{$(neg.costoT)}</div></div>
           </div>
 
           {/* COSTO TOTAL CONTRATO + LIQUIDACIONES */}
@@ -1113,17 +1113,17 @@ window.onload=function(){
 
             return <>
               <Dv/>
-              <div style={{fontSize:12,fontWeight:700,color:"#0f172a",marginBottom:8}}>📊 Costo Total del Contrato — {contrato.label||meses+" meses"}</div>
+              <div style={{fontSize:12,fontWeight:700,color:"#111111",marginBottom:8}}>📊 Costo Total del Contrato — {contrato.label||meses+" meses"}</div>
 
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:10}}>
-                <div style={{background:"#fef2f2",borderRadius:8,padding:"8px 10px",border:"1px solid #fecaca"}}><div style={{fontSize:9,color:"#dc2626",fontWeight:600}}>Gasto total contrato (tesorería)</div><div style={{fontSize:18,fontWeight:800,fontFamily:"monospace",color:"#dc2626"}}>{$(gastoTotal)}</div><div style={{fontSize:9,color:"#94a3b8"}}>{$(gastoMes)} × {meses} meses</div></div>
-                <div style={{background:"#eff6ff",borderRadius:8,padding:"8px 10px",border:"1px solid #bfdbfe"}}><div style={{fontSize:9,color:"#1d4ed8",fontWeight:600}}>Provisiones acumuladas</div><div style={{fontSize:18,fontWeight:800,fontFamily:"monospace",color:"#1d4ed8"}}>{$(provTotal)}</div><div style={{fontSize:9,color:"#94a3b8"}}>{$(provMes)} × {meses} meses</div></div>
+                <div style={{background:"#fef2f2",borderRadius:8,padding:"8px 10px",border:"1px solid #fecaca"}}><div style={{fontSize:9,color:"#dc2626",fontWeight:600}}>Gasto total contrato (tesorería)</div><div style={{fontSize:18,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#dc2626"}}>{$(gastoTotal)}</div><div style={{fontSize:9,color:"#999999"}}>{$(gastoMes)} × {meses} meses</div></div>
+                <div style={{background:"#E8F4EE",borderRadius:8,padding:"8px 10px",border:"1px solid #C8E6D0"}}><div style={{fontSize:9,color:"#1E6B42",fontWeight:600}}>Provisiones acumuladas</div><div style={{fontSize:18,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#1E6B42"}}>{$(provTotal)}</div><div style={{fontSize:9,color:"#999999"}}>{$(provMes)} × {meses} meses</div></div>
               </div>
 
               {/* LIQUIDACIÓN — siempre se paga */}
               <div style={{border:"1px solid #a7f3d0",borderRadius:8,padding:"10px 12px",background:"#f0fdf4",marginBottom:8}}>
                 <div style={{fontSize:11,fontWeight:700,color:"#059669",marginBottom:2}}>📋 Liquidación (se paga SIEMPRE al terminar)</div>
-                <div style={{fontSize:9,color:"#94a3b8",marginBottom:6}}>Independiente del motivo de terminación — renuncia, fin de contrato o despido</div>
+                <div style={{fontSize:9,color:"#999999",marginBottom:6}}>Independiente del motivo de terminación — renuncia, fin de contrato o despido</div>
                 <Rw l="Prima proporcional" v={primaProp} note={`${$(baseLiq)} × ${dias%180}d / 360`}/>
                 <Rw l="Cesantías" v={cesProp} note={`${$(baseLiq)} × ${dias}d / 360`}/>
                 <Rw l="Int. cesantías" v={intCes} note={`${$(cesProp)} × ${dias}d × 12% / 360`}/>
@@ -1135,7 +1135,7 @@ window.onload=function(){
               {/* INDEMNIZACIÓN — solo despido sin justa causa */}
               <div style={{border:"1px solid #fecaca",borderRadius:8,padding:"10px 12px",background:"#fef2f2",marginBottom:8}}>
                 <div style={{fontSize:11,fontWeight:700,color:"#dc2626",marginBottom:2}}>⚠️ Indemnización — SOLO si hay despido sin justa causa (Art. 64 CST)</div>
-                <div style={{fontSize:9,color:"#94a3b8",marginBottom:6}}>Es una penalidad ADICIONAL a la liquidación. No aplica si el contrato termina normalmente.</div>
+                <div style={{fontSize:9,color:"#999999",marginBottom:6}}>Es una penalidad ADICIONAL a la liquidación. No aplica si el contrato termina normalmente.</div>
                 <Rw l="Fórmula" v={`${$(salDia)}/día × días restantes`}/>
                 <Rw l="Indemnización máxima (despido día 1)" v={indemMax} bold hl="red" note={`${$(salDia)} × ${dias} días = ${$(indemMax)}`}/>
                 {/* Tramos */}
@@ -1152,15 +1152,15 @@ window.onload=function(){
                       rows.push({m,dt,dr,ind,pct});
                     }
                     return <div style={{display:"grid",gridTemplateColumns:"auto 1fr auto auto",gap:"0",fontSize:10}}>
-                      <div style={{padding:"3px 8px",fontWeight:700,color:"#64748b",borderBottom:"2px solid #e2e8f0"}}>Mes</div>
-                      <div style={{padding:"3px 8px",fontWeight:700,color:"#64748b",borderBottom:"2px solid #e2e8f0"}}></div>
-                      <div style={{padding:"3px 8px",fontWeight:700,color:"#64748b",borderBottom:"2px solid #e2e8f0",textAlign:"right"}}>Días rest.</div>
-                      <div style={{padding:"3px 8px",fontWeight:700,color:"#64748b",borderBottom:"2px solid #e2e8f0",textAlign:"right"}}>Indemnización</div>
+                      <div style={{padding:"3px 8px",fontWeight:700,color:"#666666",borderBottom:"2px solid #E5E3DE"}}>Mes</div>
+                      <div style={{padding:"3px 8px",fontWeight:700,color:"#666666",borderBottom:"2px solid #E5E3DE"}}></div>
+                      <div style={{padding:"3px 8px",fontWeight:700,color:"#666666",borderBottom:"2px solid #E5E3DE",textAlign:"right"}}>Días rest.</div>
+                      <div style={{padding:"3px 8px",fontWeight:700,color:"#666666",borderBottom:"2px solid #E5E3DE",textAlign:"right"}}>Indemnización</div>
                       {rows.map((r,i)=><div key={i} style={{display:"contents"}}>
-                        <div style={{padding:"3px 8px",fontWeight:700,color:r.dr===0?"#059669":"#475569",background:i%2?"#fef2f2":"transparent"}}>Mes {r.m}</div>
+                        <div style={{padding:"3px 8px",fontWeight:700,color:r.dr===0?"#059669":"#555555",background:i%2?"#fef2f2":"transparent"}}>Mes {r.m}</div>
                         <div style={{padding:"3px 8px",background:i%2?"#fef2f2":"transparent"}}><div style={{height:6,background:"#fee2e2",borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:r.pct+"%",background:r.pct>50?"#dc2626":"#f59e0b",borderRadius:3}}/></div></div>
-                        <div style={{padding:"3px 8px",textAlign:"right",color:"#64748b",fontFamily:"monospace",background:i%2?"#fef2f2":"transparent"}}>{r.dr}d</div>
-                        <div style={{padding:"3px 8px",textAlign:"right",fontWeight:700,fontFamily:"monospace",color:r.dr===0?"#059669":"#dc2626",background:i%2?"#fef2f2":"transparent"}}>{$(r.ind)}</div>
+                        <div style={{padding:"3px 8px",textAlign:"right",color:"#666666",fontFamily:"'DM Mono',monospace",background:i%2?"#fef2f2":"transparent"}}>{r.dr}d</div>
+                        <div style={{padding:"3px 8px",textAlign:"right",fontWeight:700,fontFamily:"'DM Mono',monospace",color:r.dr===0?"#059669":"#dc2626",background:i%2?"#fef2f2":"transparent"}}>{$(r.ind)}</div>
                       </div>)}
                     </div>
                   })()}
@@ -1171,25 +1171,25 @@ window.onload=function(){
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
                 <div style={{background:"#f0fdf4",borderRadius:8,padding:10,border:"2px solid #059669",textAlign:"center"}}>
                   <div style={{fontSize:9,color:"#059669",fontWeight:600}}>Costo contrato (terminación normal)</div>
-                  <div style={{fontSize:18,fontWeight:800,fontFamily:"monospace",color:"#059669"}}>{$(gastoTotal+liqNormal)}</div>
-                  <div style={{fontSize:9,color:"#94a3b8"}}>Gasto {$(gastoTotal)} + Liq. {$(liqNormal)}</div>
+                  <div style={{fontSize:18,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#059669"}}>{$(gastoTotal+liqNormal)}</div>
+                  <div style={{fontSize:9,color:"#999999"}}>Gasto {$(gastoTotal)} + Liq. {$(liqNormal)}</div>
                 </div>
                 <div style={{background:"#fef2f2",borderRadius:8,padding:10,border:"2px solid #dc2626",textAlign:"center"}}>
                   <div style={{fontSize:9,color:"#dc2626",fontWeight:600}}>Costo contrato (despido día 1 — peor caso)</div>
-                  <div style={{fontSize:18,fontWeight:800,fontFamily:"monospace",color:"#dc2626"}}>{$(gastoTotal+liqNormal+indemMax)}</div>
-                  <div style={{fontSize:9,color:"#94a3b8"}}>Gasto + Liq. + Indem. {$(indemMax)}</div>
+                  <div style={{fontSize:18,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#dc2626"}}>{$(gastoTotal+liqNormal+indemMax)}</div>
+                  <div style={{fontSize:9,color:"#999999"}}>Gasto + Liq. + Indem. {$(indemMax)}</div>
                 </div>
               </div>
 
               {/* Calendario de pagos de provisiones */}
-              <div style={{marginTop:10,fontSize:11,fontWeight:700,color:"#0f172a",marginBottom:6}}>📅 Calendario de pagos previstos:</div>
-              <div style={{fontSize:10,color:"#475569",lineHeight:1.6}}>
+              <div style={{marginTop:10,fontSize:11,fontWeight:700,color:"#111111",marginBottom:6}}>📅 Calendario de pagos previstos:</div>
+              <div style={{fontSize:10,color:"#555555",lineHeight:1.6}}>
                 {(()=>{try{
                   const items=[];
                   const fmt=d=>{if(!d||isNaN(d.getTime()))return"—";return d.toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"})};
-                  const CalRow=({fecha,concepto,valor,tipo})=><div style={{display:"flex",justifyContent:"space-between",padding:"4px 6px",borderBottom:"1px solid #f1f5f9",background:tipo==="liq"?"#fef2f2":tipo==="prov"?"#eff6ff":"transparent",borderRadius:3,marginBottom:1}}>
+                  const CalRow=({fecha,concepto,valor,tipo})=><div style={{display:"flex",justifyContent:"space-between",padding:"4px 6px",borderBottom:"1px solid #F5F4F1",background:tipo==="liq"?"#fef2f2":tipo==="prov"?"#E8F4EE":"transparent",borderRadius:3,marginBottom:1}}>
                     <span><span style={{fontSize:8,marginRight:4}}>{tipo==="liq"?"🔴":"📌"}</span><strong>{fecha}</strong> — {concepto}</span>
-                    <span style={{fontFamily:"monospace",fontWeight:700,color:tipo==="liq"?"#dc2626":"#1e293b"}}>{$(valor)}</span>
+                    <span style={{fontFamily:"'DM Mono',monospace",fontWeight:700,color:tipo==="liq"?"#dc2626":"#111111"}}>{$(valor)}</span>
                   </div>;
 
                   if(durMode==="fechas"&&contrato.fechaIni&&contrato.fechaFin){
@@ -1245,9 +1245,9 @@ window.onload=function(){
                   let totalPagos=0;
                   return <>
                     {items.map((it,i)=>{totalPagos+=it.valor;return <CalRow key={i} {...it}/>})}
-                    <div style={{display:"flex",justifyContent:"space-between",padding:"6px 6px 2px",fontWeight:700,borderTop:"2px solid #e2e8f0",marginTop:4}}>
+                    <div style={{display:"flex",justifyContent:"space-between",padding:"6px 6px 2px",fontWeight:700,borderTop:"2px solid #E5E3DE",marginTop:4}}>
                       <span>TOTAL PAGOS PREVISTOS</span>
-                      <span style={{fontFamily:"monospace",fontSize:12}}>{$(totalPagos)}</span>
+                      <span style={{fontFamily:"'DM Mono',monospace",fontSize:12}}>{$(totalPagos)}</span>
                     </div>
                   </>
                 }catch(e){return <div style={{color:"#dc2626",fontSize:10}}>Error calculando calendario: {e.message}</div>}})()}
@@ -1262,8 +1262,8 @@ window.onload=function(){
             <button type="button" onClick={()=>openDoc("empleado",true)} style={{flex:1,padding:"10px 8px",background:"#059669",color:"#fff",border:"none",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📄 PDF</button>
           </div>
           <div style={{display:"flex",gap:4}}>
-            <button type="button" onClick={()=>openDoc("empleador",false)} style={{flex:1,padding:"10px 8px",background:"#fff",color:"#1e40af",border:"2px solid #1e40af",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>👁️ Ver Empleador</button>
-            <button type="button" onClick={()=>openDoc("empleador",true)} style={{flex:1,padding:"10px 8px",background:"#1e40af",color:"#fff",border:"none",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📄 PDF</button>
+            <button type="button" onClick={()=>openDoc("empleador",false)} style={{flex:1,padding:"10px 8px",background:"#fff",color:"#111111",border:"2px solid #111111",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>👁️ Ver Empleador</button>
+            <button type="button" onClick={()=>openDoc("empleador",true)} style={{flex:1,padding:"10px 8px",background:"#111111",color:"#fff",border:"none",borderRadius:8,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📄 PDF</button>
           </div>
         </div>
       </>}
@@ -1275,41 +1275,41 @@ window.onload=function(){
         <G2>
           <In label="Fecha de ingreso" type="date" value={fechaIng} onChange={e=>setFechaIng(e.target.value)} help="Requerido para vacaciones"/>
           <div style={{display:"flex",alignItems:"center",gap:8,paddingTop:16}}>
-            <button type="button" onClick={()=>{if(liqM===0){setLiqM(11);setLiqY(liqY-1)}else setLiqM(liqM-1);setNovs({});setExtHoras({})}} style={{padding:"6px 12px",border:"1px solid #e2e8f0",borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"inherit"}}>◀</button>
-            <div style={{flex:1,textAlign:"center"}}><span style={{fontSize:16,fontWeight:800,color:"#0f172a"}}>{MESES[liqM]} {liqY}</span></div>
-            <button type="button" onClick={()=>{if(liqM===11){setLiqM(0);setLiqY(liqY+1)}else setLiqM(liqM+1);setNovs({});setExtHoras({})}} style={{padding:"6px 12px",border:"1px solid #e2e8f0",borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"inherit"}}>▶</button>
+            <button type="button" onClick={()=>{if(liqM===0){setLiqM(11);setLiqY(liqY-1)}else setLiqM(liqM-1);setNovs({});setExtHoras({})}} style={{padding:"6px 12px",border:"1px solid #E5E3DE",borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"inherit"}}>◀</button>
+            <div style={{flex:1,textAlign:"center"}}><span style={{fontSize:16,fontWeight:800,color:"#111111"}}>{MESES[liqM]} {liqY}</span></div>
+            <button type="button" onClick={()=>{if(liqM===11){setLiqM(0);setLiqY(liqY+1)}else setLiqM(liqM+1);setNovs({});setExtHoras({})}} style={{padding:"6px 12px",border:"1px solid #E5E3DE",borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"inherit"}}>▶</button>
           </div>
         </G2>
 
         {/* ★ VACACIONES */}
-        {vacInfo&&<Card t="Saldo de Vacaciones (Art. 186 CST)" icon="🏖️" accent="#ecfeff">
+        {vacInfo&&<Card t="Saldo de Vacaciones (Art. 186 CST)" icon="🏖️" accent="#E8F4EE">
           {/* Antigüedad y contrato */}
           <div style={{display:"grid",gridTemplateColumns:vacInfo.diasRestantes!=null?"1fr 1fr":"1fr",gap:8,marginBottom:8}}>
             <div style={{background:"#f0fdfa",borderRadius:8,padding:"8px 10px",border:"1px solid #99f6e4",display:"flex",alignItems:"center",gap:8}}>
-              <div style={{fontSize:22,fontWeight:800,fontFamily:"monospace",color:"#0d9488"}}>{vacInfo.diasLab}</div>
-              <div><div style={{fontSize:10,fontWeight:700,color:"#0d9488"}}>Días de antigüedad</div><div style={{fontSize:9,color:"#64748b"}}>Ingreso: {fmtDate(vacInfo.ini)}</div></div>
+              <div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#0d9488"}}>{vacInfo.diasLab}</div>
+              <div><div style={{fontSize:10,fontWeight:700,color:"#0d9488"}}>Días de antigüedad</div><div style={{fontSize:9,color:"#666666"}}>Ingreso: {fmtDate(vacInfo.ini)}</div></div>
             </div>
-            {vacInfo.diasRestantes!=null&&<div style={{background:vacInfo.diasRestantes>30?"#eff6ff":"#fef2f2",borderRadius:8,padding:"8px 10px",border:`1px solid ${vacInfo.diasRestantes>30?"#bfdbfe":"#fecaca"}`,display:"flex",alignItems:"center",gap:8}}>
-              <div style={{fontSize:22,fontWeight:800,fontFamily:"monospace",color:vacInfo.diasRestantes>30?"#2563eb":"#dc2626"}}>{vacInfo.diasRestantes}</div>
-              <div><div style={{fontSize:10,fontWeight:700,color:vacInfo.diasRestantes>30?"#2563eb":"#dc2626"}}>Días restantes</div><div style={{fontSize:9,color:"#64748b"}}>Fin contrato: {fmtDate(vacInfo.fechaFinCon)}</div></div>
+            {vacInfo.diasRestantes!=null&&<div style={{background:vacInfo.diasRestantes>30?"#E8F4EE":"#fef2f2",borderRadius:8,padding:"8px 10px",border:`1px solid ${vacInfo.diasRestantes>30?"#C8E6D0":"#fecaca"}`,display:"flex",alignItems:"center",gap:8}}>
+              <div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:vacInfo.diasRestantes>30?"#1E6B42":"#dc2626"}}>{vacInfo.diasRestantes}</div>
+              <div><div style={{fontSize:10,fontWeight:700,color:vacInfo.diasRestantes>30?"#1E6B42":"#dc2626"}}>Días restantes</div><div style={{fontSize:9,color:"#666666"}}>Fin contrato: {fmtDate(vacInfo.fechaFinCon)}</div></div>
             </div>}
           </div>
           {/* Saldo vacaciones */}
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,textAlign:"center"}}>
             {[{l:"Acumuladas",v:vacInfo.acum.toFixed(1),sub:"15 háb./año",c:"#059669",bg:"#ecfdf5",bc:"#a7f3d0"},
               {l:"Tomadas",v:vacInfo.totalUs,sub:vacInfo.usEsteMes>0?`${vacInfo.usEsteMes} este mes`:"—",c:"#dc2626",bg:"#fef2f2",bc:"#fecaca"},
-              {l:"Disponibles",v:vacInfo.disp.toFixed(1),sub:vacInfo.disp>=15?"Período completo":"En acumulación",c:vacInfo.disp>0?"#2563eb":"#d97706",bg:vacInfo.disp>0?"#eff6ff":"#fefce8",bc:vacInfo.disp>0?"#bfdbfe":"#fde68a"}
+              {l:"Disponibles",v:vacInfo.disp.toFixed(1),sub:vacInfo.disp>=15?"Período completo":"En acumulación",c:vacInfo.disp>0?"#1E6B42":"#d97706",bg:vacInfo.disp>0?"#E8F4EE":"#fefce8",bc:vacInfo.disp>0?"#C8E6D0":"#fde68a"}
             ].map((x,i)=>
               <div key={i} style={{background:x.bg,borderRadius:8,padding:"8px 4px",border:`1px solid ${x.bc}`}}>
                 <div style={{fontSize:9,color:x.c,fontWeight:600}}>{x.l}</div>
-                <div style={{fontSize:18,fontWeight:800,color:x.c,fontFamily:"monospace"}}>{x.v}</div>
-                <div style={{fontSize:8,color:"#94a3b8"}}>{x.sub}</div>
+                <div style={{fontSize:18,fontWeight:800,color:x.c,fontFamily:"'DM Mono',monospace"}}>{x.v}</div>
+                <div style={{fontSize:8,color:"#999999"}}>{x.sub}</div>
               </div>
             )}
           </div>
-          <div style={{marginTop:6,fontSize:10,color:"#64748b"}}>Para marcar vacaciones: selecciona 🏖️ en las novedades y haz clic en los días del calendario.</div>
+          <div style={{marginTop:6,fontSize:10,color:"#666666"}}>Para marcar vacaciones: selecciona 🏖️ en las novedades y haz clic en los días del calendario.</div>
           <details style={{marginTop:4}}>
-            <summary style={{fontSize:10,color:"#64748b",cursor:"pointer",fontWeight:600}}>⚙️ Ajustar vacaciones tomadas en meses anteriores</summary>
+            <summary style={{fontSize:10,color:"#666666",cursor:"pointer",fontWeight:600}}>⚙️ Ajustar vacaciones tomadas en meses anteriores</summary>
             <In label="Días ya disfrutados antes de este mes" type="number" value={vacUsadasHist} onChange={e=>setVacUsadasHist(Math.max(0,+e.target.value||0))} suffix="días" help="Se restan del acumulado para calcular disponibles"/>
           </details>
           {cal.vacD>0&&<Al c="b">🏖️ <strong>{cal.vacD} día(s)</strong> de vacaciones este mes. Salario pagado, sin bono asistencia ni aux. transporte.</Al>}
@@ -1320,7 +1320,7 @@ window.onload=function(){
         {/* ★ DOTACIÓN — con regla de 3 meses Art. 230 CST */}
         {dotacion&&<Card t="Dotación (Art. 230 CST)" icon="👔" accent="#fffbeb">
           <div style={{fontSize:10,color:"#92400e",marginBottom:6}}>Salario ≤ 2 SMLMV → 3 entregas/año. Requiere <strong>3 meses de antigüedad</strong> y contrato vigente.</div>
-          {dotacion.fecha3m&&<div style={{fontSize:10,color:"#64748b",marginBottom:6}}>
+          {dotacion.fecha3m&&<div style={{fontSize:10,color:"#666666",marginBottom:6}}>
             📅 Cumple 3 meses: <strong>{fmtDate(dotacion.fecha3m)}</strong>
             {dotacion.finCon&&<> · Fin contrato: <strong>{fmtDate(dotacion.finCon)}</strong></>}
           </div>}
@@ -1328,36 +1328,36 @@ window.onload=function(){
             Este contrato no genera derecho a dotación{dotacion.fecha3m&&dotacion.finCon?`: cumple 3 meses el ${fmtDate(dotacion.fecha3m)} pero ${dotacion.finCon<dotacion.items.find(e=>e.fecha>dotacion.fecha3m)?.fecha?"el contrato termina antes de la siguiente entrega":"no hay entregas programadas dentro del contrato"}.`:"."}
           </Al>}
           <div style={{display:"flex",gap:8}}>
-            {dotacion.items.map((d,i)=><div key={i} style={{flex:1,background:!d.aplica?"#fef2f2":d.esEsteMes?"#fef3c7":d.pasada?"#ecfdf5":"#f8fafc",border:`1px solid ${!d.aplica?"#fecaca":d.esEsteMes?"#fbbf24":d.pasada?"#a7f3d0":"#e2e8f0"}`,borderRadius:8,padding:"8px 6px",textAlign:"center",opacity:d.aplica?1:0.5}}>
-              <div style={{fontSize:10,fontWeight:700,color:!d.aplica?"#dc2626":d.esEsteMes?"#d97706":d.pasada?"#059669":"#64748b"}}>{d.n}ª — {d.mes}</div>
-              <div style={{fontSize:9,color:"#94a3b8"}}>{fmtDate(d.fecha)}</div>
+            {dotacion.items.map((d,i)=><div key={i} style={{flex:1,background:!d.aplica?"#fef2f2":d.esEsteMes?"#fef3c7":d.pasada?"#ecfdf5":"#FAFAF8",border:`1px solid ${!d.aplica?"#fecaca":d.esEsteMes?"#fbbf24":d.pasada?"#a7f3d0":"#E5E3DE"}`,borderRadius:8,padding:"8px 6px",textAlign:"center",opacity:d.aplica?1:0.5}}>
+              <div style={{fontSize:10,fontWeight:700,color:!d.aplica?"#dc2626":d.esEsteMes?"#d97706":d.pasada?"#059669":"#666666"}}>{d.n}ª — {d.mes}</div>
+              <div style={{fontSize:9,color:"#999999"}}>{fmtDate(d.fecha)}</div>
               <div style={{fontSize:14,marginTop:2}}>{!d.aplica?"—":d.pasada?"✅":"⏳"}</div>
-              <div style={{fontSize:8,color:"#94a3b8"}}>{!d.cumple3m?`${Math.round(d.antigDias)}d < 90d`:!d.conActivo?"Fuera del contrato":d.pasada?"Entregada":"Pendiente"}</div>
+              <div style={{fontSize:8,color:"#999999"}}>{!d.cumple3m?`${Math.round(d.antigDias)}d < 90d`:!d.conActivo?"Fuera del contrato":d.pasada?"Entregada":"Pendiente"}</div>
             </div>)}
           </div>
         </Card>}
 
         {/* CALENDAR */}
         <Card t={`Calendario — ${cal.wk} lab. · ${cal.hol} fest.${cal.vacD>0?" · "+cal.vacD+" vac.":""}`} icon="📅">
-          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>{DL.map((d,i)=><div key={i} style={{textAlign:"center",fontSize:10,fontWeight:700,color:workDays[i]?"#0ea5e9":"#cbd5e1",padding:"3px 0"}}>{d}</div>)}</div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>{DL.map((d,i)=><div key={i} style={{textAlign:"center",fontSize:10,fontWeight:700,color:workDays[i]?"#111111":"#CCCCCC",padding:"3px 0"}}>{d}</div>)}</div>
           <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2}}>
             {cDays.map((d,i)=>{
               if(!d)return <div key={i}/>;
               const dw=di(d),isW=workDays[dw],h=isHol(d,holidays),pre=fIngDate&&d<fIngDate;
               const k=dKey(d),nv=novs[k],nvT=nv?NOV.find(n=>n.id===nv):null;
               const isT=sameDay(d,now);
-              let bg="#f8fafc",cl="#cbd5e1",bd="1px solid #f1f5f9";
-              if(pre){bg="#f8fafc";cl="#e2e8f0"}else if(isW&&!h){bg="#ecfdf5";cl="#059669";bd="1px solid #a7f3d0"}
+              let bg="#FAFAF8",cl="#CCCCCC",bd="1px solid #F5F4F1";
+              if(pre){bg="#FAFAF8";cl="#E5E3DE"}else if(isW&&!h){bg="#ecfdf5";cl="#059669";bd="1px solid #a7f3d0"}
               if(h&&!pre){bg="#fefce8";cl="#92400e";bd="1px solid #fde68a"}
               if(nvT){bg=nvT.c+"15";bd=`1px solid ${nvT.c}40`}
-              if(isT)bd="2px solid #0ea5e9";
+              if(isT)bd="2px solid #111111";
               return <div key={i} onClick={()=>isW&&!h&&!pre&&toggleNov(d)} style={{padding:"3px 2px",borderRadius:6,background:bg,border:bd,textAlign:"center",cursor:isW&&!h&&!pre?"pointer":"default",minHeight:34,opacity:pre?.3:isW?1:.4,transition:"all .15s"}}><div style={{fontSize:12,fontWeight:700,color:cl}}>{d.getDate()}</div>{h&&!pre&&<div style={{fontSize:7,color:"#92400e",lineHeight:1}}>{h.name.slice(0,8)}</div>}{nvT&&<div style={{fontSize:8,color:nvT.c}}>{nvT.i}</div>}</div>
             })}
           </div>
           {cal.holList.length>0&&<div style={{marginTop:4,fontSize:10,color:"#92400e"}}>🎉 {cal.holList.map(h=>h.name).join(", ")}</div>}
-          <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid #e2e8f0"}} className="no-print">
-            <div style={{fontSize:10,color:"#64748b",marginBottom:4}}>Novedad:</div>
-            <div style={{display:"flex",flexWrap:"wrap",gap:3}}>{NOV.filter(n=>n.id!=="none").map(n=><button key={n.id} type="button" onClick={()=>setSelNov(n.id)} style={{padding:"4px 8px",borderRadius:6,fontSize:9,fontWeight:600,border:"none",cursor:"pointer",background:selNov===n.id?n.c:"#f1f5f9",color:selNov===n.id?"#fff":n.c,fontFamily:"inherit"}}>{n.i} {n.l}</button>)}</div>
+          <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid #E5E3DE"}} className="no-print">
+            <div style={{fontSize:10,color:"#666666",marginBottom:4}}>Novedad:</div>
+            <div style={{display:"flex",flexWrap:"wrap",gap:3}}>{NOV.filter(n=>n.id!=="none").map(n=><button key={n.id} type="button" onClick={()=>setSelNov(n.id)} style={{padding:"4px 8px",borderRadius:6,fontSize:9,fontWeight:600,border:"none",cursor:"pointer",background:selNov===n.id?n.c:"#F5F4F1",color:selNov===n.id?"#fff":n.c,fontFamily:"inherit"}}>{n.i} {n.l}</button>)}</div>
           </div>
         </Card>
 
@@ -1365,13 +1365,13 @@ window.onload=function(){
         <Card t="Horas Extras y Recargos" icon="⏰" accent="#fff7ed">
           <div style={{fontSize:10,color:"#9a3412",marginBottom:6}}>Arts. 168-171 CST, Ley 789/2002. Valor hora: {$(neg.salMes30/(hDia*30))}</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-            {EXTRAS.map(e=><div key={e.id} style={{display:"flex",alignItems:"center",gap:6,background:"#f8fafc",borderRadius:6,padding:"4px 8px",border:"1px solid #e2e8f0"}}>
-              <div style={{flex:1}}><div style={{fontSize:10,fontWeight:700,color:"#1e293b"}}>{e.l}</div><div style={{fontSize:8,color:"#94a3b8"}}>{e.d} ({e.tipo==="extra"?"×":"+"}{ (e.r*100).toFixed(0)}%)</div></div>
-              <input type="number" value={extHoras[e.id]||0} onChange={ev=>setExt(e.id,+ev.target.value)} min={0} style={{width:50,padding:"4px 6px",border:"1px solid #e2e8f0",borderRadius:4,fontSize:12,fontFamily:"monospace",textAlign:"center"}}/>
-              <span style={{fontSize:9,color:"#64748b"}}>h</span>
+            {EXTRAS.map(e=><div key={e.id} style={{display:"flex",alignItems:"center",gap:6,background:"#FAFAF8",borderRadius:6,padding:"4px 8px",border:"1px solid #E5E3DE"}}>
+              <div style={{flex:1}}><div style={{fontSize:10,fontWeight:700,color:"#111111"}}>{e.l}</div><div style={{fontSize:8,color:"#999999"}}>{e.d} ({e.tipo==="extra"?"×":"+"}{ (e.r*100).toFixed(0)}%)</div></div>
+              <input type="number" value={extHoras[e.id]||0} onChange={ev=>setExt(e.id,+ev.target.value)} min={0} style={{width:50,padding:"4px 6px",border:"1px solid #E5E3DE",borderRadius:4,fontSize:12,fontFamily:"'DM Mono',monospace",textAlign:"center"}}/>
+              <span style={{fontSize:9,color:"#666666"}}>h</span>
             </div>)}
           </div>
-          {liq&&liq.evDetail&&liq.evDetail.length>0&&<div style={{marginTop:8,borderTop:"1px solid #e2e8f0",paddingTop:6}}>
+          {liq&&liq.evDetail&&liq.evDetail.length>0&&<div style={{marginTop:8,borderTop:"1px solid #E5E3DE",paddingTop:6}}>
             {liq.evDetail.map(x=><Rw key={x.id} l={`${x.l} (${x.h}h × ${$(x.hRate)} × ${x.rate})`} v={x.val} hl="cyan"/>)}
             <Dv/><Rw l="TOTAL EXTRAS" v={liq.ev} bold hl="cyan"/>
           </div>}
@@ -1380,9 +1380,9 @@ window.onload=function(){
         {/* Summary */}
         <BigBox bg="linear-gradient(135deg,#059669,#047857)">
           <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:4}}>
-            {[{l:"Pagados",v:cal.dPagSal},{l:"Asistidos",v:cal.dAsist},{l:"Festivos",v:cal.hol},{l:"Vacaciones",v:cal.vacD},{l:"Novedades",v:cal.noT},{l:"Horas",v:cal.hMes+"h"}].map((x,i)=><div key={i}><div style={{fontSize:8,opacity:.7}}>{x.l}</div><div style={{fontSize:16,fontWeight:800,fontFamily:"monospace"}}>{x.v}</div></div>)}
+            {[{l:"Pagados",v:cal.dPagSal},{l:"Asistidos",v:cal.dAsist},{l:"Festivos",v:cal.hol},{l:"Vacaciones",v:cal.vacD},{l:"Novedades",v:cal.noT},{l:"Horas",v:cal.hMes+"h"}].map((x,i)=><div key={i}><div style={{fontSize:8,opacity:.7}}>{x.l}</div><div style={{fontSize:16,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{x.v}</div></div>)}
           </div>
-          {liq&&<div style={{marginTop:8,paddingTop:8,borderTop:"1px solid rgba(255,255,255,.2)",display:"flex",justifyContent:"space-between"}}><span style={{fontSize:11}}>Neto a pagar:</span><span style={{fontSize:20,fontWeight:800,fontFamily:"monospace"}}>{$(liq.neto)}</span></div>}
+          {liq&&<div style={{marginTop:8,paddingTop:8,borderTop:"1px solid rgba(255,255,255,.2)",display:"flex",justifyContent:"space-between"}}><span style={{fontSize:11}}>Neto a pagar:</span><span style={{fontSize:20,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{$(liq.neto)}</span></div>}
         </BigBox>
 
         <div className="no-print"><TabBar tabs={[{i:"📋",l:"Liquidación"},{i:"🏛",l:"PILA"},{i:"🎁",l:"Prestaciones"}]} active={liqTab} set={setLiqTab}/></div>
@@ -1409,7 +1409,7 @@ window.onload=function(){
 
         {liq&&liqTab===1&&<>
           <Al c="b"><strong>IBC:</strong> {$(liq.ibc)} · {liq.esSub?`Tipo 51 — ${liq.tramo}`:` Contributivo — SMLMV completo`} · Días cot: {liq.diasCotPILA}{liq.esSub?` · Mín tramo: ${$(liq.ibcMin)}`:""}</Al>
-          {liq.esSub?<Card t="Tramos PILA (Decreto 2616/2013 — Tipo 51)" icon="📊">{[{r:"1–7d",s:1,min:1,max:7},{r:"8–14d",s:2,min:8,max:14},{r:"15–21d",s:3,min:15,max:21},{r:"22–30d",s:4,min:22,max:30}].map((t,i)=>{const a=liq.diasCotPILA>=t.min&&liq.diasCotPILA<=t.max;return <div key={i} style={{display:"grid",gridTemplateColumns:"1fr .6fr 1fr",padding:"5px 10px",background:a?"#eff6ff":"transparent",borderBottom:"1px solid #f1f5f9",borderLeft:a?"3px solid #2563eb":"3px solid transparent"}}><span style={{fontSize:11,fontWeight:a?700:400,color:a?"#1d4ed8":"#64748b"}}>{t.r}</span><span style={{fontSize:11,color:a?"#0f172a":"#94a3b8"}}>{t.s}sem</span><span style={{fontSize:11,fontFamily:"monospace",color:a?"#059669":"#94a3b8"}}>IBC: {$(smlmv*t.s/4)}</span></div>})}</Card>
+          {liq.esSub?<Card t="Tramos PILA (Decreto 2616/2013 — Tipo 51)" icon="📊">{[{r:"1–7d",s:1,min:1,max:7},{r:"8–14d",s:2,min:8,max:14},{r:"15–21d",s:3,min:15,max:21},{r:"22–30d",s:4,min:22,max:30}].map((t,i)=>{const a=liq.diasCotPILA>=t.min&&liq.diasCotPILA<=t.max;return <div key={i} style={{display:"grid",gridTemplateColumns:"1fr .6fr 1fr",padding:"5px 10px",background:a?"#E8F4EE":"transparent",borderBottom:"1px solid #F5F4F1",borderLeft:a?"3px solid #1E6B42":"3px solid transparent"}}><span style={{fontSize:11,fontWeight:a?700:400,color:a?"#1E6B42":"#666666"}}>{t.r}</span><span style={{fontSize:11,color:a?"#111111":"#999999"}}>{t.s}sem</span><span style={{fontSize:11,fontFamily:"'DM Mono',monospace",color:a?"#059669":"#999999"}}>IBC: {$(smlmv*t.s/4)}</span></div>})}</Card>
           :<Card t="IBC — Régimen Contributivo" icon="📊">
             <Al c="b">En régimen <strong>contributivo</strong>, el IBC mínimo es siempre el <strong>SMLMV completo</strong> ({$(smlmv)}), independiente de los días trabajados. Los tramos por semanas (Decreto 2616/2013) solo aplican para <strong>cotizante tipo 51 (subsidiado/SISBEN)</strong>.</Al>
             <Rw l="IBC mínimo" v={smlmv} bold note="Ley 100/1993 Art. 18 — SMLMV completo"/>
@@ -1439,10 +1439,10 @@ window.onload=function(){
         <Card t="Datos del Retiro" icon="🚪" accent="#fef2f2">
           <G2><In label="Fecha inicio" type="date" value={fechaIniCon} onChange={e=>setFechaIniCon(e.target.value)}/><In label="Fecha retiro" type="date" value={fechaRet} onChange={e=>setFechaRet(e.target.value)}/></G2>
           <Sel label="Motivo" value={motivoRet} onChange={e=>setMotivoRet(e.target.value)} options={[{v:"",l:"— Seleccionar —"},...MOTIVOS].map(m=>({v:m.id,l:m.l}))}/>
-          {liqFinal&&<div style={{fontSize:11,color:"#64748b",marginTop:4}}>Laborado: <strong>{liqFinal.diasT}d</strong> ({(liqFinal.diasT/365).toFixed(1)} años) · Sal/día: {$(liqFinal.salDia)}</div>}
+          {liqFinal&&<div style={{fontSize:11,color:"#666666",marginTop:4}}>Laborado: <strong>{liqFinal.diasT}d</strong> ({(liqFinal.diasT/365).toFixed(1)} años) · Sal/día: {$(liqFinal.salDia)}</div>}
         </Card>
         {liqFinal&&<>
-          <Card t="Liquidación" icon="📋" badge={{t:$(liqFinal.total),bg:"#dbeafe",c:"#1d4ed8"}}>
+          <Card t="Liquidación" icon="📋" badge={{t:$(liqFinal.total),bg:"#E8F4EE",c:"#1E6B42"}}>
             <Rw l="Prima proporcional" v={liqFinal.primaProp} note="Sal × días sem / 360"/>
             <Rw l="Cesantías" v={liqFinal.cesProp} note="Sal × días / 360"/>
             <Rw l="Int. cesantías" v={liqFinal.intCes} note="Ces × días × 12% / 360"/>
@@ -1451,13 +1451,13 @@ window.onload=function(){
             <Dv/><Rw l="TOTAL" v={liqFinal.total} bold hl="blue"/>
           </Card>
           {liqFinal.indem>0&&<Al c="r"><strong>⚠️ Indemnización:</strong> {$(liqFinal.indem)}</Al>}
-          <BigBox bg="linear-gradient(135deg,#7c3aed,#5b21b6)"><div style={{fontSize:10,opacity:.8}}>TOTAL A PAGAR</div><div style={{fontSize:28,fontWeight:800,fontFamily:"monospace"}}>{$(liqFinal.total)}</div><div style={{fontSize:10,opacity:.6,marginTop:4}}>{MOTIVOS.find(m=>m.id===motivoRet)?.l} · {liqFinal.diasT}d</div></BigBox>
-          <div style={{textAlign:"center",marginBottom:10}} className="no-print"><button type="button" onClick={()=>openDoc("empleado",false)} style={{padding:"10px 24px",background:"#7c3aed",color:"#fff",border:"none",borderRadius:8,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>👁️ Ver Propuesta</button></div>
+          <BigBox bg="linear-gradient(135deg,#5B3A8C,#3B1F6E)"><div style={{fontSize:10,opacity:.8}}>TOTAL A PAGAR</div><div style={{fontSize:28,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{$(liqFinal.total)}</div><div style={{fontSize:10,opacity:.6,marginTop:4}}>{MOTIVOS.find(m=>m.id===motivoRet)?.l} · {liqFinal.diasT}d</div></BigBox>
+          <div style={{textAlign:"center",marginBottom:10}} className="no-print"><button type="button" onClick={()=>openDoc("empleado",false)} style={{padding:"10px 24px",background:"#5B3A8C",color:"#fff",border:"none",borderRadius:8,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>👁️ Ver Propuesta</button></div>
         </>}
         {!liqFinal&&<Al c="b">Ingresa fechas de inicio y retiro.</Al>}
       </>}
 
-      <div style={{background:"#fff",borderRadius:8,padding:"10px 12px",fontSize:9,color:"#94a3b8",lineHeight:1.4,border:"1px solid #e2e8f0",marginTop:4}}>
+      <div style={{background:"#fff",borderRadius:8,padding:"10px 12px",fontSize:9,color:"#999999",lineHeight:1.4,border:"1px solid #E5E3DE",marginTop:4}}>
         📚 CST Arts. 46-47, 64, 128, 168-171, 186, 227, 230; Ley 50/1990; Ley 100/1993; Ley 789/2002; Ley 2101/2021; Art. 114-1, 383, 387, 388 E.T.; Decreto 2616/2013; Decreto 1469/2025; Decreto 1470/2025.<br/>⚠️ Herramienta de referencia. No reemplaza asesoría contable profesional. Retención: Procedimiento 1 simplificado.
       </div>
     </div>
