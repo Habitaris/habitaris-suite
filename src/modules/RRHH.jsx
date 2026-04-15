@@ -3316,40 +3316,45 @@ function AnexosPanel({p}){
 
   // Document catalog
   const CATS = [
-    {id:"ident",label:"Identificación",icon:"🪪",color:"#111",docs:[
+    {id:"cand_ident",section:"candidato",label:"Identificación",icon:"🪪",color:"#111",docs:[
       {key:"cedula_anverso",label:"Cédula anverso"},
       {key:"cedula_reverso",label:"Cédula reverso"},
       {key:"contrasena",label:"Contraseña (si aplica)"},
     ]},
-    {id:"afil",label:"Afiliaciones y certificados",icon:"🏛️",color:"#0D5E6E",docs:[
+    {id:"cand_afil",section:"candidato",label:"Certificados del candidato",icon:"🏛️",color:"#0D5E6E",docs:[
       {key:"cert_eps",label:"Certificado EPS"},
       {key:"cert_pension",label:"Certificado Fondo Pensiones"},
       {key:"cert_banco",label:"Certificado cuenta bancaria"},
-      {key:"cert_arl",label:"ARL (gestión empleador)"},
-      {key:"cert_caja",label:"Caja de compensación"},
     ]},
-    {id:"medico",label:"Médico / SST",icon:"🏥",color:"#059669",docs:[
+    {id:"cand_medico",section:"candidato",label:"Médico",icon:"🏥",color:"#059669",docs:[
       {key:"examen_medico",label:"Examen médico ocupacional de ingreso"},
-      {key:"recomendaciones_sst",label:"Recomendaciones SST",gen:()=>abrirAnexo('sst')},
     ]},
-    {id:"eval",label:"Evaluaciones",icon:"🧠",color:"#5B3A8C",docs:[
-      {key:"psicotecnico",label:"Resultados psicotécnicos / DISC"},
-    ]},
-    {id:"contrato",label:"Documentos contractuales",icon:"📄",color:"#1E6B42",docs:[
-      {key:"condiciones_trabajador",label:"Condiciones laborales — trabajador"},
-      {key:"condiciones_empleador",label:"Condiciones laborales — empleador"},
-      {key:"contrato",label:"Contrato laboral firmado",gen:generarContrato},
-      {key:"descriptor",label:"Descriptor de cargo",gen:()=>abrirAnexo('descriptor')},
-      {key:"centro_trabajo",label:"Asignación centro de trabajo",gen:()=>abrirAnexo('centro')},
-    ]},
-    {id:"otros",label:"Otros documentos",icon:"📎",color:"#666",docs:[
+    {id:"cand_otros",section:"candidato",label:"Otros del candidato",icon:"📎",color:"#666",docs:[
       {key:"hoja_vida",label:"Hoja de vida"},
       {key:"cert_estudio",label:"Certificados estudio / experiencia"},
       {key:"antecedentes",label:"Antecedentes (policía/procuraduría)"},
       {key:"libreta_militar",label:"Libreta militar"},
       {key:"rut",label:"RUT"},
     ]},
+    {id:"emp_contrato",section:"empresa",label:"Documentos contractuales",icon:"📄",color:"#1E6B42",docs:[
+      {key:"condiciones_trabajador",label:"Condiciones laborales — trabajador"},
+      {key:"condiciones_empleador",label:"Condiciones laborales — empleador"},
+      {key:"contrato",label:"Contrato laboral",gen:generarContrato},
+      {key:"descriptor",label:"Descriptor de cargo",gen:()=>abrirAnexo('descriptor')},
+      {key:"centro_trabajo",label:"Asignación centro de trabajo",gen:()=>abrirAnexo('centro')},
+    ]},
+    {id:"emp_sst",section:"empresa",label:"SST y evaluaciones",icon:"🦺",color:"#D97706",docs:[
+      {key:"recomendaciones_sst",label:"Recomendaciones SST",gen:()=>abrirAnexo('sst')},
+      {key:"psicotecnico",label:"Resultados psicotécnicos / DISC"},
+    ]},
+    {id:"emp_afil",section:"empresa",label:"Afiliaciones empresa",icon:"🏢",color:"#2563EB",docs:[
+      {key:"cert_arl",label:"ARL (gestión empleador)"},
+      {key:"cert_caja",label:"Caja de compensación"},
+    ]},
   ];
+
+  const catsCand = CATS.filter(c=>c.section==="candidato");
+  const catsEmp = CATS.filter(c=>c.section==="empresa");
 
   const total = CATS.reduce((s,c)=>s+c.docs.length,0);
   const subidos = CATS.reduce((s,c)=>s+c.docs.filter(d=>docs[d.key]&&!docs[d.key].pendiente).length,0);
@@ -3376,31 +3381,40 @@ function AnexosPanel({p}){
       </div>
 
       {expanded && <div style={{marginTop:14}}>
-        {CATS.map(cat=>{
-          const catSubidos=cat.docs.filter(d=>docs[d.key]).length;
-          return <div key={cat.id} style={{marginBottom:12}}>
-            <div style={{fontSize:11,fontWeight:700,color:cat.color,display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
-              <span>{cat.icon}</span> {cat.label}
-              <span style={{fontSize:9,fontWeight:400,color:'#999'}}>({catSubidos}/{cat.docs.length})</span>
+        {[{title:"👤 Documentos del candidato",cats:catsCand,bg:"#FAFAF8",border:"#E5E3DE"},
+          {title:"🏢 Documentos de la empresa",cats:catsEmp,bg:"#F0FDF4",border:"#D1FAE5"}].map(sec=>(
+          <div key={sec.title} style={{marginBottom:14,border:'1px solid '+sec.border,borderRadius:8,overflow:'hidden'}}>
+            <div style={{background:sec.bg,padding:'8px 12px',fontSize:12,fontWeight:700,color:'#111',borderBottom:'1px solid '+sec.border}}>{sec.title}</div>
+            <div style={{padding:'8px 10px'}}>
+              {sec.cats.map(cat=>{
+                const catSubidos=cat.docs.filter(d=>docs[d.key]&&!docs[d.key].pendiente).length;
+                const catPend=cat.docs.filter(d=>docs[d.key]&&docs[d.key].pendiente).length;
+                return <div key={cat.id} style={{marginBottom:10}}>
+                  <div style={{fontSize:10,fontWeight:700,color:cat.color,display:'flex',alignItems:'center',gap:5,marginBottom:4}}>
+                    <span>{cat.icon}</span> {cat.label}
+                    <span style={{fontSize:9,fontWeight:400,color:'#999'}}>({catSubidos}{catPend>0?'+'+catPend+'⏳':''}/{cat.docs.length})</span>
+                  </div>
+                  {cat.docs.map(d=>{
+                    const uploaded=docs[d.key];
+                    const isPending=uploaded&&uploaded.pendiente;
+                    return <div key={d.key} style={{display:'flex',alignItems:'center',gap:8,padding:'4px 8px',borderBottom:'1px solid #F0EEE9',background:uploaded?(isPending?'#FFFBEB':'#FAFFF9'):'transparent'}}>
+                      <span style={{fontSize:11,width:18,textAlign:'center'}}>{uploaded?(isPending?'⏳':'✅'):'⬜'}</span>
+                      <span style={{flex:1,fontSize:11,color:'#111'}}>{d.label}</span>
+                      {uploaded && !isPending && <>
+                        <span style={{fontSize:9,color:'#1E6B42'}}>{uploaded.nombre}</span>
+                        {uploaded.data && <a href={uploaded.data} download={uploaded.nombre} style={{...btnS,background:'#E8F4EE',color:'#1E6B42'}}>↓</a>}
+                      </>}
+                      {isPending && <span style={{fontSize:9,color:'#D97706',fontWeight:600}}>Pendiente</span>}
+                      {d.gen && <button style={{...btnS,background:'#1E6B42',color:'#fff'}} onClick={d.gen}>Generar</button>}
+                      {!uploaded && <button style={{...btnS,background:'#FFFBEB',color:'#D97706',border:'1px solid #FDE68A'}} onClick={()=>{const nd={...docs,[d.key]:{pendiente:true,fecha:new Date().toISOString()}};setDocs(nd);fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,_expediente:nd})}).catch(()=>{});}}>Pendiente</button>}
+                      <button style={{...btnS,background:'#F5F4F1',color:'#555',border:'1px solid #E5E3DE'}} onClick={()=>subirDoc(d.key)}>{uploaded&&!isPending?'Reemplazar':'Subir'}</button>
+                    </div>;
+                  })}
+                </div>;
+              })}
             </div>
-            {cat.docs.map(d=>{
-              const uploaded=docs[d.key];
-              const isPending=uploaded&&uploaded.pendiente;
-              return <div key={d.key} style={{display:'flex',alignItems:'center',gap:8,padding:'5px 8px',borderBottom:'1px solid #E8F4EE',background:uploaded?(isPending?'#FFFBEB':'#FAFFF9'):'transparent'}}>
-                <span style={{fontSize:12,width:20,textAlign:'center'}}>{uploaded?(isPending?'⏳':'✅'):'⬜'}</span>
-                <span style={{flex:1,fontSize:12,color:'#111'}}>{d.label}</span>
-                {uploaded && !isPending && <>
-                  <span style={{fontSize:9,color:'#1E6B42'}}>{uploaded.nombre}</span>
-                  {uploaded.data && <a href={uploaded.data} download={uploaded.nombre} style={{...btnS,background:'#E8F4EE',color:'#1E6B42'}}>↓</a>}
-                </>}
-                {isPending && <span style={{fontSize:9,color:'#D97706',fontWeight:600}}>Pendiente</span>}
-                {d.gen && <button style={{...btnS,background:'#1E6B42',color:'#fff'}} onClick={d.gen}>Generar</button>}
-                {!uploaded && <button style={{...btnS,background:'#FFFBEB',color:'#D97706',border:'1px solid #FDE68A'}} onClick={()=>{const nd={...docs,[d.key]:{pendiente:true,fecha:new Date().toISOString()}};setDocs(nd);fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,_expediente:nd})}).catch(()=>{});}}>Pendiente</button>}
-                <button style={{...btnS,background:'#F5F4F1',color:'#555',border:'1px solid #E5E3DE'}} onClick={()=>subirDoc(d.key)}>{uploaded&&!isPending?'Reemplazar':'Subir'}</button>
-              </div>;
-            })}
-          </div>;
-        })}
+          </div>
+        ))}
       </div>}
     </div>
   );
