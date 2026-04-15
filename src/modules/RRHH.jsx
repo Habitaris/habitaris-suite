@@ -3326,13 +3326,9 @@ function AnexosPanel({p}){
       {key:"cert_pension",label:"Certificado Fondo Pensiones"},
       {key:"cert_banco",label:"Certificado cuenta bancaria"},
     ]},
-    {id:"cand_medico",section:"candidato",label:"Médico",icon:"🏥",color:"#059669",docs:[
-      {key:"examen_medico",label:"Examen médico ocupacional de ingreso"},
-    ]},
     {id:"cand_otros",section:"candidato",label:"Otros del candidato",icon:"📎",color:"#666",docs:[
       {key:"hoja_vida",label:"Hoja de vida"},
       {key:"cert_estudio",label:"Certificados estudio / experiencia"},
-      {key:"antecedentes",label:"Antecedentes (policía/procuraduría)"},
       {key:"libreta_militar",label:"Libreta militar"},
       {key:"rut",label:"RUT"},
     ]},
@@ -3343,9 +3339,11 @@ function AnexosPanel({p}){
       {key:"descriptor",label:"Descriptor de cargo",gen:()=>abrirAnexo('descriptor')},
       {key:"centro_trabajo",label:"Asignación centro de trabajo",gen:()=>abrirAnexo('centro')},
     ]},
-    {id:"emp_sst",section:"empresa",label:"SST y evaluaciones",icon:"🦺",color:"#D97706",docs:[
+    {id:"emp_sst",section:"empresa",label:"SST, médico y evaluaciones",icon:"🦺",color:"#D97706",docs:[
+      {key:"examen_medico",label:"Examen médico ocupacional de ingreso"},
       {key:"recomendaciones_sst",label:"Recomendaciones SST",gen:()=>abrirAnexo('sst')},
       {key:"psicotecnico",label:"Resultados psicotécnicos / DISC"},
+      {key:"antecedentes",label:"Antecedentes (policía/procuraduría)"},
     ]},
     {id:"emp_afil",section:"empresa",label:"Afiliaciones empresa",icon:"🏢",color:"#2563EB",docs:[
       {key:"cert_arl",label:"ARL (gestión empleador)"},
