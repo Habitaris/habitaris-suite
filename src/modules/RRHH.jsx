@@ -3361,8 +3361,9 @@ function AnexosPanel({p}){
       {key:"antecedentes_contraloria",label:"Antecedentes fiscales (Contraloría)",url:"https://www.contraloria.gov.co/control-fiscal/responsabilidad-fiscal/certificado-de-antecedentes-fiscales"},
     ]},
     {id:"emp_afil",section:"empresa",label:"Afiliaciones empresa",icon:"🏢",color:"#2563EB",docs:[
-      {key:"cert_arl",label:"ARL (gestión empleador)"},
-      {key:"cert_caja",label:"Caja de compensación"},
+      {key:"afil_eps",label:"Afiliación EPS"},
+      {key:"cert_arl",label:"Afiliación ARL"},
+      {key:"cert_caja",label:"Afiliación Caja de compensación"},
     ]},
   ];
 
