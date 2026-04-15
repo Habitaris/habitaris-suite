@@ -13,6 +13,16 @@ export default async function handler(req,res){
   try{
     // GET - by token or list
     if(req.method==="GET"){
+      // KV store operations (nomina)
+      var kv=req.query.kv||"";
+      if(kv){
+        var kvKey="hab:"+kv+":"+(req.query.anio||"2026")+":"+(req.query.mes||"0");
+        var rk=await fetch(SB_URL+"/rest/v1/kv_store?key=eq."+kvKey+"&select=value",{headers:sbH()});
+        var dk=await rk.json();
+        if(Array.isArray(dk)&&dk.length>0&&dk[0].value)return res.json({ok:true,data:JSON.parse(dk[0].value)});
+        return res.json({ok:true,data:[]});
+      }
+
       var tp=req.query.token_propuesta||"";
       var td=req.query.token_datos||"";
       var estado=req.query.estado||"";
@@ -46,6 +56,23 @@ export default async function handler(req,res){
     // POST - create new hiring process or delete
     if(req.method==="POST"){
       var b=req.body||{};
+
+      // KV store save (nomina)
+      if(req.query.kv){
+        var kvKey="hab:"+req.query.kv+":"+(req.query.anio||"2026")+":"+(req.query.mes||"0");
+        var val=JSON.stringify(b.data);
+        // Try PATCH first
+        var rp=await fetch(SB_URL+"/rest/v1/kv_store?key=eq."+kvKey,{method:"PATCH",headers:{...sbH(),Prefer:"return=minimal"},body:JSON.stringify({value:val})});
+        // If no rows matched, insert
+        if(rp.status===204||rp.status===200){
+          var chk=await fetch(SB_URL+"/rest/v1/kv_store?key=eq."+kvKey+"&select=key",{headers:sbH()});
+          var chkd=await chk.json();
+          if(!Array.isArray(chkd)||chkd.length===0){
+            await fetch(SB_URL+"/rest/v1/kv_store",{method:"POST",headers:sbH(),body:JSON.stringify({key:kvKey,value:val,tenant_id:"habitaris"})});
+          }
+        }
+        return res.json({ok:true});
+      }
 
       // Delete action — cascade: psicotecnico_results → hiring_processes
       if(b.action==="delete"&&b.id){

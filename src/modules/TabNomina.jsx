@@ -41,8 +41,8 @@ async function fetchEmps(){try{
   }
   return results;
 }catch{return[];}}
-async function loadN(a,m){try{const r=await fetch("/api/nomina?anio="+a+"&mes="+m);const d=await r.json();return d.ok?d.data:[];}catch{return[];}}
-async function saveN(a,m,data){await fetch("/api/nomina?anio="+a+"&mes="+m,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data})});}
+async function loadN(a,m){try{const r=await fetch("/api/hiring?kv=nomina&anio="+a+"&mes="+m);const d=await r.json();return d.ok?d.data:[];}catch{return[];}}
+async function saveN(a,m,data){await fetch("/api/hiring?kv=nomina&anio="+a+"&mes="+m,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data})});}
 
 function calcN(n) {
   const dias=n.dias||30, ratio=dias/30, sal=n.sal||0;
