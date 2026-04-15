@@ -146,7 +146,7 @@ export function TabNomina(){
             const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:700px;margin:0 auto;padding:30px 40px;font-size:10pt;color:#111;line-height:1.5}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;margin:0;padding:0;font-size:10pt;color:#111;line-height:1.5}
 .hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:16px}.logo img{height:28px}
 h1{font-size:13pt;text-align:center;margin-bottom:4px}h2{font-size:11pt;margin:16px 0 8px;color:#111;border-bottom:1px solid #ccc;padding-bottom:4px}
 .sub{font-size:9pt;color:#666;text-align:center;margin-bottom:16px}
@@ -224,7 +224,7 @@ ${selN.nov?`<tr><td colspan="3" style="font-size:9pt;color:#666">Notas: ${selN.n
 <div class="foot">Habitaris Suite · ${new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" id="dlBtn" onclick="html2pdf().set({margin:10,filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
+<button class="btn" id="dlBtn" onclick="html2pdf().set({margin:[15,15,15,15],filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
@@ -416,7 +416,7 @@ ${selN.nov?`<tr><td colspan="3" style="font-size:9pt;color:#666">Notas: ${selN.n
                 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;font-size:10pt;color:#111}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;margin:0;padding:0;font-size:10pt;color:#111}
 .hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
 .hdr img{height:24px;margin-bottom:4px}.nit{font-size:8pt;color:#999}
 h1{font-size:11pt;text-align:center;margin:8px 0}
@@ -449,7 +449,7 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
 <div style="font-size:7pt;color:#999;text-align:center;margin-top:12px">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" onclick="html2pdf().set({margin:5,filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:[100,200],orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
+<button class="btn" onclick="html2pdf().set({margin:[20,25,20,25],filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
@@ -479,7 +479,7 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
                 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;font-size:10pt;color:#111}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;margin:0;padding:0;font-size:10pt;color:#111}
 .hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
 .hdr img{height:24px;margin-bottom:4px}.nit{font-size:8pt;color:#999}
 h1{font-size:11pt;text-align:center;margin:8px 0}
@@ -520,7 +520,7 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
 <div style="font-size:7pt;color:#999;text-align:center;margin-top:12px">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" onclick="html2pdf().set({margin:5,filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:[100,200],orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
+<button class="btn" onclick="html2pdf().set({margin:[20,25,20,25],filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
