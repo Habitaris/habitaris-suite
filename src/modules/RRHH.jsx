@@ -3269,122 +3269,132 @@ function ExamenPanel({ p, onDone }) {
 }
 
 /* ── EvaluacionesPanel: lanzar, ver resultados y aprobación dual RRHH+SST ── */
-/* ─── PANEL ANEXOS CONTRATO ──────────────────────────────────────────────────── */
+/* ─── EXPEDIENTE COMPLETO DEL EMPLEADO ──────────────────────────────────────── */
 function AnexosPanel({p}){
   const fecha = new Date().toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'});
-  const nombre = p.candidate_name || '________________________';
-  const cc     = p.candidate_id   || '________________________';
+  const nombre = p.candidato_nombre || p.candidate_name || '________________________';
+  const cc = p.candidato_cc || p.candidate_id || '________________________';
 
-  const DOCS = {
-    descriptor:{
-      titulo:'DESCRIPTOR DE CARGO',
-      cuerpo:`<table style="width:100%;border-collapse:collapse;font-size:11pt;margin-bottom:20px">
-<tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;width:35%;font-weight:bold">Cargo</td><td style="border:1px solid #ddd;padding:8px">${p.cargo||"—"}</td></tr>
-<tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;font-weight:bold">Área</td><td style="border:1px solid #ddd;padding:8px">${p.area||"—"}</td></tr>
-<tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;font-weight:bold">Tipo de contrato</td><td style="border:1px solid #ddd;padding:8px">${p.tipo_contrato||"—"}</td></tr>
-<tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;font-weight:bold">Jornada</td><td style="border:1px solid #ddd;padding:8px">${p.jornada_horas||42} horas semanales · ${p.horario||"—"}</td></tr>
-<tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;font-weight:bold">Días laborales</td><td style="border:1px solid #ddd;padding:8px">${p.dias_laborales||"—"}</td></tr>
-<tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;font-weight:bold">Trabajador</td><td style="border:1px solid #ddd;padding:8px">${nombre} · C.C. ${cc}</td></tr>
-</table>
-<p style="text-align:justify;margin:0 0 12px"><strong>OBJETIVO DEL CARGO:</strong> Desempeñar las funciones propias del cargo de <strong>${p.cargo||"—"}</strong> dentro del área de <strong>${p.area||"—"}</strong>, cumpliendo con los estándares de calidad, seguridad y normatividad interna de HABITARIS SAS.</p>
-<p style="text-align:justify;margin:0 0 12px"><strong>FUNCIONES PRINCIPALES:</strong></p>
-<ul style="margin:0 0 12px;padding-left:20px"><li>Las propias del cargo según las necesidades de la empresa.</li><li>Cumplir con el reglamento interno de trabajo y las políticas de SST.</li><li>Reportar cualquier novedad o situación de riesgo a su superior inmediato.</li><li>Mantener el orden y aseo en su puesto de trabajo.</li><li>Las demás que le sean asignadas por su jefe inmediato.</li></ul>
-<p style="text-align:justify;margin:0 0 12px">Declaro haber recibido, leído y comprendido el presente descriptor de cargo.</p>
-<div style="margin-top:60px;display:flex;gap:80px">
-  <div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">${nombre}<br>C.C. ${cc}<br><em>TRABAJADOR</em></div></div>
-  <div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">HABITARIS SAS<br>NIT 901.922.136-8<br><em>EMPLEADOR</em></div></div>
-</div>`
-    },
-    centro:{
-      titulo:'ASIGNACIÓN DE CENTRO DE TRABAJO',
-      cuerpo:`<p style="text-align:justify;margin:0 0 12px">HABITARIS SAS, NIT 901.922.136-8, asigna al trabajador <strong>${nombre}</strong>, identificado con C.C. <strong>${cc}</strong>, quien desempeñará el cargo de <strong>${p.cargo||"—"}</strong>, los siguientes centros de trabajo:</p>
-<table style="width:100%;border-collapse:collapse;font-size:11pt;margin:16px 0">
-<tr style="background:#1E6B42;color:#fff"><th style="border:1px solid #ddd;padding:8px;text-align:left">Centro</th><th style="border:1px solid #ddd;padding:8px;text-align:left">Dirección</th><th style="border:1px solid #ddd;padding:8px;text-align:left">Ciudad</th></tr>
-<tr><td style="border:1px solid #ddd;padding:8px">Centro principal</td><td style="border:1px solid #ddd;padding:8px">${p.centro_trabajo||"Por definir"}</td><td style="border:1px solid #ddd;padding:8px">${p.ciudad||"Bogotá D.C."}</td></tr>
-</table>
-<p style="text-align:justify;margin:0 0 12px">El trabajador podrá ser reubicado a otros centros de trabajo de la empresa según las necesidades operativas, previa comunicación.</p>
-<p style="text-align:justify;margin:0 0 12px"><strong>JORNADA:</strong> ${p.jornada_horas||42} horas semanales · ${p.horario||"—"} · ${p.dias_laborales||"—"}</p>
-<p style="text-align:justify;margin:0 0 12px"><strong>FECHA DE INICIO:</strong> ${p.fecha_inicio||"—"}</p>
-<p style="text-align:justify;margin:0 0 12px">En constancia, se firma en ${p.ciudad||"Bogotá D.C."}, a los ${fecha}.</p>
-<div style="margin-top:60px;display:flex;gap:80px">
-  <div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">${nombre}<br>C.C. ${cc}<br><em>TRABAJADOR</em></div></div>
-  <div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">HABITARIS SAS<br>NIT 901.922.136-8<br><em>EMPLEADOR</em></div></div>
-</div>`
-    }
-  };
+  // Document uploads state
+  const [docs, setDocs] = React.useState(p._expediente||{});
+  const [expanded, setExpanded] = React.useState(true);
 
-  const abrirAnexo = (tipo) => {
-    const doc = DOCS[tipo];
-    const html = `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${doc.titulo}</title>
-<style>body{font-family:'Times New Roman',serif;max-width:800px;margin:0 auto;padding:40px 50px;font-size:12pt;line-height:1.6;color:#111}h1{text-align:center;font-size:13pt;text-transform:uppercase;margin-bottom:24px;font-weight:bold}.logo{text-align:center;margin-bottom:24px;font-size:10pt;color:#666;border-bottom:2px solid #1E6B42;padding-bottom:12px}.no-print{text-align:center;margin:30px 0;padding:16px;background:#f5f5f5;border-radius:8px}.btn{background:#1E6B42;color:#fff;border:none;padding:10px 28px;font-size:12pt;cursor:pointer;border-radius:4px;margin-right:10px}@media print{.no-print{display:none}}</style>
-</head><body>
-<div class="logo"><strong>HABITARIS SAS</strong> &nbsp;·&nbsp; NIT 901.922.136-8 &nbsp;·&nbsp; Bogotá D.C., Colombia</div>
-<h1>${doc.titulo}</h1>
-${doc.cuerpo}
-<div class="no-print">
-  <p style="color:#555;margin-bottom:12px">Para guardar: Archivo → Imprimir → "Guardar como PDF"</p>
-  <button class="btn" onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button>
-  <button class="btn" style="background:#374151" onclick="window.close()">✕ Cerrar</button>
-</div></body></html>`;
-    const blob = new Blob([html],{type:'text/html;charset=utf-8'});
-    window.open(URL.createObjectURL(blob),'_blank');
-  };
-
-  const cardStyle = {borderRadius:8,border:'1px solid #D1FAE5',padding:16,background:'#F0FDF4',marginTop:12};
-  const btnBase   = {border:'none',padding:'8px 14px',borderRadius:6,cursor:'pointer',fontSize:13,fontFamily:'DM Sans,sans-serif',fontWeight:600};
-  const [uploads, setUploads] = React.useState({contrato:p.doc_contrato||null,descriptor:p.doc_descriptor||null,centro:p.doc_centro||null});
-
-  const generarContrato = async () => {
-    try {
-      const r = await fetch("/api/generate-contract?hiring_id="+p.id);
-      const d = await r.json();
-      if(d.ok && d.html){
-        const blob = new Blob([d.html],{type:'text/html;charset=utf-8'});
-        window.open(URL.createObjectURL(blob),'_blank');
-      } else {
-        alert("Error generando contrato: "+(d.error||"sin datos"));
-      }
-    } catch(e) { alert("Error: "+e.message); }
-  };
-
-  const subirDoc = (tipo) => {
+  const subirDoc = (key) => {
     const input = document.createElement('input');
-    input.type = 'file'; input.accept = '.pdf,.jpg,.jpeg,.png,.doc,.docx';
-    input.onchange = (e) => {
-      const file = e.target.files[0]; if(!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setUploads(prev => ({...prev, [tipo]: {nombre: file.name, data: ev.target.result, fecha: new Date().toISOString()}}));
-        // TODO: persist to Supabase
+    input.type='file'; input.accept='.pdf,.jpg,.jpeg,.png,.doc,.docx';
+    input.onchange=(e)=>{
+      const file=e.target.files[0]; if(!file)return;
+      const reader=new FileReader();
+      reader.onload=(ev)=>{
+        const nd={...docs,[key]:{nombre:file.name,data:ev.target.result,fecha:new Date().toISOString()}};
+        setDocs(nd);
+        // Persist to Supabase
+        fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({id:p.id,_expediente:nd})}).catch(()=>{});
       };
       reader.readAsDataURL(file);
     };
     input.click();
   };
 
-  const docRow = (tipo, label, emoji, genFn) => {
-    const doc = uploads[tipo];
-    return <div style={{display:'flex',alignItems:'center',gap:8,padding:'6px 0',borderBottom:'1px solid #D1FAE5'}}>
-      <span style={{fontSize:16}}>{emoji}</span>
-      <span style={{flex:1,fontSize:12,fontWeight:600,color:'#111'}}>{label}</span>
-      {doc ? (
-        <div style={{display:'flex',alignItems:'center',gap:6}}>
-          <span style={{fontSize:10,color:'#059669'}}>✅ {doc.nombre||'Subido'}</span>
-          {doc.data && <a href={doc.data} download={doc.nombre} style={{fontSize:10,color:'#2563EB',textDecoration:'none'}}>↓</a>}
-        </div>
-      ) : null}
-      {genFn && <button style={{...btnBase,background:'#1E6B42',color:'#fff',padding:'5px 10px',fontSize:11}} onClick={genFn}>Generar</button>}
-      <button style={{...btnBase,background:'#F5F4F1',color:'#555',padding:'5px 10px',fontSize:11,border:'1px solid #E5E3DE'}} onClick={()=>subirDoc(tipo)}>{doc?'Reemplazar':'Subir'}</button>
-    </div>;
+  const abrirAnexo = (tipo) => {
+    const plantillas = {
+      descriptor: {titulo:'DESCRIPTOR DE CARGO',cuerpo:`<table style="width:100%;border-collapse:collapse;font-size:11pt;margin-bottom:20px"><tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;width:35%;font-weight:bold">Cargo</td><td style="border:1px solid #ddd;padding:8px">${p.cargo||"—"}</td></tr><tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;font-weight:bold">Área</td><td style="border:1px solid #ddd;padding:8px">${p.area||"—"}</td></tr><tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;font-weight:bold">Tipo contrato</td><td style="border:1px solid #ddd;padding:8px">${p.tipo_contrato||"—"}</td></tr><tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;font-weight:bold">Jornada</td><td style="border:1px solid #ddd;padding:8px">${p.jornada_horas||42}h · ${p.horario||"—"}</td></tr><tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;font-weight:bold">Trabajador</td><td style="border:1px solid #ddd;padding:8px">${nombre} · C.C. ${cc}</td></tr></table><p style="text-align:justify;margin:0 0 12px"><strong>OBJETIVO:</strong> Desempeñar las funciones propias del cargo de <strong>${p.cargo||"—"}</strong> cumpliendo los estándares de calidad, seguridad y normatividad de HABITARIS SAS.</p><p style="text-align:justify;margin:0 0 12px"><strong>FUNCIONES:</strong></p><ul style="margin:0 0 12px;padding-left:20px"><li>Las propias del cargo según necesidades de la empresa.</li><li>Cumplir reglamento interno y políticas SST.</li><li>Reportar novedades o riesgos al superior inmediato.</li><li>Las demás asignadas por su jefe inmediato.</li></ul><div style="margin-top:60px;display:flex;gap:80px"><div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">${nombre}<br>C.C. ${cc}<br><em>TRABAJADOR</em></div></div><div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">HABITARIS SAS<br>NIT 901.922.136-8<br><em>EMPLEADOR</em></div></div></div>`},
+      centro: {titulo:'ASIGNACIÓN DE CENTRO DE TRABAJO',cuerpo:`<p style="text-align:justify;margin:0 0 12px">HABITARIS SAS asigna al trabajador <strong>${nombre}</strong>, C.C. <strong>${cc}</strong>, cargo <strong>${p.cargo||"—"}</strong>, los siguientes centros de trabajo:</p><table style="width:100%;border-collapse:collapse;margin:16px 0"><tr style="background:#1E6B42;color:#fff"><th style="border:1px solid #ddd;padding:8px;text-align:left">Centro</th><th style="border:1px solid #ddd;padding:8px;text-align:left">Dirección</th><th style="border:1px solid #ddd;padding:8px;text-align:left">Ciudad</th></tr><tr><td style="border:1px solid #ddd;padding:8px">Principal</td><td style="border:1px solid #ddd;padding:8px">${p.centro_trabajo||"Por definir"}</td><td style="border:1px solid #ddd;padding:8px">${p.ciudad||"Bogotá D.C."}</td></tr></table><p style="text-align:justify;margin:0 0 12px"><strong>JORNADA:</strong> ${p.jornada_horas||42}h · ${p.horario||"—"} · ${p.dias_laborales||"—"}</p><p style="text-align:justify;margin:0 0 12px"><strong>INICIO:</strong> ${p.fecha_inicio||"—"}</p><p style="text-align:justify;margin:0 0 12px">Firmado en ${p.ciudad||"Bogotá D.C."}, ${fecha}.</p><div style="margin-top:60px;display:flex;gap:80px"><div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">${nombre}<br>C.C. ${cc}<br><em>TRABAJADOR</em></div></div><div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">HABITARIS SAS<br>NIT 901.922.136-8<br><em>EMPLEADOR</em></div></div></div>`},
+      sst: {titulo:'RECOMENDACIONES DE SEGURIDAD Y SALUD EN EL TRABAJO',cuerpo:`<p>Trabajador: <strong>${nombre}</strong> · C.C. ${cc} · Cargo: ${p.cargo||"—"}</p><p style="margin:12px 0"><strong>RECOMENDACIONES GENERALES:</strong></p><ul style="padding-left:20px"><li>Usar los EPP asignados durante toda la jornada laboral.</li><li>Reportar inmediatamente cualquier condición insegura o accidente.</li><li>Participar en las capacitaciones de SST programadas.</li><li>Conocer y respetar la señalización de seguridad.</li><li>Mantener orden y aseo en el puesto de trabajo.</li><li>Conocer las rutas de evacuación y puntos de encuentro.</li></ul><p style="margin:12px 0">Fecha: ${fecha}</p><div style="margin-top:60px;display:flex;gap:80px"><div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">${nombre}<br><em>TRABAJADOR</em></div></div><div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">Responsable SST<br><em>HABITARIS SAS</em></div></div></div>`}
+    };
+    const doc=plantillas[tipo]; if(!doc)return;
+    const html=`<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><title>${doc.titulo}</title><style>body{font-family:'Times New Roman',serif;max-width:800px;margin:0 auto;padding:40px 50px;font-size:12pt;line-height:1.6;color:#111}h1{text-align:center;font-size:13pt;text-transform:uppercase;margin-bottom:24px}.logo{text-align:center;margin-bottom:24px;font-size:10pt;color:#666;border-bottom:2px solid #1E6B42;padding-bottom:12px}.no-print{text-align:center;margin:30px 0;padding:16px;background:#f5f5f5;border-radius:8px}.btn{background:#1E6B42;color:#fff;border:none;padding:10px 28px;font-size:12pt;cursor:pointer;border-radius:4px;margin-right:10px}@media print{.no-print{display:none}}</style></head><body><div class="logo"><strong>HABITARIS SAS</strong> · NIT 901.922.136-8 · Bogotá D.C.</div><h1>${doc.titulo}</h1>${doc.cuerpo}<div class="no-print"><p style="color:#555;margin-bottom:12px">Archivo → Imprimir → "Guardar como PDF"</p><button class="btn" onclick="window.print()">🖨️ Imprimir</button><button class="btn" style="background:#374151" onclick="window.close()">✕ Cerrar</button></div></body></html>`;
+    window.open(URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'})),'_blank');
   };
 
+  const generarContrato = async () => {
+    try{const r=await fetch("/api/generate-contract?hiring_id="+p.id);const d=await r.json();
+    if(d.ok&&d.html){window.open(URL.createObjectURL(new Blob([d.html],{type:'text/html;charset=utf-8'})),'_blank');}
+    else{alert("Error: "+(d.error||"sin datos"));}}catch(e){alert("Error: "+e.message);}
+  };
+
+  // Document catalog
+  const CATS = [
+    {id:"ident",label:"Identificación",icon:"🪪",color:"#111",docs:[
+      {key:"cedula_anverso",label:"Cédula anverso"},
+      {key:"cedula_reverso",label:"Cédula reverso"},
+      {key:"contrasena",label:"Contraseña (si aplica)"},
+    ]},
+    {id:"afil",label:"Afiliaciones y certificados",icon:"🏛️",color:"#0D5E6E",docs:[
+      {key:"cert_eps",label:"Certificado EPS"},
+      {key:"cert_pension",label:"Certificado Fondo Pensiones"},
+      {key:"cert_banco",label:"Certificado cuenta bancaria"},
+      {key:"cert_arl",label:"ARL (gestión empleador)"},
+      {key:"cert_caja",label:"Caja de compensación"},
+    ]},
+    {id:"medico",label:"Médico / SST",icon:"🏥",color:"#059669",docs:[
+      {key:"examen_medico",label:"Examen médico ocupacional de ingreso"},
+      {key:"recomendaciones_sst",label:"Recomendaciones SST",gen:()=>abrirAnexo('sst')},
+    ]},
+    {id:"eval",label:"Evaluaciones",icon:"🧠",color:"#5B3A8C",docs:[
+      {key:"psicotecnico",label:"Resultados psicotécnicos / DISC"},
+    ]},
+    {id:"contrato",label:"Documentos contractuales",icon:"📄",color:"#1E6B42",docs:[
+      {key:"contrato",label:"Contrato laboral firmado",gen:generarContrato},
+      {key:"descriptor",label:"Descriptor de cargo",gen:()=>abrirAnexo('descriptor')},
+      {key:"centro_trabajo",label:"Asignación centro de trabajo",gen:()=>abrirAnexo('centro')},
+    ]},
+    {id:"otros",label:"Otros documentos",icon:"📎",color:"#666",docs:[
+      {key:"hoja_vida",label:"Hoja de vida"},
+      {key:"cert_estudio",label:"Certificados estudio / experiencia"},
+      {key:"antecedentes",label:"Antecedentes (policía/procuraduría)"},
+      {key:"libreta_militar",label:"Libreta militar"},
+      {key:"rut",label:"RUT"},
+    ]},
+  ];
+
+  const total = CATS.reduce((s,c)=>s+c.docs.length,0);
+  const subidos = CATS.reduce((s,c)=>s+c.docs.filter(d=>docs[d.key]).length,0);
+
+  const sCard = {borderRadius:8,border:'1px solid #D1FAE5',padding:16,background:'#F0FDF4',marginTop:12};
+  const btnS = {border:'none',padding:'4px 10px',borderRadius:5,cursor:'pointer',fontSize:10,fontFamily:'DM Sans,sans-serif',fontWeight:600};
+
   return (
-    <div style={cardStyle}>
-      <div style={{fontWeight:700,fontSize:14,color:'#065F46',marginBottom:6}}>📋 Documentos Contractuales</div>
-      <p style={{fontSize:12,color:'#555',margin:'0 0 10px'}}>Genere o suba los documentos del contrato. La confidencialidad y tratamiento de datos van dentro del contrato.</p>
-      {docRow('contrato', 'Contrato Laboral', '📄', generarContrato)}
-      {docRow('descriptor', 'Descriptor de Cargo', '📋', ()=>abrirAnexo('descriptor'))}
-      {docRow('centro', 'Asignación Centro de Trabajo', '📍', ()=>abrirAnexo('centro'))}
+    <div style={sCard}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer'}} onClick={()=>setExpanded(!expanded)}>
+        <div>
+          <div style={{fontWeight:700,fontSize:14,color:'#065F46'}}>📁 Expediente del empleado</div>
+          <div style={{fontSize:11,color:'#555',marginTop:2}}>{nombre} · {subidos}/{total} documentos</div>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <div style={{width:80,height:6,background:'#D1FAE5',borderRadius:3,overflow:'hidden'}}>
+            <div style={{height:'100%',width:(subidos/total*100)+'%',background:'#1E6B42',borderRadius:3,transition:'width .3s'}}/>
+          </div>
+          <span style={{fontSize:11,fontWeight:700,color:'#1E6B42'}}>{Math.round(subidos/total*100)}%</span>
+          <span style={{fontSize:16,color:'#999'}}>{expanded?'▾':'▸'}</span>
+        </div>
+      </div>
+
+      {expanded && <div style={{marginTop:14}}>
+        {CATS.map(cat=>{
+          const catSubidos=cat.docs.filter(d=>docs[d.key]).length;
+          return <div key={cat.id} style={{marginBottom:12}}>
+            <div style={{fontSize:11,fontWeight:700,color:cat.color,display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
+              <span>{cat.icon}</span> {cat.label}
+              <span style={{fontSize:9,fontWeight:400,color:'#999'}}>({catSubidos}/{cat.docs.length})</span>
+            </div>
+            {cat.docs.map(d=>{
+              const uploaded=docs[d.key];
+              return <div key={d.key} style={{display:'flex',alignItems:'center',gap:8,padding:'5px 8px',borderBottom:'1px solid #E8F4EE',background:uploaded?'#FAFFF9':'transparent'}}>
+                <span style={{fontSize:12,width:20,textAlign:'center'}}>{uploaded?'✅':'⬜'}</span>
+                <span style={{flex:1,fontSize:12,color:'#111'}}>{d.label}</span>
+                {uploaded && <>
+                  <span style={{fontSize:9,color:'#1E6B42'}}>{uploaded.nombre}</span>
+                  {uploaded.data && <a href={uploaded.data} download={uploaded.nombre} style={{...btnS,background:'#E8F4EE',color:'#1E6B42'}}>↓</a>}
+                </>}
+                {d.gen && <button style={{...btnS,background:'#1E6B42',color:'#fff'}} onClick={d.gen}>Generar</button>}
+                <button style={{...btnS,background:'#F5F4F1',color:'#555',border:'1px solid #E5E3DE'}} onClick={()=>subirDoc(d.key)}>{uploaded?'Reemplazar':'Subir'}</button>
+              </div>;
+            })}
+          </div>;
+        })}
+      </div>}
     </div>
   );
 }
@@ -4075,7 +4085,7 @@ function TabContratacion({onNuevaPropuesta}) {
                       {p.estado==="firmado" && <>
                       <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"afiliaciones"})});loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #0891B2",borderRadius:6,background:"#E0F2FE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#0891B2"}}>🏛️ Registrar afiliaciones</button>
                     </>}
-                    {(p.estado==="afiliaciones"||p.estado==="firma_pendiente"||p.estado==="firmado") && <AfiliacionesPanel p={p} onDone={loadProcesos}/>}
+                    {(p.estado==="afiliaciones"||p.estado==="firma_pendiente"||p.estado==="firmado") && <span style={{fontSize:10,color:"#0891B2",fontStyle:"italic"}}>Las afiliaciones se gestionan en el expediente del empleado ↑</span>}
                     {p.estado==="completado" && <>
                       <span style={{padding:"6px 12px",fontSize:11,fontWeight:600,background:"#DCFCE7",borderRadius:6,color:"#059669"}}>✅ Proceso completo{p.expediente_num ? " · Exp. "+p.expediente_num : ""}</span>
                     </>}
