@@ -3278,22 +3278,24 @@ function AnexosPanel({p}){
   // Document uploads state
   const [docs, setDocs] = React.useState(p._expediente||{});
   const [expanded, setExpanded] = React.useState(true);
+  const [dragKey, setDragKey] = React.useState(null);
+
+  const processFile = (key, file) => {
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const nd = {...docs, [key]: {nombre: file.name, data: ev.target.result, fecha: new Date().toISOString()}};
+      setDocs(nd);
+      fetch("/api/hiring", {method: "PATCH", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({id: p.id, _expediente: nd})}).catch(()=>{});
+    };
+    reader.readAsDataURL(file);
+  };
 
   const subirDoc = (key) => {
     const input = document.createElement('input');
     input.type='file'; input.accept='.pdf,.jpg,.jpeg,.png,.doc,.docx';
-    input.onchange=(e)=>{
-      const file=e.target.files[0]; if(!file)return;
-      const reader=new FileReader();
-      reader.onload=(ev)=>{
-        const nd={...docs,[key]:{nombre:file.name,data:ev.target.result,fecha:new Date().toISOString()}};
-        setDocs(nd);
-        // Persist to Supabase
-        fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},
-          body:JSON.stringify({id:p.id,_expediente:nd})}).catch(()=>{});
-      };
-      reader.readAsDataURL(file);
-    };
+    input.onchange=(e)=>processFile(key, e.target.files[0]);
     input.click();
   };
 
@@ -3401,7 +3403,12 @@ function AnexosPanel({p}){
                   {cat.docs.map(d=>{
                     const uploaded=docs[d.key];
                     const isPending=uploaded&&uploaded.pendiente;
-                    return <div key={d.key} style={{display:'flex',alignItems:'center',gap:8,padding:'4px 8px',borderBottom:'1px solid #F0EEE9',background:uploaded?(isPending?'#FFFBEB':'#FAFFF9'):'transparent'}}>
+                    const isDrag=dragKey===d.key;
+                    return <div key={d.key}
+                      onDragOver={e=>{e.preventDefault();e.stopPropagation();setDragKey(d.key);}}
+                      onDragLeave={()=>setDragKey(null)}
+                      onDrop={e=>{e.preventDefault();e.stopPropagation();setDragKey(null);const f=e.dataTransfer.files[0];if(f)processFile(d.key,f);}}
+                      style={{display:'flex',alignItems:'center',gap:8,padding:'4px 8px',borderBottom:'1px solid #F0EEE9',background:isDrag?'#DBEAFE':uploaded?(isPending?'#FFFBEB':'#FAFFF9'):'transparent',transition:'background .15s',borderRadius:isDrag?4:0,border:isDrag?'2px dashed #2563EB':'2px solid transparent'}}>
                       <span style={{fontSize:11,width:18,textAlign:'center'}}>{uploaded?(isPending?'⏳':'✅'):'⬜'}</span>
                       <span style={{flex:1,fontSize:11,color:'#111'}}>{d.label}</span>
                       {uploaded && !isPending && <>
@@ -3411,7 +3418,7 @@ function AnexosPanel({p}){
                       {isPending && <span style={{fontSize:9,color:'#D97706',fontWeight:600}}>Pendiente</span>}
                       {d.gen && <button style={{...btnS,background:'#1E6B42',color:'#fff'}} onClick={d.gen}>Generar</button>}
                       {!uploaded && <button style={{...btnS,background:'#FFFBEB',color:'#D97706',border:'1px solid #FDE68A'}} onClick={()=>{const nd={...docs,[d.key]:{pendiente:true,fecha:new Date().toISOString()}};setDocs(nd);fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,_expediente:nd})}).catch(()=>{});}}>Pendiente</button>}
-                      <button style={{...btnS,background:'#F5F4F1',color:'#555',border:'1px solid #E5E3DE'}} onClick={()=>subirDoc(d.key)}>{uploaded&&!isPending?'Reemplazar':'Subir'}</button>
+                      <button style={{...btnS,background:isDrag?'#2563EB':'#F5F4F1',color:isDrag?'#fff':'#555',border:'1px solid '+(isDrag?'#2563EB':'#E5E3DE')}} onClick={()=>subirDoc(d.key)}>{isDrag?'Soltar aquí':uploaded&&!isPending?'Reemplazar':'📂 Subir'}</button>
                     </div>;
                   })}
                 </div>;
