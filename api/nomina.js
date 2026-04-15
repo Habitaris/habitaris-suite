@@ -1,6 +1,6 @@
-const SB = "https://xlzkasdskatnikuavefh.supabase.co";
-const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhsemthc2Rzc2thdG5pa3VhdmVmaCIsInJvbGUiOiJzZXJ2aWNlX3JvbGUiLCJpYXQiOjE3NDAxNTI5OTcsImV4cCI6MjA1NTcyODk5N30.SR9tIpvL0YnV9CNrRq4TKa1VNG0HPGDsPDuacirMbwQ";
-const H = { "Content-Type":"application/json", apikey:KEY, Authorization:"Bearer "+KEY };
+const SB_URL = "https://xlzkasdskatnikuavefh.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhsemthc2Rza2F0bmlrdWF2ZWZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTE3NzQsImV4cCI6MjA4NzQ2Nzc3NH0.SR9tIpvL0YnV9CNrRq4T-xetifuNQOJZE0OnQpwtYLM";
+function sbH(){return{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json","Prefer":"return=representation"};}
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin","*");
@@ -9,39 +9,34 @@ export default async function handler(req, res) {
   if(req.method==="OPTIONS") return res.status(200).end();
 
   try {
-    const { anio, mes } = req.query;
-    const kvKey = "hab:nomina:" + anio + ":" + mes;
+    var anio = req.query.anio || "2026";
+    var mes = req.query.mes || "0";
+    var kvKey = "hab:nomina:" + anio + ":" + mes;
 
     if (req.method === "GET") {
-      const r = await fetch(SB + "/rest/v1/kv_store?key=eq." + kvKey + "&select=value", { headers: H });
-      const d = await r.json();
-      if (d && d[0]?.value) {
+      var r = await fetch(SB_URL + "/rest/v1/kv_store?key=eq." + kvKey + "&select=value", { headers: sbH() });
+      var d = await r.json();
+      if (Array.isArray(d) && d.length > 0 && d[0].value) {
         return res.json({ ok: true, data: JSON.parse(d[0].value) });
       }
       return res.json({ ok: true, data: [] });
     }
 
     if (req.method === "POST") {
-      const body = req.body;
-      // Upsert via Prefer header
-      const r = await fetch(SB + "/rest/v1/kv_store", {
-        method: "POST",
-        headers: { ...H, Prefer: "resolution=merge-duplicates" },
-        body: JSON.stringify({ key: kvKey, value: JSON.stringify(body.data), tenant_id: "habitaris" })
+      var body = req.body;
+      var val = JSON.stringify(body.data);
+      var r1 = await fetch(SB_URL + "/rest/v1/kv_store?key=eq." + kvKey, {
+        method: "PATCH",
+        headers: {...sbH(), Prefer: "return=minimal"},
+        body: JSON.stringify({ value: val })
       });
-      if (!r.ok) {
-        // Try update instead
-        const r2 = await fetch(SB + "/rest/v1/kv_store?key=eq." + kvKey, {
-          method: "PATCH",
-          headers: { ...H, Prefer: "return=minimal" },
-          body: JSON.stringify({ value: JSON.stringify(body.data) })
-        });
-        if (!r2.ok) {
-          // Insert fresh
-          await fetch(SB + "/rest/v1/kv_store", {
+      if (r1.status === 200 || r1.status === 204) {
+        var txt = await r1.text();
+        if (!txt || txt === "[]" || txt === "") {
+          await fetch(SB_URL + "/rest/v1/kv_store", {
             method: "POST",
-            headers: H,
-            body: JSON.stringify({ key: kvKey, value: JSON.stringify(body.data), tenant_id: "habitaris" })
+            headers: sbH(),
+            body: JSON.stringify({ key: kvKey, value: val, tenant_id: "habitaris" })
           });
         }
       }
