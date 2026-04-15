@@ -3607,7 +3607,20 @@ function TabContratacion() {
     horario:"8:00 a.m. a 5:00 p.m.",dias_laborales:"Lunes a viernes",
     tipo_contrato:"fijo",duracion_meses:6,ciudad:"Bogotá D.C.",
     fecha_inicio:"",periodo_prueba:"Dos (2) meses",descriptor_codigo:"",
-    
+    // Estructura salarial extendida
+    modo_salario:"neto",        // "neto" | "bruto" | "integral"
+    bono_es_salarial:false,     // Art.127 salarial / Art.128 no salarial
+    bono_por_asistencia:false,  // se descuenta proporcional como aux.transporte
+    bono_concepto:"",           // descripción del bono
+    regimen_salud:"contributivo", // "contributivo" | "subsidiado"
+    arl_nivel:0,                // 0-4
+    exoneracion_114:true,       // exoneración art.114-1 ET
+    // Inicio del proceso
+    inicio_manual:false,        // true = aceptar ahora sin enviar link
+    estado_inicial:"propuesta", // propuesta | aceptada | datos_recibidos | completado
+    // Candidato (si inicio manual)
+    candidato_nombre:"", candidato_cc:"", candidato_email:"", candidato_celular:"",
+    candidato_eps:"", candidato_pension:"", entidadBancaria:"", cuentaBancaria:"",
   });
 
   const loadProcesos = async () => {
@@ -3633,7 +3646,7 @@ function TabContratacion() {
       if (d.ok) {
         alert("Propuesta creada: " + d.data.codigo + "\n\nLink propuesta:\n" + d.links.propuesta + "\n\nLink datos:\n" + d.links.datos);
         setShowForm(false);
-        setForm({cargo:"",area:"",nivel:"Operativo",salario_neto:0,salario_base:0,auxilio_transporte:0,bono_no_salarial:0,jornada_horas:48,horario:"8:00 a.m. a 5:00 p.m.",dias_laborales:"Lunes a viernes",tipo_contrato:"fijo",duracion_meses:6,ciudad:"Bogotá D.C.",fecha_inicio:"",periodo_prueba:"Dos (2) meses",descriptor_codigo:"",});
+        setForm({cargo:"",area:"",nivel:"Operativo",salario_neto:0,salario_base:0,auxilio_transporte:0,bono_no_salarial:0,jornada_horas:48,horario:"8:00 a.m. a 5:00 p.m.",dias_laborales:"Lunes a viernes",tipo_contrato:"fijo",duracion_meses:6,ciudad:"Bogotá D.C.",fecha_inicio:"",periodo_prueba:"Dos (2) meses",descriptor_codigo:"",modo_salario:"neto",bono_es_salarial:false,bono_por_asistencia:false,bono_concepto:"",regimen_salud:"contributivo",arl_nivel:0,exoneracion_114:true,inicio_manual:false,estado_inicial:"propuesta",candidato_nombre:"",candidato_cc:"",candidato_email:"",candidato_celular:"",candidato_eps:"",candidato_pension:"",entidadBancaria:"",cuentaBancaria:""});
         loadProcesos();
       }
     } catch(e) { alert("Error: " + e.message); }
@@ -3722,16 +3735,39 @@ function TabContratacion() {
               <Col><Inp label="Periodo de prueba" value={form.periodo_prueba} onChange={e=>setForm({...form,periodo_prueba:e.target.value})}/></Col>
             </Row>
           )}
+          {/* ── SECCIÓN SALARIAL ── */}
+          <div style={{fontSize:12,fontWeight:700,color:C.inkLight,letterSpacing:"0.06em",textTransform:"uppercase",margin:"12px 0 8px"}}>Estructura salarial</div>
           <Row gap={14} wrap>
-            <Col><Inp label="Salario neto mensual *" type="number" value={form.salario_neto} onChange={e=>setForm({...form,salario_neto:parseFloat(e.target.value)||0})}/></Col>
-            <Col><Inp label="Salario base" type="number" value={form.salario_base} onChange={e=>setForm({...form,salario_base:parseFloat(e.target.value)||0})}/></Col>
+            <Col><Sel label="Modo salario" value={form.modo_salario} onChange={e=>setForm({...form,modo_salario:e.target.value})} options={[{value:"neto",label:"Neto objetivo (despeje)"},{value:"bruto",label:"Bruto acordado"},{value:"integral",label:"Salario integral"}]}/></Col>
+            <Col><Sel label="Régimen salud" value={form.regimen_salud} onChange={e=>setForm({...form,regimen_salud:e.target.value})} options={[{value:"contributivo",label:"Contributivo (EPS)"},{value:"subsidiado",label:"Subsidiado (SISBEN Tipo 51)"}]}/></Col>
+            <Col><Sel label="Nivel ARL" value={form.arl_nivel} onChange={e=>setForm({...form,arl_nivel:parseInt(e.target.value)})} options={[{value:0,label:"I — 0.522% (Mínimo)"},{value:1,label:"II — 1.044% (Bajo)"},{value:2,label:"III — 2.436% (Medio)"},{value:3,label:"IV — 4.350% (Alto)"},{value:4,label:"V — 6.960% (Máximo)"}]}/></Col>
           </Row>
           <Row gap={14} wrap>
-            <Col><Inp label="Auxilio transporte" type="number" value={form.auxilio_transporte} onChange={e=>setForm({...form,auxilio_transporte:parseFloat(e.target.value)||0})}/></Col>
-            <Col><Inp label="Bono no salarial" type="number" value={form.bono_no_salarial} onChange={e=>setForm({...form,bono_no_salarial:parseFloat(e.target.value)||0})}/></Col>
+            <Col><Inp label={form.modo_salario==="neto"?"Neto mensual objetivo *":"Salario bruto *"} type="number" value={form.salario_neto} onChange={e=>setForm({...form,salario_neto:parseFloat(e.target.value)||0})}/></Col>
+            <Col><Inp label="Salario base (prestacional)" type="number" value={form.salario_base} onChange={e=>setForm({...form,salario_base:parseFloat(e.target.value)||0})}/></Col>
+            <Col><Inp label="Auxilio transporte" type="number" value={form.auxilio_transporte} onChange={e=>setForm({...form,auxilio_transporte:parseFloat(e.target.value)||0})} help="0 = auto si salario ≤ 2 SMLMV"/></Col>
           </Row>
+          {/* Bono */}
           <Row gap={14} wrap>
-            <Col><Inp label="Jornada (horas/semana)" type="number" value={form.jornada_horas} onChange={e=>setForm({...form,jornada_horas:parseInt(e.target.value)||0})}/></Col>
+            <Col><Inp label="Bono (monto)" type="number" value={form.bono_no_salarial} onChange={e=>setForm({...form,bono_no_salarial:parseFloat(e.target.value)||0})}/></Col>
+            <Col><Inp label="Concepto del bono" value={form.bono_concepto} onChange={e=>setForm({...form,bono_concepto:e.target.value})} help="Ej: Auxilio de conectividad"/></Col>
+          </Row>
+          {form.bono_no_salarial > 0 && (
+            <div style={{background:"#F5F4F1",borderRadius:6,padding:"10px 14px",marginBottom:10,display:"flex",gap:24,flexWrap:"wrap"}}>
+              <label style={{display:"flex",alignItems:"center",gap:6,fontSize:12,cursor:"pointer"}}>
+                <input type="checkbox" checked={form.bono_es_salarial} onChange={e=>setForm({...form,bono_es_salarial:e.target.checked})}/>
+                <span>Salarial (Art. 127 CST) — entra a IBC y prestaciones</span>
+              </label>
+              <label style={{display:"flex",alignItems:"center",gap:6,fontSize:12,cursor:"pointer"}}>
+                <input type="checkbox" checked={form.bono_por_asistencia} onChange={e=>setForm({...form,bono_por_asistencia:e.target.checked})}/>
+                <span>Se descuenta por inasistencia (como aux. transporte)</span>
+              </label>
+            </div>
+          )}
+          {/* ── JORNADA ── */}
+          <div style={{fontSize:12,fontWeight:700,color:C.inkLight,letterSpacing:"0.06em",textTransform:"uppercase",margin:"12px 0 8px"}}>Jornada y contrato</div>
+          <Row gap={14} wrap>
+            <Col><Inp label="Jornada (horas/semana)" type="number" value={form.jornada_horas} onChange={e=>setForm({...form,jornada_horas:parseInt(e.target.value)||0})} help="Máx. legal 42h (Ley 2101/2021)"/></Col>
             <Col><Inp label="Horario" value={form.horario} onChange={e=>setForm({...form,horario:e.target.value})}/></Col>
           </Row>
           <Row gap={14} wrap>
@@ -3740,10 +3776,41 @@ function TabContratacion() {
           </Row>
           <Row gap={14} wrap>
             <Col><Inp label="Fecha inicio" type="date" value={form.fecha_inicio} onChange={e=>setForm({...form,fecha_inicio:e.target.value})}/></Col>
-            
           </Row>
-          <div style={{display:"flex",gap:8,marginTop:12}}>
-            <Btn icon={Check} onClick={crearPropuesta}>Generar propuesta</Btn>
+          {/* ── INICIO DEL PROCESO ── */}
+          <div style={{fontSize:12,fontWeight:700,color:C.inkLight,letterSpacing:"0.06em",textTransform:"uppercase",margin:"12px 0 8px"}}>Inicio del proceso</div>
+          <div style={{display:"flex",gap:8,marginBottom:10}}>
+            <button type="button" onClick={()=>setForm({...form,inicio_manual:false,estado_inicial:"propuesta"})} style={{padding:"7px 16px",borderRadius:6,border:"1px solid "+(form.inicio_manual?"#E5E3DE":"#111"),background:form.inicio_manual?"transparent":"#111",color:form.inicio_manual?"#888":"#fff",fontSize:12,fontWeight:600,fontFamily:"DM Sans,sans-serif",cursor:"pointer"}}>
+              📤 Enviar link al candidato
+            </button>
+            <button type="button" onClick={()=>setForm({...form,inicio_manual:true,estado_inicial:"aceptada"})} style={{padding:"7px 16px",borderRadius:6,border:"1px solid "+(!form.inicio_manual?"#E5E3DE":"#1E6B42"),background:!form.inicio_manual?"transparent":"#E6F2EC",color:!form.inicio_manual?"#888":"#1E6B42",fontSize:12,fontWeight:600,fontFamily:"DM Sans,sans-serif",cursor:"pointer"}}>
+              ✅ Contrato ya firmado — ingresar manualmente
+            </button>
+          </div>
+          {form.inicio_manual && (
+            <div>
+              <Sel label="Estado inicial" value={form.estado_inicial} onChange={e=>setForm({...form,estado_inicial:e.target.value})} options={[{value:"aceptada",label:"Aceptada (pendiente datos)"},{value:"datos_recibidos",label:"Datos recibidos"},{value:"evaluaciones",label:"Evaluaciones realizadas"},{value:"completado",label:"Contrato firmado y completo"}]}/>
+              <div style={{fontSize:12,fontWeight:700,color:C.inkLight,letterSpacing:"0.06em",textTransform:"uppercase",margin:"12px 0 8px"}}>Datos del candidato</div>
+              <Row gap={14} wrap>
+                <Col><Inp label="Nombre completo *" value={form.candidato_nombre} onChange={e=>setForm({...form,candidato_nombre:e.target.value})}/></Col>
+                <Col><Inp label="Cédula *" value={form.candidato_cc} onChange={e=>setForm({...form,candidato_cc:e.target.value})}/></Col>
+              </Row>
+              <Row gap={14} wrap>
+                <Col><Inp label="Email" value={form.candidato_email} onChange={e=>setForm({...form,candidato_email:e.target.value})}/></Col>
+                <Col><Inp label="Celular" value={form.candidato_celular} onChange={e=>setForm({...form,candidato_celular:e.target.value})}/></Col>
+              </Row>
+              <Row gap={14} wrap>
+                <Col><Inp label="EPS" value={form.candidato_eps} onChange={e=>setForm({...form,candidato_eps:e.target.value})}/></Col>
+                <Col><Inp label="Fondo pensión" value={form.candidato_pension} onChange={e=>setForm({...form,candidato_pension:e.target.value})}/></Col>
+              </Row>
+              <Row gap={14} wrap>
+                <Col><Inp label="Banco" value={form.entidadBancaria} onChange={e=>setForm({...form,entidadBancaria:e.target.value})}/></Col>
+                <Col><Inp label="Nº cuenta" value={form.cuentaBancaria} onChange={e=>setForm({...form,cuentaBancaria:e.target.value})}/></Col>
+              </Row>
+            </div>
+          )}
+          <div style={{display:"flex",gap:8,marginTop:16}}>
+            <Btn icon={Check} onClick={crearPropuesta}>{form.inicio_manual?"Registrar proceso":"Generar y enviar propuesta"}</Btn>
             <Btn variant="secondary" onClick={() => setShowForm(false)}>Cancelar</Btn>
           </div>
         </Card>
@@ -3946,7 +4013,23 @@ function TabContratacion() {
                         })()}
                         </div>
                     )}
-                    <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.border}}>
+                    <div style={{display:"flex",gap:6,flexWrap:"wrap",paddingTop:8,borderTop:"1px solid "+C.border,alignItems:"center"}}>
+                      {/* Avanzar manualmente */}
+                      {(()=>{
+                        const orden=["propuesta","aceptada","datos_pendientes","datos_recibidos","evaluaciones","examen_medico","certificado_sst","firma_pendiente","firmado","afiliaciones","completado"];
+                        const idx=orden.indexOf(p.estado);
+                        const sig=idx>=0&&idx<orden.length-1?orden[idx+1]:null;
+                        const est2=ESTADOS[sig]||{};
+                        return sig?(
+                          <button onClick={async()=>{
+                            if(!window.confirm("¿Avanzar a '"+est2.label+"'?"))return;
+                            await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:sig})});
+                            loadProcesos();
+                          }} style={{padding:"4px 10px",fontSize:11,fontWeight:600,border:"1px solid #E5E3DE",borderRadius:6,background:"#F5F4F1",color:"#555",cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>
+                            → {est2.label||sig}
+                          </button>
+                        ):null;
+                      })()}
                       {/* Botones según estado */}
                       {(p.estado==="propuesta") && <>
                         <button onClick={()=>{navigator.clipboard.writeText(linkProp);alert("Link copiado al portapapeles");}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:C.card,cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:C.ink}}>📋 Copiar link</button>
