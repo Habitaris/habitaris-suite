@@ -7,7 +7,28 @@ const ARL_OPTS = [
   { n:"V", t:0.06960, lbl:"V — Máximo" },
 ];
 const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const FEST_2026 = ["2026-01-01","2026-01-12","2026-03-23","2026-04-02","2026-04-03","2026-05-01","2026-05-18","2026-06-08","2026-06-15","2026-06-29","2026-07-20","2026-08-07","2026-08-17","2026-10-12","2026-11-02","2026-11-16","2026-12-08","2026-12-25"];
+const DL_SHORT = ["L","M","X","J","V","S","D"];
+// Festivos Colombia — cálculo dinámico con Easter
+function easter(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da)}
+function nxtMon(d){const w=d.getDay();if(w===1)return new Date(d);return new Date(d.getFullYear(),d.getMonth(),d.getDate()+(w===0?1:8-w))}
+function addD(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n)}
+function getHolidays(y){const e=easter(y),h=[];const F=(m,d,n)=>h.push({date:new Date(y,m-1,d),name:n});const E=(m,d,n)=>{h.push({date:nxtMon(new Date(y,m-1,d)),name:n})};
+F(1,1,"Año Nuevo");F(5,1,"Día Trabajo");F(7,20,"Independencia");F(8,7,"Boyacá");F(12,8,"Inmaculada");F(12,25,"Navidad");
+h.push({date:addD(e,-3),name:"Jueves Santo"});h.push({date:addD(e,-2),name:"Viernes Santo"});
+h.push({date:nxtMon(addD(e,39)),name:"Ascensión"});h.push({date:nxtMon(addD(e,60)),name:"Corpus Christi"});h.push({date:nxtMon(addD(e,68)),name:"Sagrado Corazón"});
+E(1,6,"Reyes Magos");E(3,19,"San José");E(6,29,"San Pedro y Pablo");E(8,15,"Asunción");E(10,12,"Día Raza");E(11,1,"Todos Santos");E(11,11,"Indep. Cartagena");
+return h}
+function sameDay(a,b){return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();}
+
+// Novedad types for calendar
+const NOV_TIPOS = [
+  {id:"normal",label:"Normal",color:"transparent",icon:""},
+  {id:"incapacidad",label:"Incapacidad",color:"#FEE2E2",icon:"🏥"},
+  {id:"vacaciones",label:"Vacaciones",color:"#DBEAFE",icon:"🏖️"},
+  {id:"licencia",label:"Licencia rem.",color:"#FEF3C7",icon:"📋"},
+  {id:"licNoRem",label:"Lic. NO rem.",color:"#F3E8FF",icon:"⚠️"},
+  {id:"ausencia",label:"Ausencia",color:"#FEE2E2",icon:"❌"},
+];
 const uid = () => Math.random().toString(36).slice(2, 10);
 const fmt = n => n == null || isNaN(n) ? "$0" : "$" + Math.round(n).toLocaleString("es-CO");
 const fPct = n => (n * 100).toFixed(2) + "%";
@@ -70,7 +91,10 @@ export function TabNomina(){
   const[sel,setSel]=useState(null);
   const[vista,setVista]=useState("lista");
   const[subTab,setSubTab]=useState("liquidacion");
-  const festivosMes=FEST_2026.filter(f=>{const d=new Date(f);return d.getMonth()===mes&&d.getFullYear()===anio;});
+  const holidays=useMemo(()=>getHolidays(anio),[anio]);
+  const festivosMes=holidays.filter(h=>h.date.getMonth()===mes);
+  const [novDias,setNovDias]=useState({});  // {dayKey: novType}
+  const [selNovTipo,setSelNovTipo]=useState("incapacidad");
 
   useEffect(()=>{
     setLoading(true);
@@ -118,19 +142,91 @@ export function TabNomina(){
         </div>
 
         {subTab==="liquidacion"&&(
-          <div style={{display:"grid",gridTemplateColumns:"260px 1fr 1fr",gap:12}}>
+          <div>
+            {/* ── CALENDARIO + NOVEDADES ── */}
+            <Card accent={T.ink} style={{marginBottom:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                <STit>📅 Calendario {MESES[mes]} {anio}</STit>
+                <div style={{display:"flex",gap:4,alignItems:"center"}}>
+                  <span style={{fontSize:9,color:T.inkLight}}>Clic en día:</span>
+                  <select value={selNovTipo} onChange={e=>setSelNovTipo(e.target.value)} style={{padding:"3px 8px",fontSize:10,border:`1px solid ${T.border}`,borderRadius:4,fontFamily:"'DM Sans',sans-serif"}}>
+                    {NOV_TIPOS.filter(n=>n.id!=="normal").map(n=><option key={n.id} value={n.id}>{n.icon} {n.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              {/* Calendar grid */}
+              {(()=>{
+                const firstDay=new Date(anio,mes,1);
+                const lastDay=new Date(anio,mes+1,0);
+                const startPad=(firstDay.getDay()+6)%7; // Monday=0
+                const totalDays=lastDay.getDate();
+                const nDias=selN.novDias||{};
+                // Count novedades
+                const counts={incapacidad:0,vacaciones:0,licencia:0,licNoRem:0,ausencia:0};
+                Object.values(nDias).forEach(v=>{if(counts[v]!==undefined)counts[v]++;});
+                const diasNoLab=counts.incapacidad+counts.vacaciones+counts.licencia+counts.licNoRem+counts.ausencia;
+                const diasLab=Math.max(0,30-diasNoLab);
+
+                const toggleDay=(day)=>{
+                  if(!ed)return;
+                  const k=anio+"-"+String(mes+1).padStart(2,"0")+"-"+String(day).padStart(2,"0");
+                  const cur={...nDias};
+                  if(cur[k]===selNovTipo)delete cur[k]; else cur[k]=selNovTipo;
+                  // Update counts
+                  const nc={incapacidad:0,vacaciones:0,licencia:0,licNoRem:0,ausencia:0};
+                  Object.values(cur).forEach(v=>{if(nc[v]!==undefined)nc[v]++;});
+                  u({novDias:cur,dias:Math.max(0,30-(nc.incapacidad+nc.vacaciones+nc.licencia+nc.licNoRem+nc.ausencia)),diasIncap:nc.incapacidad,diasVac:nc.vacaciones,diasLicRem:nc.licencia,diasLicNoRem:nc.licNoRem});
+                };
+
+                return <>
+                  <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:8}}>
+                    {DL_SHORT.map(d=><div key={d} style={{textAlign:"center",fontSize:8,fontWeight:700,color:T.inkLight,padding:"2px 0"}}>{d}</div>)}
+                    {Array.from({length:startPad}).map((_,i)=><div key={"p"+i}/>)}
+                    {Array.from({length:totalDays}).map((_,i)=>{
+                      const day=i+1;
+                      const k=anio+"-"+String(mes+1).padStart(2,"0")+"-"+String(day).padStart(2,"0");
+                      const date=new Date(anio,mes,day);
+                      const dow=date.getDay(); // 0=Sun
+                      const isSun=dow===0;
+                      const hol=holidays.find(h=>sameDay(h.date,date));
+                      const nov=nDias[k];
+                      const novInfo=nov?NOV_TIPOS.find(n=>n.id===nov):null;
+                      const isToday=sameDay(date,new Date());
+
+                      return <div key={day} onClick={()=>!isSun&&toggleDay(day)} title={hol?hol.name:(novInfo?novInfo.label:"")} style={{
+                        textAlign:"center",padding:"4px 2px",borderRadius:4,fontSize:11,fontWeight:isToday?800:(hol?700:400),
+                        cursor:isSun||!ed?"default":"pointer",
+                        background:novInfo?novInfo.color:hol?"#FEF3C7":isSun?"#F5F4F1":"transparent",
+                        color:isSun?"#ccc":hol?"#D97706":isToday?"#1E6B42":"#111",
+                        border:isToday?`2px solid #1E6B42`:"2px solid transparent",
+                        position:"relative"
+                      }}>
+                        {day}
+                        {hol&&<div style={{fontSize:6,color:"#D97706",lineHeight:1,marginTop:1}}>🔶</div>}
+                        {novInfo&&<div style={{fontSize:7,lineHeight:1,marginTop:1}}>{novInfo.icon}</div>}
+                      </div>;
+                    })}
+                  </div>
+                  {/* Leyenda y resumen */}
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:8}}>
+                    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+                      {festivosMes.map((h,i)=><span key={i} style={{fontSize:9,color:T.amber,background:T.amberBg,padding:"2px 6px",borderRadius:4}}>🔶 {h.date.getDate()} {h.name}</span>)}
+                    </div>
+                    <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                      {NOV_TIPOS.filter(n=>n.id!=="normal").map(n=>{const c=counts[n.id]||0;return c>0?<span key={n.id} style={{fontSize:9,background:n.color,padding:"2px 6px",borderRadius:4,fontWeight:600}}>{n.icon} {n.label}: {c}d</span>:null;})}
+                      <span style={{fontSize:9,background:T.greenBg,padding:"2px 6px",borderRadius:4,fontWeight:700,color:T.green}}>Días lab: {diasLab}/30</span>
+                    </div>
+                  </div>
+                </>;
+              })()}
+            </Card>
+
+            <div style={{display:"grid",gridTemplateColumns:"260px 1fr 1fr",gap:12}}>
             <div>
               <Card accent={T.ink}><STit>Período</STit>
                 <Inp label="Días laborados" type="number" value={selN.dias} onChange={v=>u({dias:v})} suf="/30" disabled={!ed} small/>
                 <Inp label="Festivos laborados" type="number" value={selN.festLab||0} onChange={v=>u({festLab:v})} suf="días" disabled={!ed} small/>
-                {festivosMes.length>0&&<div style={{fontSize:9,color:T.amber,background:T.amberBg,borderRadius:3,padding:"5px 8px",marginBottom:6}}>📅 Festivos: {festivosMes.map(f=>new Date(f).getDate()).join(", ")}</div>}
-              </Card>
-              <Card accent={T.amber}><STit>Novedades</STit>
-                <Inp label="Días incapacidad" type="number" value={selN.diasIncap||0} onChange={v=>u({diasIncap:v})} small disabled={!ed}/>
-                <Inp label="Días licencia rem." type="number" value={selN.diasLicRem||0} onChange={v=>u({diasLicRem:v})} small disabled={!ed}/>
-                <Inp label="Días lic. NO rem." type="number" value={selN.diasLicNoRem||0} onChange={v=>u({diasLicNoRem:v})} small disabled={!ed}/>
-                <Inp label="Días vacaciones" type="number" value={selN.diasVac||0} onChange={v=>u({diasVac:v})} small disabled={!ed}/>
-                <Inp label="Notas" value={selN.nov||""} onChange={v=>u({nov:v})} small disabled={!ed} placeholder="Ej: 3 días incap EG…"/>
+                {festivosMes.length>0&&<div style={{fontSize:9,color:T.amber,background:T.amberBg,borderRadius:3,padding:"5px 8px",marginBottom:6}}>📅 {festivosMes.length} festivos: {festivosMes.map(h=>h.date.getDate()+" "+h.name).join(", ")}</div>}
               </Card>
               <Card accent={T.purple}><STit>Horas extra</STit>
                 <Inp label="HE diurna (×1.25)" type="number" value={selN.hexD||0} onChange={v=>u({hexD:v})} suf="h" small disabled={!ed}/>
@@ -179,6 +275,7 @@ export function TabNomina(){
                 Sal.prop = {fmt(selN.sal)} × {calc.dias}/30<br/>EPS = IBC × 4% = {fmt(calc.ibc)} × 0.04<br/>Pen = IBC × 4%<br/>Neto = {fmt(calc.dev)} − {fmt(calc.totD)}
               </div></Card>
             </div>
+          </div>
           </div>
         )}
 
