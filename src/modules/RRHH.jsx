@@ -3605,51 +3605,6 @@ function EvaluacionesPanel({ p, onDone }) {
 
 
 
-/* ── MOTOR CÁLCULO PROPUESTA ── */
-const _SM=1750905,_AX=249095;
-const _ARL_T=[0.00522,0.01044,0.02436,0.04350,0.06960];
-function calcPropuesta(f){
-  const modo=f.modo_salario||"neto",arl=_ARL_T[f.arl_nivel||0]||0.00522;
-  const ex114=f.exoneracion_114!==false,eSub=f.regimen_salud==="subsidiado";
-  const aplAux=(v)=>v<=2*_SM;
-  let base=0,bono=0,aux=0,netoObj=f.salario_neto||0;
-  if(modo==="neto"){
-    // Despeje: neto = base + aux + bono - epsE - penE
-    // Si hay bono no salarial: base=SMLMV, bono=neto-base-aux+ded
-    const dedR=eSub?0.04:0.08; // 4% pen (sub) o 8% eps+pen (cont)
-    const ibcM=eSub?_SM:_SM; // mínimo SMLMV
-    const dedFija=Math.max(ibcM,_SM)*dedR;
-    base=f.salario_base||_SM;
-    aux=aplAux(base)?_AX:0;
-    if(f.bono_no_salarial>0){bono=f.bono_no_salarial;}
-    else{bono=Math.max(0,netoObj-base-aux+dedFija);}
-  }else if(modo==="bruto"){
-    base=f.salario_neto||0; bono=f.bono_no_salarial||0;
-    aux=aplAux(base)?_AX:0;
-  }else{base=netoObj;bono=0;aux=0;} // integral
-  if(f.salario_base>0)base=f.salario_base;
-  if(f.auxilio_transporte>0)aux=f.auxilio_transporte;
-  else aux=aplAux(base)?_AX:0;
-  if(f.bono_no_salarial>0)bono=f.bono_no_salarial;
-  const ibc=Math.max(base+(f.bono_es_salarial?bono:0),_SM);
-  const epsE=eSub?0:ibc*0.04,penE=ibc*0.04,totDed=epsE+penE;
-  const dev=base+aux+bono,neto=dev-totDed;
-  // Empleador
-  const epsEr=(eSub||ex114)?0:ibc*0.085,penEr=ibc*0.12;
-  const arlV=Math.max(ibc,_SM)*arl,caja=ibc*0.04;
-  const icbf=(ex114)?0:ibc*0.03,sena=(ex114)?0:ibc*0.02;
-  const totAp=epsEr+penEr+arlV+caja+icbf+sena;
-  // Provisiones
-  const bPr=ibc+aux,pri=bPr/12,ces=bPr/12,intC=ces*0.12/12,vac=ibc*15/360;
-  const totPr=pri+ces+intC+vac;
-  const costoT=dev+totAp+totPr;
-  // Q1/Q2
-  const q1Pct=0.5,q1=Math.round(base*q1Pct),q2=neto-q1;
-  return{base,bono,aux,ibc,dev,epsE,penE,totDed,neto,epsEr,penEr,arlV,caja,icbf,sena,totAp,pri,ces,intC,vac,totPr,costoT,q1,q2,ex114,eSub};
-}
-const _$=n=>"$"+Math.round(n||0).toLocaleString("es-CO");
-const _pc=n=>(n*100).toFixed(2)+"%";
-
 function TabContratacion() {
   const [procesos, setProcesos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -3821,76 +3776,6 @@ function TabContratacion() {
               </label>
             </div>
           )}
-          {/* ── CALCULADORA EN VIVO ── */}
-          {(form.salario_neto>0||form.salario_base>0)&&(()=>{
-            const r=calcPropuesta(form);
-            const M=_$,P=_pc;
-            const s={background:"#FAFAF8",border:"1px solid #E5E3DE",borderRadius:8,padding:16,marginBottom:14};
-            const rw=(l,v,c)=><div style={{display:"flex",justifyContent:"space-between",padding:"3px 0",borderBottom:"1px solid #F0EEE9"}}><span style={{fontSize:11,color:"#666"}}>{l}</span><span style={{fontSize:12,fontWeight:600,fontFamily:"'DM Mono',monospace",color:c||"#111"}}>{M(v)}</span></div>;
-            const hd=(t,c)=><div style={{fontSize:10,fontWeight:700,color:c||"#111",letterSpacing:1,textTransform:"uppercase",margin:"10px 0 4px"}}>{t}</div>;
-            return <div style={s}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
-                <div style={{fontSize:13,fontWeight:700,color:"#111"}}>🧮 Simulación de costes</div>
-                <div style={{fontSize:10,color:"#999"}}>SMLMV 2026: {M(_SM)}</div>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:10}}>
-                <div style={{background:"#E8F4EE",borderRadius:6,padding:"8px 10px",textAlign:"center"}}>
-                  <div style={{fontSize:8,fontWeight:700,color:"#1E6B42",letterSpacing:1}}>NETO TRABAJADOR</div>
-                  <div style={{fontSize:20,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#1E6B42"}}>{M(r.neto)}</div>
-                  <div style={{fontSize:9,color:"#666"}}>Q1: {M(r.q1)} · Q2: {M(r.q2)}</div>
-                </div>
-                <div style={{background:"#EFF6FF",borderRadius:6,padding:"8px 10px",textAlign:"center"}}>
-                  <div style={{fontSize:8,fontWeight:700,color:"#2563EB",letterSpacing:1}}>COSTO EMPRESA</div>
-                  <div style={{fontSize:20,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#2563EB"}}>{M(r.costoT)}</div>
-                  <div style={{fontSize:9,color:"#666"}}>Factor: {r.base>0?(r.costoT/r.base).toFixed(2):"—"}×</div>
-                </div>
-                <div style={{background:"#F5F4F1",borderRadius:6,padding:"8px 10px",textAlign:"center"}}>
-                  <div style={{fontSize:8,fontWeight:700,color:"#555",letterSpacing:1}}>COSTO CONTRATO</div>
-                  <div style={{fontSize:20,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#111"}}>{M(r.costoT*(form.duracion_meses||12))}</div>
-                  <div style={{fontSize:9,color:"#666"}}>{form.duracion_meses||12} meses</div>
-                </div>
-              </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
-                <div>
-                  {hd("Devengado","#1E6B42")}
-                  {rw("Salario base",r.base)}
-                  {rw("Aux. transporte",r.aux)}
-                  {r.bono>0&&rw("Bono "+(form.bono_es_salarial?"(salarial)":"(Art.128)"),r.bono,"#7C3AED")}
-                  {rw("TOTAL DEVENGADO",r.dev,"#1E6B42")}
-                  {hd("Deducciones","#DC2626")}
-                  {!r.eSub&&rw("EPS empleado (4%)",r.epsE,"#DC2626")}
-                  {r.eSub&&rw("EPS SISBEN",0,"#999")}
-                  {rw("Pensión (4%)",r.penE,"#DC2626")}
-                  {rw("TOTAL DED.",r.totDed,"#DC2626")}
-                </div>
-                <div>
-                  {hd("Aportes empleador","#2563EB")}
-                  {rw("EPS "+(r.ex114?"✅ exon.":"(8.5%)"),r.epsEr)}
-                  {rw("Pensión (12%)",r.penEr)}
-                  {rw("ARL "+["I","II","III","IV","V"][form.arl_nivel||0],r.arlV)}
-                  {rw("Caja (4%)",r.caja)}
-                  {rw("ICBF "+(r.ex114?"✅":"(3%)"),r.icbf)}
-                  {rw("SENA "+(r.ex114?"✅":"(2%)"),r.sena)}
-                  {rw("TOTAL APORTES",r.totAp,"#2563EB")}
-                </div>
-                <div>
-                  {hd("Provisiones","#7C3AED")}
-                  {rw("Prima (8.33%)",r.pri)}
-                  {rw("Cesantías (8.33%)",r.ces)}
-                  {rw("Int. ces. (1%)",r.intC)}
-                  {rw("Vacaciones (4.17%)",r.vac)}
-                  {rw("TOTAL PROV.",r.totPr,"#7C3AED")}
-                  {hd("Resumen")}
-                  {rw("Gasto mensual (caja)",r.dev+r.totAp,"#DC2626")}
-                  {rw("Provisión mensual",r.totPr,"#2563EB")}
-                  <div style={{marginTop:6,background:"#111",borderRadius:4,padding:"6px 10px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                    <span style={{fontSize:10,color:"#fff",fontWeight:600}}>COSTO TOTAL/MES</span>
-                    <span style={{fontSize:15,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#fff"}}>{M(r.costoT)}</span>
-                  </div>
-                </div>
-              </div>
-            </div>;
-          })()}
           {/* ── JORNADA ── */}
           <div style={{fontSize:12,fontWeight:700,color:C.inkLight,letterSpacing:"0.06em",textTransform:"uppercase",margin:"12px 0 8px"}}>Jornada y contrato</div>
           <Row gap={14} wrap>
