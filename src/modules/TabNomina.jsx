@@ -16,7 +16,7 @@ const SB = "https://xlzkasdskatnikuavefh.supabase.co";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhsemthc2Rzc2thdG5pa3VhdmVmaCIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzQwMTUyOTk3LCJleHAiOjIwNTU3Mjg5OTd9.DP5x1hNbnTSzIFRMFOG7tYbykaAJMc6BRXYC_dFNFgE";
 const SBH = { "Content-Type":"application/json", apikey:KEY, Authorization:"Bearer "+KEY };
 
-async function fetchEmps(){try{const r=await fetch(SB+"/rest/v1/hiring_processes?estado=in.(firmado,afiliaciones_pendientes,completado)&select=*",{headers:SBH});const d=await r.json();return Array.isArray(d)?d:[];}catch{return[];}}
+async function fetchEmps(){try{const r=await fetch(SB+"/rest/v1/hiring_processes?estado=in.(firmado,afiliaciones,completado)&select=*",{headers:SBH});const d=await r.json();return Array.isArray(d)?d:[];}catch{return[];}}
 async function loadN(a,m){try{const r=await fetch(SB+"/rest/v1/kv_store?key=eq.hab:nomina:"+a+":"+m+"&select=value",{headers:SBH});const d=await r.json();return d&&d[0]?.value?JSON.parse(d[0].value):[];}catch{return[];}}
 async function saveN(a,m,data){await fetch(SB+"/rest/v1/kv_store",{method:"POST",headers:{...SBH,Prefer:"resolution=merge-duplicates"},body:JSON.stringify({key:"hab:nomina:"+a+":"+m,value:JSON.stringify(data),tenant_id:"habitaris"})});}
 
@@ -70,7 +70,7 @@ export function TabNomina(){
     Promise.all([fetchEmps(),loadN(anio,mes)]).then(([emps,saved])=>{
       const ex=saved||[];
       const lista=emps.map(e=>{const f=ex.find(n=>n.empId===e.id);if(f)return f;
-        return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_neto||0,bono:e.bono_no_salarial||0,dias:30,reg:"contributivo",arl:0,ex114:true,q1Pct:0.5,hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.entidadBancaria||"",cuenta:e.cuentaBancaria||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",anio,mes};});
+        return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:0.5,hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.entidadBancaria||"",cuenta:e.cuentaBancaria||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",netoRef:e.salario_neto||0,anio,mes};});
       setNoms(lista);setLoading(false);
     });
   },[anio,mes]);
@@ -246,7 +246,7 @@ export function TabNomina(){
           <Card style={{maxWidth:680,margin:"0 auto",border:`2px solid ${T.ink}`}}>
             <div style={{textAlign:"center",borderBottom:`2px solid ${T.ink}`,paddingBottom:12,marginBottom:12}}>
               <div style={{fontSize:15,fontWeight:800,letterSpacing:2}}>HABITARIS S.A.S</div>
-              <div style={{fontSize:9,color:T.inkMid}}>NIT: 901.691.763-1</div>
+              <div style={{fontSize:9,color:T.inkMid}}>NIT: 901.922.136-8</div>
               <div style={{fontSize:11,fontWeight:700,marginTop:6,letterSpacing:1}}>COMPROBANTE DE NÓMINA</div>
               <div style={{fontSize:10,color:T.inkMid}}>{MESES[mes]} {anio}</div>
             </div>
