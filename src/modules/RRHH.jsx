@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { store } from "../core/store.js";
 import { TabNomina } from "./TabNomina.jsx";
+import CalcSalarial from "./CalcSalarial.jsx";
 
 const DEF_EQUIPO = () => ({
   id: uid(), nombre: "", descripcion: "", tipo: "obra",
@@ -4226,6 +4227,7 @@ const TABS = [
   { id:"partes",    lbl:"Partes de Trabajo",    I:ClipboardList,desc:"Vista admin — empleados imputan desde Portal" },
   { id:"novedades", lbl:"Novedades Nómina",     I:FileText,     desc:"Vacaciones, bajas, permisos y horas extra" },
   { id:"nomina",     lbl:"Liquidador Nómina",    I:DollarSign,   desc:"Nómina mensual Colombia 2026" },
+  { id:"calculadora", lbl:"Calculadora Salarial", I:BarChart2,    desc:"Simulador neto/bruto, costes y propuesta de empleo" },
   { id:"contratacion", lbl:"Contratación",      I:FileText,     desc:"Propuestas, datos candidato y firma de contratos" },
   { id:"evaluaciones", lbl:"Evaluaciones",       I:ClipboardList,desc:"Plantillas psicotécnicas y DISC por cargo" },
   { id:"docs",      lbl:"Documentos",           I:Briefcase,    desc:"Nóminas, contratos y certificados" },
@@ -4359,6 +4361,7 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                   {tab==="partes"    && <TabPartes    partes={partes}    setPartes={savePartes}    equipo={equipos} cargos={cargos} currentUser={null} pais={currentUser?.pais||"CO"}/>}
                   {tab==="novedades" && <TabNovedades novedades={novedades} saveNovedades={saveNovedades}/>}
                   {tab==="nomina"       && <TabNomina/>}
+                  {tab==="calculadora"  && <CalcSalarial/>}
                   {tab==="contratacion" && <TabContratacion/>}
                   {tab==="evaluaciones" && <TabEvaluaciones/>}
                   {tab==="docs"      && <TabDocumentos docs={docs}       saveDocs={saveDocs}        fichas={fichas} cargos={cargos}/>}
