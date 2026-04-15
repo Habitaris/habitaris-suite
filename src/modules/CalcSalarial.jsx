@@ -745,7 +745,7 @@ window.onload=function(){
     </div>
 
     <div style={{maxWidth:860,padding:"0 0 40px"}}>
-      <div className="no-print"><TabBar tabs={[{i:"🧮",l:"Calculadora"},{i:"📅",l:"Liquidador"},{i:"🚪",l:"Liquidación Final"}]} active={tab} set={setTab}/></div>
+      <div className="no-print"><TabBar tabs={[{i:"🧮",l:"Calculadora"},{i:"🚪",l:"Liquidación Final"}]} active={tab} set={setTab}/></div>
 
       {/* ══════ CONFIG ══════ */}
       <Card t="Parámetros Legales 2026" icon="⚙️" accent="#F5F4F1">
@@ -1271,171 +1271,12 @@ window.onload=function(){
       {/* ══════════════════════════════════════════
          TAB 1: LIQUIDADOR MENSUAL
          ══════════════════════════════════════════ */}
-      {tab===1&&<>
-        <G2>
-          <In label="Fecha de ingreso" type="date" value={fechaIng} onChange={e=>setFechaIng(e.target.value)} help="Requerido para vacaciones"/>
-          <div style={{display:"flex",alignItems:"center",gap:8,paddingTop:16}}>
-            <button type="button" onClick={()=>{if(liqM===0){setLiqM(11);setLiqY(liqY-1)}else setLiqM(liqM-1);setNovs({});setExtHoras({})}} style={{padding:"6px 12px",border:"1px solid #E5E3DE",borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"inherit"}}>◀</button>
-            <div style={{flex:1,textAlign:"center"}}><span style={{fontSize:16,fontWeight:800,color:"#111111"}}>{MESES[liqM]} {liqY}</span></div>
-            <button type="button" onClick={()=>{if(liqM===11){setLiqM(0);setLiqY(liqY+1)}else setLiqM(liqM+1);setNovs({});setExtHoras({})}} style={{padding:"6px 12px",border:"1px solid #E5E3DE",borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"inherit"}}>▶</button>
-          </div>
-        </G2>
-
-        {/* ★ VACACIONES */}
-        {vacInfo&&<Card t="Saldo de Vacaciones (Art. 186 CST)" icon="🏖️" accent="#E8F4EE">
-          {/* Antigüedad y contrato */}
-          <div style={{display:"grid",gridTemplateColumns:vacInfo.diasRestantes!=null?"1fr 1fr":"1fr",gap:8,marginBottom:8}}>
-            <div style={{background:"#f0fdfa",borderRadius:8,padding:"8px 10px",border:"1px solid #99f6e4",display:"flex",alignItems:"center",gap:8}}>
-              <div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#0d9488"}}>{vacInfo.diasLab}</div>
-              <div><div style={{fontSize:10,fontWeight:700,color:"#0d9488"}}>Días de antigüedad</div><div style={{fontSize:9,color:"#666666"}}>Ingreso: {fmtDate(vacInfo.ini)}</div></div>
-            </div>
-            {vacInfo.diasRestantes!=null&&<div style={{background:vacInfo.diasRestantes>30?"#E8F4EE":"#fef2f2",borderRadius:8,padding:"8px 10px",border:`1px solid ${vacInfo.diasRestantes>30?"#C8E6D0":"#fecaca"}`,display:"flex",alignItems:"center",gap:8}}>
-              <div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:vacInfo.diasRestantes>30?"#1E6B42":"#dc2626"}}>{vacInfo.diasRestantes}</div>
-              <div><div style={{fontSize:10,fontWeight:700,color:vacInfo.diasRestantes>30?"#1E6B42":"#dc2626"}}>Días restantes</div><div style={{fontSize:9,color:"#666666"}}>Fin contrato: {fmtDate(vacInfo.fechaFinCon)}</div></div>
-            </div>}
-          </div>
-          {/* Saldo vacaciones */}
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,textAlign:"center"}}>
-            {[{l:"Acumuladas",v:vacInfo.acum.toFixed(1),sub:"15 háb./año",c:"#059669",bg:"#ecfdf5",bc:"#a7f3d0"},
-              {l:"Tomadas",v:vacInfo.totalUs,sub:vacInfo.usEsteMes>0?`${vacInfo.usEsteMes} este mes`:"—",c:"#dc2626",bg:"#fef2f2",bc:"#fecaca"},
-              {l:"Disponibles",v:vacInfo.disp.toFixed(1),sub:vacInfo.disp>=15?"Período completo":"En acumulación",c:vacInfo.disp>0?"#1E6B42":"#d97706",bg:vacInfo.disp>0?"#E8F4EE":"#fefce8",bc:vacInfo.disp>0?"#C8E6D0":"#fde68a"}
-            ].map((x,i)=>
-              <div key={i} style={{background:x.bg,borderRadius:8,padding:"8px 4px",border:`1px solid ${x.bc}`}}>
-                <div style={{fontSize:9,color:x.c,fontWeight:600}}>{x.l}</div>
-                <div style={{fontSize:18,fontWeight:800,color:x.c,fontFamily:"'DM Mono',monospace"}}>{x.v}</div>
-                <div style={{fontSize:8,color:"#999999"}}>{x.sub}</div>
-              </div>
-            )}
-          </div>
-          <div style={{marginTop:6,fontSize:10,color:"#666666"}}>Para marcar vacaciones: selecciona 🏖️ en las novedades y haz clic en los días del calendario.</div>
-          <details style={{marginTop:4}}>
-            <summary style={{fontSize:10,color:"#666666",cursor:"pointer",fontWeight:600}}>⚙️ Ajustar vacaciones tomadas en meses anteriores</summary>
-            <In label="Días ya disfrutados antes de este mes" type="number" value={vacUsadasHist} onChange={e=>setVacUsadasHist(Math.max(0,+e.target.value||0))} suffix="días" help="Se restan del acumulado para calcular disponibles"/>
-          </details>
-          {cal.vacD>0&&<Al c="b">🏖️ <strong>{cal.vacD} día(s)</strong> de vacaciones este mes. Salario pagado, sin bono asistencia ni aux. transporte.</Al>}
-          {vacInfo.disp<cal.vacD&&cal.vacD>0&&<Al c="r">⚠️ Los {cal.vacD}d marcados superan saldo ({vacInfo.disp.toFixed(1)}d).</Al>}
-        </Card>}
-        {!vacInfo&&<Al c="y">💡 Ingresa la <strong>fecha de ingreso</strong> para ver antigüedad, contrato y vacaciones.</Al>}
-
-        {/* ★ DOTACIÓN — con regla de 3 meses Art. 230 CST */}
-        {dotacion&&<Card t="Dotación (Art. 230 CST)" icon="👔" accent="#fffbeb">
-          <div style={{fontSize:10,color:"#92400e",marginBottom:6}}>Salario ≤ 2 SMLMV → 3 entregas/año. Requiere <strong>3 meses de antigüedad</strong> y contrato vigente.</div>
-          {dotacion.fecha3m&&<div style={{fontSize:10,color:"#666666",marginBottom:6}}>
-            📅 Cumple 3 meses: <strong>{fmtDate(dotacion.fecha3m)}</strong>
-            {dotacion.finCon&&<> · Fin contrato: <strong>{fmtDate(dotacion.finCon)}</strong></>}
-          </div>}
-          {dotacion.items.filter(d=>d.aplica).length===0&&<Al c="y">
-            Este contrato no genera derecho a dotación{dotacion.fecha3m&&dotacion.finCon?`: cumple 3 meses el ${fmtDate(dotacion.fecha3m)} pero ${dotacion.finCon<dotacion.items.find(e=>e.fecha>dotacion.fecha3m)?.fecha?"el contrato termina antes de la siguiente entrega":"no hay entregas programadas dentro del contrato"}.`:"."}
-          </Al>}
-          <div style={{display:"flex",gap:8}}>
-            {dotacion.items.map((d,i)=><div key={i} style={{flex:1,background:!d.aplica?"#fef2f2":d.esEsteMes?"#fef3c7":d.pasada?"#ecfdf5":"#FAFAF8",border:`1px solid ${!d.aplica?"#fecaca":d.esEsteMes?"#fbbf24":d.pasada?"#a7f3d0":"#E5E3DE"}`,borderRadius:8,padding:"8px 6px",textAlign:"center",opacity:d.aplica?1:0.5}}>
-              <div style={{fontSize:10,fontWeight:700,color:!d.aplica?"#dc2626":d.esEsteMes?"#d97706":d.pasada?"#059669":"#666666"}}>{d.n}ª — {d.mes}</div>
-              <div style={{fontSize:9,color:"#999999"}}>{fmtDate(d.fecha)}</div>
-              <div style={{fontSize:14,marginTop:2}}>{!d.aplica?"—":d.pasada?"✅":"⏳"}</div>
-              <div style={{fontSize:8,color:"#999999"}}>{!d.cumple3m?`${Math.round(d.antigDias)}d < 90d`:!d.conActivo?"Fuera del contrato":d.pasada?"Entregada":"Pendiente"}</div>
-            </div>)}
-          </div>
-        </Card>}
-
-        {/* CALENDAR */}
-        <Card t={`Calendario — ${cal.wk} lab. · ${cal.hol} fest.${cal.vacD>0?" · "+cal.vacD+" vac.":""}`} icon="📅">
-          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2,marginBottom:4}}>{DL.map((d,i)=><div key={i} style={{textAlign:"center",fontSize:10,fontWeight:700,color:workDays[i]?"#111111":"#CCCCCC",padding:"3px 0"}}>{d}</div>)}</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:2}}>
-            {cDays.map((d,i)=>{
-              if(!d)return <div key={i}/>;
-              const dw=di(d),isW=workDays[dw],h=isHol(d,holidays),pre=fIngDate&&d<fIngDate;
-              const k=dKey(d),nv=novs[k],nvT=nv?NOV.find(n=>n.id===nv):null;
-              const isT=sameDay(d,now);
-              let bg="#FAFAF8",cl="#CCCCCC",bd="1px solid #F5F4F1";
-              if(pre){bg="#FAFAF8";cl="#E5E3DE"}else if(isW&&!h){bg="#ecfdf5";cl="#059669";bd="1px solid #a7f3d0"}
-              if(h&&!pre){bg="#fefce8";cl="#92400e";bd="1px solid #fde68a"}
-              if(nvT){bg=nvT.c+"15";bd=`1px solid ${nvT.c}40`}
-              if(isT)bd="2px solid #111111";
-              return <div key={i} onClick={()=>isW&&!h&&!pre&&toggleNov(d)} style={{padding:"3px 2px",borderRadius:6,background:bg,border:bd,textAlign:"center",cursor:isW&&!h&&!pre?"pointer":"default",minHeight:34,opacity:pre?.3:isW?1:.4,transition:"all .15s"}}><div style={{fontSize:12,fontWeight:700,color:cl}}>{d.getDate()}</div>{h&&!pre&&<div style={{fontSize:7,color:"#92400e",lineHeight:1}}>{h.name.slice(0,8)}</div>}{nvT&&<div style={{fontSize:8,color:nvT.c}}>{nvT.i}</div>}</div>
-            })}
-          </div>
-          {cal.holList.length>0&&<div style={{marginTop:4,fontSize:10,color:"#92400e"}}>🎉 {cal.holList.map(h=>h.name).join(", ")}</div>}
-          <div style={{marginTop:8,paddingTop:8,borderTop:"1px solid #E5E3DE"}} className="no-print">
-            <div style={{fontSize:10,color:"#666666",marginBottom:4}}>Novedad:</div>
-            <div style={{display:"flex",flexWrap:"wrap",gap:3}}>{NOV.filter(n=>n.id!=="none").map(n=><button key={n.id} type="button" onClick={()=>setSelNov(n.id)} style={{padding:"4px 8px",borderRadius:6,fontSize:9,fontWeight:600,border:"none",cursor:"pointer",background:selNov===n.id?n.c:"#F5F4F1",color:selNov===n.id?"#fff":n.c,fontFamily:"inherit"}}>{n.i} {n.l}</button>)}</div>
-          </div>
-        </Card>
-
-        {/* ★ HORAS EXTRAS Y RECARGOS */}
-        <Card t="Horas Extras y Recargos" icon="⏰" accent="#fff7ed">
-          <div style={{fontSize:10,color:"#9a3412",marginBottom:6}}>Arts. 168-171 CST, Ley 789/2002. Valor hora: {$(neg.salMes30/(hDia*30))}</div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-            {EXTRAS.map(e=><div key={e.id} style={{display:"flex",alignItems:"center",gap:6,background:"#FAFAF8",borderRadius:6,padding:"4px 8px",border:"1px solid #E5E3DE"}}>
-              <div style={{flex:1}}><div style={{fontSize:10,fontWeight:700,color:"#111111"}}>{e.l}</div><div style={{fontSize:8,color:"#999999"}}>{e.d} ({e.tipo==="extra"?"×":"+"}{ (e.r*100).toFixed(0)}%)</div></div>
-              <input type="number" value={extHoras[e.id]||0} onChange={ev=>setExt(e.id,+ev.target.value)} min={0} style={{width:50,padding:"4px 6px",border:"1px solid #E5E3DE",borderRadius:4,fontSize:12,fontFamily:"'DM Mono',monospace",textAlign:"center"}}/>
-              <span style={{fontSize:9,color:"#666666"}}>h</span>
-            </div>)}
-          </div>
-          {liq&&liq.evDetail&&liq.evDetail.length>0&&<div style={{marginTop:8,borderTop:"1px solid #E5E3DE",paddingTop:6}}>
-            {liq.evDetail.map(x=><Rw key={x.id} l={`${x.l} (${x.h}h × ${$(x.hRate)} × ${x.rate})`} v={x.val} hl="cyan"/>)}
-            <Dv/><Rw l="TOTAL EXTRAS" v={liq.ev} bold hl="cyan"/>
-          </div>}
-        </Card>
-
-        {/* Summary */}
-        <BigBox bg="linear-gradient(135deg,#059669,#047857)">
-          <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:4}}>
-            {[{l:"Pagados",v:cal.dPagSal},{l:"Asistidos",v:cal.dAsist},{l:"Festivos",v:cal.hol},{l:"Vacaciones",v:cal.vacD},{l:"Novedades",v:cal.noT},{l:"Horas",v:cal.hMes+"h"}].map((x,i)=><div key={i}><div style={{fontSize:8,opacity:.7}}>{x.l}</div><div style={{fontSize:16,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{x.v}</div></div>)}
-          </div>
-          {liq&&<div style={{marginTop:8,paddingTop:8,borderTop:"1px solid rgba(255,255,255,.2)",display:"flex",justifyContent:"space-between"}}><span style={{fontSize:11}}>Neto a pagar:</span><span style={{fontSize:20,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{$(liq.neto)}</span></div>}
-        </BigBox>
-
-        <div className="no-print"><TabBar tabs={[{i:"📋",l:"Liquidación"},{i:"🏛",l:"PILA"},{i:"🎁",l:"Prestaciones"}]} active={liqTab} set={setLiqTab}/></div>
-
-        {liq&&liqTab===0&&<>
-          <Card t="Devengado" icon="📄" badge={{t:$(liq.devTotal),bg:"#dcfce7",c:"#166534"}}>
-            <Rw l={`Salario (${cal.dPagSal}d)`} v={liq.salBase} note={`${cal.trab}d trab.${cal.hol>0?" +"+cal.hol+" fest.":""}${cal.lR>0?" +"+cal.lR+" lic.rem.":""}${cal.vacD>0?" +"+cal.vacD+" vac.":""}`}/>
-            {liq.salIncapEG>0&&<Rw l={`Incap. EG (${liq.egEmp}d × 66.67%)`} v={liq.salIncapEG} hl="cyan"/>}
-            {liq.bono>0&&<Rw l={`${bonoConcepto} (${liq.bonoDias}d)`} v={liq.bono} hl="purple"/>}
-            {liq.cSP>0&&<Rw l="Conceptos salariales" v={liq.cSP} hl="red"/>}
-            {liq.cNSP>0&&<Rw l="Conceptos no salariales" v={liq.cNSP} hl="purple"/>}
-            {liq.ev>0&&<Rw l={`Extras/Recargos (${liq.evDetail.length} tipos)`} v={liq.ev} hl="cyan"/>}
-            {liq.auxDev>0&&<Rw l={`Aux. transp. (${liq.auxDias}d)`} v={liq.auxDev}/>}
-            <Dv/><Rw l="TOTAL DEVENGADO" v={liq.devTotal} bold hl="green"/>
-          </Card>
-          {(liq.pagoEPS>0||liq.pagoARL>0)&&<Al c="b"><strong>Terceros:</strong>{liq.pagoEPS>0&&<> EPS: {$(liq.pagoEPS)}</>}{liq.pagoARL>0&&<> · ARL: {$(liq.pagoARL)}</>}</Al>}
-          <Card t="Deducciones" icon="📉" badge={{t:$(liq.totDed+liq.retV),bg:"#fee2e2",c:"#dc2626"}}>
-            <Rw l={liq.esSub?"EPS SISBEN $0":"EPS"} v={liq.sE} tasa={liq.esSub?0:4}/><Rw l="Pensión" v={liq.pE} tasa={4}/>
-            {liq.fspV>0&&<Rw l="FSP" v={liq.fspV} tasa={liq.fspT}/>}
-            {liq.retV>0&&<Rw l="Retención fuente" v={liq.retV} hl="red" note={`Proc.1 — ${liq.retMes.baseUVT} UVT`}/>}
-            <Dv/><Rw l="TOTAL" v={liq.totDed+liq.retV} bold hl="red"/>
-          </Card>
-        </>}
-
-        {liq&&liqTab===1&&<>
-          <Al c="b"><strong>IBC:</strong> {$(liq.ibc)} · {liq.esSub?`Tipo 51 — ${liq.tramo}`:` Contributivo — SMLMV completo`} · Días cot: {liq.diasCotPILA}{liq.esSub?` · Mín tramo: ${$(liq.ibcMin)}`:""}</Al>
-          {liq.esSub?<Card t="Tramos PILA (Decreto 2616/2013 — Tipo 51)" icon="📊">{[{r:"1–7d",s:1,min:1,max:7},{r:"8–14d",s:2,min:8,max:14},{r:"15–21d",s:3,min:15,max:21},{r:"22–30d",s:4,min:22,max:30}].map((t,i)=>{const a=liq.diasCotPILA>=t.min&&liq.diasCotPILA<=t.max;return <div key={i} style={{display:"grid",gridTemplateColumns:"1fr .6fr 1fr",padding:"5px 10px",background:a?"#E8F4EE":"transparent",borderBottom:"1px solid #F5F4F1",borderLeft:a?"3px solid #1E6B42":"3px solid transparent"}}><span style={{fontSize:11,fontWeight:a?700:400,color:a?"#1E6B42":"#666666"}}>{t.r}</span><span style={{fontSize:11,color:a?"#111111":"#999999"}}>{t.s}sem</span><span style={{fontSize:11,fontFamily:"'DM Mono',monospace",color:a?"#059669":"#999999"}}>IBC: {$(smlmv*t.s/4)}</span></div>})}</Card>
-          :<Card t="IBC — Régimen Contributivo" icon="📊">
-            <Al c="b">En régimen <strong>contributivo</strong>, el IBC mínimo es siempre el <strong>SMLMV completo</strong> ({$(smlmv)}), independiente de los días trabajados. Los tramos por semanas (Decreto 2616/2013) solo aplican para <strong>cotizante tipo 51 (subsidiado/SISBEN)</strong>.</Al>
-            <Rw l="IBC mínimo" v={smlmv} bold note="Ley 100/1993 Art. 18 — SMLMV completo"/>
-            <Rw l={`IBC aplicado (${liq.diasCotPILA}d cotizados)`} v={liq.ibc} bold hl="cyan"/>
-            <Rw l="IBC ARL (siempre SMLMV)" v={liq.ibcARL} note="ARL se calcula sobre SMLMV completo en ambos regímenes"/>
-          </Card>}
-          <Card t="SS + Parafiscales" icon="🏥"><Rw l="EPS empl." v={liq.sE} tasa={4}/><Rw l={liq.exS?"EPS empr. ✅":"EPS empr."} v={liq.sEr} tasa={liq.exS?0:8.5}/><Rw l="Pensión empl." v={liq.pE} tasa={4}/><Rw l="Pensión empr." v={liq.pEr} tasa={12}/><Rw l={`ARL ${ARL[Math.max(0,arlIdx)].n}`} v={liq.arlV} tasa={ARL[Math.max(0,arlIdx)].t}/><Rw l="Caja" v={liq.caja} tasa={4}/><Rw l={liq.exPF?"ICBF ✅":"ICBF"} v={liq.icbf} tasa={liq.exPF?0:3}/><Rw l={liq.exPF?"SENA ✅":"SENA"} v={liq.sena} tasa={liq.exPF?0:2}/><Dv/><Rw l="TOTAL EMPLEADOR" v={liq.totAp} bold hl="blue"/></Card>
-        </>}
-
-        {liq&&liqTab===2&&<>
-          <Card t="Prestaciones (provisión)" icon="🎁"><Rw l="Prima" v={liq.pri} tasa={8.33}/><Rw l="Cesantías" v={liq.ces} tasa={8.33}/><Rw l="Int. cesantías" v={liq.intC} tasa={1}/><Rw l="Vacaciones" v={liq.vac} tasa={4.17}/><Dv/><Rw l="TOTAL" v={liq.totPr} bold hl="purple"/></Card>
-          {/* ★ PRIMA SEMESTRAL REAL */}
-          {primaSem&&<Card t={`Prima Semestre ${primaSem.semestre} — ${liqY}`} icon="💰" accent="#ecfdf5">
-            <Rw l="Base (sal + aux)" v={primaSem.base}/>
-            <Rw l={`Días del semestre (desde ${primaSem.desde.toLocaleDateString("es-CO")})`} v={`${primaSem.dias} días`}/>
-            <Dv/><Rw l={`PRIMA SEMESTRE ${primaSem.semestre}`} v={primaSem.monto} bold hl="green" note={`${$(primaSem.base)} × ${primaSem.dias} / 360 — Pago: ${primaSem.semestre===1?"30 Jun":"20 Dic"}`}/>
-            {(liqM===5||liqM===11)&&<Al c="g">📅 <strong>Este mes se paga la prima del semestre {primaSem.semestre}.</strong></Al>}
-          </Card>}
-          <Card t="Costo Total Mes" icon="💰"><Rw l="Devengado" v={liq.devTotal}/><Rw l="Aportes empleador" v={liq.totAp}/><Rw l="Prestaciones" v={liq.totPr}/><Dv/><Rw l="COSTO TOTAL" v={liq.costoT} bold hl="cyan"/></Card>
-        </>}
-      </>}
+      
 
       {/* ══════════════════════════════════════════
          TAB 2: LIQUIDACIÓN FINAL
          ══════════════════════════════════════════ */}
-      {tab===2&&<>
+      {tab===1&&<>
         <Card t="Datos del Retiro" icon="🚪" accent="#fef2f2">
           <G2><In label="Fecha inicio" type="date" value={fechaIniCon} onChange={e=>setFechaIniCon(e.target.value)}/><In label="Fecha retiro" type="date" value={fechaRet} onChange={e=>setFechaRet(e.target.value)}/></G2>
           <Sel label="Motivo" value={motivoRet} onChange={e=>setMotivoRet(e.target.value)} options={[{v:"",l:"— Seleccionar —"},...MOTIVOS].map(m=>({v:m.id,l:m.l}))}/>
