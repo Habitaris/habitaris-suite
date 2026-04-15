@@ -3275,72 +3275,40 @@ function AnexosPanel({p}){
   const cc     = p.candidate_id   || '________________________';
 
   const DOCS = {
-    confidencialidad:{
-      titulo:'ACUERDO DE CONFIDENCIALIDAD Y NO DIVULGACIÓN DE LA INFORMACIÓN',
-      cuerpo:`<p style="text-align:justify;margin:0 0 12px">En mi condición de empleado de HABITARIS SAS de manera voluntaria suscribo el presente acuerdo de confidencialidad con base a las siguientes consideraciones:</p>
-<p style="text-align:justify;margin:0 0 12px"><strong>CONFIDENCIALIDAD:</strong> EL TRABAJADOR se obliga a no revelar a ningún tercero, sin la autorización previa, expresa y por escrito EL EMPLEADOR, cualquier información relacionada con su trabajo directa o indirectamente. EL TRABAJADOR manifiesta expresamente conocer la prohibición legal de transmitir las informaciones que tenga sobre su trabajo, especialmente sobre asuntos de naturaleza reservada o cuya divulgación puede generar perjuicios a EL EMPLEADOR, así como revelar o divulgar descubrimientos, invenciones técnicas, procesos o aplicaciones industriales llegadas a su conocimiento debido a su cargo, oficio o profesión y que deban permanecer en reserva. Igualmente conoce y acepta expresamente que su infracción puede conllevar las sanciones previstas por el Numeral 6° del Literal A) del Artículo 7° del Decreto 2351 de 1.965 que subrogó el Artículo 62 del Código Sustantivo del Trabajo, y que le son aplicables aún finalizada la relación laboral, especialmente aquellas previstas en el Artículo 308 del Código Penal y/o las normas que lo modifiquen, complementen o adicionen.</p>
-<p style="text-align:justify;margin:0 0 12px">EL TRABAJADOR se obliga a mantener en forma confidencial la información que en relación con EL EMPLEADOR y, especialmente, información de los proyectos, contratos o servicios sea entregada, utilizada y desarrollada por éste. Cualquier otro uso o destinación que se le dé a la misma tendrá que ser autorizada previamente por EL EMPLEADOR.</p>
-<p style="text-align:justify;margin:0 0 12px"><strong>PARÁGRAFO PRIMERO:</strong> Para los efectos de la presente cláusula se entenderá por información: Documentos, Facturas, Pedidos, Modelos, Contratos, Cotizaciones, Base de Datos de Clientes, Conversaciones, Estudios, Compilaciones, Datos, Análisis, Diseños, Grabaciones, Archivos, Interpretaciones de cualquier tipo, carácter o naturaleza, relativos a la factibilidad para la realización de los Proyectos, Contratos o Servicios desarrollados por EL EMPLEADOR.</p>
-<p style="text-align:justify;margin:0 0 12px"><strong>PARÁGRAFO SEGUNDO:</strong> La violación de las obligaciones o prohibiciones a que se refiere la presente cláusula, podrá dar lugar a la imposición de sanciones disciplinarias o a la terminación del contrato de trabajo con justa causa. EL EMPLEADOR podrá exigir y/o reclamar el pago de la indemnización por la totalidad de los perjuicios que le pueda generar la violación.</p>
-<p style="text-align:justify;margin:0 0 12px"><strong>PARÁGRAFO TERCERO:</strong> EL EMPLEADO reconoce que será responsable hasta la culpa levísima en cualquier caso que permita la divulgación de información de carácter confidencial o reservado, causando un perjuicio a EL EMPLEADOR que estará obligado a indemnizar económicamente, sin perjuicio de las acciones penales o laborales a que EL EMPLEADOR tenga derecho.</p>
-<p style="text-align:justify;margin:0 0 12px"><strong>PARÁGRAFO CUARTO:</strong> EL TRABAJADOR se obliga durante la vigencia del contrato de trabajo, así como después de la terminación de este, a no utilizar para su propio beneficio o ajeno y a guardar absoluta reserva frente a terceros (incluida su familia), sobre toda la información referente a EL EMPLEADOR, empleados y demás relacionados.</p>
-<p style="text-align:justify;margin:0 0 12px"><strong>PARÁGRAFO QUINTO:</strong> La obligación de confidencialidad subsistirá por DOS (2) años calendario más, después de la terminación del contrato de trabajo y sin importar la causa que haya dado lugar a dicha terminación.</p>
-<p style="text-align:justify;margin:0 0 12px"><strong>PARÁGRAFO SEXTO:</strong> En caso de que alguna autoridad requiera la presentación de información confidencial, EL TRABAJADOR deberá dar aviso oportunamente a EL EMPLEADOR antes de divulgar cualquier información, y sólo con autorización de éste podrá divulgarla.</p>
-<p style="text-align:justify;margin:0 0 12px">En señal de aceptación, se firma en Bogotá D.C., a los ${fecha}.</p>
+    descriptor:{
+      titulo:'DESCRIPTOR DE CARGO',
+      cuerpo:`<table style="width:100%;border-collapse:collapse;font-size:11pt;margin-bottom:20px">
+<tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;width:35%;font-weight:bold">Cargo</td><td style="border:1px solid #ddd;padding:8px">${p.cargo||"—"}</td></tr>
+<tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;font-weight:bold">Área</td><td style="border:1px solid #ddd;padding:8px">${p.area||"—"}</td></tr>
+<tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;font-weight:bold">Tipo de contrato</td><td style="border:1px solid #ddd;padding:8px">${p.tipo_contrato||"—"}</td></tr>
+<tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;font-weight:bold">Jornada</td><td style="border:1px solid #ddd;padding:8px">${p.jornada_horas||42} horas semanales · ${p.horario||"—"}</td></tr>
+<tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;font-weight:bold">Días laborales</td><td style="border:1px solid #ddd;padding:8px">${p.dias_laborales||"—"}</td></tr>
+<tr><td style="border:1px solid #ddd;padding:8px;background:#f9f9f9;font-weight:bold">Trabajador</td><td style="border:1px solid #ddd;padding:8px">${nombre} · C.C. ${cc}</td></tr>
+</table>
+<p style="text-align:justify;margin:0 0 12px"><strong>OBJETIVO DEL CARGO:</strong> Desempeñar las funciones propias del cargo de <strong>${p.cargo||"—"}</strong> dentro del área de <strong>${p.area||"—"}</strong>, cumpliendo con los estándares de calidad, seguridad y normatividad interna de HABITARIS SAS.</p>
+<p style="text-align:justify;margin:0 0 12px"><strong>FUNCIONES PRINCIPALES:</strong></p>
+<ul style="margin:0 0 12px;padding-left:20px"><li>Las propias del cargo según las necesidades de la empresa.</li><li>Cumplir con el reglamento interno de trabajo y las políticas de SST.</li><li>Reportar cualquier novedad o situación de riesgo a su superior inmediato.</li><li>Mantener el orden y aseo en su puesto de trabajo.</li><li>Las demás que le sean asignadas por su jefe inmediato.</li></ul>
+<p style="text-align:justify;margin:0 0 12px">Declaro haber recibido, leído y comprendido el presente descriptor de cargo.</p>
 <div style="margin-top:60px;display:flex;gap:80px">
-  <div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">${nombre}<br>C.C. ${cc}<br><em>EL TRABAJADOR</em></div></div>
-  <div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">HABITARIS SAS<br>NIT 901.922.136-8<br><em>EL EMPLEADOR</em></div></div>
+  <div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">${nombre}<br>C.C. ${cc}<br><em>TRABAJADOR</em></div></div>
+  <div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">HABITARIS SAS<br>NIT 901.922.136-8<br><em>EMPLEADOR</em></div></div>
 </div>`
     },
-    datos:{
-      titulo:'AUTORIZACIÓN DE TRATAMIENTO DE DATOS PERSONALES',
-      cuerpo:`<p style="text-align:justify;margin:0 0 12px">De conformidad con la Ley 1581 de 2012 y el Decreto 1377 de 2013, yo (titular) <strong>${nombre}</strong>, con documento de identidad No. <strong>${cc}</strong>, como titular de información personal autorizo a HABITARIS SAS, de manera voluntaria e informada, para que recolecte, almacene, use, circule, suprima, confirme y en general realice todas las actividades que constituyan tratamiento de mis datos personales, conforme con su Política de Tratamiento de Datos Personales.</p>
-<p style="text-align:justify;margin:0 0 8px">Así mismo manifiesto que:</p>
-<ul style="margin:0 0 12px;padding-left:20px">
-  <li style="margin-bottom:6px">Conozco mis derechos como titular de la información sujeta a tratamiento por parte de HABITARIS SAS.</li>
-  <li style="margin-bottom:6px">El tratamiento tiene como finalidad: el proceso de atracción y selección de talento, comunicación con mi familia en casos de emergencia, acreditar historia laboral y académica, gestión del negocio, atención de PQRS, verificación de antecedentes, seguridad informática y física, y establecer relaciones contractuales.</li>
-  <li style="margin-bottom:6px">Conozco los canales por los cuales puedo ejercer mis derechos como titular ante Talento Humano de la compañía.</li>
-  <li style="margin-bottom:6px">Reconozco que HABITARIS SAS garantiza la seguridad de mis datos contra mal uso o pérdida.</li>
-  <li style="margin-bottom:6px">La presente autorización se extiende aun después de finalizado nuestro vínculo contractual, conforme a la Política de Tratamiento de Datos de HABITARIS SAS.</li>
-  <li style="margin-bottom:6px">La información suministrada es cierta, y relevo a HABITARIS SAS de responsabilidad por información imprecisa, sin perjuicio de mi derecho a solicitar corrección, aclaración y/o supresión.</li>
-</ul>
-<p style="text-align:justify;margin:0 0 12px">Mis derechos como titular incluyen: conocer, actualizar, rectificar y suprimir mi información personal, y revocar el consentimiento otorgado, ejercibles a través de los canales dispuestos por HABITARIS SAS (comercial@habitaris.co).</p>
-<p style="text-align:justify;margin:0 0 12px">En constancia, se firma en Bogotá D.C., a los ${fecha}.</p>
+    centro:{
+      titulo:'ASIGNACIÓN DE CENTRO DE TRABAJO',
+      cuerpo:`<p style="text-align:justify;margin:0 0 12px">HABITARIS SAS, NIT 901.922.136-8, asigna al trabajador <strong>${nombre}</strong>, identificado con C.C. <strong>${cc}</strong>, quien desempeñará el cargo de <strong>${p.cargo||"—"}</strong>, los siguientes centros de trabajo:</p>
+<table style="width:100%;border-collapse:collapse;font-size:11pt;margin:16px 0">
+<tr style="background:#1E6B42;color:#fff"><th style="border:1px solid #ddd;padding:8px;text-align:left">Centro</th><th style="border:1px solid #ddd;padding:8px;text-align:left">Dirección</th><th style="border:1px solid #ddd;padding:8px;text-align:left">Ciudad</th></tr>
+<tr><td style="border:1px solid #ddd;padding:8px">Centro principal</td><td style="border:1px solid #ddd;padding:8px">${p.centro_trabajo||"Por definir"}</td><td style="border:1px solid #ddd;padding:8px">${p.ciudad||"Bogotá D.C."}</td></tr>
+</table>
+<p style="text-align:justify;margin:0 0 12px">El trabajador podrá ser reubicado a otros centros de trabajo de la empresa según las necesidades operativas, previa comunicación.</p>
+<p style="text-align:justify;margin:0 0 12px"><strong>JORNADA:</strong> ${p.jornada_horas||42} horas semanales · ${p.horario||"—"} · ${p.dias_laborales||"—"}</p>
+<p style="text-align:justify;margin:0 0 12px"><strong>FECHA DE INICIO:</strong> ${p.fecha_inicio||"—"}</p>
+<p style="text-align:justify;margin:0 0 12px">En constancia, se firma en ${p.ciudad||"Bogotá D.C."}, a los ${fecha}.</p>
 <div style="margin-top:60px;display:flex;gap:80px">
-  <div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">${nombre}<br>C.C. ${cc}<br><em>Firma del Titular</em></div></div>
+  <div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">${nombre}<br>C.C. ${cc}<br><em>TRABAJADOR</em></div></div>
+  <div style="text-align:center"><div style="border-top:1px solid #000;width:220px;padding-top:6px">HABITARIS SAS<br>NIT 901.922.136-8<br><em>EMPLEADOR</em></div></div>
 </div>`
-    },
-    politica:{
-      titulo:'POLÍTICA DE TRATAMIENTO DE DATOS PERSONALES — HABITARIS SAS',
-      cuerpo:`<p style="margin:0 0 10px"><strong>NIT:</strong> 901.922.136-8 &nbsp;|&nbsp; <strong>Domicilio:</strong> Bogotá D.C., Colombia &nbsp;|&nbsp; <strong>Vigencia:</strong> 2025</p>
-<p style="text-align:justify;margin:0 0 12px">HABITARIS SAS está comprometida con la protección de los datos personales en el desarrollo de sus actividades de diseño, arquitectura y servicios relacionados. Esta Política establece las directrices para la recolección, uso, almacenamiento, circulación, transmisión y supresión de datos personales, en cumplimiento de la Ley 1581 de 2012, el Decreto 1377 de 2013 y los lineamientos de la Superintendencia de Industria y Comercio (SIC).</p>
-<p style="margin:0 0 6px"><strong>1. Principios</strong></p>
-<p style="text-align:justify;margin:0 0 12px">Legalidad, Finalidad, Libertad, Veracidad, Transparencia, Acceso y circulación restringida, Seguridad y Confidencialidad.</p>
-<p style="margin:0 0 6px"><strong>2. Datos tratados y finalidades</strong></p>
-<p style="text-align:justify;margin:0 0 4px">Categorías de datos: identificación y contacto, laborales, financieros y de proyectos. Finalidades:</p>
-<ul style="margin:0 0 12px;padding-left:20px">
-  <li>Gestión de clientes y proyectos (cotización, contratación, ejecución, PQRS).</li>
-  <li>Gestión administrativa, contable y tributaria.</li>
-  <li>Gestión de proveedores y contratistas.</li>
-  <li>Talento humano: selección, nómina, SST, bienestar, formación.</li>
-  <li>Seguridad física y digital.</li>
-  <li>Marketing y comunicaciones (solo con autorización).</li>
-  <li>Cumplimiento legal y regulatorio.</li>
-</ul>
-<p style="margin:0 0 6px"><strong>3. Derechos de los titulares</strong></p>
-<ul style="margin:0 0 12px;padding-left:20px">
-  <li>Conocer, actualizar y rectificar sus datos.</li>
-  <li>Solicitar prueba de la autorización otorgada.</li>
-  <li>Solicitar supresión de datos o revocar autorización (salvo deber legal).</li>
-  <li>Presentar quejas ante la SIC.</li>
-</ul>
-<p style="margin:0 0 6px"><strong>4. Consultas y reclamos</strong></p>
-<p style="text-align:justify;margin:0 0 12px">Consultas: máximo 10 días hábiles. Reclamos: máximo 15 días hábiles. Canal de contacto: comercial@habitaris.co</p>
-<p style="margin:0 0 6px"><strong>5. Seguridad</strong></p>
-<p style="text-align:justify;margin:0 0 12px">Control de acceso por roles, cifrado de datos sensibles, backups periódicos, acuerdos de confidencialidad con colaboradores y contratistas, capacitación continua y gestión de incidentes.</p>
-<p style="margin:0 0 6px"><strong>6. Vigencia de los datos</strong></p>
-<p style="text-align:justify;margin:0 0 12px">Los datos se conservarán por el tiempo necesario para las finalidades descritas y el cumplimiento de obligaciones legales (fiscales, laborales, contables). Finalizado el tratamiento, se realizará supresión o anonimización salvo deber legal de conservación.</p>
-<p style="text-align:justify;margin:16px 0 0"><em>Documento entregado como soporte al proceso de vinculación laboral. Bogotá D.C., ${fecha}.</em></p>`
     }
   };
 
@@ -3366,12 +3334,12 @@ ${doc.cuerpo}
 
   return (
     <div style={cardStyle}>
-      <div style={{fontWeight:700,fontSize:14,color:'#065F46',marginBottom:6}}>📋 Documentos Anexos al Contrato</div>
-      <p style={{fontSize:13,color:'#555',margin:'0 0 14px'}}>Genere, revise e imprima los siguientes documentos para firmar junto al contrato laboral.</p>
+      <div style={{fontWeight:700,fontSize:14,color:'#065F46',marginBottom:6}}>📋 Documentos Contractuales</div>
+      <p style={{fontSize:13,color:'#555',margin:'0 0 14px'}}>Los siguientes documentos se firman junto al contrato laboral. La confidencialidad y tratamiento de datos van dentro del contrato.</p>
       <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
-        <button style={{...btnBase,background:'#1E6B42',color:'#fff'}} onClick={()=>abrirAnexo('confidencialidad')}>📄 Acuerdo de Confidencialidad</button>
-        <button style={{...btnBase,background:'#065F46',color:'#fff'}} onClick={()=>abrirAnexo('datos')}>📄 Autorización Datos Personales</button>
-        <button style={{...btnBase,background:'#374151',color:'#fff'}} onClick={()=>abrirAnexo('politica')}>📄 Política de Tratamiento</button>
+        <button style={{...btnBase,background:'#1E6B42',color:'#fff'}} onClick={()=>{window.open("/api/generate-contract?hiring_id="+p.id,"_blank")}}>📄 Contrato Laboral</button>
+        <button style={{...btnBase,background:'#065F46',color:'#fff'}} onClick={()=>abrirAnexo('descriptor')}>📄 Descriptor de Cargo</button>
+        <button style={{...btnBase,background:'#374151',color:'#fff'}} onClick={()=>abrirAnexo('centro')}>📄 Asignación Centro de Trabajo</button>
       </div>
     </div>
   );
@@ -3593,6 +3561,51 @@ function EvaluacionesPanel({ p, onDone }) {
 
 
 
+/* ── MOTOR CÁLCULO PROPUESTA ── */
+const _SM=1750905,_AX=249095;
+const _ARL_T=[0.00522,0.01044,0.02436,0.04350,0.06960];
+function calcPropuesta(f){
+  const modo=f.modo_salario||"neto",arl=_ARL_T[f.arl_nivel||0]||0.00522;
+  const ex114=f.exoneracion_114!==false,eSub=f.regimen_salud==="subsidiado";
+  const aplAux=(v)=>v<=2*_SM;
+  let base=0,bono=0,aux=0,netoObj=f.salario_neto||0;
+  if(modo==="neto"){
+    // Despeje: neto = base + aux + bono - epsE - penE
+    // Si hay bono no salarial: base=SMLMV, bono=neto-base-aux+ded
+    const dedR=eSub?0.04:0.08; // 4% pen (sub) o 8% eps+pen (cont)
+    const ibcM=eSub?_SM:_SM; // mínimo SMLMV
+    const dedFija=Math.max(ibcM,_SM)*dedR;
+    base=f.salario_base||_SM;
+    aux=aplAux(base)?_AX:0;
+    if(f.bono_no_salarial>0){bono=f.bono_no_salarial;}
+    else{bono=Math.max(0,netoObj-base-aux+dedFija);}
+  }else if(modo==="bruto"){
+    base=f.salario_neto||0; bono=f.bono_no_salarial||0;
+    aux=aplAux(base)?_AX:0;
+  }else{base=netoObj;bono=0;aux=0;} // integral
+  if(f.salario_base>0)base=f.salario_base;
+  if(f.auxilio_transporte>0)aux=f.auxilio_transporte;
+  else aux=aplAux(base)?_AX:0;
+  if(f.bono_no_salarial>0)bono=f.bono_no_salarial;
+  const ibc=Math.max(base+(f.bono_es_salarial?bono:0),_SM);
+  const epsE=eSub?0:ibc*0.04,penE=ibc*0.04,totDed=epsE+penE;
+  const dev=base+aux+bono,neto=dev-totDed;
+  // Empleador
+  const epsEr=(eSub||ex114)?0:ibc*0.085,penEr=ibc*0.12;
+  const arlV=Math.max(ibc,_SM)*arl,caja=ibc*0.04;
+  const icbf=(ex114)?0:ibc*0.03,sena=(ex114)?0:ibc*0.02;
+  const totAp=epsEr+penEr+arlV+caja+icbf+sena;
+  // Provisiones
+  const bPr=ibc+aux,pri=bPr/12,ces=bPr/12,intC=ces*0.12/12,vac=ibc*15/360;
+  const totPr=pri+ces+intC+vac;
+  const costoT=dev+totAp+totPr;
+  // Q1/Q2
+  const q1Pct=0.5,q1=Math.round(base*q1Pct),q2=neto-q1;
+  return{base,bono,aux,ibc,dev,epsE,penE,totDed,neto,epsEr,penEr,arlV,caja,icbf,sena,totAp,pri,ces,intC,vac,totPr,costoT,q1,q2,ex114,eSub};
+}
+const _$=n=>"$"+Math.round(n||0).toLocaleString("es-CO");
+const _pc=n=>(n*100).toFixed(2)+"%";
+
 function TabContratacion() {
   const [procesos, setProcesos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -3764,6 +3777,76 @@ function TabContratacion() {
               </label>
             </div>
           )}
+          {/* ── CALCULADORA EN VIVO ── */}
+          {(form.salario_neto>0||form.salario_base>0)&&(()=>{
+            const r=calcPropuesta(form);
+            const M=_$,P=_pc;
+            const s={background:"#FAFAF8",border:"1px solid #E5E3DE",borderRadius:8,padding:16,marginBottom:14};
+            const rw=(l,v,c)=><div style={{display:"flex",justifyContent:"space-between",padding:"3px 0",borderBottom:"1px solid #F0EEE9"}}><span style={{fontSize:11,color:"#666"}}>{l}</span><span style={{fontSize:12,fontWeight:600,fontFamily:"'DM Mono',monospace",color:c||"#111"}}>{M(v)}</span></div>;
+            const hd=(t,c)=><div style={{fontSize:10,fontWeight:700,color:c||"#111",letterSpacing:1,textTransform:"uppercase",margin:"10px 0 4px"}}>{t}</div>;
+            return <div style={s}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                <div style={{fontSize:13,fontWeight:700,color:"#111"}}>🧮 Simulación de costes</div>
+                <div style={{fontSize:10,color:"#999"}}>SMLMV 2026: {M(_SM)}</div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:10,marginBottom:10}}>
+                <div style={{background:"#E8F4EE",borderRadius:6,padding:"8px 10px",textAlign:"center"}}>
+                  <div style={{fontSize:8,fontWeight:700,color:"#1E6B42",letterSpacing:1}}>NETO TRABAJADOR</div>
+                  <div style={{fontSize:20,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#1E6B42"}}>{M(r.neto)}</div>
+                  <div style={{fontSize:9,color:"#666"}}>Q1: {M(r.q1)} · Q2: {M(r.q2)}</div>
+                </div>
+                <div style={{background:"#EFF6FF",borderRadius:6,padding:"8px 10px",textAlign:"center"}}>
+                  <div style={{fontSize:8,fontWeight:700,color:"#2563EB",letterSpacing:1}}>COSTO EMPRESA</div>
+                  <div style={{fontSize:20,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#2563EB"}}>{M(r.costoT)}</div>
+                  <div style={{fontSize:9,color:"#666"}}>Factor: {r.base>0?(r.costoT/r.base).toFixed(2):"—"}×</div>
+                </div>
+                <div style={{background:"#F5F4F1",borderRadius:6,padding:"8px 10px",textAlign:"center"}}>
+                  <div style={{fontSize:8,fontWeight:700,color:"#555",letterSpacing:1}}>COSTO CONTRATO</div>
+                  <div style={{fontSize:20,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#111"}}>{M(r.costoT*(form.duracion_meses||12))}</div>
+                  <div style={{fontSize:9,color:"#666"}}>{form.duracion_meses||12} meses</div>
+                </div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
+                <div>
+                  {hd("Devengado","#1E6B42")}
+                  {rw("Salario base",r.base)}
+                  {rw("Aux. transporte",r.aux)}
+                  {r.bono>0&&rw("Bono "+(form.bono_es_salarial?"(salarial)":"(Art.128)"),r.bono,"#7C3AED")}
+                  {rw("TOTAL DEVENGADO",r.dev,"#1E6B42")}
+                  {hd("Deducciones","#DC2626")}
+                  {!r.eSub&&rw("EPS empleado (4%)",r.epsE,"#DC2626")}
+                  {r.eSub&&rw("EPS SISBEN",0,"#999")}
+                  {rw("Pensión (4%)",r.penE,"#DC2626")}
+                  {rw("TOTAL DED.",r.totDed,"#DC2626")}
+                </div>
+                <div>
+                  {hd("Aportes empleador","#2563EB")}
+                  {rw("EPS "+(r.ex114?"✅ exon.":"(8.5%)"),r.epsEr)}
+                  {rw("Pensión (12%)",r.penEr)}
+                  {rw("ARL "+["I","II","III","IV","V"][form.arl_nivel||0],r.arlV)}
+                  {rw("Caja (4%)",r.caja)}
+                  {rw("ICBF "+(r.ex114?"✅":"(3%)"),r.icbf)}
+                  {rw("SENA "+(r.ex114?"✅":"(2%)"),r.sena)}
+                  {rw("TOTAL APORTES",r.totAp,"#2563EB")}
+                </div>
+                <div>
+                  {hd("Provisiones","#7C3AED")}
+                  {rw("Prima (8.33%)",r.pri)}
+                  {rw("Cesantías (8.33%)",r.ces)}
+                  {rw("Int. ces. (1%)",r.intC)}
+                  {rw("Vacaciones (4.17%)",r.vac)}
+                  {rw("TOTAL PROV.",r.totPr,"#7C3AED")}
+                  {hd("Resumen")}
+                  {rw("Gasto mensual (caja)",r.dev+r.totAp,"#DC2626")}
+                  {rw("Provisión mensual",r.totPr,"#2563EB")}
+                  <div style={{marginTop:6,background:"#111",borderRadius:4,padding:"6px 10px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <span style={{fontSize:10,color:"#fff",fontWeight:600}}>COSTO TOTAL/MES</span>
+                    <span style={{fontSize:15,fontWeight:800,fontFamily:"'DM Mono',monospace",color:"#fff"}}>{M(r.costoT)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>;
+          })()}
           {/* ── JORNADA ── */}
           <div style={{fontSize:12,fontWeight:700,color:C.inkLight,letterSpacing:"0.06em",textTransform:"uppercase",margin:"12px 0 8px"}}>Jornada y contrato</div>
           <Row gap={14} wrap>
