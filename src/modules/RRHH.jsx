@@ -3353,10 +3353,16 @@ function AnexosPanel({p}){
 
   const catsCand = CATS.filter(c=>c.section==="candidato");
   const catsEmp = CATS.filter(c=>c.section==="empresa");
+  // Filter by required docs (if defined in process)
+  const reqDocs = p._docs_requeridos;
+  const filterCats = (cats) => reqDocs ? cats.map(c=>({...c,docs:c.docs.filter(d=>reqDocs[d.key])})).filter(c=>c.docs.length>0) : cats;
+  const filtCand = filterCats(catsCand);
+  const filtEmp = filterCats(catsEmp);
 
-  const total = CATS.reduce((s,c)=>s+c.docs.length,0);
-  const subidos = CATS.reduce((s,c)=>s+c.docs.filter(d=>docs[d.key]&&!docs[d.key].pendiente).length,0);
-  const pendientes = CATS.reduce((s,c)=>s+c.docs.filter(d=>docs[d.key]&&docs[d.key].pendiente).length,0);
+  const allFiltered = [...filtCand,...filtEmp];
+  const total = allFiltered.reduce((s,c)=>s+c.docs.length,0);
+  const subidos = allFiltered.reduce((s,c)=>s+c.docs.filter(d=>docs[d.key]&&!docs[d.key].pendiente).length,0);
+  const pendientes = allFiltered.reduce((s,c)=>s+c.docs.filter(d=>docs[d.key]&&docs[d.key].pendiente).length,0);
 
   const sCard = {borderRadius:8,border:'1px solid #D1FAE5',padding:16,background:'#F0FDF4',marginTop:12};
   const btnS = {border:'none',padding:'4px 10px',borderRadius:5,cursor:'pointer',fontSize:10,fontFamily:'DM Sans,sans-serif',fontWeight:600};
@@ -3379,8 +3385,8 @@ function AnexosPanel({p}){
       </div>
 
       {expanded && <div style={{marginTop:14}}>
-        {[{title:"👤 Documentos del candidato",cats:catsCand,bg:"#FAFAF8",border:"#E5E3DE"},
-          {title:"🏢 Documentos de la empresa",cats:catsEmp,bg:"#F0FDF4",border:"#D1FAE5"}].map(sec=>(
+        {[{title:"👤 Documentos del candidato",cats:filtCand,bg:"#FAFAF8",border:"#E5E3DE"},
+          {title:"🏢 Documentos de la empresa",cats:filtEmp,bg:"#F0FDF4",border:"#D1FAE5"}].map(sec=>(
           <div key={sec.title} style={{marginBottom:14,border:'1px solid '+sec.border,borderRadius:8,overflow:'hidden'}}>
             <div style={{background:sec.bg,padding:'8px 12px',fontSize:12,fontWeight:700,color:'#111',borderBottom:'1px solid '+sec.border}}>{sec.title}</div>
             <div style={{padding:'8px 10px'}}>
