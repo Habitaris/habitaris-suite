@@ -16,7 +16,14 @@ const SB = "https://xlzkasdskatnikuavefh.supabase.co";
 const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhsemthc2Rzc2thdG5pa3VhdmVmaCIsInJvbGUiOiJhbm9uIiwiaWF0IjoxNzQwMTUyOTk3LCJleHAiOjIwNTU3Mjg5OTd9.DP5x1hNbnTSzIFRMFOG7tYbykaAJMc6BRXYC_dFNFgE";
 const SBH = { "Content-Type":"application/json", apikey:KEY, Authorization:"Bearer "+KEY };
 
-async function fetchEmps(){try{const r=await fetch(SB+"/rest/v1/hiring_processes?estado=in.(firmado,afiliaciones,completado)&select=*",{headers:SBH});const d=await r.json();return Array.isArray(d)?d:[];}catch{return[];}}
+async function fetchEmps(){try{
+  const results=[];
+  for(const est of["firmado","afiliaciones","completado"]){
+    const r=await fetch("/api/hiring?estado="+est);const d=await r.json();
+    if(d.ok&&Array.isArray(d.data))results.push(...d.data);
+  }
+  return results;
+}catch{return[];}}
 async function loadN(a,m){try{const r=await fetch(SB+"/rest/v1/kv_store?key=eq.hab:nomina:"+a+":"+m+"&select=value",{headers:SBH});const d=await r.json();return d&&d[0]?.value?JSON.parse(d[0].value):[];}catch{return[];}}
 async function saveN(a,m,data){await fetch(SB+"/rest/v1/kv_store",{method:"POST",headers:{...SBH,Prefer:"resolution=merge-duplicates"},body:JSON.stringify({key:"hab:nomina:"+a+":"+m,value:JSON.stringify(data),tenant_id:"habitaris"})});}
 
