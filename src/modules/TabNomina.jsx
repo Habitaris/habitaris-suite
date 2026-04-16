@@ -147,8 +147,12 @@ export function TabNomina(){
             const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:700px;margin:0 auto;padding:30px 40px;font-size:10pt;color:#111;line-height:1.5}
-.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:16px}.hdr img{height:32px;width:auto}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Helvetica,Arial,sans-serif;background:#f5f5f5;padding:20px 0;margin:0}
+#content{font-family:Helvetica,Arial,sans-serif;background:#fff;max-width:720px;margin:0 auto;padding:30px 40px;font-size:10pt;color:#111;line-height:1.5}
+.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:16px}
+.hdr img{height:40px;width:auto;display:block}
+.hdr .nitbox{font-size:8pt;color:#666;text-align:right}
 h1{font-size:13pt;text-align:center;margin-bottom:4px}h2{font-size:11pt;margin:16px 0 8px;color:#111;border-bottom:1px solid #ccc;padding-bottom:4px}
 .sub{font-size:9pt;color:#666;text-align:center;margin-bottom:16px}
 .info{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:16px;font-size:10pt}.info span{color:#666}.info b{color:#111}
@@ -161,14 +165,14 @@ td{padding:4px 8px;border-bottom:1px solid #ddd}
 .sbox .n{font-size:20pt;font-weight:800;font-family:monospace}.sbox .l{font-size:8pt;color:#666;text-transform:uppercase;letter-spacing:.5px}
 .sig{margin-top:40px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;text-align:center;font-size:9pt}
 .sig div{border-top:1px solid #111;padding-top:6px}
-.np{text-align:center;margin:20px 0;display:flex;gap:8px;justify-content:center}
-.btn{background:#111;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
-.btn2{background:#fff;color:#111;border:1px solid #111;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
+.np{text-align:center;margin:20px auto;display:flex;gap:8px;justify-content:center;max-width:720px}
+.btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600}
+.btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt}
 .foot{font-size:7pt;color:#999;text-align:center;margin-top:20px}
-@media print{.np{display:none}}
+@media print{body{background:#fff;padding:0}.np{display:none}#content{max-width:none;margin:0;padding:0;box-shadow:none}}
 </style></head><body>
 <div id="content">
-<div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris"/><span style="font-size:8pt;color:#999">NIT: 901.922.136-8</span></div>
+<div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris"/><div class="nitbox"><div>Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>
 <h1>REPORTE DE NOVEDADES DE NÓMINA</h1>
 <div class="sub">${MESES[mes]} ${anio} · Ref: ${fileName}</div>
 
@@ -225,7 +229,7 @@ ${selN.nov?`<tr><td colspan="3" style="font-size:9pt;color:#666">Notas: ${selN.n
 <div class="foot">Habitaris Suite · ${new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" id="dlBtn" onclick="html2pdf().set({margin:[15,20,15,20],filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
+<button class="btn" id="dlBtn" onclick="(function(){var el=document.getElementById('content');el.style.maxWidth='none';el.style.boxShadow='none';html2pdf().set({margin:0,filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['avoid-all','css','legacy']}}).from(el).save().then(function(){el.style.maxWidth='720px';});})()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
@@ -419,7 +423,7 @@ ${selN.nov?`<tr><td colspan="3" style="font-size:9pt;color:#666">Notas: ${selN.n
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;font-size:10pt;color:#111}
 .hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
-.hdr img{height:24px;margin-bottom:4px}.nit{font-size:8pt;color:#999}
+.hdr img{height:36px;width:auto;display:block;margin:0 auto 4px}.nit{font-size:8pt;color:#999}
 h1{font-size:11pt;text-align:center;margin:8px 0}
 .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #eee;font-size:10pt}
 .row b{font-family:monospace}.total{border-top:2px solid #111;font-weight:800;font-size:12pt;padding:6px 0}
@@ -450,7 +454,7 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
 <div style="font-size:7pt;color:#999;text-align:center;margin-top:12px">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" onclick="html2pdf().set({margin:[10,15,10,15],filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:[140,216],orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
+<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.maxWidth='none';el.style.boxShadow='none';html2pdf().set({margin:0,filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:[140,216],orientation:'portrait'}}).from(el).save().then(function(){el.style.maxWidth='380px';});})()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
@@ -482,7 +486,7 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;font-size:10pt;color:#111}
 .hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
-.hdr img{height:24px;margin-bottom:4px}.nit{font-size:8pt;color:#999}
+.hdr img{height:36px;width:auto;display:block;margin:0 auto 4px}.nit{font-size:8pt;color:#999}
 h1{font-size:11pt;text-align:center;margin:8px 0}
 .row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #eee;font-size:10pt}
 .row b{font-family:monospace}.total{border-top:2px solid #111;font-weight:800;font-size:12pt;padding:6px 0}
@@ -521,7 +525,7 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
 <div style="font-size:7pt;color:#999;text-align:center;margin-top:12px">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" onclick="html2pdf().set({margin:[10,15,10,15],filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:[140,216],orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
+<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.maxWidth='none';el.style.boxShadow='none';html2pdf().set({margin:0,filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:[140,216],orientation:'portrait'}}).from(el).save().then(function(){el.style.maxWidth='380px';});})()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
@@ -632,8 +636,8 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
                 const items=[{c:"Salario básico",d:calc.salProp,dd:0},calc.aux>0&&{c:`Auxilio transporte (${calc.diasComm}d)`,d:calc.aux,dd:0},calc.bono>0&&{c:`Bono asistencia Art.128 (${calc.diasAsist}d)`,d:calc.bono,dd:0},calc.totHex>0&&{c:"Horas extra",d:calc.totHex,dd:0},calc.recFest>0&&{c:"Recargo festivos",d:calc.recFest,dd:0},{c:"EPS (4%)",d:0,dd:calc.epsE},{c:"Pensión (4%)",d:0,dd:calc.penE},calc.rteF>0&&{c:"Retención fuente",d:0,dd:calc.rteF},calc.otrasDed>0&&{c:"Otras deducciones",d:0,dd:calc.otrasDed}].filter(Boolean);
                 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;padding:30px 40px;font-size:10pt;color:#111}
-.hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:12px}.hdr img{height:28px;margin-bottom:4px}
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;background:#f5f5f5;padding:20px 0;margin:0}#content{background:#fff;max-width:600px;margin:0 auto;padding:30px 40px;font-size:10pt;color:#111}
+.hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:12px}.hdr img{height:42px;width:auto;display:block;margin:0 auto 4px}
 h1{font-size:12pt;text-align:center;margin:6px 0;letter-spacing:1px}
 .info{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:12px;font-size:10pt}.info span{color:#666}
 table{width:100%;border-collapse:collapse;font-size:10pt}th{padding:5px 8px;text-align:left;font-size:8pt;font-weight:700;letter-spacing:.5px;border-bottom:2px solid #111;border-top:1px solid #ccc}
@@ -673,7 +677,7 @@ ${items.map(r=>`<tr><td>${r.c}</td><td class="r">${r.d>0?fmt(r.d):"—"}</td><td
 <div class="foot">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" onclick="html2pdf().set({margin:[15,20,15,20],filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(document.getElementById('content')).save()">📥 Descargar PDF</button>
+<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.maxWidth='none';el.style.boxShadow='none';html2pdf().set({margin:0,filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(el).save().then(function(){el.style.maxWidth='600px';});})()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div></body></html>`;
                 window.open(URL.createObjectURL(new Blob([html],{type:"text/html;charset=utf-8"})),"_blank");
