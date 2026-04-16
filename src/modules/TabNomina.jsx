@@ -234,7 +234,7 @@ ${selN.nov?`<tr><td colspan="3" style="font-size:9pt;color:#666">Notas: ${selN.n
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
-            window.open(URL.createObjectURL(new Blob([html],{type:"text/html;charset=utf-8"})),"_blank");
+            var w=window.open('','_blank');w.document.write(html);w.document.close();
           }}>📄 Reporte novedades</Btn>
           <Pill e={selN.estado}/>
         </div>
@@ -459,7 +459,7 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
-                window.open(URL.createObjectURL(new Blob([html],{type:"text/html;charset=utf-8"})),"_blank");
+                var w=window.open('','_blank');w.document.write(html);w.document.close();
               }}>🧾 Tirilla Q1</Btn>
             </Card>
             <Card accent={T.green}>
@@ -530,7 +530,7 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
-                window.open(URL.createObjectURL(new Blob([html],{type:"text/html;charset=utf-8"})),"_blank");
+                var w=window.open('','_blank');w.document.write(html);w.document.close();
               }}>🧾 Tirilla Q2</Btn>
             </Card>
             <Card style={{gridColumn:"1/3",textAlign:"center"}}>
@@ -681,7 +681,7 @@ ${items.map(r=>`<tr><td>${r.c}</td><td class="r">${r.d>0?fmt(r.d):"—"}</td><td
 <button class="btn" onclick="document.title='${fileName}';window.print()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div></body></html>`;
-                window.open(URL.createObjectURL(new Blob([html],{type:"text/html;charset=utf-8"})),"_blank");
+                var w=window.open('','_blank');w.document.write(html);w.document.close();
               }}>📥 Descargar colilla</Btn>
             </div>
           </Card>
