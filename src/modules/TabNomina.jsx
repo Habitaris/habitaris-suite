@@ -149,28 +149,28 @@ export function TabNomina(){
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:30px 0}
-#content{font-family:Helvetica,Arial,sans-serif;background:#fff;width:210mm;min-height:297mm;margin:0 auto;padding:20mm 18mm;font-size:10pt;color:#111;line-height:1.45;box-shadow:0 0 8px rgba(0,0,0,.15)}
-.hdr{display:table;width:100%;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:14px}
-.hdr .l{display:table-cell;vertical-align:middle;width:50%}
-.hdr .r{display:table-cell;vertical-align:middle;text-align:right;font-size:8pt;color:#666;line-height:1.3}
-.hdr img{height:42px;width:auto;display:block}
-h1{font-size:13pt;text-align:center;margin-bottom:4px}h2{font-size:11pt;margin:14px 0 6px;color:#111;border-bottom:1px solid #ccc;padding-bottom:3px}
+#content{font-family:Helvetica,Arial,sans-serif;background:#fff;width:794px;margin:0 auto;padding:40px 50px;font-size:10pt;color:#111;line-height:1.45;box-shadow:0 0 8px rgba(0,0,0,.15)}
+.hdr{border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:16px;overflow:hidden}
+.hdr .l{float:left;width:50%}
+.hdr .r{float:right;text-align:right;font-size:9pt;color:#666;line-height:1.4;padding-top:8px}
+.hdr img{height:48px;width:auto}
+h1{font-size:14pt;text-align:center;margin:6px 0 4px;clear:both}h2{font-size:11pt;margin:14px 0 6px;color:#111;border-bottom:1px solid #ccc;padding-bottom:3px}
 .sub{font-size:9pt;color:#666;text-align:center;margin-bottom:14px}
-.info{display:grid;grid-template-columns:1fr 1fr;gap:2px 16px;margin-bottom:14px;font-size:10pt}.info span{color:#666}.info b{color:#111}
-table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5pt}
-th{background:#111;color:#fff;text-align:left;padding:5px 8px;font-size:8pt;text-transform:uppercase;letter-spacing:.5px}
-td{padding:4px 8px;border-bottom:1px solid #ddd}
+.info{margin-bottom:14px;font-size:10pt;overflow:hidden}.info div{float:left;width:50%;padding:2px 8px 2px 0}.info span{color:#666}.info b{color:#111}
+table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5pt;clear:both}
+th{background:#111;color:#fff;text-align:left;padding:6px 8px;font-size:8pt;text-transform:uppercase;letter-spacing:.5px}
+td{padding:5px 8px;border-bottom:1px solid #ddd}
 .fest{background:#f5f5f5}.nov{background:#f0f0f0}
-.summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0}
-.sbox{border:1px solid #ccc;border-radius:6px;padding:8px;text-align:center}
-.sbox .n{font-size:18pt;font-weight:800;font-family:monospace}.sbox .l{font-size:7.5pt;color:#666;text-transform:uppercase;letter-spacing:.3px}
-.sig{margin-top:30px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;text-align:center;font-size:9pt}
-.sig div{border-top:1px solid #111;padding-top:6px}
-.np{text-align:center;margin:16px auto;display:flex;gap:8px;justify-content:center;max-width:720px}
-.btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600}
-.btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt}
-.foot{font-size:7pt;color:#999;text-align:center;margin-top:16px}
-@media print{body{background:#fff;padding:0}.np{display:none}#content{width:auto;min-height:0;margin:0;padding:15mm;box-shadow:none}}
+.summary{margin:12px 0;overflow:hidden}.summary .sbox{float:left;width:calc(33.33% - 6px);margin-right:8px;border:1px solid #ccc;border-radius:6px;padding:10px;text-align:center}
+.summary .sbox:nth-child(3n){margin-right:0}.summary .sbox:nth-child(n+4){margin-top:8px}
+.sbox .n{font-size:20pt;font-weight:800;font-family:monospace}.sbox .l{font-size:8pt;color:#666;text-transform:uppercase;letter-spacing:.3px}
+.sig{margin-top:36px;overflow:hidden}.sig div{float:left;width:calc(33.33% - 12px);margin-right:18px;text-align:center;font-size:9pt;border-top:1px solid #111;padding-top:8px}
+.sig div:last-child{margin-right:0}
+.np{text-align:center;margin:16px auto;max-width:794px}
+.btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
+.btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
+.foot{font-size:7pt;color:#999;text-align:center;margin-top:16px;clear:both}
+@media print{body{background:#fff;padding:0}.np{display:none}#content{width:auto;margin:0;padding:15mm;box-shadow:none}}
 </style></head><body>
 <div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>
