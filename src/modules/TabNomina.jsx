@@ -145,7 +145,7 @@ export function TabNomina(){
             const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
             const fileName=`NOV-${mAbr}${a2}-${ape}-${selN.cc||""}`;
             const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:30px 0}
@@ -170,7 +170,7 @@ td{padding:5px 8px;border-bottom:1px solid #ddd}
 .btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
 .btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
 .foot{font-size:7pt;color:#999;text-align:center;margin-top:16px;clear:both}
-@media print{body{background:#fff;padding:0}.np{display:none}#content{width:auto;margin:0;padding:15mm;box-shadow:none}}
+@page{size:A4;margin:15mm}@media print{body{background:#fff;padding:0;margin:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
 </style></head><body>
 <div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>
@@ -230,7 +230,7 @@ ${selN.nov?`<tr><td colspan="3" style="font-size:9pt;color:#666">Notas: ${selN.n
 <div class="foot">Habitaris Suite · ${new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" id="dlBtn" onclick="(function(){var el=document.getElementById('content');var orig={w:el.style.width,m:el.style.margin,s:el.style.boxShadow};el.style.boxShadow='none';html2pdf().set({margin:0,filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,windowWidth:794},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy']}}).from(el).save().then(function(){el.style.boxShadow=orig.s;});})()">📥 Descargar PDF</button>
+<button class="btn" onclick="document.title='${fileName}';window.print()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
@@ -420,7 +420,7 @@ ${selN.nov?`<tr><td colspan="3" style="font-size:9pt;color:#666">Notas: ${selN.n
                 const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
                 const fileName=`Q1-${mAbr}${a2}-${ape}`;
                 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;font-size:10pt;color:#111}
 .hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
@@ -433,7 +433,7 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
 .np{text-align:center;margin:20px 0;display:flex;gap:8px;justify-content:center}
 .btn{background:#111;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
 .btn2{background:#fff;color:#111;border:1px solid #111;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
-@media print{.np{display:none}}
+@page{size:140mm 216mm;margin:10mm}@media print{body{background:#fff;padding:0;margin:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
 </style></head><body>
 <div id="content">
 <div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris" style="height:28px;width:auto;display:block;margin:0 auto"/><div class="nit">NIT: 901.922.136-8</div></div>
@@ -455,7 +455,7 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
 <div style="font-size:7pt;color:#999;text-align:center;margin-top:12px">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.maxWidth='none';el.style.boxShadow='none';html2pdf().set({margin:0,filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:[140,216],orientation:'portrait'}}).from(el).save().then(function(){el.style.maxWidth='380px';});})()">📥 Descargar PDF</button>
+<button class="btn" onclick="document.title='${fileName}';window.print()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
@@ -483,7 +483,7 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
                 const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
                 const fileName=`Q2-${mAbr}${a2}-${ape}`;
                 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;font-size:10pt;color:#111}
 .hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
@@ -496,7 +496,7 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
 .np{text-align:center;margin:20px 0;display:flex;gap:8px;justify-content:center}
 .btn{background:#111;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
 .btn2{background:#fff;color:#111;border:1px solid #111;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
-@media print{.np{display:none}}
+@page{size:140mm 216mm;margin:10mm}@media print{body{background:#fff;padding:0;margin:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
 </style></head><body>
 <div id="content">
 <div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris" style="height:28px;width:auto;display:block;margin:0 auto"/><div class="nit">NIT: 901.922.136-8</div></div>
@@ -526,7 +526,7 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
 <div style="font-size:7pt;color:#999;text-align:center;margin-top:12px">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.maxWidth='none';el.style.boxShadow='none';html2pdf().set({margin:0,filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:[140,216],orientation:'portrait'}}).from(el).save().then(function(){el.style.maxWidth='380px';});})()">📥 Descargar PDF</button>
+<button class="btn" onclick="document.title='${fileName}';window.print()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
@@ -636,7 +636,7 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
                 const fileName=`COLILLA-${mAbr}${a2}-${ape}`;
                 const items=[{c:"Salario básico",d:calc.salProp,dd:0},calc.aux>0&&{c:`Auxilio transporte (${calc.diasComm}d)`,d:calc.aux,dd:0},calc.bono>0&&{c:`Bono asistencia Art.128 (${calc.diasAsist}d)`,d:calc.bono,dd:0},calc.totHex>0&&{c:"Horas extra",d:calc.totHex,dd:0},calc.recFest>0&&{c:"Recargo festivos",d:calc.recFest,dd:0},{c:"EPS (4%)",d:0,dd:calc.epsE},{c:"Pensión (4%)",d:0,dd:calc.penE},calc.rteF>0&&{c:"Retención fuente",d:0,dd:calc.rteF},calc.otrasDed>0&&{c:"Otras deducciones",d:0,dd:calc.otrasDed}].filter(Boolean);
                 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
+
 <style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;background:#f5f5f5;padding:20px 0;margin:0}#content{background:#fff;max-width:600px;margin:0 auto;padding:30px 40px;font-size:10pt;color:#111}
 .hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:12px}.hdr img{height:42px;width:auto;display:block;margin:0 auto 4px}
 h1{font-size:12pt;text-align:center;margin:6px 0;letter-spacing:1px}
@@ -653,7 +653,7 @@ td{padding:4px 8px;border-bottom:1px solid #eee}.r{text-align:right;font-family:
 .btn{background:#111;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
 .btn2{background:#fff;color:#111;border:1px solid #111;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
 .foot{font-size:7pt;color:#999;text-align:center;margin-top:12px}
-@media print{.np{display:none}}</style></head><body>
+@page{size:A4;margin:15mm}@media print{body{background:#fff;padding:0;margin:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}</style></head><body>
 <div id="content">
 <div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris" style="height:28px;width:auto;display:block;margin:0 auto"/><div style="font-size:8pt;color:#999">NIT: 901.922.136-8</div></div>
 <h1>COMPROBANTE DE NÓMINA</h1>
@@ -678,7 +678,7 @@ ${items.map(r=>`<tr><td>${r.c}</td><td class="r">${r.d>0?fmt(r.d):"—"}</td><td
 <div class="foot">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.maxWidth='none';el.style.boxShadow='none';html2pdf().set({margin:0,filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}}).from(el).save().then(function(){el.style.maxWidth='600px';});})()">📥 Descargar PDF</button>
+<button class="btn" onclick="document.title='${fileName}';window.print()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div></body></html>`;
                 window.open(URL.createObjectURL(new Blob([html],{type:"text/html;charset=utf-8"})),"_blank");
