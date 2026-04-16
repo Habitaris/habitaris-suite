@@ -148,7 +148,7 @@ export function TabNomina(){
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:700px;margin:0 auto;padding:30px 40px;font-size:10pt;color:#111;line-height:1.5}
-.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:16px}.logo img{height:28px}
+.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:16px}.hdr img{height:32px;width:auto}
 h1{font-size:13pt;text-align:center;margin-bottom:4px}h2{font-size:11pt;margin:16px 0 8px;color:#111;border-bottom:1px solid #ccc;padding-bottom:4px}
 .sub{font-size:9pt;color:#666;text-align:center;margin-bottom:16px}
 .info{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:16px;font-size:10pt}.info span{color:#666}.info b{color:#111}
@@ -168,7 +168,7 @@ td{padding:4px 8px;border-bottom:1px solid #ddd}
 @media print{.np{display:none}}
 </style></head><body>
 <div id="content">
-<div class="hdr"><div class="logo"><img src="${HAB_LOGO}" alt="Habitaris" style="height:28px;width:auto;display:block;margin:0 auto"/></div><span style="font-size:8pt;color:#999">NIT: 901.922.136-8</span></div>
+<div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris"/><span style="font-size:8pt;color:#999">NIT: 901.922.136-8</span></div>
 <h1>REPORTE DE NOVEDADES DE NÓMINA</h1>
 <div class="sub">${MESES[mes]} ${anio} · Ref: ${fileName}</div>
 
