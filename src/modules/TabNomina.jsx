@@ -417,47 +417,51 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                 const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
                 const fileName=`Q1-${mAbr}${a2}-${ape}`;
                 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;font-size:10pt;color:#111}
-.hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
-.hdr img{height:36px;width:auto;display:block;margin:0 auto 4px}.nit{font-size:8pt;color:#999}
-h1{font-size:11pt;text-align:center;margin:8px 0}
-.row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #eee;font-size:10pt}
-.row b{font-family:monospace}.total{border-top:2px solid #111;font-weight:800;font-size:12pt;padding:6px 0}
-.sig{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center;font-size:9pt}
-.sig div{border-top:1px solid #111;padding-top:6px}
-.np{text-align:center;margin:20px 0;display:flex;gap:8px;justify-content:center}
-.btn{background:#111;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
-.btn2{background:#fff;color:#111;border:1px solid #111;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
-@page{size:140mm 216mm;margin:10mm}@media print{body{background:#fff;padding:0;margin:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;padding:20px 0}
+#content{background:#fff;width:529px;margin:0 auto;padding:24px 30px;font-size:9pt;color:#111;box-shadow:0 0 8px rgba(0,0,0,.15)}
+.hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px}
+.hdr img{height:32px;display:block;margin:0 auto 4px}
+.nit{font-size:7pt;color:#999}
+h1{font-size:10pt;text-align:center;margin:6px 0}
+.row{overflow:hidden;padding:3px 0;border-bottom:1px solid #eee;font-size:9pt}
+.row span{float:left}.row b{float:right;font-family:monospace}
+.total{border-top:2px solid #111;font-weight:800;font-size:11pt;padding:5px 0}
+.sig{margin-top:20px;overflow:hidden}.sig div{float:left;width:48%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:5px}.sig div:last-child{float:right}
+.foot{font-size:6pt;color:#999;text-align:center;margin-top:8px;clear:both}
+.np{text-align:center;margin:14px auto;max-width:529px}
+.btn{background:#111;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt;margin:0 4px}
+.btn2{background:#fff;color:#111;border:1px solid #111;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt;margin:0 4px}
+@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
 </style></head><body>
 <div id="content">
-<div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris" style="height:28px;width:auto;display:block;margin:0 auto"/><div class="nit">NIT: 901.922.136-8</div></div>
+<div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris"/><div class="nit">NIT: 901.922.136-8</div></div>
 <h1>COMPROBANTE DE PAGO — PRIMERA QUINCENA</h1>
-<div style="text-align:center;font-size:9pt;color:#666;margin-bottom:12px">${MESES[mes]} ${anio} · Anticipo Q1</div>
+<div style="text-align:center;font-size:8pt;color:#666;margin-bottom:10px">${MESES[mes]} ${anio} · ${fileName}</div>
 <div class="row"><span>Empleado</span><b>${selN.nombre}</b></div>
 <div class="row"><span>Documento</span><b>${selN.cc}</b></div>
 <div class="row"><span>Cargo</span><b>${selN.cargo}</b></div>
 <div class="row"><span>EPS</span><b>${selN.eps||"—"}</b></div>
 <div class="row"><span>Banco</span><b>${selN.banco||"—"} · ${selN.cuenta||""}</b></div>
-<div style="height:8px"></div>
+<div style="height:6px"></div>
 <div class="row"><span>Salario base mensual</span><b>${fmt(selN.sal)}</b></div>
 <div class="row"><span>Porcentaje anticipo Q1</span><b>${((selN.q1Pct||0.5)*100).toFixed(0)}%</b></div>
-<div style="height:4px"></div>
-<div class="row total"><span>VALOR A PAGAR</span><b style="font-size:16pt">${fmt(calc.q1)}</b></div>
-<div style="font-size:9pt;color:#666;text-align:center;margin:8px 0">Anticipo fijo: ${fPct(selN.q1Pct||0.5)} × ${fmt(selN.sal)} = ${fmt(calc.q1)}</div>
-<div style="font-size:9pt;color:#666;text-align:center">Fecha de pago: 15 de ${MESES[mes].toLowerCase()} de ${anio}</div>
-<div class="sig"><div>Empleador<br><span style="font-size:8pt;color:#999">Habitaris S.A.S</span></div><div>Trabajador<br><span style="font-size:8pt;color:#999">${selN.nombre}</span></div></div>
-<div style="font-size:7pt;color:#999;text-align:center;margin-top:12px">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
+<div style="height:3px"></div>
+<div class="row total"><span>VALOR A PAGAR</span><b style="font-size:14pt">${fmt(calc.q1)}</b></div>
+<div style="font-size:8pt;color:#666;text-align:center;margin:6px 0">Anticipo fijo: ${fPct(selN.q1Pct||0.5)} × ${fmt(selN.sal)} = ${fmt(calc.q1)}</div>
+<div style="font-size:8pt;color:#666;text-align:center">Fecha de pago: 15 de ${MESES[mes].toLowerCase()} de ${anio}</div>
+<div class="sig"><div>Empleador<br><span style="color:#999">Habitaris S.A.S</span></div><div>Trabajador<br><span style="color:#999">${selN.nombre}</span></div></div>
+<div class="foot">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" onclick="var el=document.getElementById('content');el.style.boxShadow='none';html2pdf().set({margin:0,filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,windowWidth:el.scrollWidth},jsPDF:{unit:'px',format:[el.scrollWidth,el.scrollHeight],hotfixes:['px_scaling']}}).from(el).save()">📥 Descargar PDF</button>
+<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(c){var img=c.toDataURL('image/jpeg',0.98);var pW=140,pH=(c.height*pW)/c.width;var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:[140,216]});pdf.addImage(img,'JPEG',0,0,pW,pH);pdf.save('${fileName}.pdf');el.style.boxShadow='0 0 8px rgba(0,0,0,.15)'})})()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
-                window.open(URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'})),'_blank');
+                const w=window.open('','_blank');w.document.write(html);w.document.close();
               }}>🧾 Tirilla Q1</Btn>
             </Card>
             <Card accent={T.green}>
@@ -481,31 +485,36 @@ h1{font-size:11pt;text-align:center;margin:8px 0}
                 const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
                 const fileName=`Q2-${mAbr}${a2}-${ape}`;
                 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;max-width:380px;margin:0 auto;padding:20px;font-size:10pt;color:#111}
-.hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px}
-.hdr img{height:36px;width:auto;display:block;margin:0 auto 4px}.nit{font-size:8pt;color:#999}
-h1{font-size:11pt;text-align:center;margin:8px 0}
-.row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid #eee;font-size:10pt}
-.row b{font-family:monospace}.total{border-top:2px solid #111;font-weight:800;font-size:12pt;padding:6px 0}
-.sig{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center;font-size:9pt}
-.sig div{border-top:1px solid #111;padding-top:6px}
-.np{text-align:center;margin:20px 0;display:flex;gap:8px;justify-content:center}
-.btn{background:#111;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
-.btn2{background:#fff;color:#111;border:1px solid #111;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
-@page{size:140mm 216mm;margin:10mm}@media print{body{background:#fff;padding:0;margin:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;padding:20px 0}
+#content{background:#fff;width:529px;margin:0 auto;padding:24px 30px;font-size:9pt;color:#111;box-shadow:0 0 8px rgba(0,0,0,.15)}
+.hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px}
+.hdr img{height:32px;display:block;margin:0 auto 4px}
+.nit{font-size:7pt;color:#999}
+h1{font-size:10pt;text-align:center;margin:6px 0}
+.row{overflow:hidden;padding:3px 0;border-bottom:1px solid #eee;font-size:9pt}
+.row span{float:left}.row b{float:right;font-family:monospace}
+.total{border-top:2px solid #111;font-weight:800;font-size:11pt;padding:5px 0}
+.sig{margin-top:20px;overflow:hidden}.sig div{float:left;width:48%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:5px}.sig div:last-child{float:right}
+.foot{font-size:6pt;color:#999;text-align:center;margin-top:8px;clear:both}
+.np{text-align:center;margin:14px auto;max-width:529px}
+.btn{background:#111;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt;margin:0 4px}
+.btn2{background:#fff;color:#111;border:1px solid #111;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt;margin:0 4px}
+@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
 </style></head><body>
 <div id="content">
-<div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris" style="height:28px;width:auto;display:block;margin:0 auto"/><div class="nit">NIT: 901.922.136-8</div></div>
+<div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris" /><div class="nit">NIT: 901.922.136-8</div></div>
 <h1>COMPROBANTE DE PAGO — SEGUNDA QUINCENA</h1>
 <div style="text-align:center;font-size:9pt;color:#666;margin-bottom:12px">${MESES[mes]} ${anio} · ${fileName}</div>
 <div class="row"><span>Empleado</span><b>${selN.nombre}</b></div>
 <div class="row"><span>Documento</span><b>${selN.cc}</b></div>
 <div class="row"><span>Cargo</span><b>${selN.cargo}</b></div>
 <div class="row"><span>Banco</span><b>${selN.banco||"—"} · ${selN.cuenta||""}</b></div>
-<div style="height:8px"></div>
+<div style="height:6px"></div>
 <div class="row"><span>Salario proporcional (${calc.dias}d)</span><b>${fmt(calc.salProp)}</b></div>
 ${calc.aux>0?`<div class="row"><span>Auxilio transporte (${calc.diasComm}d)</span><b>${fmt(calc.aux)}</b></div>`:""}
 ${calc.bono>0?`<div class="row"><span>${selN.bonoConcepto||"Bono"} (${calc.diasAsist}d)</span><b>${fmt(calc.bono)}</b></div>`:""}
@@ -525,11 +534,11 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
 <div style="font-size:7pt;color:#999;text-align:center;margin-top:12px">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" onclick="var el=document.getElementById('content');el.style.boxShadow='none';html2pdf().set({margin:0,filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,windowWidth:el.scrollWidth},jsPDF:{unit:'px',format:[el.scrollWidth,el.scrollHeight],hotfixes:['px_scaling']}}).from(el).save()">📥 Descargar PDF</button>
+<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(c){var img=c.toDataURL('image/jpeg',0.98);var pW=140,pH=(c.height*pW)/c.width;var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:[140,216]});pdf.addImage(img,'JPEG',0,0,pW,pH);pdf.save('${fileName}.pdf');el.style.boxShadow='0 0 8px rgba(0,0,0,.15)'})})()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
-                window.open(URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'})),'_blank');
+                var w=window.open('','_blank');w.document.write(html);w.document.close();
               }}>🧾 Tirilla Q2</Btn>
             </Card>
             <Card style={{gridColumn:"1/3",textAlign:"center"}}>
@@ -635,29 +644,37 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
                 const fileName=`COLILLA-${mAbr}${a2}-${ape}`;
                 const items=[{c:"Salario básico",d:calc.salProp,dd:0},calc.aux>0&&{c:`Auxilio transporte (${calc.diasComm}d)`,d:calc.aux,dd:0},calc.bono>0&&{c:`Bono asistencia Art.128 (${calc.diasAsist}d)`,d:calc.bono,dd:0},calc.totHex>0&&{c:"Horas extra",d:calc.totHex,dd:0},calc.recFest>0&&{c:"Recargo festivos",d:calc.recFest,dd:0},{c:"EPS (4%)",d:0,dd:calc.epsE},{c:"Pensión (4%)",d:0,dd:calc.penE},calc.rteF>0&&{c:"Retención fuente",d:0,dd:calc.rteF},calc.otrasDed>0&&{c:"Otras deducciones",d:0,dd:calc.otrasDed}].filter(Boolean);
                 const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 
-<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;background:#f5f5f5;padding:20px 0;margin:0}#content{background:#fff;max-width:600px;margin:0 auto;padding:30px 40px;font-size:10pt;color:#111}
-.hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:12px}.hdr img{height:42px;width:auto;display:block;margin:0 auto 4px}
-h1{font-size:12pt;text-align:center;margin:6px 0;letter-spacing:1px}
-.info{display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:12px;font-size:10pt}.info span{color:#666}
-table{width:100%;border-collapse:collapse;font-size:10pt}th{padding:5px 8px;text-align:left;font-size:8pt;font-weight:700;letter-spacing:.5px;border-bottom:2px solid #111;border-top:1px solid #ccc}
-td{padding:4px 8px;border-bottom:1px solid #eee}.r{text-align:right;font-family:monospace}
-.tot td{border-top:2px solid #111;font-weight:700;font-size:11pt;padding:6px 8px}
-.neto{background:#111;color:#fff;border-radius:4px;padding:12px 16px;margin:12px 0;display:flex;justify-content:space-between;align-items:center}
-.neto .v{font-size:22pt;font-weight:800;font-family:monospace}
-.q{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.qb{border:1px solid #ccc;border-radius:4px;padding:8px;text-align:center}
-.qb .v{font-size:16pt;font-weight:800;font-family:monospace}.qb .l{font-size:7pt;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
-.sig{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:20px;text-align:center;font-size:9pt}.sig div{border-top:1px solid #111;padding-top:6px}
-.np{text-align:center;margin:20px 0;display:flex;gap:8px;justify-content:center}
-.btn{background:#111;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
-.btn2{background:#fff;color:#111;border:1px solid #111;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt}
-.foot{font-size:7pt;color:#999;text-align:center;margin-top:12px}
-@page{size:A4;margin:15mm}@media print{body{background:#fff;padding:0;margin:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}</style></head><body>
+<style>*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;padding:20px 0;margin:0}
+#content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;box-shadow:0 0 8px rgba(0,0,0,.15)}
+.hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:10px}
+.hdr img{height:36px;display:block;margin:0 auto 4px}
+h1{font-size:12pt;text-align:center;margin:4px 0;letter-spacing:1px}
+.info{margin-bottom:10px;font-size:9pt;overflow:hidden}.info div{float:left;width:50%;padding:1px 0}.info span{color:#666}
+table{width:100%;border-collapse:collapse;font-size:9pt;clear:both}
+th{padding:4px 8px;text-align:left;font-size:7pt;font-weight:700;letter-spacing:.5px;border-bottom:2px solid #111;border-top:1px solid #ccc;text-transform:uppercase}
+td{padding:3px 8px;border-bottom:1px solid #eee}.r{text-align:right;font-family:monospace}
+.tot td{border-top:2px solid #111;font-weight:700;font-size:10pt;padding:5px 8px}
+.neto{background:#111;color:#fff;border-radius:4px;padding:10px 14px;margin:10px 0;overflow:hidden}
+.neto .lbl{float:left}.neto .lbl div:first-child{font-size:8pt;font-weight:700;letter-spacing:1px}
+.neto .lbl div:last-child{font-size:7pt;opacity:.5;margin-top:1px}
+.neto .v{float:right;font-size:20pt;font-weight:800;font-family:monospace}
+.q{overflow:hidden;margin-bottom:10px}.qb{float:left;width:49%;border:1px solid #ccc;border-radius:4px;padding:6px;text-align:center}
+.qb:last-child{float:right}
+.qb .v{font-size:14pt;font-weight:800;font-family:monospace}.qb .l{font-size:6.5pt;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.sig{margin-top:20px;overflow:hidden}.sig div{float:left;width:48%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:5px}.sig div:last-child{float:right}
+.foot{font-size:6pt;color:#999;text-align:center;margin-top:8px;clear:both}
+.np{text-align:center;margin:14px auto;max-width:794px}
+.btn{background:#111;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt;margin:0 4px}
+.btn2{background:#fff;color:#111;border:1px solid #111;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt;margin:0 4px}
+@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}</style></head><body>
 <div id="content">
-<div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris" style="height:28px;width:auto;display:block;margin:0 auto"/><div style="font-size:8pt;color:#999">NIT: 901.922.136-8</div></div>
+<div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris"/><div style="font-size:7pt;color:#999">NIT: 901.922.136-8</div></div>
 <h1>COMPROBANTE DE NÓMINA</h1>
-<div style="text-align:center;font-size:9pt;color:#666;margin-bottom:12px">${MESES[mes]} ${anio}</div>
+<div style="text-align:center;font-size:8pt;color:#666;margin-bottom:10px">${MESES[mes]} ${anio} · ${fileName}</div>
 <div class="info">
 <div><span>Nombre: </span><b>${selN.nombre}</b></div>
 <div><span>Documento: </span><b>${selN.cc}</b></div>
@@ -672,16 +689,16 @@ td{padding:4px 8px;border-bottom:1px solid #eee}.r{text-align:right;font-family:
 ${items.map(r=>`<tr><td>${r.c}</td><td class="r">${r.d>0?fmt(r.d):"—"}</td><td class="r">${r.dd>0?fmt(r.dd):"—"}</td></tr>`).join("")}
 <tr class="tot"><td>TOTALES</td><td class="r">${fmt(calc.dev)}</td><td class="r">${fmt(calc.totD)}</td></tr>
 </tbody></table>
-<div class="neto"><div><div style="font-size:9pt;font-weight:700;letter-spacing:1px">NETO A PAGAR</div><div style="font-size:8pt;opacity:.5;margin-top:2px">Q1: ${fmt(calc.q1)} + Q2: ${fmt(calc.q2)}</div></div><div class="v">${fmt(calc.neto)}</div></div>
+<div class="neto"><div class="lbl"><div>NETO A PAGAR</div><div>Q1: ${fmt(calc.q1)} + Q2: ${fmt(calc.q2)}</div></div><div class="v">${fmt(calc.neto)}</div></div>
 <div class="q"><div class="qb"><div class="l">Q1 — 15/${MESES[mes].slice(0,3)}</div><div class="v">${fmt(calc.q1)}</div></div><div class="qb"><div class="l">Q2 — Fin/${MESES[mes].slice(0,3)}</div><div class="v">${fmt(calc.q2)}</div></div></div>
 <div class="sig"><div>Empleador<br><span style="color:#999">Habitaris S.A.S</span></div><div>Trabajador<br><span style="color:#999">${selN.nombre}</span></div></div>
 <div class="foot">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" onclick="var el=document.getElementById('content');el.style.boxShadow='none';html2pdf().set({margin:0,filename:'${fileName}.pdf',image:{type:'jpeg',quality:0.98},html2canvas:{scale:2,useCORS:true,windowWidth:el.scrollWidth},jsPDF:{unit:'px',format:[el.scrollWidth,el.scrollHeight],hotfixes:['px_scaling']}}).from(el).save()">📥 Descargar PDF</button>
+<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(c){var img=c.toDataURL('image/jpeg',0.98);var pW=210,pH=(c.height*pW)/c.width;var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileName}.pdf');el.style.boxShadow='0 0 8px rgba(0,0,0,.15)'})})()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div></body></html>`;
-                window.open(URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'})),'_blank');
+                var w=window.open('','_blank');w.document.write(html);w.document.close();
               }}>📥 Descargar colilla</Btn>
             </div>
           </Card>
