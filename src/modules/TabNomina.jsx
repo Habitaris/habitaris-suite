@@ -138,35 +138,45 @@ export function TabNomina(){
           <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selN.nombre}</div><div style={{fontSize:11,color:T.inkLight}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio}</div></div>
           {ed&&<Btn pri small onClick={()=>u({estado:"aprobada"})}>✓ Aprobar</Btn>}
           <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
-          <Btn small onClick={async()=>{
+          <Btn small onClick={()=>{
             const nDias=selN.novDias||{};
-            const novList=Object.entries(nDias).sort().map(([k,v])=>{const d=new Date(k+"T12:00:00");const info=NOV_TIPOS.find(n=>n.id===v);return{fecha:d.toLocaleDateString("es-CO",{weekday:"long",day:"numeric",month:"long"}),tipo:info?.label||v};});
-            const festList=festivosMes.map(h=>({fecha:h.date.toLocaleDateString("es-CO",{weekday:"long",day:"numeric",month:"long"}),name:h.name}));
+            const novList=Object.entries(nDias).sort().map(([k,v])=>{const d=new Date(k+"T12:00:00");const info=NOV_TIPOS.find(n=>n.id===v);return{fecha:d.toLocaleDateString("es-CO",{weekday:"short",day:"numeric",month:"short"}),tipo:info?.label||v};});
+            const festList=festivosMes.map(h=>({fecha:h.date.toLocaleDateString("es-CO",{weekday:"short",day:"numeric",month:"short"}),name:h.name}));
             const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);
             const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
             const fileName=`NOV-${mAbr}${a2}-${ape}-${selN.cc||""}`;
-            const content=`<style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:Helvetica,Arial,sans-serif}
-.hdr{border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:16px;overflow:hidden}
-.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:9pt;color:#666;padding-top:8px}
-.hdr img{height:48px}
-h1{font-size:14pt;text-align:center;margin:6px 0 4px;clear:both}
-h2{font-size:11pt;margin:14px 0 6px;border-bottom:1px solid #ccc;padding-bottom:3px;clear:both}
-.sub{font-size:9pt;color:#666;text-align:center;margin-bottom:14px}
-.info{margin-bottom:14px;font-size:10pt;overflow:hidden}.info div{float:left;width:50%;padding:2px 0}
+            const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+#content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.35;box-shadow:0 0 8px rgba(0,0,0,.15)}
+.hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
+.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
+.hdr img{height:36px}
+h1{font-size:12pt;text-align:center;margin:4px 0 2px;clear:both}
+h2{font-size:9.5pt;margin:10px 0 4px;border-bottom:1px solid #ccc;padding-bottom:2px;clear:both}
+.sub{font-size:8pt;color:#666;text-align:center;margin-bottom:10px}
+.info{margin-bottom:10px;font-size:8.5pt;overflow:hidden}.info div{float:left;width:50%;padding:1px 0}
 .info span{color:#666}.info b{color:#111}
-table{width:100%;border-collapse:collapse;margin-bottom:12px;font-size:9.5pt;clear:both}
-th{background:#111;color:#fff;text-align:left;padding:6px 8px;font-size:8pt;text-transform:uppercase}
-td{padding:5px 8px;border-bottom:1px solid #ddd}
-.fest{background:#f5f5f5}.nov{background:#f0f0f0}
-.summary{margin:12px 0;overflow:hidden}
-.sbox{float:left;width:31%;margin-right:3%;border:1px solid #ccc;border-radius:6px;padding:10px;text-align:center;margin-bottom:8px}
+table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:8.5pt;clear:both}
+th{background:#111;color:#fff;text-align:left;padding:4px 6px;font-size:7pt;text-transform:uppercase}
+td{padding:3px 6px;border-bottom:1px solid #ddd}
+.fest{background:#f9f9f9}.nov{background:#f4f4f4}
+.summary{margin:8px 0;overflow:hidden}
+.sbox{float:left;width:31%;margin-right:3%;border:1px solid #ccc;border-radius:4px;padding:6px;text-align:center;margin-bottom:6px}
 .sbox:nth-child(3n){margin-right:0}
-.sbox .n{font-size:20pt;font-weight:800;font-family:monospace}.sbox .l{font-size:8pt;color:#666;text-transform:uppercase}
-.sig{margin-top:36px;overflow:hidden}.sig div{float:left;width:30%;margin-right:5%;text-align:center;font-size:9pt;border-top:1px solid #111;padding-top:8px}
+.sbox .n{font-size:16pt;font-weight:800;font-family:monospace}.sbox .l{font-size:7pt;color:#666;text-transform:uppercase}
+.sig{margin-top:20px;overflow:hidden}.sig div{float:left;width:30%;margin-right:5%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:5px}
 .sig div:last-child{margin-right:0}
-.foot{font-size:7pt;color:#999;text-align:center;margin-top:16px;clear:both}
-</style>
+.foot{font-size:6.5pt;color:#999;text-align:center;margin-top:10px;clear:both}
+.np{text-align:center;margin:16px auto;max-width:794px}
+.btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
+.btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
+@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+</style></head><body>
+<div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>
 <h1>REPORTE DE NOVEDADES DE NÓMINA</h1>
 <div class="sub">${MESES[mes]} ${anio} · Ref: ${fileName}</div>
@@ -176,17 +186,17 @@ td{padding:5px 8px;border-bottom:1px solid #ddd}
 <div><span>Cargo: </span><b>${selN.cargo}</b></div>
 <div><span>Contrato: </span><b>${selN.tipoContrato||"fijo"}</b></div>
 <div><span>EPS: </span><b>${selN.eps||"—"}</b></div>
-<div><span>Fondo pensión: </span><b>${selN.pen||"—"}</b></div>
+<div><span>Pensión: </span><b>${selN.pen||"—"}</b></div>
 <div><span>Banco: </span><b>${selN.banco||"—"}</b></div>
 <div><span>Cuenta: </span><b>${selN.cuenta||"—"}</b></div>
 </div>
 <h2>Festivos del mes</h2>
 <table><thead><tr><th>Fecha</th><th>Motivo</th></tr></thead><tbody>
-${festList.length>0?festList.map(f=>`<tr class="fest"><td>${f.fecha}</td><td>${f.name} — Descanso remunerado</td></tr>`).join(""):`<tr><td colspan="2" style="color:#999;text-align:center">Sin festivos este mes</td></tr>`}
+${festList.length>0?festList.map(f=>`<tr class="fest"><td>${f.fecha}</td><td>${f.name}</td></tr>`).join(""):`<tr><td colspan="2" style="color:#999;text-align:center">Sin festivos</td></tr>`}
 </tbody></table>
 <h2>Novedades registradas</h2>
 <table><thead><tr><th>Fecha</th><th>Tipo</th><th>Observación</th></tr></thead><tbody>
-${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.tipo}</td><td></td></tr>`).join(""):`<tr><td colspan="3" style="color:#999;text-align:center">Sin novedades este mes</td></tr>`}
+${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.tipo}</td><td></td></tr>`).join(""):`<tr><td colspan="3" style="color:#999;text-align:center">Sin novedades</td></tr>`}
 </tbody></table>
 <h2>Resumen del período</h2>
 <div class="summary">
@@ -200,22 +210,28 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
 <h2>Impacto en nómina</h2>
 <table><thead><tr><th>Concepto</th><th>Días</th><th style="text-align:right">Valor</th><th>Observación</th></tr></thead><tbody>
 <tr><td>Salario base</td><td>${calc.dias}/30</td><td style="font-family:monospace;text-align:right">${fmt(calc.salProp)}</td><td>Lic.rem NO reduce salario</td></tr>
-<tr><td>Auxilio transporte</td><td>${calc.diasComm}/30</td><td style="font-family:monospace;text-align:right">${fmt(calc.aux)}</td><td>Incl. festivos, excl. novedades</td></tr>
-<tr><td>Bono asistencia (Art.128)</td><td>${calc.diasAsist}/30</td><td style="font-family:monospace;text-align:right">${fmt(calc.bono)}</td><td>Excl. festivos y novedades</td></tr>
+<tr><td>Aux. transporte</td><td>${calc.diasComm}/30</td><td style="font-family:monospace;text-align:right">${fmt(calc.aux)}</td><td>Incl. festivos, excl. novedades</td></tr>
+<tr><td>Bono asistencia</td><td>${calc.diasAsist}/30</td><td style="font-family:monospace;text-align:right">${fmt(calc.bono)}</td><td>Excl. festivos y novedades</td></tr>
 <tr style="font-weight:700;border-top:2px solid #111"><td>Total devengado</td><td></td><td style="font-family:monospace;text-align:right">${fmt(calc.dev)}</td><td></td></tr>
 <tr><td>EPS (4%)</td><td></td><td style="font-family:monospace;text-align:right">-${fmt(calc.epsE)}</td><td>IBC: ${fmt(calc.ibc)}</td></tr>
 <tr><td>Pensión (4%)</td><td></td><td style="font-family:monospace;text-align:right">-${fmt(calc.penE)}</td><td>IBC: ${fmt(calc.ibc)}</td></tr>
-<tr style="font-weight:700;background:#f0f0f0"><td>Neto a pagar</td><td></td><td style="font-family:monospace;text-align:right;font-size:12pt">${fmt(calc.neto)}</td><td></td></tr>
-<tr><td style="padding-left:20px">Q1 anticipo</td><td></td><td style="font-family:monospace;text-align:right">${fmt(calc.q1)}</td><td>15 ${MESES[mes].toLowerCase()}</td></tr>
-<tr><td style="padding-left:20px">Q2 ajuste</td><td></td><td style="font-family:monospace;text-align:right">${fmt(calc.q2)}</td><td>Fin de mes</td></tr>
+<tr style="font-weight:700;background:#f0f0f0"><td>Neto a pagar</td><td></td><td style="font-family:monospace;text-align:right;font-size:11pt">${fmt(calc.neto)}</td><td></td></tr>
+<tr><td style="padding-left:16px">Q1 anticipo</td><td></td><td style="font-family:monospace;text-align:right">${fmt(calc.q1)}</td><td>15 ${MESES[mes].toLowerCase()}</td></tr>
+<tr><td style="padding-left:16px">Q2 ajuste</td><td></td><td style="font-family:monospace;text-align:right">${fmt(calc.q2)}</td><td>Fin de mes</td></tr>
 </tbody></table>
 <div class="sig">
 <div>Elaborado por<br><span style="color:#999">RRHH Habitaris</span></div>
 <div>Revisado por<br><span style="color:#999">Contador</span></div>
 <div>Aprobado por<br><span style="color:#999">Gerencia</span></div>
 </div>
-<div class="foot">Habitaris Suite · ${new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})} · ${fileName}</div>`;
-            await downloadPDF(content, fileName, "a4");
+<div class="foot">Habitaris Suite · ${new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})} · ${fileName}</div>
+</div>
+<div class="np">
+<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';document.querySelector('.np').style.display='none';var st=document.createElement('div');st.style.cssText='text-align:center;padding:10px;font-family:monospace;color:#999';st.textContent='Generando PDF...';document.body.appendChild(st);html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(canvas){var img=canvas.toDataURL('image/jpeg',0.98);var iW=canvas.width,iH=canvas.height,pW=210,pH=(iH*pW)/iW;var J=jspdf.jsPDF;var pdf=new J({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileName}.pdf');st.textContent='PDF descargado ✅';el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display='';}).catch(function(e){st.textContent='Error: '+e.message;document.querySelector('.np').style.display=''})})()">📥 Descargar PDF</button>
+<button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
+</div>
+</body></html>`;
+            const w=window.open('','_blank');w.document.write(html);w.document.close();
           }}>📄 Reporte novedades</Btn>
           <Pill e={selN.estado}/>
         </div>
