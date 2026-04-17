@@ -423,9 +423,9 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;padding:20px 0}
 #content{background:#fff;width:529px;margin:0 auto;padding:24px 30px;font-size:9pt;color:#111;box-shadow:0 0 8px rgba(0,0,0,.15)}
-.hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px}
-.hdr img{height:32px;display:block;margin:0 auto 4px}
-.nit{font-size:7pt;color:#999}
+.hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
+.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:4px}
+.hdr img{height:32px}
 h1{font-size:10pt;text-align:center;margin:6px 0}
 .row{overflow:hidden;padding:3px 0;border-bottom:1px solid #eee;font-size:9pt}
 .row span{float:left}.row b{float:right;font-family:monospace}
@@ -438,7 +438,7 @@ h1{font-size:10pt;text-align:center;margin:6px 0}
 @media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
 </style></head><body>
 <div id="content">
-<div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris"/><div class="nit">NIT: 901.922.136-8</div></div>
+<div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>
 <h1>COMPROBANTE DE PAGO — PRIMERA QUINCENA</h1>
 <div style="text-align:center;font-size:8pt;color:#666;margin-bottom:10px">${MESES[mes]} ${anio} · ${fileName}</div>
 <div class="row"><span>Empleado</span><b>${selN.nombre}</b></div>
@@ -492,9 +492,9 @@ h1{font-size:10pt;text-align:center;margin:6px 0}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;padding:20px 0}
 #content{background:#fff;width:529px;margin:0 auto;padding:24px 30px;font-size:9pt;color:#111;box-shadow:0 0 8px rgba(0,0,0,.15)}
-.hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px}
-.hdr img{height:32px;display:block;margin:0 auto 4px}
-.nit{font-size:7pt;color:#999}
+.hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
+.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:4px}
+.hdr img{height:32px}
 h1{font-size:10pt;text-align:center;margin:6px 0}
 .row{overflow:hidden;padding:3px 0;border-bottom:1px solid #eee;font-size:9pt}
 .row span{float:left}.row b{float:right;font-family:monospace}
@@ -507,9 +507,9 @@ h1{font-size:10pt;text-align:center;margin:6px 0}
 @media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
 </style></head><body>
 <div id="content">
-<div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris" /><div class="nit">NIT: 901.922.136-8</div></div>
+<div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>
 <h1>COMPROBANTE DE PAGO — SEGUNDA QUINCENA</h1>
-<div style="text-align:center;font-size:9pt;color:#666;margin-bottom:12px">${MESES[mes]} ${anio} · ${fileName}</div>
+<div style="text-align:center;font-size:8pt;color:#666;margin-bottom:10px">${MESES[mes]} ${anio} · ${fileName}</div>
 <div class="row"><span>Empleado</span><b>${selN.nombre}</b></div>
 <div class="row"><span>Documento</span><b>${selN.cc}</b></div>
 <div class="row"><span>Cargo</span><b>${selN.cargo}</b></div>
@@ -645,8 +645,9 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
                 const items=[{c:"Salario básico",d:calc.salProp,dd:0},calc.aux>0&&{c:`Aux. transporte (${calc.diasComm}d)`,d:calc.aux,dd:0},calc.bono>0&&{c:`Bono asistencia (${calc.diasAsist}d)`,d:calc.bono,dd:0},calc.totHex>0&&{c:"Horas extra",d:calc.totHex,dd:0},calc.recFest>0&&{c:"Recargo festivos",d:calc.recFest,dd:0},{c:"EPS (4%)",d:0,dd:calc.epsE},{c:"Pensión (4%)",d:0,dd:calc.penE},calc.rteF>0&&{c:"Retención fuente",d:0,dd:calc.rteF},calc.otrasDed>0&&{c:"Otras deducciones",d:0,dd:calc.otrasDed}].filter(Boolean);
                 const content=`<style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Helvetica,Arial,sans-serif}
-.hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:10px}
-.hdr img{height:36px;display:block;margin:0 auto 4px}
+.hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:10px;overflow:hidden}
+.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
+.hdr img{height:36px}
 h1{font-size:12pt;text-align:center;margin:4px 0;letter-spacing:1px}
 .info{margin-bottom:10px;font-size:9pt;overflow:hidden}.info div{float:left;width:50%;padding:1px 0}.info span{color:#666}
 table{width:100%;border-collapse:collapse;font-size:9pt;clear:both}
@@ -661,7 +662,7 @@ td{padding:3px 8px;border-bottom:1px solid #eee}.r{text-align:right;font-family:
 .sig{margin-top:20px;overflow:hidden}.sig div{float:left;width:48%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:5px}.sig div:last-child{float:right}
 .foot{font-size:6pt;color:#999;text-align:center;margin-top:8px;clear:both}
 </style>
-<div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris"/><div style="font-size:7pt;color:#999">NIT: 901.922.136-8</div></div>
+<div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>
 <h1>COMPROBANTE DE NÓMINA</h1>
 <div style="text-align:center;font-size:8pt;color:#666;margin-bottom:10px">${MESES[mes]} ${anio} · ${fileName}</div>
 <div class="info">
