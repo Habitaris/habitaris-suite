@@ -639,39 +639,28 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
               <div style={{textAlign:"center",paddingTop:24,borderTop:`1px solid ${T.ink}`}}><div style={{fontSize:9,fontWeight:600}}>Trabajador</div><div style={{fontSize:8,color:T.inkLight}}>{selN.nombre}</div></div>
             </div>
             <div style={{marginTop:12,display:"flex",gap:8,justifyContent:"center"}}>
-              <Btn small onClick={()=>{
+              <Btn small onClick={async()=>{
                 const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
                 const fileName=`COLILLA-${mAbr}${a2}-${ape}`;
-                const items=[{c:"Salario básico",d:calc.salProp,dd:0},calc.aux>0&&{c:`Auxilio transporte (${calc.diasComm}d)`,d:calc.aux,dd:0},calc.bono>0&&{c:`Bono asistencia Art.128 (${calc.diasAsist}d)`,d:calc.bono,dd:0},calc.totHex>0&&{c:"Horas extra",d:calc.totHex,dd:0},calc.recFest>0&&{c:"Recargo festivos",d:calc.recFest,dd:0},{c:"EPS (4%)",d:0,dd:calc.epsE},{c:"Pensión (4%)",d:0,dd:calc.penE},calc.rteF>0&&{c:"Retención fuente",d:0,dd:calc.rteF},calc.otrasDed>0&&{c:"Otras deducciones",d:0,dd:calc.otrasDed}].filter(Boolean);
-                const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
-
-<style>*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;padding:20px 0;margin:0}
-#content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;box-shadow:0 0 8px rgba(0,0,0,.15)}
+                const items=[{c:"Salario básico",d:calc.salProp,dd:0},calc.aux>0&&{c:`Aux. transporte (${calc.diasComm}d)`,d:calc.aux,dd:0},calc.bono>0&&{c:`Bono asistencia (${calc.diasAsist}d)`,d:calc.bono,dd:0},calc.totHex>0&&{c:"Horas extra",d:calc.totHex,dd:0},calc.recFest>0&&{c:"Recargo festivos",d:calc.recFest,dd:0},{c:"EPS (4%)",d:0,dd:calc.epsE},{c:"Pensión (4%)",d:0,dd:calc.penE},calc.rteF>0&&{c:"Retención fuente",d:0,dd:calc.rteF},calc.otrasDed>0&&{c:"Otras deducciones",d:0,dd:calc.otrasDed}].filter(Boolean);
+                const content=`<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Helvetica,Arial,sans-serif}
 .hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:10px}
 .hdr img{height:36px;display:block;margin:0 auto 4px}
 h1{font-size:12pt;text-align:center;margin:4px 0;letter-spacing:1px}
 .info{margin-bottom:10px;font-size:9pt;overflow:hidden}.info div{float:left;width:50%;padding:1px 0}.info span{color:#666}
 table{width:100%;border-collapse:collapse;font-size:9pt;clear:both}
-th{padding:4px 8px;text-align:left;font-size:7pt;font-weight:700;letter-spacing:.5px;border-bottom:2px solid #111;border-top:1px solid #ccc;text-transform:uppercase}
+th{padding:4px 8px;text-align:left;font-size:7pt;font-weight:700;border-bottom:2px solid #111;border-top:1px solid #ccc;text-transform:uppercase}
 td{padding:3px 8px;border-bottom:1px solid #eee}.r{text-align:right;font-family:monospace}
 .tot td{border-top:2px solid #111;font-weight:700;font-size:10pt;padding:5px 8px}
 .neto{background:#111;color:#fff;border-radius:4px;padding:10px 14px;margin:10px 0;overflow:hidden}
-.neto .lbl{float:left}.neto .lbl div:first-child{font-size:8pt;font-weight:700;letter-spacing:1px}
-.neto .lbl div:last-child{font-size:7pt;opacity:.5;margin-top:1px}
+.neto .lbl{float:left}.neto .lbl div:first-child{font-size:8pt;font-weight:700}.neto .lbl div:last-child{font-size:7pt;opacity:.5}
 .neto .v{float:right;font-size:20pt;font-weight:800;font-family:monospace}
-.q{overflow:hidden;margin-bottom:10px}.qb{float:left;width:49%;border:1px solid #ccc;border-radius:4px;padding:6px;text-align:center}
-.qb:last-child{float:right}
-.qb .v{font-size:14pt;font-weight:800;font-family:monospace}.qb .l{font-size:6.5pt;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.q{overflow:hidden;margin-bottom:10px}.qb{float:left;width:49%;border:1px solid #ccc;border-radius:4px;padding:6px;text-align:center}.qb:last-child{float:right}
+.qb .v{font-size:14pt;font-weight:800;font-family:monospace}.qb .l{font-size:6.5pt;font-weight:700;text-transform:uppercase}
 .sig{margin-top:20px;overflow:hidden}.sig div{float:left;width:48%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:5px}.sig div:last-child{float:right}
 .foot{font-size:6pt;color:#999;text-align:center;margin-top:8px;clear:both}
-.np{text-align:center;margin:14px auto;max-width:794px}
-.btn{background:#111;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt;margin:0 4px}
-.btn2{background:#fff;color:#111;border:1px solid #111;padding:8px 20px;border-radius:4px;cursor:pointer;font-size:10pt;margin:0 4px}
-@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}</style></head><body>
-<div id="content">
+</style>
 <div class="hdr"><img src="${HAB_LOGO}" alt="Habitaris"/><div style="font-size:7pt;color:#999">NIT: 901.922.136-8</div></div>
 <h1>COMPROBANTE DE NÓMINA</h1>
 <div style="text-align:center;font-size:8pt;color:#666;margin-bottom:10px">${MESES[mes]} ${anio} · ${fileName}</div>
@@ -686,20 +675,15 @@ td{padding:3px 8px;border-bottom:1px solid #eee}.r{text-align:right;font-family:
 <div><span>Cuenta: </span><b>${selN.cuenta||"—"}</b></div>
 </div>
 <table><thead><tr><th>CONCEPTO</th><th class="r">DEVENGADO</th><th class="r">DEDUCCIÓN</th></tr></thead><tbody>
-${items.map(r=>`<tr><td>${r.c}</td><td class="r">${r.d>0?fmt(r.d):"—"}</td><td class="r">${r.dd>0?fmt(r.dd):"—"}</td></tr>`).join("")}
+${items.map(r=>"<tr><td>"+r.c+"</td><td class='r'>"+(r.d>0?fmt(r.d):"—")+"</td><td class='r'>"+(r.dd>0?fmt(r.dd):"—")+"</td></tr>").join("")}
 <tr class="tot"><td>TOTALES</td><td class="r">${fmt(calc.dev)}</td><td class="r">${fmt(calc.totD)}</td></tr>
 </tbody></table>
 <div class="neto"><div class="lbl"><div>NETO A PAGAR</div><div>Q1: ${fmt(calc.q1)} + Q2: ${fmt(calc.q2)}</div></div><div class="v">${fmt(calc.neto)}</div></div>
 <div class="q"><div class="qb"><div class="l">Q1 — 15/${MESES[mes].slice(0,3)}</div><div class="v">${fmt(calc.q1)}</div></div><div class="qb"><div class="l">Q2 — Fin/${MESES[mes].slice(0,3)}</div><div class="v">${fmt(calc.q2)}</div></div></div>
 <div class="sig"><div>Empleador<br><span style="color:#999">Habitaris S.A.S</span></div><div>Trabajador<br><span style="color:#999">${selN.nombre}</span></div></div>
-<div class="foot">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>
-</div>
-<div class="np">
-<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(c){var img=c.toDataURL('image/jpeg',0.98);var pW=210,pH=(c.height*pW)/c.width;var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileName}.pdf');el.style.boxShadow='0 0 8px rgba(0,0,0,.15)'})})()">📥 Descargar PDF</button>
-<button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
-</div></body></html>`;
-                var w=window.open('','_blank');w.document.write(html);w.document.close();
-              }}>📥 Descargar colilla</Btn>
+<div class="foot">Habitaris Suite · ${new Date().toLocaleDateString("es-CO")} · ${fileName}</div>`;
+                await downloadPDF(content, fileName, "a4");
+              }}>📥 Descargar colilla PDF</Btn>
             </div>
           </Card>
         )}
