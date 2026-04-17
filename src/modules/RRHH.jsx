@@ -1631,10 +1631,37 @@ function TabPartes({ partes, setPartes, equipo, cargos, currentUser, pais }) {
 
 
 
-function TabAsistencia({ equipo, asistencia, setAsistencia, pais }) {
+function TabAsistencia({ equipo: equiposOrig, asistencia, setAsistencia, pais }) {
   const [modo, setModo] = useState("encargado"); // "encargado" | "fichaje"
   const [fecha, setFecha] = useState(today());
   const [fichando, setFichando] = useState(false);
+  const [empleadosSB, setEmpleadosSB] = useState([]);
+
+  // Load real employees from Supabase
+  useEffect(()=>{
+    (async()=>{
+      try {
+        const results = [];
+        for(const est of ["firmado","afiliaciones","completado"]) {
+          const r = await fetch("/api/hiring?estado="+est);
+          const d = await r.json();
+          if(d.ok && Array.isArray(d.data)) results.push(...d.data);
+        }
+        // Map to attendance format
+        setEmpleadosSB(results.map(e=>({
+          id: e.id,
+          nombre: e.candidato_nombre || "Sin nombre",
+          documento: (e.tipo_documento||"CC") + " " + (e.candidato_cc||""),
+          cargo: e.cargo || "",
+          pin: e.pin || "1234",
+          activo: true
+        })));
+      } catch(e) { console.error("Error cargando empleados:", e); }
+    })();
+  },[]);
+
+  // Use Supabase employees if available, fallback to equipos
+  const equipo = empleadosSB.length > 0 ? empleadosSB : (equiposOrig||[]).filter(e=>e.activo);
 
   // Estado del proceso de fichaje (trabajador móvil)
   const [paso, setPaso] = useState(1); // 1=selección 2=pin 3=foto 4=gps 5=confirmado
