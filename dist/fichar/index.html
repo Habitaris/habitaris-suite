@@ -67,11 +67,12 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
   var P = new URLSearchParams(window.location.search);
   var CC = P.get("cc") || "oficina";
   var OT = P.get("ot") || "";
+  var EMP_ID = P.get("emp") || "";
   var emps = [], me = null, att = [], nov = [];
   var gps = null, gpsE = null, pin = "", pinE = false, foto = null, vs = null;
   var devInfo = (navigator.userAgent||"").substring(0,100);
 
-  document.getElementById("ccLabel").textContent = OT ? "Obra: "+OT : CC.replace(/-/g," ").toUpperCase();
+  document.getElementById("ccLabel").textContent = EMP_ID ? "Fichaje personal" : OT ? "Obra: "+OT : CC.replace(/-/g," ").toUpperCase();
 
   var $ = document.getElementById.bind(document);
   function R(h){ $("app").innerHTML = '<div class="wrap">'+h+'</div>'; }
@@ -92,8 +93,18 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
 
   // API calls
   async function loadEmps(){
-    try{ var r=await fetch("/api/employees-public?"+(OT?"ot="+OT:"cc="+CC)); var d=await r.json(); emps=d.data||[]; }catch(e){ emps=[]; }
-    step1();
+    try{
+      var url = EMP_ID ? "/api/employees-public?emp="+EMP_ID : "/api/employees-public";
+      var r=await fetch(url); var d=await r.json(); emps=d.data||[];
+    }catch(e){ emps=[]; }
+    // If emp= param provided and found, skip to PIN
+    if(EMP_ID && emps.length===1){
+      me = emps[0];
+      pin=""; pinE=false;
+      step2();
+    } else {
+      step1();
+    }
   }
   async function loadAtt(){
     try{ var r=await fetch("/api/attendance?fecha="+today()+"&employee_id="+me.id); var d=await r.json(); att=d.data||[]; }catch(e){ att=[]; }

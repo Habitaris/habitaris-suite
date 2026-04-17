@@ -3888,6 +3888,8 @@ function TabPersonal() {
                       📋 Cert. laboral ({conSal?"con":"sin"} salario)
                     </button>
                   ))}
+                  <button onClick={()=>{const link="https://suite.habitaris.co/fichar?emp="+emp.id;navigator.clipboard.writeText(link);alert("Link copiado:\n"+link+"\n\nPIN: últimos 4 dígitos del CC");}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #D97706",borderRadius:6,background:"#FFFBEB",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#D97706"}}>📱 Link fichaje</button>
+                  <button onClick={()=>{const link="https://suite.habitaris.co/fichar?emp="+emp.id;window.open("https://wa.me/?text="+encodeURIComponent("Fichaje Habitaris - "+(emp.candidato_nombre||"")+"\n"+link+"\nPIN: últimos 4 dígitos de tu cédula"),"_blank");}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>💬 WhatsApp</button>
                 </div>
 
                 {/* Expediente completo */}

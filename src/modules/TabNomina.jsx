@@ -345,6 +345,8 @@ export function TabNomina(){
           <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selN.nombre}</div><div style={{fontSize:11,color:T.inkLight}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio}</div></div>
           {ed&&<Btn pri small onClick={()=>u({estado:"aprobada"})}>✓ Aprobar</Btn>}
           <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
+          <Btn small onClick={()=>{const link="https://suite.habitaris.co/fichar?emp="+selN.empId;navigator.clipboard.writeText(link);alert("Link copiado:\n"+link+"\n\nPIN: últimos 4 dígitos del CC");}}>📱 Link fichaje</Btn>
+          <Btn small onClick={()=>{const link="https://suite.habitaris.co/fichar?emp="+selN.empId;window.open("https://wa.me/?text="+encodeURIComponent("Fichaje Habitaris - "+selN.nombre+"\n"+link+"\nPIN: últimos 4 dígitos de tu cédula"),"_blank");}}>💬 Enviar WhatsApp</Btn>
           <Btn small onClick={()=>{
             const nDias=selN.novDias||{};
             const novList=Object.entries(nDias).sort().map(([k,v])=>{const d=new Date(k+"T12:00:00");const info=NOV_TIPOS.find(n=>n.id===v);return{fecha:d.toLocaleDateString("es-CO",{weekday:"short",day:"numeric",month:"short"}),tipo:info?.label||v};});
