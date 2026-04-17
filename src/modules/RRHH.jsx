@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { store } from "../core/store.js";
 import { TabNomina } from "./TabNomina.jsx";
 import CalcSalarial from "./CalcSalarial.jsx";
+import TabFestivos from "./TabFestivos.jsx";
 
 const DEF_EQUIPO = () => ({
   id: uid(), nombre: "", descripcion: "", tipo: "obra",
@@ -3728,8 +3729,21 @@ function TabPersonal() {
         const t = cond?.trabajador || {};
         const e = cond?.empleador || {};
 
+        // Contract days calculation
+        const fechaIni = emp.fecha_inicio ? new Date(emp.fecha_inicio+"T12:00:00") : null;
+        const durMeses = emp.duracion_meses || 0;
+        const isFijo = (emp.tipo_contrato||"").toLowerCase().includes("fijo") || durMeses > 0;
+        const fechaFin = (fechaIni && isFijo && durMeses) ? new Date(fechaIni.getFullYear(), fechaIni.getMonth()+durMeses, fechaIni.getDate()-1) : null;
+        const hoy = new Date();
+        const diasTranscurridos = fechaIni ? Math.max(0, Math.floor((hoy - fechaIni) / 86400000)) : 0;
+        const diasTotales = (fechaIni && fechaFin) ? Math.max(1, Math.floor((fechaFin - fechaIni) / 86400000)+1) : 0;
+        const diasRestantes = (fechaIni && fechaFin) ? Math.max(0, Math.floor((fechaFin - hoy) / 86400000)+1) : 0;
+        const pctAvance = diasTotales > 0 ? Math.min(100, Math.round((diasTranscurridos/diasTotales)*100)) : 0;
+        const alertaVenc = diasRestantes > 0 && diasRestantes <= 30;
+        const vencido = fechaFin && hoy > fechaFin;
+
         return (
-          <Card key={emp.id} style={{marginBottom:12,border:isOpen?"2px solid #1E6B42":"1px solid "+C.border}}>
+          <Card key={emp.id} style={{marginBottom:12,border:isOpen?"2px solid #1E6B42":alertaVenc?"2px solid #D97706":vencido?"2px solid #dc2626":"1px solid "+C.border}}>
             {/* Header del empleado */}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",cursor:"pointer"}} onClick={()=>setSelEmp(isOpen?null:emp.id)}>
               <div>
@@ -3749,6 +3763,28 @@ function TabPersonal() {
                 <span style={{fontSize:18,color:C.inkLight}}>{isOpen?"▾":"▸"}</span>
               </div>
             </div>
+
+            {/* Barra de progreso contrato término fijo */}
+            {isFijo && fechaFin && (
+              <div style={{marginTop:10,padding:"8px 0 2px"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+                  <div style={{fontSize:10,color:C.inkMid}}>
+                    📅 {fechaIni.toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"})} → {fechaFin.toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"})}
+                    <span style={{marginLeft:8,fontWeight:600}}>{durMeses} meses</span>
+                  </div>
+                  <div style={{fontSize:10,fontWeight:700,color:vencido?"#dc2626":alertaVenc?"#D97706":"#1E6B42"}}>
+                    {vencido ? "⚠ VENCIDO" : alertaVenc ? `⚠ ${diasRestantes}d restantes` : `${diasRestantes}d restantes`}
+                  </div>
+                </div>
+                <div style={{height:6,background:"#E5E3DE",borderRadius:3,overflow:"hidden"}}>
+                  <div style={{height:"100%",borderRadius:3,width:pctAvance+"%",background:vencido?"#dc2626":alertaVenc?"#D97706":"#1E6B42",transition:"width .3s"}}/>
+                </div>
+                <div style={{display:"flex",justifyContent:"space-between",marginTop:2}}>
+                  <span style={{fontSize:9,color:C.inkLight}}>{diasTranscurridos}d transcurridos</span>
+                  <span style={{fontSize:9,color:C.inkLight,fontWeight:600}}>{pctAvance}%</span>
+                </div>
+              </div>
+            )}
 
             {/* Detalle expandido */}
             {isOpen && (
@@ -4375,6 +4411,7 @@ const TABS = [
     { id:"asistencia", lbl:"Asistencia Obra", I:Camera, desc:"Control GPS+Foto de entrada/salida" },
   { id:"partes",    lbl:"Partes de Trabajo",    I:ClipboardList,desc:"Vista admin — empleados imputan desde Portal" },
   { id:"novedades", lbl:"Novedades Nómina",     I:FileText,     desc:"Vacaciones, bajas, permisos y horas extra" },
+  { id:"festivos",  lbl:"Festivos Colombia",    I:Calendar,     desc:"Calendario de festivos y días no laborables" },
   { id:"nomina",     lbl:"Liquidador Nómina",    I:DollarSign,   desc:"Nómina mensual Colombia 2026" },
   { id:"personal",   lbl:"Personal",             I:Users,        desc:"Fichas de empleados, expediente y condiciones" },
   { id:"calculadora", lbl:"Calculadora Salarial", I:BarChart2,    desc:"Simulador neto/bruto, costes y propuesta de empleo" },
@@ -4510,6 +4547,7 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                   {tab==="asistencia"&& <TabAsistencia equipo={equipos} asistencia={asistencia} setAsistencia={saveAsistencia} pais={currentUser?.pais||"CO"}/>}
                   {tab==="partes"    && <TabPartes    partes={partes}    setPartes={savePartes}    equipo={equipos} cargos={cargos} currentUser={null} pais={currentUser?.pais||"CO"}/>}
                   {tab==="novedades" && <TabNovedades novedades={novedades} saveNovedades={saveNovedades}/>}
+                  {tab==="festivos"  && <TabFestivos/>}
                   {tab==="nomina"       && <TabNomina/>}
                   {tab==="personal"    && <TabPersonal/>}
                   {tab==="calculadora"  && <CalcSalarial/>}
