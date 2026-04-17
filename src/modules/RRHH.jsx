@@ -4450,7 +4450,6 @@ const TABS = [
   { id:"festivos",  lbl:"Festivos Colombia",    I:Calendar,     desc:"Calendario de festivos y días no laborables" },
   { id:"nomina",     lbl:"Liquidador Nómina",    I:DollarSign,   desc:"Nómina mensual Colombia 2026" },
   { id:"personal",   lbl:"Personal",             I:Users,        desc:"Fichas de empleados, expediente y condiciones" },
-  { id:"liquidacion", lbl:"Liquidación Final",     I:FileText,     desc:"Cálculo terminación, indemnización y documentos de salida" },
   { id:"calculadora", lbl:"Calculadora Salarial", I:BarChart2,    desc:"Simulador neto/bruto, costes y propuesta de empleo" },
   { id:"contratacion", lbl:"Contratación",      I:FileText,     desc:"Propuestas, datos candidato y firma de contratos" },
   { id:"evaluaciones", lbl:"Evaluaciones",       I:ClipboardList,desc:"Plantillas psicotécnicas y DISC por cargo" },
@@ -4587,7 +4586,6 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                   {tab==="festivos"  && <TabFestivos/>}
                   {tab==="nomina"       && <TabNomina/>}
                   {tab==="personal"    && <TabPersonal/>}
-                  {tab==="liquidacion" && <TabLiquidacion/>}
                   {tab==="calculadora"  && <CalcSalarial/>}
                   {tab==="contratacion" && <TabContratacion onNuevaPropuesta={()=>setTab("calculadora")}/>}
                   {tab==="evaluaciones" && <TabEvaluaciones/>}

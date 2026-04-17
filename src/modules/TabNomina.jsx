@@ -91,6 +91,143 @@ const STit=({children,color})=><div style={{fontSize:12,fontWeight:700,color:col
 const Pill=({e})=>{const m={borrador:{bg:"#F5F4F1",c:"#888"},aprobada:{bg:T.greenBg,c:T.green},pagada:{bg:"#E8E8E8",c:"#111"},"anticipo fijo":{bg:T.blueBg,c:T.blue},"ajuste real":{bg:T.greenBg,c:T.green}};const s=m[e]||m.borrador;return<span style={{padding:"2px 8px",borderRadius:10,fontSize:9,fontWeight:700,background:s.bg,color:s.c}}>{e}</span>;};
 const Btn=({children,pri,small,onClick,disabled,style:sx})=><button onClick={onClick} disabled={disabled} style={{padding:small?"4px 10px":"7px 14px",borderRadius:5,border:pri?"none":`1px solid ${T.border}`,background:pri?T.ink:T.surface,color:pri?"#fff":T.ink,fontSize:small?10:11,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:disabled?"default":"pointer",opacity:disabled?0.5:1,display:"inline-flex",alignItems:"center",gap:5,...sx}}>{children}</button>;
 
+/* ── LIQUIDACIÓN FINAL (sub-tab dentro del liquidador) ── */
+const TIPOS_TERM = [
+  { id:"renuncia", label:"Renuncia voluntaria", icon:"📝", color:T.blue, indemniza:false },
+  { id:"vencimiento", label:"Terminación contrato", icon:"📅", color:T.amber, indemniza:false },
+  { id:"justa_causa", label:"Despido con justa causa", icon:"⚖️", color:T.amber, indemniza:false },
+  { id:"sin_justa", label:"Despido sin justa causa", icon:"🚨", color:T.red, indemniza:true },
+];
+
+function calcLiqFinal(selN, tipo, fechaSalida) {
+  const sal=selN.sal||0, aux=(sal<=2*SMLMV)?(selN.auxT||AUX_TR):0;
+  const fi=new Date((selN.fechaIngreso||"2026-01-01")+"T12:00:00");
+  const ff=new Date(fechaSalida+"T12:00:00");
+  const durMeses=selN.duracionMeses||0;
+  const isFijo=(selN.tipoContrato||"").toLowerCase().includes("fijo")||durMeses>0;
+  const diasTot=Math.max(1,Math.floor((ff-fi)/86400000)+1);
+  const diaUltMes=ff.getDate();
+  const iniSem=ff.getMonth()<6?new Date(ff.getFullYear(),0,1):new Date(ff.getFullYear(),6,1);
+  const diasSem=Math.max(1,Math.floor((ff-Math.max(iniSem,fi))/86400000)+1);
+  const anios=diasTot/365;
+  const salPend=Math.round((sal/30)*diaUltMes);
+  const vac=Math.round((sal*diasTot)/720);
+  const prima=Math.round(((sal+aux)*diasSem)/360);
+  const ces=Math.round(((sal+aux)*diasTot)/360);
+  const intCes=Math.round((ces*diasTot*0.12)/360);
+  let indem=0;
+  if(tipo==="sin_justa"){
+    if(isFijo){const ffc=new Date(fi.getFullYear(),fi.getMonth()+durMeses,fi.getDate()-1);const dr=Math.max(0,Math.floor((ffc-ff)/86400000));indem=Math.round((sal/30)*Math.max(15,dr));}
+    else{const sd=sal/30;if(sal<=10*SMLMV){indem=anios<1?Math.round(30*sd*anios):Math.round(30*sd+(Math.floor(anios)-1+(anios%1))*20*sd);}else{indem=anios<1?Math.round(20*sd*anios):Math.round(20*sd+(Math.floor(anios)-1+(anios%1))*15*sd);}}
+  }
+  const sub=salPend+vac+prima+ces+intCes;
+  return {sal,aux,fi,ff,diasTot,diaUltMes,diasSem,anios,isFijo,durMeses,salPend,vac,prima,ces,intCes,indem,sub,total:sub+indem,
+    items:[
+      {c:"Salario pendiente ("+diaUltMes+" días)",v:salPend,n:"Art. 65 CST"},
+      {c:"Vacaciones no disfrutadas",v:vac,n:"Art. 186 CST — "+diasTot+"d/720"},
+      {c:"Prima proporcional",v:prima,n:"Art. 306 CST — "+diasSem+"d semestre"},
+      {c:"Cesantías proporcionales",v:ces,n:"Art. 249 CST — "+diasTot+"d/360"},
+      {c:"Intereses sobre cesantías",v:intCes,n:"Ley 52/1975 — 12%"},
+      ...(indem>0?[{c:"Indemnización sin justa causa",v:indem,n:isFijo?"Art. 64 CST — fijo":"Art. 64 CST — indefinido"}]:[]),
+    ]};
+}
+
+function LiqFinalPanel({selN, calc, fmt, MESES, mes, anio, HAB_LOGO}) {
+  const [tipo, setTipo] = useState("renuncia");
+  const [fechaSalida, setFechaSalida] = useState(new Date().toISOString().split("T")[0]);
+  const liq = calcLiqFinal(selN, tipo, fechaSalida);
+  const tipoInfo = TIPOS_TERM.find(t=>t.id===tipo);
+
+  const genDoc = (docType) => {
+    const hoy=new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
+    const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
+    const motivo=tipo==="renuncia"?"por renuncia voluntaria":tipo==="vencimiento"?"por vencimiento del término fijo":tipo==="justa_causa"?"por despido con justa causa":"por decisión unilateral sin justa causa";
+
+    const hdr=`<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Helvetica,Arial,sans-serif}.hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:16px;overflow:hidden}.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}.hdr img{height:36px}h1{font-size:12pt;text-align:center;margin:12px 0 8px}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:9pt}th{background:#111;color:#fff;padding:4px 8px;text-align:left;font-size:7pt;text-transform:uppercase}td{padding:3px 8px;border-bottom:1px solid #ddd}.r{text-align:right;font-family:monospace}.tot td{border-top:2px solid #111;font-weight:700;font-size:10pt}.body{font-size:10pt;line-height:1.6;text-align:justify}.sig{margin-top:40px;overflow:hidden}.sig div{float:left;width:48%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:6px}.sig div:last-child{float:right}.foot{font-size:6pt;color:#999;text-align:center;margin-top:16px;clear:both}.checks{margin:14px 0;font-size:10pt;line-height:2}</style><div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>`;
+
+    if(docType==="carta"){
+      return {name:`CARTA-TERM-${ape}`, html:hdr+`<h1>CARTA DE TERMINACIÓN Y LIQUIDACIÓN</h1><div class="body"><p>Bogotá D.C., ${hoy}</p><br/><p>Señor(a) <b>${selN.nombre}</b><br/>${selN.cc}</p><br/><p>Comunicamos la terminación de su contrato <b>${motivo}</b>, efectiva el <b>${liq.ff.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b>.</p><p>Cargo: <b>${selN.cargo}</b> · Ingreso: <b>${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b> · ${liq.diasTot} días trabajados.</p></div><table><thead><tr><th>Concepto</th><th class="r">Valor</th><th>Base legal</th></tr></thead><tbody>${liq.items.map(i=>"<tr><td>"+i.c+"</td><td class='r'>"+fmt(i.v)+"</td><td style='font-size:8pt;color:#666'>"+i.n+"</td></tr>").join("")}<tr class="tot"><td>TOTAL A PAGAR</td><td class="r">${fmt(liq.total)}</td><td></td></tr></tbody></table><div class="sig"><div>Empleador<br/><b>Habitaris S.A.S</b></div><div>Trabajador<br/><b>${selN.nombre}</b></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`};
+    }
+    if(docType==="paz"){
+      return {name:`PAZ-SALVO-${ape}`, html:hdr+`<h1>PAZ Y SALVO</h1><div class="body"><p><b>HABITARIS S.A.S</b> certifica que <b>${selN.nombre}</b>, ${selN.cc}, quien laboró como <b>${selN.cargo}</b> desde el ${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})} hasta el ${liq.ff.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}, se encuentra a <b>PAZ Y SALVO</b>:</p></div><div class="checks"><p>☑ Salarios y prestaciones sociales</p><p>☑ Liquidación final</p><p>☑ Vacaciones</p><p>☑ Dotación y herramientas</p><p>☑ Documentos y archivos</p><p>☑ Llaves y accesos</p></div><div class="body"><p>Bogotá D.C., ${hoy}</p></div><div class="sig"><div>Empleador<br/><b>Habitaris S.A.S</b></div><div>Trabajador<br/><b>${selN.nombre}</b></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`};
+    }
+    if(docType==="cesantias"){
+      return {name:`RETIRO-CES-${ape}`, html:hdr+`<h1>CARTA DE RETIRO DE CESANTÍAS</h1><div class="body"><p>Bogotá D.C., ${hoy}</p><br/><p>Señores<br/><b>${selN.pen||"Fondo de Cesantías"}</b></p><br/><p>Ref: Retiro de cesantías por terminación de contrato</p><br/><p>Por medio de la presente, <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que el(la) trabajador(a) <b>${selN.nombre}</b>, identificado(a) con C.C. <b>${(selN.cc||"").replace(/\D/g,"")}</b>, laboró en nuestra empresa desde el <b>${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b> hasta el <b>${liq.ff.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b> (${liq.diasTot} días).</p><br/><p>La relación laboral terminó <b>${motivo}</b>.</p><br/><p>El monto de cesantías proporcionales corresponde a <b>${fmt(liq.ces)}</b>, calculado según Art. 249 del CST.</p><br/><p>Solicitamos autorizar el retiro parcial/total de las cesantías acumuladas a favor del trabajador.</p></div><div class="sig"><div>Representante Legal<br/><b>Habitaris S.A.S</b><br/>NIT: 901.922.136-8</div><div>Trabajador<br/><b>${selN.nombre}</b><br/>C.C. ${(selN.cc||"").replace(/\D/g,"")}</div></div><div class="foot">Habitaris Suite · ${hoy}</div>`};
+    }
+    if(docType==="cert"){
+      return {name:`CERT-LAB-${ape}`, html:hdr+`<h1>CERTIFICACIÓN LABORAL</h1><div class="body"><p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que:</p><br/><p><b>${selN.nombre}</b>, identificado(a) con C.C. No. <b>${(selN.cc||"").replace(/\D/g,"")}</b>, laboró en esta empresa desde el <b>${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b> hasta el <b>${liq.ff.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b>, desempeñando el cargo de <b>${selN.cargo}</b>.</p><br/><p>Devengó un salario mensual de <b>${fmt(selN.sal)}</b>.</p><br/><p>Se expide a solicitud del interesado en Bogotá D.C., ${hoy}.</p></div><div class="sig"><div><br/><b>Representante Legal</b><br/>Habitaris S.A.S</div></div><div class="foot">Habitaris Suite · ${hoy}</div>`};
+    }
+  };
+
+  return (
+    <div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+        <Card accent={T.ink}>
+          <STit>Tipo de terminación</STit>
+          {TIPOS_TERM.map(t=>(
+            <div key={t.id} onClick={()=>setTipo(t.id)} style={{padding:"6px 10px",borderRadius:6,marginBottom:3,cursor:"pointer",background:tipo===t.id?(t.color+"15"):T.surface,border:`1px solid ${tipo===t.id?t.color:T.border}`,fontSize:11}}>
+              {t.icon} {t.label}{t.indemniza&&<span style={{fontSize:9,color:T.red,marginLeft:4,fontWeight:600}}>+ Indemnización</span>}
+            </div>
+          ))}
+          <div style={{marginTop:10}}>
+            <div style={{fontSize:10,fontWeight:700,color:T.inkLight,letterSpacing:.8,textTransform:"uppercase",marginBottom:4}}>Fecha de salida</div>
+            <input type="date" value={fechaSalida} onChange={e=>setFechaSalida(e.target.value)} style={{width:"100%",padding:"6px 10px",border:`1px solid ${T.border}`,borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/>
+          </div>
+        </Card>
+
+        <Card accent={tipoInfo.color}>
+          <STit color={tipoInfo.color}>{tipoInfo.icon} Resumen liquidación</STit>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:10}}>
+            <div style={{background:T.surface,borderRadius:4,padding:"6px 8px",textAlign:"center"}}><div style={{fontSize:8,fontWeight:700,color:T.inkLight}}>DÍAS TRABAJADOS</div><div style={{fontSize:16,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{liq.diasTot}</div></div>
+            <div style={{background:T.surface,borderRadius:4,padding:"6px 8px",textAlign:"center"}}><div style={{fontSize:8,fontWeight:700,color:T.inkLight}}>AÑOS</div><div style={{fontSize:16,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{liq.anios.toFixed(1)}</div></div>
+          </div>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+            <tbody>
+              {liq.items.map((item,i)=>(
+                <tr key={i} style={{borderBottom:`1px solid ${T.border}`,background:item.c.includes("Indemnización")?T.redBg:"transparent"}}>
+                  <td style={{padding:"4px 0",fontSize:11}}>{item.c}</td>
+                  <td style={{padding:"4px 0",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:600}}>{fmt(item.v)}</td>
+                </tr>
+              ))}
+              <tr style={{borderTop:`2px solid ${T.ink}`,background:T.greenBg}}>
+                <td style={{padding:"6px 0",fontSize:13,fontWeight:800}}>TOTAL</td>
+                <td style={{padding:"6px 0",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:800,fontSize:18,color:T.green}}>{fmt(liq.total)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </Card>
+      </div>
+
+      {/* Fórmulas */}
+      <Card style={{marginBottom:12}}>
+        <div style={{fontSize:10,color:T.inkMid,lineHeight:1.6}}>
+          <strong style={{color:T.ink}}>📐 Fórmulas:</strong>{" "}
+          Vacaciones = Sal×{liq.diasTot}d÷720 = {fmt(liq.vac)} · Prima = (Sal+Aux)×{liq.diasSem}d÷360 = {fmt(liq.prima)} · Cesantías = (Sal+Aux)×{liq.diasTot}d÷360 = {fmt(liq.ces)} · Int.ces = {fmt(liq.ces)}×{liq.diasTot}d×12%÷360 = {fmt(liq.intCes)}
+          {liq.indem>0&&<span style={{color:T.red}}> · Indemnización = {fmt(liq.indem)}</span>}
+        </div>
+      </Card>
+
+      {/* Documentos */}
+      <Card accent={T.ink}>
+        <STit>📄 Documentos de salida</STit>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+          {[
+            {id:"carta",lbl:"📄 Carta terminación + Liquidación",color:T.ink,bg:T.surface},
+            {id:"paz",lbl:"✅ Paz y salvo",color:T.green,bg:T.greenBg},
+            {id:"cesantias",lbl:"🏦 Carta retiro de cesantías",color:T.amber,bg:T.amberBg},
+            {id:"cert",lbl:"📋 Certificación laboral",color:T.blue,bg:T.blueBg},
+          ].map(d=>(
+            <Btn key={d.id} small style={{justifyContent:"center",background:d.bg,color:d.color,border:`1px solid ${d.color}`,padding:"8px 12px"}} onClick={async()=>{
+              const doc=genDoc(d.id);
+              await downloadPDF(doc.html, doc.name, "a4");
+            }}>{d.lbl}</Btn>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 export function TabNomina(){
   const hoy=new Date();
   const[anio,setAnio]=useState(hoy.getFullYear());
@@ -114,7 +251,7 @@ export function TabNomina(){
     Promise.all([fetchEmps(),loadN(anio,mes)]).then(([emps,saved])=>{
       const ex=saved||[];
       const lista=emps.map(e=>{const f=ex.find(n=>n.empId===e.id);if(f){if(f.festMes===undefined)f.festMes=festCount;return f;}
-        return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:0.5,hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.entidadBancaria||"",cuenta:e.cuentaBancaria||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",netoRef:e.salario_neto||0,anio,mes};});
+        return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:0.5,hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.entidadBancaria||"",cuenta:e.cuentaBancaria||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",duracionMeses:e.duracion_meses||0,auxT:e.auxilio_transporte||AUX_TR,netoRef:e.salario_neto||0,anio,mes};});
       setNoms(lista);setLoading(false);
     });
   },[anio,mes]);
@@ -244,7 +381,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
           ))}
         </div>
         <div style={{display:"flex",gap:0,marginBottom:14,borderBottom:`1px solid ${T.border}`}}>
-          {[{id:"liquidacion",lbl:"📋 Liquidación"},{id:"quincenal",lbl:"💵 Quincenal Q1/Q2"},{id:"empleador",lbl:"🏢 Costo empleador"},{id:"colilla",lbl:"🧾 Colilla"},{id:"auditoria",lbl:"🔍 Auditoría"}].map(t=>(
+          {[{id:"liquidacion",lbl:"📋 Liquidación"},{id:"quincenal",lbl:"💵 Quincenal Q1/Q2"},{id:"empleador",lbl:"🏢 Costo empleador"},{id:"colilla",lbl:"🧾 Colilla"},{id:"auditoria",lbl:"🔍 Auditoría"},{id:"liqfinal",lbl:"🚪 Liquidación Final"}].map(t=>(
             <button key={t.id} onClick={()=>setSubTab(t.id)} style={{padding:"8px 16px",fontSize:11,fontWeight:subTab===t.id?700:400,border:"none",borderBottom:subTab===t.id?`2px solid ${T.ink}`:"2px solid transparent",background:"transparent",color:subTab===t.id?T.ink:T.inkLight,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{t.lbl}</button>
           ))}
         </div>
@@ -799,6 +936,10 @@ ${items.map(r=>"<tr><td>"+r.c+"</td><td class='r'>"+(r.d>0?fmt(r.d):"—")+"</td
               </div>
             </Card>
           </div>
+        )}
+
+        {subTab==="liqfinal"&&(
+          <LiqFinalPanel selN={selN} calc={calc} fmt={fmt} MESES={MESES} mes={mes} anio={anio} HAB_LOGO={HAB_LOGO}/>
         )}
       </div>
     );
