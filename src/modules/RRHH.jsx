@@ -3,6 +3,9 @@ import { store } from "../core/store.js";
 import { TabNomina } from "./TabNomina.jsx";
 import CalcSalarial from "./CalcSalarial.jsx";
 import TabFestivos from "./TabFestivos.jsx";
+import TabLiquidacion from "./TabLiquidacion.jsx";
+import { downloadPDF } from "./pdfUtil.js";
+import { HAB_LOGO } from "./habLogo.js";
 
 const DEF_EQUIPO = () => ({
   id: uid(), nombre: "", descripcion: "", tipo: "obra",
@@ -3842,6 +3845,12 @@ function TabPersonal() {
                     </>;
                   })()}
                   {emp.entidadBancaria && <span style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:C.bg,color:C.ink}}>🏦 {emp.entidadBancaria} · {emp.tipoCuenta||""} · {emp.cuentaBancaria||""}</span>}
+                  <button onClick={async()=>{
+                    const ape=(emp.candidato_nombre||"").split(" ").slice(-2).join("-").toUpperCase();
+                    const hoy=new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
+                    const html=`<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Helvetica,Arial,sans-serif}.hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:20px;overflow:hidden}.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}.hdr img{height:36px}h1{font-size:13pt;text-align:center;margin:20px 0 16px}.body{font-size:10.5pt;line-height:1.7;text-align:justify;margin-bottom:16px}.sig{margin-top:50px;width:50%}.sig div{border-top:1px solid #111;padding-top:6px;font-size:9pt}.foot{font-size:6.5pt;color:#999;text-align:center;margin-top:30px;clear:both}</style><div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div><h1>CERTIFICACIÓN LABORAL</h1><div class="body"><p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que:</p><br/><p><b>${emp.candidato_nombre||""}</b>, identificado(a) con ${emp.tipo_documento||"C.C."} No. <b>${emp.candidato_cc||""}</b>, labora en esta empresa desde el <b>${emp.fecha_inicio?new Date(emp.fecha_inicio+"T12:00:00").toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"}):"—"}</b>, desempeñando el cargo de <b>${emp.cargo||""}</b> en el área <b>${emp.area||"Administrativa"}</b>.</p><br/><p>El trabajador devenga un salario mensual de <b>${fmtMoney(emp.salario_base)}</b>${(emp.salario_base||0)<=2*1750905?" (más auxilio de transporte de "+fmtMoney(emp.auxilio_transporte||249095)+")":""}.</p><br/><p>La presente certificación se expide a solicitud del interesado, en Bogotá D.C., a los ${hoy}.</p></div><div class="sig"><div><br/><b>Representante Legal</b><br/>Habitaris S.A.S</div></div><div class="foot">Habitaris Suite · ${hoy} · CERT-${(emp.candidato_cc||"").slice(-4)}</div>`;
+                    await downloadPDF(html, "CERT-LAB-"+ape, "a4");
+                  }} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #0891B2",borderRadius:6,background:"#E0F2FE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#0891B2"}}>📋 Certificación laboral</button>
                 </div>
 
                 {/* Expediente completo */}
@@ -4414,6 +4423,7 @@ const TABS = [
   { id:"festivos",  lbl:"Festivos Colombia",    I:Calendar,     desc:"Calendario de festivos y días no laborables" },
   { id:"nomina",     lbl:"Liquidador Nómina",    I:DollarSign,   desc:"Nómina mensual Colombia 2026" },
   { id:"personal",   lbl:"Personal",             I:Users,        desc:"Fichas de empleados, expediente y condiciones" },
+  { id:"liquidacion", lbl:"Liquidación Final",     I:FileText,     desc:"Cálculo terminación, indemnización y documentos de salida" },
   { id:"calculadora", lbl:"Calculadora Salarial", I:BarChart2,    desc:"Simulador neto/bruto, costes y propuesta de empleo" },
   { id:"contratacion", lbl:"Contratación",      I:FileText,     desc:"Propuestas, datos candidato y firma de contratos" },
   { id:"evaluaciones", lbl:"Evaluaciones",       I:ClipboardList,desc:"Plantillas psicotécnicas y DISC por cargo" },
@@ -4550,6 +4560,7 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                   {tab==="festivos"  && <TabFestivos/>}
                   {tab==="nomina"       && <TabNomina/>}
                   {tab==="personal"    && <TabPersonal/>}
+                  {tab==="liquidacion" && <TabLiquidacion/>}
                   {tab==="calculadora"  && <CalcSalarial/>}
                   {tab==="contratacion" && <TabContratacion onNuevaPropuesta={()=>setTab("calculadora")}/>}
                   {tab==="evaluaciones" && <TabEvaluaciones/>}
