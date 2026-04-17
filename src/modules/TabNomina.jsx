@@ -138,92 +138,162 @@ function LiqFinalPanel({selN, calc, fmt, MESES, mes, anio, HAB_LOGO}) {
   const liq = calcLiqFinal(selN, tipo, fechaSalida);
   const tipoInfo = TIPOS_TERM.find(t=>t.id===tipo);
 
-  const genDoc = (docType) => {
-    const hoy=new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
-    const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
-    const motivo=tipo==="renuncia"?"por renuncia voluntaria":tipo==="vencimiento"?"por vencimiento del término fijo":tipo==="justa_causa"?"por despido con justa causa":"por decisión unilateral sin justa causa";
-
-    const hdr=`<style>*{margin:0;padding:0;box-sizing:border-box;font-family:Helvetica,Arial,sans-serif}.hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:16px;overflow:hidden}.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}.hdr img{height:36px}h1{font-size:12pt;text-align:center;margin:12px 0 8px}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:9pt}th{background:#111;color:#fff;padding:4px 8px;text-align:left;font-size:7pt;text-transform:uppercase}td{padding:3px 8px;border-bottom:1px solid #ddd}.r{text-align:right;font-family:monospace}.tot td{border-top:2px solid #111;font-weight:700;font-size:10pt}.body{font-size:10pt;line-height:1.6;text-align:justify}.sig{margin-top:40px;overflow:hidden}.sig div{float:left;width:48%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:6px}.sig div:last-child{float:right}.foot{font-size:6pt;color:#999;text-align:center;margin-top:16px;clear:both}.checks{margin:14px 0;font-size:10pt;line-height:2}</style><div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>`;
-
-    if(docType==="carta"){
-      return {name:`CARTA-TERM-${ape}`, html:hdr+`<h1>CARTA DE TERMINACIÓN Y LIQUIDACIÓN</h1><div class="body"><p>Bogotá D.C., ${hoy}</p><br/><p>Señor(a) <b>${selN.nombre}</b><br/>${selN.cc}</p><br/><p>Comunicamos la terminación de su contrato <b>${motivo}</b>, efectiva el <b>${liq.ff.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b>.</p><p>Cargo: <b>${selN.cargo}</b> · Ingreso: <b>${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b> · ${liq.diasTot} días trabajados.</p></div><table><thead><tr><th>Concepto</th><th class="r">Valor</th><th>Base legal</th></tr></thead><tbody>${liq.items.map(i=>"<tr><td>"+i.c+"</td><td class='r'>"+fmt(i.v)+"</td><td style='font-size:8pt;color:#666'>"+i.n+"</td></tr>").join("")}<tr class="tot"><td>TOTAL A PAGAR</td><td class="r">${fmt(liq.total)}</td><td></td></tr></tbody></table><div class="sig"><div>Empleador<br/><b>Habitaris S.A.S</b></div><div>Trabajador<br/><b>${selN.nombre}</b></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`};
-    }
-    if(docType==="paz"){
-      return {name:`PAZ-SALVO-${ape}`, html:hdr+`<h1>PAZ Y SALVO</h1><div class="body"><p><b>HABITARIS S.A.S</b> certifica que <b>${selN.nombre}</b>, ${selN.cc}, quien laboró como <b>${selN.cargo}</b> desde el ${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})} hasta el ${liq.ff.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}, se encuentra a <b>PAZ Y SALVO</b>:</p></div><div class="checks"><p>☑ Salarios y prestaciones sociales</p><p>☑ Liquidación final</p><p>☑ Vacaciones</p><p>☑ Dotación y herramientas</p><p>☑ Documentos y archivos</p><p>☑ Llaves y accesos</p></div><div class="body"><p>Bogotá D.C., ${hoy}</p></div><div class="sig"><div>Empleador<br/><b>Habitaris S.A.S</b></div><div>Trabajador<br/><b>${selN.nombre}</b></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`};
-    }
-    if(docType==="cesantias"){
-      return {name:`RETIRO-CES-${ape}`, html:hdr+`<h1>CARTA DE RETIRO DE CESANTÍAS</h1><div class="body"><p>Bogotá D.C., ${hoy}</p><br/><p>Señores<br/><b>${selN.pen||"Fondo de Cesantías"}</b></p><br/><p>Ref: Retiro de cesantías por terminación de contrato</p><br/><p>Por medio de la presente, <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que el(la) trabajador(a) <b>${selN.nombre}</b>, identificado(a) con C.C. <b>${(selN.cc||"").replace(/\D/g,"")}</b>, laboró en nuestra empresa desde el <b>${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b> hasta el <b>${liq.ff.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b> (${liq.diasTot} días).</p><br/><p>La relación laboral terminó <b>${motivo}</b>.</p><br/><p>El monto de cesantías proporcionales corresponde a <b>${fmt(liq.ces)}</b>, calculado según Art. 249 del CST.</p><br/><p>Solicitamos autorizar el retiro parcial/total de las cesantías acumuladas a favor del trabajador.</p></div><div class="sig"><div>Representante Legal<br/><b>Habitaris S.A.S</b><br/>NIT: 901.922.136-8</div><div>Trabajador<br/><b>${selN.nombre}</b><br/>C.C. ${(selN.cc||"").replace(/\D/g,"")}</div></div><div class="foot">Habitaris Suite · ${hoy}</div>`};
-    }
-    if(docType==="cert"){
-      return {name:`CERT-LAB-${ape}`, html:hdr+`<h1>CERTIFICACIÓN LABORAL</h1><div class="body"><p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que:</p><br/><p><b>${selN.nombre}</b>, identificado(a) con C.C. No. <b>${(selN.cc||"").replace(/\D/g,"")}</b>, laboró en esta empresa desde el <b>${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b> hasta el <b>${liq.ff.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b>, desempeñando el cargo de <b>${selN.cargo}</b>.</p><br/><p>Devengó un salario mensual de <b>${fmt(selN.sal)}</b>.</p><br/><p>Se expide a solicitud del interesado en Bogotá D.C., ${hoy}.</p></div><div class="sig"><div><br/><b>Representante Legal</b><br/>Habitaris S.A.S</div></div><div class="foot">Habitaris Suite · ${hoy}</div>`};
-    }
+  const openPreview = (title, bodyHtml, fileName) => {
+    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;padding:20px 0}
+#content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.45;box-shadow:0 0 8px rgba(0,0,0,.15)}
+.hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:14px;overflow:hidden}
+.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
+.hdr img{height:36px}
+h1{font-size:12pt;text-align:center;margin:8px 0 6px;clear:both}
+.sub{font-size:8pt;color:#666;text-align:center;margin-bottom:12px}
+.body{font-size:10pt;line-height:1.7;text-align:justify;margin-bottom:10px}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:9pt;clear:both}
+th{background:#111;color:#fff;padding:5px 8px;text-align:left;font-size:7pt;text-transform:uppercase}
+td{padding:4px 8px;border-bottom:1px solid #ddd}.r{text-align:right;font-family:monospace}
+.tot td{border-top:2px solid #111;font-weight:700;font-size:10pt;padding:6px 8px}
+.checks{margin:14px 0;font-size:10pt;line-height:2}
+.sig{margin-top:36px;overflow:hidden}.sig div{float:left;width:48%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:6px}.sig div:last-child{float:right}
+.foot{font-size:6pt;color:#999;text-align:center;margin-top:14px;clear:both}
+.np{text-align:center;margin:16px auto;max-width:794px}
+.btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
+.btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
+@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+</style></head><body>
+<div id="content">
+<div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>
+${bodyHtml}
+</div>
+<div class="np">
+<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';document.querySelector('.np').style.display='none';html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(c){var img=c.toDataURL('image/jpeg',0.98);var pW=210,pH=(c.height*pW)/c.width;var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileName}.pdf');el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display=''})})()">📥 Descargar PDF</button>
+<button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
+</div></body></html>`;
+    const w=window.open('','_blank');w.document.write(html);w.document.close();
   };
+
+  const hoy=new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
+  const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
+  const motivo=tipo==="renuncia"?"por renuncia voluntaria":tipo==="vencimiento"?"por vencimiento del término fijo":tipo==="justa_causa"?"por despido con justa causa":"por decisión unilateral sin justa causa";
 
   return (
     <div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
-        <Card accent={T.ink}>
-          <STit>Tipo de terminación</STit>
-          {TIPOS_TERM.map(t=>(
-            <div key={t.id} onClick={()=>setTipo(t.id)} style={{padding:"6px 10px",borderRadius:6,marginBottom:3,cursor:"pointer",background:tipo===t.id?(t.color+"15"):T.surface,border:`1px solid ${tipo===t.id?t.color:T.border}`,fontSize:11}}>
-              {t.icon} {t.label}{t.indemniza&&<span style={{fontSize:9,color:T.red,marginLeft:4,fontWeight:600}}>+ Indemnización</span>}
-            </div>
-          ))}
-          <div style={{marginTop:10}}>
-            <div style={{fontSize:10,fontWeight:700,color:T.inkLight,letterSpacing:.8,textTransform:"uppercase",marginBottom:4}}>Fecha de salida</div>
-            <input type="date" value={fechaSalida} onChange={e=>setFechaSalida(e.target.value)} style={{width:"100%",padding:"6px 10px",border:`1px solid ${T.border}`,borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/>
-          </div>
-        </Card>
+      {/* Info empleado */}
+      <div style={{background:T.card,border:`1px solid ${T.border}`,borderRadius:8,padding:"14px 18px",marginBottom:12,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div>
+          <div style={{fontSize:15,fontWeight:700}}>{selN.nombre}</div>
+          <div style={{fontSize:11,color:T.inkLight}}>{selN.cargo} · CC {selN.cc} · {selN.tipoContrato} {selN.duracionMeses?selN.duracionMeses+"m":""}</div>
+        </div>
+        <div style={{textAlign:"right"}}>
+          <div style={{fontSize:10,color:T.inkLight}}>Ingreso: {selN.fechaIngreso}</div>
+          <div style={{fontSize:10,color:T.inkLight}}>Salida: {fechaSalida}</div>
+          <div style={{fontSize:11,fontWeight:700}}>{liq.diasTot} días ({liq.anios.toFixed(1)} años)</div>
+        </div>
+      </div>
 
-        <Card accent={tipoInfo.color}>
-          <STit color={tipoInfo.color}>{tipoInfo.icon} Resumen liquidación</STit>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:10}}>
-            <div style={{background:T.surface,borderRadius:4,padding:"6px 8px",textAlign:"center"}}><div style={{fontSize:8,fontWeight:700,color:T.inkLight}}>DÍAS TRABAJADOS</div><div style={{fontSize:16,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{liq.diasTot}</div></div>
-            <div style={{background:T.surface,borderRadius:4,padding:"6px 8px",textAlign:"center"}}><div style={{fontSize:8,fontWeight:700,color:T.inkLight}}>AÑOS</div><div style={{fontSize:16,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{liq.anios.toFixed(1)}</div></div>
+      {/* KPIs */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:12}}>
+        {[
+          ["Salario base",fmt(liq.sal),T.ink],
+          ["Aux. transporte",fmt(liq.aux),T.inkMid],
+          ["Tipo",tipoInfo.icon+" "+tipoInfo.label.split(" ")[0],tipoInfo.color],
+          ["TOTAL LIQUIDACIÓN",fmt(liq.total),T.green],
+        ].map(([l,v,c])=>(
+          <div key={l} style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:6,padding:"10px 12px",textAlign:"center"}}>
+            <div style={{fontSize:8,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:.8}}>{l}</div>
+            <div style={{fontSize:l.includes("TOTAL")?18:14,fontWeight:800,color:c,fontFamily:l==="Tipo"?"'DM Sans'":"'DM Mono',monospace"}}>{v}</div>
           </div>
-          <table style={{width:"100%",borderCollapse:"collapse",fontSize:11}}>
+        ))}
+      </div>
+
+      <div style={{display:"grid",gridTemplateColumns:"280px 1fr",gap:12}}>
+        {/* Izquierda: Config + Docs */}
+        <div>
+          <Card accent={T.ink} style={{marginBottom:10}}>
+            <STit>Tipo de terminación</STit>
+            {TIPOS_TERM.map(t=>(
+              <div key={t.id} onClick={()=>setTipo(t.id)} style={{padding:"7px 10px",borderRadius:6,marginBottom:3,cursor:"pointer",background:tipo===t.id?(t.color+"15"):T.surface,border:`1px solid ${tipo===t.id?t.color:T.border}`,fontSize:11,fontWeight:tipo===t.id?600:400}}>
+                {t.icon} {t.label}{t.indemniza&&<span style={{fontSize:9,color:T.red,marginLeft:4,fontWeight:600}}>+ Indemnización</span>}
+              </div>
+            ))}
+            <div style={{marginTop:10}}>
+              <div style={{fontSize:9,fontWeight:700,color:T.inkLight,letterSpacing:.8,textTransform:"uppercase",marginBottom:3}}>Fecha de salida</div>
+              <input type="date" value={fechaSalida} onChange={e=>setFechaSalida(e.target.value)} style={{width:"100%",padding:"6px 10px",border:`1px solid ${T.border}`,borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/>
+            </div>
+          </Card>
+
+          <Card accent={T.ink}>
+            <STit>📄 Documentos</STit>
+            {[
+              {id:"carta",lbl:"Carta terminación + Liquidación",icon:"📄",color:T.ink,bg:T.surface},
+              {id:"paz",lbl:"Paz y salvo",icon:"✅",color:T.green,bg:T.greenBg},
+              {id:"cesantias",lbl:"Carta retiro de cesantías",icon:"🏦",color:T.amber,bg:T.amberBg},
+              {id:"cert_con",lbl:"Certificación laboral (con salario)",icon:"📋",color:T.blue,bg:T.blueBg},
+              {id:"cert_sin",lbl:"Certificación laboral (sin salario)",icon:"📋",color:T.inkMid,bg:T.surface},
+            ].map(d=>(
+              <button key={d.id} onClick={()=>{
+                const fn = d.id.startsWith("cert") ? `CERT-LAB-${ape}` : d.id==="carta" ? `CARTA-TERM-${ape}` : d.id==="paz" ? `PAZ-SALVO-${ape}` : `RETIRO-CES-${ape}`;
+                let body = "";
+                if(d.id==="carta"){
+                  body=`<h1>CARTA DE TERMINACIÓN Y LIQUIDACIÓN</h1><div class="body"><p>Bogotá D.C., ${hoy}</p><br/><p>Señor(a) <b>${selN.nombre}</b><br/>C.C. ${(selN.cc||"").replace(/\D/g,"")}</p><br/><p>Comunicamos la terminación de su contrato <b>${motivo}</b>, efectiva el <b>${liq.ff.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b>.</p><br/><p>Cargo: <b>${selN.cargo}</b> · Ingreso: <b>${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b> · ${liq.diasTot} días trabajados.</p></div><table><thead><tr><th>Concepto</th><th class="r">Valor</th><th>Base legal</th></tr></thead><tbody>${liq.items.map(i=>"<tr><td>"+i.c+"</td><td class='r'>"+fmt(i.v)+"</td><td style='font-size:8pt;color:#666'>"+i.n+"</td></tr>").join("")}<tr class="tot"><td>TOTAL A PAGAR</td><td class="r">${fmt(liq.total)}</td><td></td></tr></tbody></table><div class="sig"><div>Empleador<br/><b>Habitaris S.A.S</b></div><div>Trabajador<br/><b>${selN.nombre}</b></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
+                } else if(d.id==="paz"){
+                  body=`<h1>PAZ Y SALVO</h1><div class="body"><p><b>HABITARIS S.A.S</b> certifica que <b>${selN.nombre}</b>, C.C. ${(selN.cc||"").replace(/\D/g,"")}, quien laboró como <b>${selN.cargo}</b> desde el ${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})} hasta el ${liq.ff.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}, se encuentra a <b>PAZ Y SALVO</b>:</p></div><div class="checks"><p>☑ Salarios y prestaciones sociales</p><p>☑ Liquidación final</p><p>☑ Vacaciones</p><p>☑ Dotación y herramientas</p><p>☑ Documentos y archivos</p><p>☑ Llaves y accesos</p></div><div class="body"><p>Bogotá D.C., ${hoy}</p></div><div class="sig"><div>Empleador<br/><b>Habitaris S.A.S</b></div><div>Trabajador<br/><b>${selN.nombre}</b></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
+                } else if(d.id==="cesantias"){
+                  body=`<h1>CARTA DE RETIRO DE CESANTÍAS</h1><div class="body"><p>Bogotá D.C., ${hoy}</p><br/><p>Señores<br/><b>${selN.pen||"Fondo de Cesantías"}</b></p><br/><p>Ref: Retiro de cesantías por terminación de contrato</p><br/><p><b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que <b>${selN.nombre}</b>, C.C. <b>${(selN.cc||"").replace(/\D/g,"")}</b>, laboró desde el <b>${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b> hasta el <b>${liq.ff.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b> (${liq.diasTot} días).</p><br/><p>La relación laboral terminó <b>${motivo}</b>. El monto de cesantías proporcionales: <b>${fmt(liq.ces)}</b> (Art. 249 CST).</p><br/><p>Solicitamos autorizar el retiro de cesantías a favor del trabajador.</p></div><div class="sig"><div>Representante Legal<br/><b>Habitaris S.A.S</b></div><div>Trabajador<br/><b>${selN.nombre}</b></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
+                } else if(d.id==="cert_con"){
+                  body=`<h1>CERTIFICACIÓN LABORAL</h1><div class="body"><p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que:</p><br/><p><b>${selN.nombre}</b>, C.C. No. <b>${(selN.cc||"").replace(/\D/g,"")}</b>, ${selN.fechaIngreso?"laboró":"labora"} en esta empresa desde el <b>${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b>, desempeñando el cargo de <b>${selN.cargo}</b>.</p><br/><p>El trabajador devenga un salario mensual de <b>${fmt(selN.sal)}</b>${liq.aux>0?" (más auxilio de transporte de "+fmt(liq.aux)+")":""}.</p><br/><p>Se expide a solicitud del interesado en Bogotá D.C., ${hoy}.</p></div><div class="sig"><div><br/><b>Representante Legal</b><br/>Habitaris S.A.S</div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
+                } else {
+                  body=`<h1>CERTIFICACIÓN LABORAL</h1><div class="body"><p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que:</p><br/><p><b>${selN.nombre}</b>, C.C. No. <b>${(selN.cc||"").replace(/\D/g,"")}</b>, ${selN.fechaIngreso?"laboró":"labora"} en esta empresa desde el <b>${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b>, desempeñando el cargo de <b>${selN.cargo}</b>.</p><br/><p>Se expide a solicitud del interesado en Bogotá D.C., ${hoy}.</p></div><div class="sig"><div><br/><b>Representante Legal</b><br/>Habitaris S.A.S</div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
+                }
+                openPreview(d.lbl, body, fn);
+              }} style={{width:"100%",padding:"7px 10px",fontSize:11,fontWeight:600,border:`1px solid ${d.color}`,borderRadius:6,background:d.bg,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",color:d.color,marginBottom:4,textAlign:"left"}}>
+                {d.icon} {d.lbl}
+              </button>
+            ))}
+          </Card>
+        </div>
+
+        {/* Derecha: Desglose */}
+        <Card accent={tipoInfo.color}>
+          <STit>Desglose de la liquidación</STit>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+            <thead>
+              <tr style={{borderBottom:`2px solid ${T.ink}`}}>
+                <th style={{padding:"6px 8px",textAlign:"left",fontSize:9,fontWeight:700,color:T.inkLight,letterSpacing:.8,textTransform:"uppercase"}}>Concepto</th>
+                <th style={{padding:"6px 8px",textAlign:"right",fontSize:9,fontWeight:700,color:T.inkLight,letterSpacing:.8,textTransform:"uppercase"}}>Valor</th>
+                <th style={{padding:"6px 8px",textAlign:"left",fontSize:9,fontWeight:700,color:T.inkLight,letterSpacing:.8,textTransform:"uppercase"}}>Base legal</th>
+              </tr>
+            </thead>
             <tbody>
               {liq.items.map((item,i)=>(
                 <tr key={i} style={{borderBottom:`1px solid ${T.border}`,background:item.c.includes("Indemnización")?T.redBg:"transparent"}}>
-                  <td style={{padding:"4px 0",fontSize:11}}>{item.c}</td>
-                  <td style={{padding:"4px 0",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:600}}>{fmt(item.v)}</td>
+                  <td style={{padding:"6px 8px"}}>{item.c}</td>
+                  <td style={{padding:"6px 8px",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:600,fontSize:13}}>{fmt(item.v)}</td>
+                  <td style={{padding:"6px 8px",fontSize:10,color:T.inkMid}}>{item.n}</td>
                 </tr>
               ))}
               <tr style={{borderTop:`2px solid ${T.ink}`,background:T.greenBg}}>
-                <td style={{padding:"6px 0",fontSize:13,fontWeight:800}}>TOTAL</td>
-                <td style={{padding:"6px 0",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:800,fontSize:18,color:T.green}}>{fmt(liq.total)}</td>
+                <td style={{padding:"8px",fontSize:14,fontWeight:800}}>TOTAL A PAGAR</td>
+                <td style={{padding:"8px",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:800,fontSize:20,color:T.green}}>{fmt(liq.total)}</td>
+                <td></td>
               </tr>
             </tbody>
           </table>
+
+          {/* Fórmulas */}
+          <div style={{marginTop:14,padding:"10px 12px",background:T.surface,borderRadius:6,fontSize:10,color:T.inkMid,lineHeight:1.6}}>
+            <strong style={{color:T.ink}}>📐 Fórmulas aplicadas</strong>
+            <div>Vacaciones = Sal × {liq.diasTot}d ÷ 720 = {fmt(liq.vac)}</div>
+            <div>Prima = (Sal+Aux) × {liq.diasSem}d sem ÷ 360 = {fmt(liq.prima)}</div>
+            <div>Cesantías = (Sal+Aux) × {liq.diasTot}d ÷ 360 = {fmt(liq.ces)}</div>
+            <div>Int. cesantías = {fmt(liq.ces)} × {liq.diasTot}d × 12% ÷ 360 = {fmt(liq.intCes)}</div>
+            {liq.indem>0&&<div style={{color:T.red,fontWeight:600}}>Indemnización ({liq.isFijo?"término fijo":"indefinido"}) = {fmt(liq.indem)}</div>}
+          </div>
         </Card>
       </div>
-
-      {/* Fórmulas */}
-      <Card style={{marginBottom:12}}>
-        <div style={{fontSize:10,color:T.inkMid,lineHeight:1.6}}>
-          <strong style={{color:T.ink}}>📐 Fórmulas:</strong>{" "}
-          Vacaciones = Sal×{liq.diasTot}d÷720 = {fmt(liq.vac)} · Prima = (Sal+Aux)×{liq.diasSem}d÷360 = {fmt(liq.prima)} · Cesantías = (Sal+Aux)×{liq.diasTot}d÷360 = {fmt(liq.ces)} · Int.ces = {fmt(liq.ces)}×{liq.diasTot}d×12%÷360 = {fmt(liq.intCes)}
-          {liq.indem>0&&<span style={{color:T.red}}> · Indemnización = {fmt(liq.indem)}</span>}
-        </div>
-      </Card>
-
-      {/* Documentos */}
-      <Card accent={T.ink}>
-        <STit>📄 Documentos de salida</STit>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-          {[
-            {id:"carta",lbl:"📄 Carta terminación + Liquidación",color:T.ink,bg:T.surface},
-            {id:"paz",lbl:"✅ Paz y salvo",color:T.green,bg:T.greenBg},
-            {id:"cesantias",lbl:"🏦 Carta retiro de cesantías",color:T.amber,bg:T.amberBg},
-            {id:"cert",lbl:"📋 Certificación laboral",color:T.blue,bg:T.blueBg},
-          ].map(d=>(
-            <Btn key={d.id} small style={{justifyContent:"center",background:d.bg,color:d.color,border:`1px solid ${d.color}`,padding:"8px 12px"}} onClick={async()=>{
-              const doc=genDoc(d.id);
-              await downloadPDF(doc.html, doc.name, "a4");
-            }}>{d.lbl}</Btn>
-          ))}
-        </div>
-      </Card>
     </div>
   );
 }
