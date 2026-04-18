@@ -4625,6 +4625,41 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                           </div>
                         ))}
                       </div>
+
+                      {/* Links empleados */}
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
+                        <div style={{background:"#fff",border:"1px solid #E0E0E0",borderRadius:8,padding:"16px 18px",boxShadow:"0 1px 3px rgba(0,0,0,.06)"}}>
+                          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                            <div style={{fontSize:24}}>📍</div>
+                            <div>
+                              <div style={{fontSize:13,fontWeight:700}}>Control de Asistencia</div>
+                              <div style={{fontSize:10,color:"#888"}}>Fichaje con foto + GPS — cédula + PIN</div>
+                            </div>
+                          </div>
+                          <div style={{display:"flex",gap:6}}>
+                            <button onClick={()=>window.open("/fichar","_blank")} style={{flex:1,padding:"8px",fontSize:11,fontWeight:600,border:"1px solid #1E6B42",borderRadius:6,background:"#E8F4EE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#1E6B42"}}>Abrir fichaje →</button>
+                            <button onClick={()=>{navigator.clipboard.writeText("https://suite.habitaris.co/fichar");alert("Link copiado:\nhttps://suite.habitaris.co/fichar");}} style={{padding:"8px 12px",fontSize:11,fontWeight:600,border:"1px solid #E0E0E0",borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#666"}}>📋</button>
+                          </div>
+                        </div>
+                        <div style={{background:"#fff",border:"1px solid #E0E0E0",borderRadius:8,padding:"16px 18px",boxShadow:"0 1px 3px rgba(0,0,0,.06)"}}>
+                          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                            <div style={{fontSize:24}}>🏠</div>
+                            <div>
+                              <div style={{fontSize:13,fontWeight:700}}>Portal del Empleado</div>
+                              <div style={{fontSize:10,color:"#888"}}>Autogestión: asistencia, vacaciones, certificaciones</div>
+                            </div>
+                          </div>
+                          <div style={{display:"flex",gap:6}}>
+                            <button onClick={()=>window.open("/portal","_blank")} style={{flex:1,padding:"8px",fontSize:11,fontWeight:600,border:"1px solid #2563eb",borderRadius:6,background:"#EFF6FF",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#2563eb"}}>Abrir portal →</button>
+                            <button onClick={()=>{navigator.clipboard.writeText("https://suite.habitaris.co/portal");alert("Link copiado:\nhttps://suite.habitaris.co/portal");}} style={{padding:"8px 12px",fontSize:11,fontWeight:600,border:"1px solid #E0E0E0",borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#666"}}>📋</button>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{background:"#fff",border:"1px solid #E0E0E0",borderRadius:8,padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                        <div style={{fontSize:11,color:"#888"}}>💬 Comparte estos links con tus empleados por WhatsApp — un solo link para todos</div>
+                        <button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n📍 Fichaje: https://suite.habitaris.co/fichar\n🏠 Portal: https://suite.habitaris.co/portal\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank")} style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669",whiteSpace:"nowrap"}}>💬 Enviar por WhatsApp</button>
+                      </div>
                     </div>
                   )}
                   {tab==="cargos"    && <TabCargos    cargos={cargos}    saveCargos={saveCargos}    jornada={jornada}/>}
