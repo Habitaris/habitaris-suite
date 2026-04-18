@@ -154,6 +154,7 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
   }
 
   // STEP 2 - PIN
+  var newPin1="",newPin2="";
   function step2(){
     var dots="";
     for(var i=0;i<4;i++) dots+='<div class="dot '+(i<pin.length?"on":"")+'"></div>';
@@ -165,11 +166,12 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
     R('<div class="card" style="text-align:center">'
       +'<div style="font-size:40px;margin-bottom:12px">🔢</div>'
       +'<h2>Hola, '+me.nombre.split(" ")[0]+'</h2>'
-      +'<div class="sub">Introduce tu PIN de 4 dígitos</div>'
+      +'<div class="sub">Introduce tu PIN'+(me.pin_changed?'':' (últimos 4 dígitos de tu cédula)')+'</div>'
       +'<div class="dots">'+dots+'</div>'
       +(pinE?'<div class="err">PIN incorrecto</div>':'')
       +'<div class="grid">'+keys+'</div>'
-      +'<button class="ghost" onclick="APP.step1()">← Volver</button>'
+      +'<button class="ghost" onclick="APP.forgotPin()" style="margin-top:12px;color:#2563eb">¿Olvidaste tu PIN?</button>'
+      +'<button class="ghost" onclick="APP.backToCC?APP.backToCC():APP.step1()">← Cambiar cédula</button>'
       +'</div>');
   }
 
@@ -177,9 +179,119 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
     if(k==="del"){pin=pin.slice(0,-1);step2();return;}
     pin+=k;
     if(pin.length===4){
-      if(pin===me.pin){pin="";pinE=false;Promise.all([loadAtt(),loadNov()]).then(home);}
+      if(pin===me.pin){
+        pin="";pinE=false;
+        // First access → force PIN change
+        if(!me.pin_changed){
+          stepChangePin("Crea tu PIN personal","Por seguridad, cambia tu PIN temporal por uno nuevo de 4 dígitos.");
+        } else {
+          Promise.all([loadAtt(),loadNov()]).then(home);
+        }
+      }
       else{pinE=true;pin="";step2();}
     } else step2();
+  }
+
+  // CHANGE PIN
+  function stepChangePin(title,subtitle){
+    newPin1="";newPin2="";
+    renderNewPin(1,title,subtitle);
+  }
+  function renderNewPin(phase,title,subtitle){
+    var p=phase===1?newPin1:newPin2;
+    var dots="";for(var i=0;i<4;i++) dots+='<div class="dot '+(i<p.length?"on":"")+'"></div>';
+    var keys=[1,2,3,4,5,6,7,8,9,"",0,"⌫"].map(function(k){
+      if(k==="") return '<div></div>';
+      if(k==="⌫") return '<div class="key del" onclick="APP.npk(\'del\','+phase+')">⌫</div>';
+      return '<div class="key" onclick="APP.npk(\''+k+'\','+phase+')">'+k+'</div>';
+    }).join("");
+    R('<div class="card" style="text-align:center">'
+      +'<div style="font-size:40px;margin-bottom:12px">'+(phase===1?'🔐':'✅')+'</div>'
+      +'<h2>'+(title||"Nuevo PIN")+'</h2>'
+      +'<div class="sub">'+(phase===1?(subtitle||"Elige 4 dígitos"):"Confirma tu nuevo PIN")+'</div>'
+      +'<div class="dots">'+dots+'</div>'
+      +'<div class="grid">'+keys+'</div>'
+      +'</div>');
+  }
+  function npk(k,phase){
+    if(phase===1){
+      if(k==="del"){newPin1=newPin1.slice(0,-1);renderNewPin(1);return;}
+      newPin1+=k;
+      if(newPin1.length===4) renderNewPin(2);
+      else renderNewPin(1);
+    } else {
+      if(k==="del"){newPin2=newPin2.slice(0,-1);renderNewPin(2);return;}
+      newPin2+=k;
+      if(newPin2.length===4){
+        if(newPin1===newPin2){
+          // Save new PIN
+          R('<div class="card" style="text-align:center;padding:30px"><div class="spin"></div><div style="font-size:13px;color:#888;margin-top:8px">Guardando PIN...</div></div>');
+          fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"change_pin",emp_id:me.id,new_pin:newPin1})})
+            .then(function(r){return r.json();})
+            .then(function(d){
+              if(d.ok){
+                me.pin=newPin1;me.pin_changed=true;
+                R('<div class="card" style="text-align:center;padding:30px"><div style="font-size:40px;margin-bottom:12px">✅</div><h2>PIN actualizado</h2><div class="sub">Tu nuevo PIN está activo</div><button class="btn bk" onclick="Promise.all([APP.loadAtt(),APP.loadNov()]).then(APP.home)">Continuar</button></div>');
+              } else { alert("Error: "+(d.error||"")); stepChangePin(); }
+            }).catch(function(e){alert("Error: "+e.message);stepChangePin();});
+        } else {
+          newPin2="";
+          R('<div class="card" style="text-align:center;padding:20px"><div class="err">Los PIN no coinciden</div><button class="btn bk" onclick="APP.stepChangePin()">Intentar de nuevo</button></div>');
+        }
+      } else renderNewPin(2);
+    }
+  }
+
+  // FORGOT PIN
+  function forgotPin(){
+    if(!me||!me.email_masked){alert("No hay email registrado. Contacta a RRHH.");return;}
+    R('<div class="card" style="text-align:center">'
+      +'<div style="font-size:40px;margin-bottom:12px">📧</div>'
+      +'<h2>Recuperar PIN</h2>'
+      +'<div class="sub">Enviaremos un código de verificación a:</div>'
+      +'<div style="font-size:16px;font-weight:700;margin:12px 0;font-family:monospace">'+me.email_masked+'</div>'
+      +'<button class="btn bk" onclick="APP.sendRecoveryOTP()">Enviar código</button>'
+      +'<button class="ghost" onclick="APP.step2()">← Volver</button>'
+      +'</div>');
+  }
+  function sendRecoveryOTP(){
+    R('<div class="card" style="text-align:center;padding:30px"><div class="spin"></div><div style="font-size:13px;color:#888;margin-top:8px">Enviando código...</div></div>');
+    fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"send_otp",emp_id:me.id,purpose:"recovery"})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.ok) stepVerifyOTP("recovery");
+        else { alert("Error: "+(d.error||"No se pudo enviar")); step2(); }
+      }).catch(function(e){alert("Error: "+e.message);step2();});
+  }
+  var otpInput="";
+  function stepVerifyOTP(purpose){
+    otpInput="";
+    renderOTPInput(purpose);
+  }
+  function renderOTPInput(purpose){
+    R('<div class="card" style="text-align:center">'
+      +'<div style="font-size:40px;margin-bottom:12px">✉️</div>'
+      +'<h2>Código enviado</h2>'
+      +'<div class="sub">Revisa tu correo e introduce el código de 6 dígitos</div>'
+      +'<div style="margin:16px 0"><input id="otpField" type="tel" maxlength="6" placeholder="000000" value="'+otpInput+'" style="width:200px;padding:14px;border:1px solid #E0E0E0;border-radius:8px;font-size:24px;font-family:monospace;text-align:center;letter-spacing:6px" oninput="APP.otpInput(this.value,\''+purpose+'\')"/></div>'
+      +'<button class="ghost" onclick="APP.sendRecoveryOTP()">Reenviar código</button>'
+      +'<button class="ghost" onclick="APP.step2()">← Cancelar</button>'
+      +'</div>');
+    setTimeout(function(){var f=document.getElementById("otpField");if(f)f.focus();},100);
+  }
+  function handleOTPInput(val,purpose){
+    otpInput=val.replace(/\D/g,"");
+    if(otpInput.length===6){
+      R('<div class="card" style="text-align:center;padding:30px"><div class="spin"></div><div style="font-size:13px;color:#888;margin-top:8px">Verificando...</div></div>');
+      fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"verify_otp",emp_id:me.id,code:otpInput})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.ok){
+            if(purpose==="recovery") stepChangePin("Nuevo PIN","El código fue verificado. Ahora crea tu PIN nuevo.");
+            else if(purpose==="2fa") Promise.all([loadAtt(),loadNov()]).then(home);
+          } else { alert("Código incorrecto o expirado"); stepVerifyOTP(purpose); }
+        }).catch(function(e){alert("Error: "+e.message);stepVerifyOTP(purpose);});
+    }
   }
 
   // HOME
@@ -365,7 +477,7 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
   }
 
   // Expose to global
-  window.APP={pick:pick,pk:pk,step1:step1,home:home,fichaje:fichaje,snap:snap,doFichaje:doFichaje,stopCam:stopCam,novForm:novForm,novSend:novSend,novList:novList,buscarCC:buscarCC};
+  window.APP={pick:pick,pk:pk,step1:step1,step2:step2,home:home,fichaje:fichaje,snap:snap,doFichaje:doFichaje,stopCam:stopCam,novForm:novForm,novSend:novSend,novList:novList,buscarCC:buscarCC,backToCC:function(){me=null;ccInput="";ccErr=false;stepCC();},forgotPin:forgotPin,sendRecoveryOTP:sendRecoveryOTP,otpInput:handleOTPInput,npk:npk,stepChangePin:function(){stepChangePin();},loadAtt:loadAtt,loadNov:loadNov};
 
   // INIT
   loadEmps();

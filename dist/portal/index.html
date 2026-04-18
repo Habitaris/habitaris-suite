@@ -143,7 +143,8 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
       +dots
       +(pinErr?'<div class="pin-err">PIN incorrecto</div>':'')
       +'<div class="numpad">'+keys+'</div>'
-      +'<div style="text-align:center;margin-top:12px"><button onclick="APP.backToCC()" style="border:none;background:none;color:#888;font-size:11px;cursor:pointer;font-family:inherit">← Cambiar cédula</button></div>';
+      +'<div style="text-align:center;margin-top:12px"><button onclick="APP.forgotPin()" style="border:none;background:none;color:#2563eb;font-size:11px;cursor:pointer;font-family:inherit">¿Olvidaste tu PIN?</button></div>'
+      +'<div style="text-align:center;margin-top:6px"><button onclick="APP.backToCC()" style="border:none;background:none;color:#888;font-size:11px;cursor:pointer;font-family:inherit">← Cambiar cédula</button></div>';
   }
 
   // ── CONTENT ──
@@ -301,12 +302,21 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
   // ── APP INTERFACE ──
   window.APP={
     buscarCC:buscarCC,
-    backToCC:function(){me=null;pin="";pinErr=false;renderCCScreen();},
+    backToCC:function(){me=null;pin="";pinErr=false;ccInput="";renderCCScreen();},
     pinKey:function(k){
       if(k==="del"){pin=pin.slice(0,-1);renderPinScreen();return;}
       pin+=k;
       if(pin.length===4){
-        if(pin===me.pin){pinErr=false;pin="";loadAtt().then(function(){return loadNov();}).then(function(){render();});}
+        if(pin===me.pin){
+          pinErr=false;pin="";
+          // First access → force PIN change
+          if(!me.pin_changed){
+            portalChangePin("Crea tu PIN personal","Por seguridad, cambia tu PIN temporal.");
+          } else {
+            // 2FA: send OTP
+            portalSend2FA();
+          }
+        }
         else{pinErr=true;pin="";renderPinScreen();}
       } else renderPinScreen();
     },
@@ -314,8 +324,112 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
     setMonth:function(m){curMonth=parseInt(m);renderAsistencia();},
     enviarNov:enviarNov,
     genCert:genCert,
-    logout:function(){me=null;att=[];novs=[];pin="";tab="asistencia";ccInput="";render();}
+    logout:function(){me=null;att=[];novs=[];pin="";tab="asistencia";ccInput="";render();},
+    forgotPin:portalForgotPin,
+    sendRecoveryOTP:portalSendRecoveryOTP,
+    otpKey:portalOTPKey,
+    npk:portalNPK,
+    retryChangePin:function(){portalChangePin();},
+    skip2FA:function(){loadAtt().then(function(){return loadNov();}).then(function(){render();});}
   };
+
+  // ── 2FA: send OTP after PIN ──
+  function portalSend2FA(){
+    $("loginBody").innerHTML='<div style="text-align:center;padding:30px"><div class="spin" style="width:24px;height:24px;border:3px solid #E5E3DE;border-top-color:#111;border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 8px"></div><div style="font-size:13px;color:#888">Enviando código de verificación...</div></div><style>@keyframes sp{to{transform:rotate(360deg)}}</style>';
+    fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"send_otp",emp_id:me.id,purpose:"2fa"})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.ok) portalOTPScreen("2fa");
+        else { alert("Error enviando código. "+(d.error||"")); renderPinScreen(); }
+      }).catch(function(e){alert("Error: "+e.message);renderPinScreen();});
+  }
+
+  var portalOTP="";
+  function portalOTPScreen(purpose){
+    portalOTP="";
+    $("loginBody").innerHTML='<div style="text-align:center"><div style="font-size:28px;margin-bottom:8px">✉️</div><div style="font-size:15px;font-weight:700">Verificación en 2 pasos</div><div style="font-size:12px;color:#888;margin:6px 0 16px">Revisa tu correo: <b>'+me.email_masked+'</b></div>'
+      +'<div style="margin:12px 0"><input id="otpField" type="tel" maxlength="6" placeholder="000000" style="width:180px;padding:14px;border:1px solid #E5E3DE;border-radius:8px;font-size:22px;font-family:monospace;text-align:center;letter-spacing:5px" oninput="APP.otpKey(this.value,\''+purpose+'\')"/></div>'
+      +'<div style="font-size:10px;color:#999;margin-bottom:12px">Código de 6 dígitos · Expira en 10 min</div>'
+      +'<button onclick="APP.sendRecoveryOTP()" style="border:none;background:none;color:#2563eb;font-size:11px;cursor:pointer;font-family:inherit">Reenviar código</button><br/>'
+      +'<button onclick="APP.backToCC()" style="border:none;background:none;color:#888;font-size:11px;cursor:pointer;font-family:inherit;margin-top:8px">← Cancelar</button>'
+      +'</div>';
+    setTimeout(function(){var f=document.getElementById("otpField");if(f)f.focus();},100);
+  }
+
+  function portalOTPKey(val,purpose){
+    portalOTP=val.replace(/\D/g,"");
+    if(portalOTP.length===6){
+      $("loginBody").innerHTML='<div style="text-align:center;padding:30px"><div class="spin" style="width:24px;height:24px;border:3px solid #E5E3DE;border-top-color:#111;border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 8px"></div><div style="font-size:13px;color:#888">Verificando...</div></div>';
+      fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"verify_otp",emp_id:me.id,code:portalOTP})})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d.ok){
+            if(purpose==="recovery") portalChangePin("Nuevo PIN","Código verificado. Crea tu PIN nuevo.");
+            else loadAtt().then(function(){return loadNov();}).then(function(){render();});
+          } else { alert("Código incorrecto o expirado"); portalOTPScreen(purpose); }
+        }).catch(function(e){alert("Error: "+e.message);portalOTPScreen(purpose);});
+    }
+  }
+
+  // ── FORGOT PIN ──
+  function portalForgotPin(){
+    if(!me||!me.email_masked){alert("No hay email registrado. Contacta a RRHH.");return;}
+    $("loginBody").innerHTML='<div style="text-align:center"><div style="font-size:28px;margin-bottom:8px">📧</div><div style="font-size:15px;font-weight:700">Recuperar PIN</div><div style="font-size:12px;color:#888;margin:6px 0 16px">Enviaremos un código a:<br/><b>'+me.email_masked+'</b></div>'
+      +'<button class="btn btn-p" style="width:100%;justify-content:center" onclick="APP.sendRecoveryOTP()">Enviar código</button>'
+      +'<button onclick="APP.backToCC()" style="border:none;background:none;color:#888;font-size:11px;cursor:pointer;font-family:inherit;margin-top:12px;display:block;width:100%;text-align:center">← Volver</button></div>';
+  }
+  function portalSendRecoveryOTP(){
+    $("loginBody").innerHTML='<div style="text-align:center;padding:30px"><div class="spin" style="width:24px;height:24px;border:3px solid #E5E3DE;border-top-color:#111;border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 8px"></div><div style="font-size:13px;color:#888">Enviando...</div></div>';
+    fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"send_otp",emp_id:me.id,purpose:"recovery"})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d.ok) portalOTPScreen("recovery");
+        else { alert("Error: "+(d.error||"")); renderPinScreen(); }
+      }).catch(function(e){alert("Error: "+e.message);renderPinScreen();});
+  }
+
+  // ── CHANGE PIN ──
+  var pNewPin1="",pNewPin2="";
+  function portalChangePin(title,subtitle){
+    pNewPin1="";pNewPin2="";
+    renderPortalNewPin(1,title||"Nuevo PIN",subtitle||"Elige 4 dígitos");
+  }
+  function renderPortalNewPin(phase,title,subtitle){
+    var p=phase===1?pNewPin1:pNewPin2;
+    var dots="";for(var i=0;i<4;i++) dots+='<div class="dot'+(i<p.length?' on':'')+'"></div>';
+    var keys="";
+    [1,2,3,4,5,6,7,8,9,"",0,"⌫"].forEach(function(k){
+      if(k==="") keys+='<div></div>';
+      else if(k==="⌫") keys+='<div class="key del" onclick="APP.npk(\'del\','+phase+')">⌫</div>';
+      else keys+='<div class="key" onclick="APP.npk(\''+k+'\','+phase+')">'+k+'</div>';
+    });
+    $("loginBody").innerHTML='<div style="text-align:center"><div style="font-size:28px;margin-bottom:8px">'+(phase===1?'🔐':'✅')+'</div><div style="font-size:15px;font-weight:700">'+(title||"")+'</div><div style="font-size:12px;color:#888;margin:4px 0 12px">'+(phase===1?(subtitle||""):"Confirma tu nuevo PIN")+'</div><div class="dots">'+dots+'</div><div class="numpad">'+keys+'</div></div>';
+  }
+  function portalNPK(k,phase){
+    if(phase===1){
+      if(k==="del"){pNewPin1=pNewPin1.slice(0,-1);renderPortalNewPin(1);return;}
+      pNewPin1+=k;if(pNewPin1.length===4)renderPortalNewPin(2);else renderPortalNewPin(1);
+    } else {
+      if(k==="del"){pNewPin2=pNewPin2.slice(0,-1);renderPortalNewPin(2);return;}
+      pNewPin2+=k;
+      if(pNewPin2.length===4){
+        if(pNewPin1===pNewPin2){
+          $("loginBody").innerHTML='<div style="text-align:center;padding:30px"><div class="spin" style="width:24px;height:24px;border:3px solid #E5E3DE;border-top-color:#111;border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 8px"></div><div style="font-size:13px;color:#888">Guardando PIN...</div></div>';
+          fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"change_pin",emp_id:me.id,new_pin:pNewPin1})})
+            .then(function(r){return r.json();})
+            .then(function(d){
+              if(d.ok){
+                me.pin=pNewPin1;me.pin_changed=true;
+                $("loginBody").innerHTML='<div style="text-align:center;padding:24px"><div style="font-size:28px;margin-bottom:8px">✅</div><div style="font-size:15px;font-weight:700">PIN actualizado</div><div style="font-size:12px;color:#888;margin:6px 0 16px">Ahora te enviaremos un código de verificación</div><button class="btn btn-p" style="width:100%;justify-content:center" onclick="APP.skip2FA()">Continuar al portal</button></div>';
+              } else { alert("Error: "+(d.error||"")); portalChangePin(); }
+            }).catch(function(e){alert("Error: "+e.message);portalChangePin();});
+        } else {
+          pNewPin2="";
+          $("loginBody").innerHTML='<div style="text-align:center;padding:20px"><div style="color:#dc2626;font-size:13px;margin-bottom:12px">Los PIN no coinciden</div><button class="btn btn-p" style="justify-content:center" onclick="APP.retryChangePin()">Intentar de nuevo</button></div>';
+        }
+      } else renderPortalNewPin(2);
+    }
+  }
 
   loadEmps();
 })();
