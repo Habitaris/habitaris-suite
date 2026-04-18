@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#111111"/>
+<title>Portal Empleado · Habitaris</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:#F0EEE9;min-height:100vh;color:#1A1A19}
+.topbar{background:#111;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.topbar .logo{height:22px}
+.topbar .user{color:#fff;font-size:11px;opacity:.6}
+.topbar .salir{color:#fff;font-size:10px;opacity:.4;cursor:pointer;border:1px solid rgba(255,255,255,.2);padding:4px 10px;border-radius:4px;background:none;font-family:inherit}
+.tabs{display:flex;gap:0;border-bottom:2px solid #E5E3DE;background:#fff;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{padding:12px 16px;font-size:11px;font-weight:500;color:#9B9B99;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .2s}
+.tab.on{color:#1A1A19;font-weight:700;border-bottom-color:#1A1A19}
+.main{max-width:900px;margin:0 auto;padding:20px}
+.card{background:#fff;border:1px solid #E5E3DE;border-radius:8px;padding:16px 18px;margin-bottom:12px}
+.card-t{font-size:13px;font-weight:700;margin-bottom:10px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.kpi{background:#FAFAF8;border:1px solid #E5E3DE;border-radius:6px;padding:10px;text-align:center}
+.kpi .l{font-size:7px;font-weight:700;color:#9B9B99;text-transform:uppercase;letter-spacing:.8px}
+.kpi .v{font-size:20px;font-weight:800;font-family:'DM Mono',monospace;margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:6px 10px;text-align:left;font-size:9px;font-weight:700;color:#9B9B99;letter-spacing:.8px;text-transform:uppercase;border-bottom:2px solid #1A1A19}
+td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700}
+.b-g{background:#E8F4EE;color:#1E6B42}.b-a{background:#FFFBEB;color:#D97706}.b-r{background:#FEF2F2;color:#dc2626}.b-b{background:#EFF6FF;color:#2563eb}.b-m{background:#F5F4F1;color:#666}
+.btn{padding:8px 16px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:#1A1A19;color:#fff}.btn-s{background:#FAFAF8;border:1px solid #E5E3DE;color:#1A1A19}.btn-g{background:#E8F4EE;border:1px solid #1E6B42;color:#1E6B42}.btn-b{background:#EFF6FF;border:1px solid #2563eb;color:#2563eb}.btn-a{background:#FFFBEB;border:1px solid #D97706;color:#D97706}
+.form-g{margin-bottom:14px}.form-g label{display:block;font-size:10px;font-weight:700;color:#9B9B99;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.form-g input,.form-g select,.form-g textarea{width:100%;padding:10px 12px;border:1px solid #E5E3DE;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;background:#fff}
+.form-g textarea{resize:vertical;min-height:70px}
+.empty{text-align:center;padding:30px 20px;color:#9B9B99;font-size:13px}
+.mono{font-family:'DM Mono',monospace}
+/* Login */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{width:340px;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)}
+.login-top{background:#111;padding:28px 24px;text-align:center}
+.login-top h1{font-size:14px;font-weight:800;letter-spacing:3px;color:#fff;text-transform:uppercase}
+.login-top p{font-size:11px;color:rgba(255,255,255,.4);margin-top:4px}
+.login-body{background:#fff;padding:24px}
+.dots{display:flex;justify-content:center;gap:12px;margin:16px 0}
+.dot{width:14px;height:14px;border-radius:50%;background:#E5E3DE;transition:.2s}
+.dot.on{background:#1E6B42}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:200px;margin:0 auto}
+.key{padding:14px;font-size:18px;font-weight:600;border:1px solid #E5E3DE;border-radius:8px;background:#FAFAF8;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;-webkit-user-select:none}
+.key:active{background:#ddd}
+.key.del{background:#FEF2F2;color:#dc2626}
+.pin-err{color:#dc2626;font-size:12px;text-align:center;margin-bottom:8px}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;display:flex;align-items:center;justify-content:center}
+.modal{background:#fff;border-radius:8px;padding:24px;width:440px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+@media(max-width:600px){.kpis{grid-template-columns:repeat(2,1fr)}.main{padding:12px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+  var P=new URLSearchParams(window.location.search);
+  var EMP_ID=P.get("emp")||"";
+  var me=null, att=[], novs=[], tab="asistencia";
+
+  var $=document.getElementById.bind(document);
+  function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+  function fmt(n){return n==null||isNaN(n)?"$0":"$"+Math.round(n).toLocaleString("es-CO");}
+  var MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+  var curMonth=new Date().getMonth(), curYear=new Date().getFullYear();
+
+  // ── RENDER ──
+  function render(){
+    if(!me) return renderLogin();
+    $("app").innerHTML='<div class="topbar"><img class="logo" src="/logo-habitaris-blanco.png" alt="Habitaris"/><span class="user">'+me.nombre+'</span><button class="salir" onclick="APP.logout()">Salir</button></div>'
+      +'<div class="tabs" id="tabs"></div>'
+      +'<div class="main" id="content"></div>';
+    renderTabs();
+    renderContent();
+  }
+
+  function renderTabs(){
+    var items=[
+      {id:"asistencia",lbl:"📍 Mi asistencia"},
+      {id:"solicitudes",lbl:"📨 Mis solicitudes"},
+      {id:"vacaciones",lbl:"🏖️ Vacaciones / Licencia"},
+      {id:"certificacion",lbl:"📋 Certificación laboral"},
+      {id:"ficha",lbl:"👤 Mi ficha"},
+    ];
+    $("tabs").innerHTML=items.map(function(t){
+      return '<div class="tab'+(tab===t.id?" on":"")+'" onclick="APP.setTab(\''+t.id+'\')">'+t.lbl+'</div>';
+    }).join("");
+  }
+
+  // ── LOGIN ──
+  var pin="",pinErr=false,emps=[];
+  function renderLogin(){
+    $("app").innerHTML='<div class="login-wrap"><div class="login-card"><div class="login-top"><h1>Habitaris</h1><p>Portal del Empleado</p></div><div class="login-body" id="loginBody"></div></div></div>';
+    if(EMP_ID && emps.length===1){
+      me=emps[0];
+      renderPinScreen();
+    } else if(emps.length>0){
+      renderPickList();
+    } else {
+      $("loginBody").innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:32px;margin-bottom:8px">👋</div><p style="font-size:13px;color:#888">Cargando...</p></div>';
+    }
+  }
+
+  function renderPickList(){
+    var list=emps.map(function(e){
+      return '<div style="padding:12px 16px;cursor:pointer;border-bottom:1px solid #eee;font-size:14px;font-weight:500" onclick="APP.pickEmp(\''+e.id+'\')" onmouseenter="this.style.background=\'#E8F4EE\'" onmouseleave="this.style.background=\'\'">'+e.nombre+'<div style="font-size:10px;color:#888">'+e.cargo+'</div></div>';
+    }).join("");
+    $("loginBody").innerHTML='<div style="text-align:center;margin-bottom:12px"><div style="font-size:28px">👋</div><div style="font-size:15px;font-weight:700;margin-top:6px">Bienvenido</div><div style="font-size:12px;color:#888">Selecciona tu nombre</div></div><div style="max-height:300px;overflow-y:auto;border:1px solid #E5E3DE;border-radius:8px">'+list+'</div>';
+  }
+
+  function renderPinScreen(){
+    var dots='<div class="dots">';
+    for(var i=0;i<4;i++) dots+='<div class="dot'+(i<pin.length?' on':'')+'"></div>';
+    dots+='</div>';
+    var keys="";
+    [1,2,3,4,5,6,7,8,9,"",0,"⌫"].forEach(function(k){
+      if(k==="") keys+='<div></div>';
+      else if(k==="⌫") keys+='<div class="key del" onclick="APP.pinKey(\'del\')">⌫</div>';
+      else keys+='<div class="key" onclick="APP.pinKey(\''+k+'\')">'+k+'</div>';
+    });
+    $("loginBody").innerHTML='<div style="text-align:center;margin-bottom:8px"><div style="font-size:15px;font-weight:700">Hola, '+me.nombre+'</div><div style="font-size:12px;color:#888;margin-top:2px">Ingresa tu PIN (4 dígitos)</div></div>'
+      +dots
+      +(pinErr?'<div class="pin-err">PIN incorrecto</div>':'')
+      +'<div class="numpad">'+keys+'</div>'
+      +'<div style="text-align:center;margin-top:12px"><button onclick="APP.backToList()" style="border:none;background:none;color:#888;font-size:11px;cursor:pointer;font-family:inherit">← Cambiar persona</button></div>';
+  }
+
+  // ── CONTENT ──
+  function renderContent(){
+    if(tab==="asistencia") renderAsistencia();
+    else if(tab==="solicitudes") renderSolicitudes();
+    else if(tab==="vacaciones") renderVacaciones();
+    else if(tab==="certificacion") renderCertificacion();
+    else if(tab==="ficha") renderFicha();
+  }
+
+  // ── ASISTENCIA ──
+  function renderAsistencia(){
+    var mesStr=curYear+"-"+String(curMonth+1).padStart(2,"0");
+    var regs=att.filter(function(r){return(r.fecha||"").startsWith(mesStr);}).sort(function(a,b){return a.timestamp<b.timestamp?-1:1;});
+    var byDate={};
+    regs.forEach(function(r){if(!byDate[r.fecha])byDate[r.fecha]=[];byDate[r.fecha].push(r);});
+    var dates=Object.keys(byDate).sort();
+    var diasEnt=dates.filter(function(d){return byDate[d].some(function(r){return r.tipo==="entrada";});}).length;
+    var totalH=dates.reduce(function(s,d){var e=byDate[d].find(function(r){return r.tipo==="entrada";});var sl=byDate[d].find(function(r){return r.tipo==="salida";});if(e&&sl){return s+Math.max(0,(new Date(sl.timestamp)-new Date(e.timestamp))/3600000);}return s;},0);
+
+    var fichajeLink=window.location.origin+"/fichar?emp="+me.id;
+
+    var rows=dates.map(function(d){
+      var dr=byDate[d];var ent=dr.find(function(r){return r.tipo==="entrada";});var sal=dr.find(function(r){return r.tipo==="salida";});
+      var hrs=(ent&&sal)?((new Date(sal.timestamp)-new Date(ent.timestamp))/3600000).toFixed(1):null;
+      var dt=new Date(d+"T12:00:00");var dn=dt.toLocaleDateString("es-CO",{weekday:"short",day:"numeric",month:"short"});
+      return '<tr><td style="font-weight:600;text-transform:capitalize">'+dn+'</td>'
+        +'<td class="mono" style="color:'+(ent?"#1E6B42":"#ccc")+'">'+(ent?new Date(ent.timestamp).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"}):"–")+'</td>'
+        +'<td class="mono" style="color:'+(sal?"#dc2626":"#ccc")+'">'+(sal?new Date(sal.timestamp).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"}):"–")+'</td>'
+        +'<td class="mono" style="font-weight:600">'+(hrs?hrs+"h":"–")+'</td>'
+        +'<td>'+(ent&&ent.gps_lat?'<a href="https://www.google.com/maps?q='+ent.gps_lat+','+ent.gps_lng+'" target="_blank" style="color:#2563eb;text-decoration:none;font-size:11px">📍</a>':'–')+'</td></tr>';
+    }).join("");
+
+    $("content").innerHTML='<div class="kpis">'
+      +'<div class="kpi"><div class="l">Días fichados</div><div class="v" style="color:#1E6B42">'+diasEnt+'</div></div>'
+      +'<div class="kpi"><div class="l">Fichajes mes</div><div class="v">'+regs.length+'</div></div>'
+      +'<div class="kpi"><div class="l">Horas totales</div><div class="v" style="color:#D97706">'+totalH.toFixed(1)+'h</div></div>'
+      +'<div class="kpi"><div class="l">Link fichaje</div><div class="v" style="font-size:11px;cursor:pointer;color:#2563eb" onclick="navigator.clipboard.writeText(\''+fichajeLink+'\');alert(\'Link copiado\')">📱 Copiar</div></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;margin-bottom:12px;align-items:center">'
+      +'<select onchange="APP.setMonth(this.value)" style="padding:6px 10px;border:1px solid #E5E3DE;border-radius:4px;font-size:12px;font-family:inherit">'+MESES.map(function(m,i){return'<option value="'+i+'"'+(i===curMonth?' selected':'')+'>'+m+'</option>';}).join("")+'</select>'
+      +'<button class="btn btn-g" onclick="window.open(\''+fichajeLink+'\',\'_blank\')">📍 Ir a fichar</button>'
+      +'</div>'
+      +'<div class="card" style="padding:0;overflow:hidden">'
+      +(dates.length>0?'<table><thead><tr><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Horas</th><th>GPS</th></tr></thead><tbody>'+rows+'</tbody></table>':'<div class="empty">📭 Sin fichajes en '+MESES[curMonth]+'</div>')
+      +'</div>';
+  }
+
+  // ── SOLICITUDES ──
+  function renderSolicitudes(){
+    var rows=novs.map(function(n){
+      var est=n.estado||"pendiente";
+      var bc=est==="aprobada"?"b-g":est==="rechazada"?"b-r":"b-a";
+      return '<tr><td>'+new Date(n.created_at||n.fecha_inicio).toLocaleDateString("es-CO",{day:"numeric",month:"short"})+'</td>'
+        +'<td style="font-weight:600">'+n.tipo+'</td>'
+        +'<td>'+(n.fecha_inicio||"")+(n.fecha_fin?" → "+n.fecha_fin:"")+'</td>'
+        +'<td>'+(n.motivo||"—")+'</td>'
+        +'<td><span class="badge '+bc+'">'+est+'</span></td></tr>';
+    }).join("");
+
+    var pend=novs.filter(function(n){return n.estado==="pendiente";}).length;
+    var aprob=novs.filter(function(n){return n.estado==="aprobada";}).length;
+
+    $("content").innerHTML='<div class="kpis" style="grid-template-columns:repeat(3,1fr)">'
+      +'<div class="kpi"><div class="l">Total solicitudes</div><div class="v">'+novs.length+'</div></div>'
+      +'<div class="kpi"><div class="l">Pendientes</div><div class="v" style="color:#D97706">'+pend+'</div></div>'
+      +'<div class="kpi"><div class="l">Aprobadas</div><div class="v" style="color:#1E6B42">'+aprob+'</div></div>'
+      +'</div>'
+      +'<div class="card" style="padding:0;overflow:hidden">'
+      +(novs.length>0?'<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Periodo</th><th>Motivo</th><th>Estado</th></tr></thead><tbody>'+rows+'</tbody></table>':'<div class="empty">📭 Sin solicitudes</div>')
+      +'</div>';
+  }
+
+  // ── VACACIONES / LICENCIA ──
+  function renderVacaciones(){
+    $("content").innerHTML='<div class="card"><div class="card-t">🏖️ Solicitar vacaciones o licencia</div>'
+      +'<div class="form-g"><label>Tipo</label><select id="novTipo"><option value="vacaciones">🏖️ Vacaciones</option><option value="licencia_rem">📋 Licencia remunerada</option><option value="licencia_no_rem">⚠️ Licencia no remunerada</option><option value="permiso">🕐 Permiso</option><option value="incapacidad">🏥 Incapacidad</option></select></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+      +'<div class="form-g"><label>Fecha inicio</label><input type="date" id="novFi" value="'+today()+'"/></div>'
+      +'<div class="form-g"><label>Fecha fin</label><input type="date" id="novFf" value="'+today()+'"/></div>'
+      +'</div>'
+      +'<div class="form-g"><label>Motivo / Observación</label><textarea id="novMot" placeholder="Describe el motivo de tu solicitud..."></textarea></div>'
+      +'<div style="display:flex;gap:8px"><button class="btn btn-p" onclick="APP.enviarNov()">📨 Enviar solicitud</button></div>'
+      +'<div style="margin-top:12px;font-size:11px;color:#9B9B99">Tu solicitud quedará pendiente de aprobación por RRHH. Recibirás notificación cuando sea aprobada o rechazada.</div>'
+      +'</div>';
+  }
+
+  // ── CERTIFICACIÓN ──
+  function renderCertificacion(){
+    $("content").innerHTML='<div class="card"><div class="card-t">📋 Solicitar certificación laboral</div>'
+      +'<div style="font-size:12px;color:#666;margin-bottom:16px">Selecciona el tipo de certificación que necesitas. Se generará un PDF listo para descargar.</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'
+      +'<button class="btn btn-b" style="padding:16px;justify-content:center" onclick="APP.genCert(true)">📋 Con salario</button>'
+      +'<button class="btn btn-s" style="padding:16px;justify-content:center" onclick="APP.genCert(false)">📋 Sin salario</button>'
+      +'</div>'
+      +'<div style="margin-top:12px;font-size:11px;color:#9B9B99">La certificación se genera automáticamente con tus datos actuales.</div>'
+      +'</div>';
+  }
+
+  // ── MI FICHA ──
+  function renderFicha(){
+    var info=[
+      ["Nombre",me.nombre],["Documento",me.documento],["Cargo",me.cargo],
+      ["Fecha ingreso",me.fecha_inicio||"—"],["Celular",me.celular||"—"],
+    ];
+    var rows=info.map(function(r){return '<tr><td style="color:#9B9B99;width:40%">'+r[0]+'</td><td style="font-weight:600">'+r[1]+'</td></tr>';}).join("");
+    $("content").innerHTML='<div class="card"><div class="card-t">👤 Mi ficha personal</div>'
+      +'<table>'+rows+'</table>'
+      +'<div style="margin-top:16px;padding:10px;background:#FFFBEB;border:1px solid #D97706;border-radius:6px;font-size:11px;color:#D97706">Para actualizar tus datos personales, contacta a RRHH.</div>'
+      +'</div>';
+  }
+
+  // ── ACTIONS ──
+  async function enviarNov(){
+    var tipo=document.getElementById("novTipo").value;
+    var fi=document.getElementById("novFi").value;
+    var ff=document.getElementById("novFf").value;
+    var mot=document.getElementById("novMot").value;
+    if(!fi){alert("Selecciona fecha de inicio");return;}
+    try{
+      var r=await fetch("/api/novelties",{method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({employee_id:me.id,employee_nombre:me.nombre,tipo:tipo,fecha_inicio:fi,fecha_fin:ff,motivo:mot})});
+      var d=await r.json();
+      if(d.ok){alert("✅ Solicitud enviada correctamente. Queda pendiente de aprobación.");await loadNov();tab="solicitudes";render();}
+      else{alert("Error: "+(d.error||"No se pudo enviar"));}
+    }catch(e){alert("Error de conexión: "+e.message);}
+  }
+
+  function genCert(conSal){
+    var hoy=new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
+    var salText=conSal?"<p>El trabajador devenga un salario mensual de <b>"+fmt(me.salario_base||0)+"</b>.</p><br/>":"";
+    var body='<h1>CERTIFICACIÓN LABORAL</h1><div class="body"><p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que:</p><br/><p><b>'+me.nombre+'</b>, identificado(a) con C.C. No. <b>'+(me.documento||"").replace(/\D/g,"")+'</b>, labora en esta empresa desde el <b>'+(me.fecha_inicio?new Date(me.fecha_inicio+"T12:00:00").toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"}):"—")+'</b>, desempeñando el cargo de <b>'+me.cargo+'</b>.</p><br/>'+salText+'<p>Se expide a solicitud del interesado en Bogotá D.C., '+hoy+'.</p></div><div class="sig"><div><br/><b>Representante Legal</b><br/>Habitaris S.A.S</div></div><div class="foot">Habitaris Suite · '+hoy+'</div>';
+    var ape=(me.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
+    var fn="CERT-LAB-"+ape;
+    var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+fn+'</title><script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;padding:20px 0}#content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.45;box-shadow:0 0 8px rgba(0,0,0,.15)}.hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:14px;overflow:hidden}.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}.hdr img{height:36px}h1{font-size:13pt;text-align:center;margin:12px 0;clear:both}.body{font-size:10.5pt;line-height:1.7;text-align:justify}.sig{margin-top:50px;width:50%}.sig div{border-top:1px solid #111;padding-top:6px;font-size:9pt}.foot{font-size:6pt;color:#999;text-align:center;margin-top:20px;clear:both}.np{text-align:center;margin:16px auto;max-width:794px}.btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}.btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}</style></head><body><div id="content"><div class="hdr"><div class="l"><img src="/logo-habitaris.jpeg" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>'+body+'</div><div class="np"><button class="btn" onclick="(function(){var el=document.getElementById(\'content\');el.style.boxShadow=\'none\';document.querySelector(\'.np\').style.display=\'none\';html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:\'#fff\'}).then(function(c){var img=c.toDataURL(\'image/jpeg\',0.98);var pW=210,pH=(c.height*pW)/c.width;var pdf=new jspdf.jsPDF({orientation:\'portrait\',unit:\'mm\',format:\'a4\'});pdf.addImage(img,\'JPEG\',0,0,pW,pH);pdf.save(\''+fn+'.pdf\');el.style.boxShadow=\'0 0 8px rgba(0,0,0,.15)\';document.querySelector(\'.np\').style.display=\'\'})})()">📥 Descargar PDF</button><button class="btn2" onclick="window.print()">🖨️ Imprimir</button></div></body></html>';
+    var w=window.open('','_blank');w.document.write(html);w.document.close();
+  }
+
+  // ── DATA LOADING ──
+  async function loadEmps(){
+    try{
+      var url=EMP_ID?"/api/employees-public?emp="+EMP_ID:"/api/employees-public";
+      var r=await fetch(url);var d=await r.json();emps=d.data||[];
+    }catch(e){emps=[];}
+    render();
+  }
+  async function loadAtt(){
+    try{var r=await fetch("/api/attendance?employee_id="+me.id+"&limit=500");var d=await r.json();att=d.data||[];}catch(e){att=[];}
+  }
+  async function loadNov(){
+    try{var r=await fetch("/api/novelties?employee_id="+me.id);var d=await r.json();novs=d.data||[];}catch(e){novs=[];}
+  }
+
+  // ── APP INTERFACE ──
+  window.APP={
+    pickEmp:function(id){me=emps.find(function(e){return e.id===id;});pin="";pinErr=false;renderPinScreen();},
+    backToList:function(){me=null;pin="";pinErr=false;renderPickList();},
+    pinKey:function(k){
+      if(k==="del"){pin=pin.slice(0,-1);renderPinScreen();return;}
+      pin+=k;
+      if(pin.length===4){
+        if(pin===me.pin){pinErr=false;pin="";loadAtt().then(function(){return loadNov();}).then(function(){render();});}
+        else{pinErr=true;pin="";renderPinScreen();}
+      } else renderPinScreen();
+    },
+    setTab:function(t){tab=t;renderTabs();renderContent();},
+    setMonth:function(m){curMonth=parseInt(m);renderAsistencia();},
+    enviarNov:enviarNov,
+    genCert:genCert,
+    logout:function(){me=null;att=[];novs=[];pin="";tab="asistencia";render();}
+  };
+
+  loadEmps();
+})();
+</script>
+</body>
+</html>

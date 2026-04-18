@@ -1979,6 +1979,29 @@ function TabNovedades({ novedades, saveNovedades }) {
   const [filter, setFilter] = useState({ tipo:"", estado:"", texto:"" });
   const [detalle, setDetalle] = useState(null);
   const [comentario, setComentario] = useState("");
+  const [solSB, setSolSB] = useState([]);
+  const [loadingSol, setLoadingSol] = useState(true);
+
+  // Load Supabase solicitudes (from portal del empleado)
+  useEffect(()=>{
+    (async()=>{
+      try{
+        const r=await fetch("/api/novelties");
+        const d=await r.json();
+        setSolSB(d.data||[]);
+      }catch(e){console.error(e);}
+      setLoadingSol(false);
+    })();
+  },[]);
+
+  const aprobarSB = async(id, estado)=>{
+    try{
+      await fetch("/api/novelties",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,estado,aprobado_por:"admin"})});
+      setSolSB(prev=>prev.map(s=>s.id===id?{...s,estado}:s));
+    }catch(e){alert("Error: "+e.message);}
+  };
+
+  const pendSB=solSB.filter(s=>s.estado==="pendiente");
 
   const filtered = useMemo(() => novedades.filter(n => {
     if (filter.tipo   && n.tipo   !== filter.tipo)   return false;
@@ -2010,11 +2033,28 @@ function TabNovedades({ novedades, saveNovedades }) {
     <div className="fade-up">
       {/* KPIs */}
       <div style={{ display:"flex", gap:10, marginBottom:18 }}>
-        <KpiBox label="Solicitudes pendientes" value={pendientes} color={pendientes>0?T.amber:T.ink} icon={Bell} />
+        <KpiBox label="Solicitudes pendientes" value={pendientes+pendSB.length} color={(pendientes+pendSB.length)>0?T.amber:T.ink} icon={Bell} />
+        <KpiBox label="Portal (nuevas)"        value={pendSB.length} color={pendSB.length>0?T.amber:T.ink} icon={AlertTriangle} />
         <KpiBox label="Aprobadas este mes"     value={novedades.filter(n=>n.estado==="Aprobada").length}  color={T.green} icon={CheckCircle} />
-        <KpiBox label="Rechazadas"             value={novedades.filter(n=>n.estado==="Rechazada").length} color={T.red}   icon={X} />
-        <KpiBox label="Total novedades"        value={novedades.length} icon={ClipboardList} />
+        <KpiBox label="Total novedades"        value={novedades.length+solSB.length} icon={ClipboardList} />
       </div>
+
+      {/* Solicitudes del Portal pendientes */}
+      {pendSB.length>0&&(
+        <Card style={{borderLeft:`3px solid ${T.amber}`,marginBottom:14}}>
+          <div style={{fontSize:13,fontWeight:700,color:T.amber,marginBottom:8}}>📬 Solicitudes del portal por aprobar</div>
+          {pendSB.map(s=>(
+            <div key={s.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 10px",background:T.accent,borderRadius:6,marginBottom:4}}>
+              <div style={{flex:1}}>
+                <div style={{fontSize:12,fontWeight:600}}>{s.employee_nombre||"Empleado"}</div>
+                <div style={{fontSize:11,color:T.inkMid}}>{s.tipo} · {s.fecha_inicio}{s.fecha_fin?" → "+s.fecha_fin:""}{s.motivo?" · "+s.motivo:""}</div>
+              </div>
+              <button onClick={()=>aprobarSB(s.id,"aprobada")} style={{padding:"4px 12px",fontSize:10,fontWeight:700,border:"1px solid #1E6B42",borderRadius:4,background:"#E8F4EE",color:"#1E6B42",cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>✓ Aprobar</button>
+              <button onClick={()=>aprobarSB(s.id,"rechazada")} style={{padding:"4px 12px",fontSize:10,fontWeight:700,border:"1px solid #dc2626",borderRadius:4,background:"#FEF2F2",color:"#dc2626",cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>✗ Rechazar</button>
+            </div>
+          ))}
+        </Card>
+      )}
 
       {/* Filtros */}
       <div style={{ display:"flex", gap:10, marginBottom:14, flexWrap:"wrap" }}>
@@ -3888,8 +3928,9 @@ function TabPersonal() {
                       📋 Cert. laboral ({conSal?"con":"sin"} salario)
                     </button>
                   ))}
-                  <button onClick={()=>{const link="https://suite.habitaris.co/fichar?emp="+emp.id;navigator.clipboard.writeText(link);alert("Link copiado:\n"+link+"\n\nPIN: últimos 4 dígitos del CC");}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #D97706",borderRadius:6,background:"#FFFBEB",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#D97706"}}>📱 Link fichaje</button>
-                  <button onClick={()=>{const link="https://suite.habitaris.co/fichar?emp="+emp.id;window.open("https://wa.me/?text="+encodeURIComponent("Fichaje Habitaris - "+(emp.candidato_nombre||"")+"\n"+link+"\nPIN: últimos 4 dígitos de tu cédula"),"_blank");}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>💬 WhatsApp</button>
+                  <button onClick={()=>{const link="https://suite.habitaris.co/fichar?emp="+emp.id;navigator.clipboard.writeText(link);alert("Link copiado:\n"+link+"\n\nPIN: últimos 4 dígitos del CC");}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #D97706",borderRadius:6,background:"#FFFBEB",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#D97706"}}>📱 Fichaje</button>
+                  <button onClick={()=>{const link="https://suite.habitaris.co/portal?emp="+emp.id;navigator.clipboard.writeText(link);alert("Portal copiado:\n"+link);}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #2563EB",borderRadius:6,background:"#EFF6FF",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#2563EB"}}>🏠 Portal</button>
+                  <button onClick={()=>{const f="https://suite.habitaris.co/fichar?emp="+emp.id;const p="https://suite.habitaris.co/portal?emp="+emp.id;window.open("https://wa.me/?text="+encodeURIComponent("Habitaris - "+(emp.candidato_nombre||"")+"\n\n📍 Fichaje: "+f+"\n🏠 Portal: "+p+"\n\nPIN: últimos 4 dígitos de tu cédula"),"_blank");}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>💬 WhatsApp</button>
                 </div>
 
                 {/* Expediente completo */}

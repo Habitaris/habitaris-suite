@@ -12,8 +12,8 @@ export default async function handler(req, res) {
     var empId = req.query.emp || "";
     
     // Read from hiring_processes (real employees)
-    var filter = "estado=in.(firmado,afiliaciones,completado)&select=id,candidato_nombre,candidato_cc,cargo,fecha_inicio,candidato_celular";
-    if (empId) filter = "id=eq." + empId + "&select=id,candidato_nombre,candidato_cc,cargo,fecha_inicio,candidato_celular";
+    var filter = "estado=in.(firmado,afiliaciones,completado)&select=id,candidato_nombre,candidato_cc,cargo,fecha_inicio,candidato_celular,salario_base,auxilio_transporte,tipo_contrato,duracion_meses,candidato_eps,candidato_pension";
+    if (empId) filter = "id=eq." + empId + "&select=id,candidato_nombre,candidato_cc,cargo,fecha_inicio,candidato_celular,salario_base,auxilio_transporte,tipo_contrato,duracion_meses,candidato_eps,candidato_pension";
     
     var r = await fetch(SB_URL + "/rest/v1/hiring_processes?" + filter + "&order=candidato_nombre.asc", { headers: sbH() });
     var data = await r.json();
@@ -25,9 +25,15 @@ export default async function handler(req, res) {
         nombre: e.candidato_nombre || "Sin nombre",
         documento: e.candidato_cc || "",
         cargo: e.cargo || "",
-        pin: (e.candidato_cc || "0000").slice(-4), // Last 4 digits of CC as PIN
+        pin: (e.candidato_cc || "0000").slice(-4),
         celular: e.candidato_celular || "",
-        fecha_inicio: e.fecha_inicio || ""
+        fecha_inicio: e.fecha_inicio || "",
+        salario_base: e.salario_base || 0,
+        auxilio_transporte: e.auxilio_transporte || 0,
+        tipo_contrato: e.tipo_contrato || "fijo",
+        duracion_meses: e.duracion_meses || 0,
+        eps: e.candidato_eps || "",
+        pension: e.candidato_pension || ""
       };
     });
     
