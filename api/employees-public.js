@@ -48,6 +48,8 @@ export default async function handler(req, res) {
         var customPin = await kvGet("hab:pin:" + employees[i].id);
         if (customPin) { employees[i].pin = customPin; employees[i].pin_changed = true; }
         else { employees[i].pin = (employees[i].documento || "0000").slice(-4); employees[i].pin_changed = false; }
+        var twofa = await kvGet("hab:2fa:" + employees[i].id);
+        employees[i].twofa_enabled = (twofa === "true");
       }
       return res.status(200).json({ ok: true, data: employees });
     }
@@ -61,6 +63,12 @@ export default async function handler(req, res) {
         if (!body.emp_id || !body.new_pin) return res.status(400).json({ ok: false, error: "emp_id and new_pin required" });
         if (body.new_pin.length < 4 || body.new_pin.length > 6) return res.status(400).json({ ok: false, error: "PIN 4-6 digits" });
         await kvSet("hab:pin:" + body.emp_id, body.new_pin);
+        return res.status(200).json({ ok: true });
+      }
+
+      if (action === "set_2fa") {
+        if (!body.emp_id) return res.status(400).json({ ok: false, error: "emp_id required" });
+        await kvSet("hab:2fa:" + body.emp_id, body.enabled ? "true" : "false");
         return res.status(200).json({ ok: true });
       }
 

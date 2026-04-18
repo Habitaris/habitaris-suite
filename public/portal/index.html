@@ -88,6 +88,7 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
       {id:"vacaciones",lbl:"🏖️ Vacaciones / Licencia"},
       {id:"certificacion",lbl:"📋 Certificación laboral"},
       {id:"ficha",lbl:"👤 Mi ficha"},
+      {id:"seguridad",lbl:"⚙️ Seguridad"},
     ];
     $("tabs").innerHTML=items.map(function(t){
       return '<div class="tab'+(tab===t.id?" on":"")+'" onclick="APP.setTab(\''+t.id+'\')">'+t.lbl+'</div>';
@@ -154,6 +155,7 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
     else if(tab==="vacaciones") renderVacaciones();
     else if(tab==="certificacion") renderCertificacion();
     else if(tab==="ficha") renderFicha();
+    else if(tab==="seguridad") renderSeguridad();
   }
 
   // ── ASISTENCIA ──
@@ -258,6 +260,28 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
       +'</div>';
   }
 
+  // ── SEGURIDAD ──
+  function renderSeguridad(){
+    var twoFAStatus=has2FA;
+    $("content").innerHTML='<div class="card"><div class="card-t">⚙️ Seguridad de tu cuenta</div>'
+      +'<div style="margin-bottom:20px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:'+(twoFAStatus?'#E8F4EE':'#FAFAF8')+';border:1px solid '+(twoFAStatus?'#1E6B42':'#E5E3DE')+';border-radius:8px">'
+      +'<div><div style="font-size:13px;font-weight:700">Verificación en 2 pasos</div>'
+      +'<div style="font-size:11px;color:#9B9B99;margin-top:2px">Recibe un código por email cada vez que inicies sesión en el portal</div></div>'
+      +'<button class="btn '+(twoFAStatus?'btn-s':'btn-g')+'" onclick="APP.toggle2FA()">'+(twoFAStatus?'Desactivar':'Activar')+'</button>'
+      +'</div></div>'
+      +'<div style="margin-bottom:20px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#FAFAF8;border:1px solid #E5E3DE;border-radius:8px">'
+      +'<div><div style="font-size:13px;font-weight:700">Cambiar PIN</div>'
+      +'<div style="font-size:11px;color:#9B9B99;margin-top:2px">Cambia tu PIN de acceso al portal y al fichaje</div></div>'
+      +'<button class="btn btn-s" onclick="APP.changeMyPin()">Cambiar</button>'
+      +'</div></div>'
+      +'<div style="padding:10px;background:#F5F4F1;border-radius:6px;font-size:11px;color:#9B9B99">'
+      +'<strong>Tu email registrado:</strong> '+(me.email_masked||"No registrado")+'<br/>'
+      +'Si necesitas cambiar tu email, contacta a RRHH.'
+      +'</div></div>';
+  }
+
   // ── ACTIONS ──
   async function enviarNov(){
     var tipo=document.getElementById("novTipo").value;
@@ -313,8 +337,8 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
           if(!me.pin_changed){
             portalChangePin("Crea tu PIN personal","Por seguridad, cambia tu PIN temporal.");
           } else {
-            // 2FA: send OTP
-            portalSend2FA();
+            // Check if 2FA is enabled (optional, set by employee)
+            checkAndEnter();
           }
         }
         else{pinErr=true;pin="";renderPinScreen();}
@@ -330,10 +354,45 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
     otpKey:portalOTPKey,
     npk:portalNPK,
     retryChangePin:function(){portalChangePin();},
-    skip2FA:function(){loadAtt().then(function(){return loadNov();}).then(function(){render();});}
+    skip2FA:function(){loadAtt().then(function(){return loadNov();}).then(function(){render();});},
+    toggle2FA:toggle2FA,
+    changeMyPin:function(){
+      // Verify current PIN first, then allow change
+      tab="seguridad";
+      me.pin_changed=true; // force as changed so it doesn't loop
+      $("app").innerHTML='<div class="login-wrap"><div class="login-card"><div class="login-top"><h1>Habitaris</h1><p>Cambiar PIN</p></div><div class="login-body" id="loginBody"></div></div></div>';
+      portalChangePin("Nuevo PIN","Elige tu nuevo PIN de 4 dígitos");
+    }
   };
 
-  // ── 2FA: send OTP after PIN ──
+  // ── Toggle 2FA setting ──
+  async function toggle2FA(){
+    var newState=!has2FA;
+    try{
+      await fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"set_2fa",emp_id:me.id,enabled:newState})});
+      has2FA=newState;
+      renderSeguridad();
+      alert(newState?"✅ Verificación en 2 pasos activada.":"Verificación en 2 pasos desactivada.");
+    }catch(e){alert("Error: "+e.message);}
+  }
+
+  // ── Check 2FA setting and enter portal ──
+  var has2FA = false;
+  async function checkAndEnter(){
+    // Re-fetch employee to get current 2FA setting
+    try{
+      var r=await fetch("/api/employees-public?emp="+me.id);
+      var d=await r.json();
+      if(d.ok&&d.data&&d.data[0]) has2FA=!!d.data[0].twofa_enabled;
+    }catch(e){}
+    if(has2FA){
+      portalSend2FA();
+    } else {
+      loadAtt().then(function(){return loadNov();}).then(function(){render();});
+    }
+  }
+
+  // ── 2FA: send OTP after PIN (only if enabled) ──
   function portalSend2FA(){
     $("loginBody").innerHTML='<div style="text-align:center;padding:30px"><div class="spin" style="width:24px;height:24px;border:3px solid #E5E3DE;border-top-color:#111;border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 8px"></div><div style="font-size:13px;color:#888">Enviando código de verificación...</div></div><style>@keyframes sp{to{transform:rotate(360deg)}}</style>';
     fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"send_otp",emp_id:me.id,purpose:"2fa"})})
