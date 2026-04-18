@@ -74,7 +74,7 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
   // ── RENDER ──
   function render(){
     if(!me) return renderLogin();
-    $("app").innerHTML='<div class="topbar"><img class="logo" src="/logo-habitaris-blanco.png" alt="Habitaris"/><span class="user">'+me.nombre+'</span><button class="salir" onclick="APP.logout()">Salir</button></div>'
+    $("app").innerHTML='<div class="topbar"><img class="logo" src="/logo-habitaris-blanco.jpg" alt="Habitaris"/><span class="user">'+me.nombre+'</span><button class="salir" onclick="APP.logout()">Salir</button></div>'
       +'<div class="tabs" id="tabs"></div>'
       +'<div class="main" id="content"></div>';
     renderTabs();
@@ -113,7 +113,7 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
   function renderCCScreen(){
     $("loginBody").innerHTML='<div style="text-align:center;margin-bottom:12px"><div style="font-size:28px">👋</div><div style="font-size:15px;font-weight:700;margin-top:6px">Bienvenido</div><div style="font-size:12px;color:#888;margin-top:2px">Ingresa tu número de cédula</div></div>'
       +(ccErr?'<div style="color:#dc2626;font-size:12px;text-align:center;margin-bottom:8px">Cédula no encontrada</div>':'')
-      +'<div style="margin:12px 0"><input id="ccField" type="tel" placeholder="Ej: 59856395" value="'+ccInput+'" style="width:100%;padding:14px;border:1px solid '+(ccErr?'#dc2626':'#E5E3DE')+';border-radius:8px;font-size:18px;font-family:\'DM Mono\',monospace;text-align:center;letter-spacing:2px" onkeypress="if(event.key===\'Enter\')APP.buscarCC()"/></div>'
+      +'<div style="margin:12px 0"><input id="ccField" type="tel" placeholder="Tu número de cédula" value="'+ccInput+'" style="width:100%;padding:14px;border:1px solid '+(ccErr?'#dc2626':'#E5E3DE')+';border-radius:8px;font-size:18px;font-family:\'DM Mono\',monospace;text-align:center;letter-spacing:2px" onkeypress="if(event.key===\'Enter\')APP.buscarCC()"/></div>'
       +'<button class="btn btn-p" style="width:100%;justify-content:center" onclick="APP.buscarCC()">Continuar →</button>'
       +'<div style="text-align:center;margin-top:10px;font-size:10px;color:#aaa">PIN: últimos 4 dígitos de tu cédula</div>';
     setTimeout(function(){var f=document.getElementById("ccField");if(f)f.focus();},100);

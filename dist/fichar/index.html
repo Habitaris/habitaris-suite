@@ -58,7 +58,7 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
 </head>
 <body>
 <div class="hdr">
-  <img src="/logo-habitaris-blanco.png" alt="Habitaris"/>
+  <img src="/logo-habitaris-blanco.jpg" alt="Habitaris"/>
   <div class="cc" id="ccLabel"></div>
 </div>
 <div class="wrap" id="app"><div style="text-align:center;padding:40px"><div class="spin"></div></div></div>
@@ -123,7 +123,7 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
       +'<h2 style="text-align:center">Control de asistencia</h2>'
       +'<div class="sub" style="text-align:center">Ingresa tu número de cédula</div>'
       +(ccErr?'<div class="err">Cédula no encontrada. Verifica el número.</div>':'')
-      +'<div style="margin:16px 0"><input id="ccField" type="tel" placeholder="Ej: 59856395" value="'+ccInput+'" style="width:100%;padding:14px;border:1px solid '+(ccErr?'#DC2626':'#E0E0E0')+';border-radius:8px;font-size:18px;font-family:\'DM Mono\',monospace;text-align:center;letter-spacing:2px" onkeypress="if(event.key===\'Enter\')APP.buscarCC()"/></div>'
+      +'<div style="margin:16px 0"><input id="ccField" type="tel" placeholder="Tu número de cédula" value="'+ccInput+'" style="width:100%;padding:14px;border:1px solid '+(ccErr?'#DC2626':'#E0E0E0')+';border-radius:8px;font-size:18px;font-family:\'DM Mono\',monospace;text-align:center;letter-spacing:2px" onkeypress="if(event.key===\'Enter\')APP.buscarCC()"/></div>'
       +'<button class="btn bk" onclick="APP.buscarCC()">Continuar →</button>'
       +'<div style="text-align:center;margin-top:12px;font-size:10px;color:#aaa">PIN: últimos 4 dígitos de tu cédula</div>'
       +'</div>');
