@@ -63,6 +63,7 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
   var P=new URLSearchParams(window.location.search);
   var EMP_ID=P.get("emp")||"";
   var me=null, att=[], novs=[], tab="asistencia";
+  var ccInput="", ccErr=false;
 
   var $=document.getElementById.bind(document);
   function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
@@ -97,21 +98,35 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
   var pin="",pinErr=false,emps=[];
   function renderLogin(){
     $("app").innerHTML='<div class="login-wrap"><div class="login-card"><div class="login-top"><h1>Habitaris</h1><p>Portal del Empleado</p></div><div class="login-body" id="loginBody"></div></div></div>';
-    if(EMP_ID && emps.length===1){
-      me=emps[0];
+    if(EMP_ID && emps.length>0){
+      var found=emps.find(function(e){return e.id===EMP_ID;});
+      if(found){me=found;renderPinScreen();return;}
+    }
+    if(me){
       renderPinScreen();
-    } else if(emps.length>0){
-      renderPickList();
     } else {
-      $("loginBody").innerHTML='<div style="text-align:center;padding:20px"><div style="font-size:32px;margin-bottom:8px">👋</div><p style="font-size:13px;color:#888">Cargando...</p></div>';
+      renderCCScreen();
     }
   }
 
-  function renderPickList(){
-    var list=emps.map(function(e){
-      return '<div style="padding:12px 16px;cursor:pointer;border-bottom:1px solid #eee;font-size:14px;font-weight:500" onclick="APP.pickEmp(\''+e.id+'\')" onmouseenter="this.style.background=\'#E8F4EE\'" onmouseleave="this.style.background=\'\'">'+e.nombre+'<div style="font-size:10px;color:#888">'+e.cargo+'</div></div>';
-    }).join("");
-    $("loginBody").innerHTML='<div style="text-align:center;margin-bottom:12px"><div style="font-size:28px">👋</div><div style="font-size:15px;font-weight:700;margin-top:6px">Bienvenido</div><div style="font-size:12px;color:#888">Selecciona tu nombre</div></div><div style="max-height:300px;overflow-y:auto;border:1px solid #E5E3DE;border-radius:8px">'+list+'</div>';
+  function renderCCScreen(){
+    $("loginBody").innerHTML='<div style="text-align:center;margin-bottom:12px"><div style="font-size:28px">👋</div><div style="font-size:15px;font-weight:700;margin-top:6px">Bienvenido</div><div style="font-size:12px;color:#888;margin-top:2px">Ingresa tu número de cédula</div></div>'
+      +(ccErr?'<div style="color:#dc2626;font-size:12px;text-align:center;margin-bottom:8px">Cédula no encontrada</div>':'')
+      +'<div style="margin:12px 0"><input id="ccField" type="tel" placeholder="Ej: 59856395" value="'+ccInput+'" style="width:100%;padding:14px;border:1px solid '+(ccErr?'#dc2626':'#E5E3DE')+';border-radius:8px;font-size:18px;font-family:\'DM Mono\',monospace;text-align:center;letter-spacing:2px" onkeypress="if(event.key===\'Enter\')APP.buscarCC()"/></div>'
+      +'<button class="btn btn-p" style="width:100%;justify-content:center" onclick="APP.buscarCC()">Continuar →</button>'
+      +'<div style="text-align:center;margin-top:10px;font-size:10px;color:#aaa">PIN: últimos 4 dígitos de tu cédula</div>';
+    setTimeout(function(){var f=document.getElementById("ccField");if(f)f.focus();},100);
+  }
+
+  function buscarCC(){
+    var field=document.getElementById("ccField");
+    if(!field)return;
+    ccInput=field.value.replace(/\D/g,"");
+    if(ccInput.length<4){ccErr=true;renderCCScreen();return;}
+    var found=emps.find(function(e){return(e.documento||"").replace(/\D/g,"")===ccInput;});
+    if(!found){ccErr=true;renderCCScreen();return;}
+    me=found;ccErr=false;pin="";pinErr=false;
+    renderPinScreen();
   }
 
   function renderPinScreen(){
@@ -128,7 +143,7 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
       +dots
       +(pinErr?'<div class="pin-err">PIN incorrecto</div>':'')
       +'<div class="numpad">'+keys+'</div>'
-      +'<div style="text-align:center;margin-top:12px"><button onclick="APP.backToList()" style="border:none;background:none;color:#888;font-size:11px;cursor:pointer;font-family:inherit">← Cambiar persona</button></div>';
+      +'<div style="text-align:center;margin-top:12px"><button onclick="APP.backToCC()" style="border:none;background:none;color:#888;font-size:11px;cursor:pointer;font-family:inherit">← Cambiar cédula</button></div>';
   }
 
   // ── CONTENT ──
@@ -285,8 +300,8 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
 
   // ── APP INTERFACE ──
   window.APP={
-    pickEmp:function(id){me=emps.find(function(e){return e.id===id;});pin="";pinErr=false;renderPinScreen();},
-    backToList:function(){me=null;pin="";pinErr=false;renderPickList();},
+    buscarCC:buscarCC,
+    backToCC:function(){me=null;pin="";pinErr=false;renderCCScreen();},
     pinKey:function(k){
       if(k==="del"){pin=pin.slice(0,-1);renderPinScreen();return;}
       pin+=k;
@@ -299,7 +314,7 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
     setMonth:function(m){curMonth=parseInt(m);renderAsistencia();},
     enviarNov:enviarNov,
     genCert:genCert,
-    logout:function(){me=null;att=[];novs=[];pin="";tab="asistencia";render();}
+    logout:function(){me=null;att=[];novs=[];pin="";tab="asistencia";ccInput="";render();}
   };
 
   loadEmps();

@@ -135,8 +135,8 @@ function AsistenciaPanel({selN, MESES, mes, anio}) {
     return sum;
   }, 0);
 
-  const fichajeLink = "https://suite.habitaris.co/fichar?emp="+selN.empId;
-  const portalLink = "https://suite.habitaris.co/portal?emp="+selN.empId;
+  const fichajeLink = "https://suite.habitaris.co/fichar";
+  const portalLink = "https://suite.habitaris.co/portal";
 
   return (
     <div>
@@ -144,15 +144,13 @@ function AsistenciaPanel({selN, MESES, mes, anio}) {
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
         <div>
           <div style={{fontSize:13,fontWeight:700}}>📍 Registros de asistencia — {selN.nombre}</div>
-          <div style={{fontSize:10,color:T.inkLight}}>PIN: últimos 4 dígitos de CC · Fichaje con foto + GPS</div>
+          <div style={{fontSize:10,color:T.inkLight}}>Cédula + PIN · Fichaje con foto + GPS</div>
         </div>
         <div style={{display:"flex",gap:6}}>
           <select value={mesAtt} onChange={e=>setMesAtt(parseInt(e.target.value))} style={{padding:"5px 10px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>
             {MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}
           </select>
-          <Btn small onClick={()=>{navigator.clipboard.writeText(fichajeLink);alert("Link fichaje copiado:\n"+fichajeLink);}}>📱 Fichaje</Btn>
-          <Btn small onClick={()=>{navigator.clipboard.writeText(portalLink);alert("Portal copiado:\n"+portalLink);}}>🏠 Portal</Btn>
-          <Btn small onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent("Habitaris - "+selN.nombre+"\n\n📍 Fichaje: "+fichajeLink+"\n🏠 Portal: "+portalLink+"\n\nPIN: últimos 4 dígitos de tu cédula"),"_blank");}}>💬 WhatsApp</Btn>
+          <Btn small onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n📍 Fichaje: "+fichajeLink+"\n🏠 Portal: "+portalLink+"\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");}}>💬 Enviar links</Btn>
         </div>
       </div>
 
@@ -493,9 +491,7 @@ export function TabNomina(){
           <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selN.nombre}</div><div style={{fontSize:11,color:T.inkLight}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio}</div></div>
           {ed&&<Btn pri small onClick={()=>u({estado:"aprobada"})}>✓ Aprobar</Btn>}
           <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
-          <Btn small onClick={()=>{const link="https://suite.habitaris.co/fichar?emp="+selN.empId;navigator.clipboard.writeText(link);alert("Link copiado:\n"+link+"\n\nPIN: últimos 4 dígitos del CC");}}>📱 Fichaje</Btn>
-          <Btn small onClick={()=>{const link="https://suite.habitaris.co/portal?emp="+selN.empId;navigator.clipboard.writeText(link);alert("Portal copiado:\n"+link);}}>🏠 Portal</Btn>
-          <Btn small onClick={()=>{const f="https://suite.habitaris.co/fichar?emp="+selN.empId;const p="https://suite.habitaris.co/portal?emp="+selN.empId;window.open("https://wa.me/?text="+encodeURIComponent("Habitaris - "+selN.nombre+"\n\n📍 Fichaje: "+f+"\n🏠 Portal: "+p+"\n\nPIN: últimos 4 dígitos de tu cédula"),"_blank");}}>💬 WhatsApp</Btn>
+          <Btn small onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n📍 Fichaje: https://suite.habitaris.co/fichar\n🏠 Portal: https://suite.habitaris.co/portal\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");}}>💬 Links empleados</Btn>
           <Btn small onClick={()=>{
             const nDias=selN.novDias||{};
             const novList=Object.entries(nDias).sort().map(([k,v])=>{const d=new Date(k+"T12:00:00");const info=NOV_TIPOS.find(n=>n.id===v);return{fecha:d.toLocaleDateString("es-CO",{weekday:"short",day:"numeric",month:"short"}),tipo:info?.label||v};});

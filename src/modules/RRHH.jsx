@@ -3928,9 +3928,7 @@ function TabPersonal() {
                       📋 Cert. laboral ({conSal?"con":"sin"} salario)
                     </button>
                   ))}
-                  <button onClick={()=>{const link="https://suite.habitaris.co/fichar?emp="+emp.id;navigator.clipboard.writeText(link);alert("Link copiado:\n"+link+"\n\nPIN: últimos 4 dígitos del CC");}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #D97706",borderRadius:6,background:"#FFFBEB",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#D97706"}}>📱 Fichaje</button>
-                  <button onClick={()=>{const link="https://suite.habitaris.co/portal?emp="+emp.id;navigator.clipboard.writeText(link);alert("Portal copiado:\n"+link);}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #2563EB",borderRadius:6,background:"#EFF6FF",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#2563EB"}}>🏠 Portal</button>
-                  <button onClick={()=>{const f="https://suite.habitaris.co/fichar?emp="+emp.id;const p="https://suite.habitaris.co/portal?emp="+emp.id;window.open("https://wa.me/?text="+encodeURIComponent("Habitaris - "+(emp.candidato_nombre||"")+"\n\n📍 Fichaje: "+f+"\n🏠 Portal: "+p+"\n\nPIN: últimos 4 dígitos de tu cédula"),"_blank");}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>💬 WhatsApp</button>
+                  <button onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n📍 Fichaje: https://suite.habitaris.co/fichar\n🏠 Portal: https://suite.habitaris.co/portal\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>💬 Links empleados</button>
                 </div>
 
                 {/* Expediente completo */}

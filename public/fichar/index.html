@@ -65,14 +65,13 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
 <script>
 (function(){
   var P = new URLSearchParams(window.location.search);
-  var CC = P.get("cc") || "oficina";
-  var OT = P.get("ot") || "";
   var EMP_ID = P.get("emp") || "";
   var emps = [], me = null, att = [], nov = [];
   var gps = null, gpsE = null, pin = "", pinE = false, foto = null, vs = null;
+  var ccInput = "", ccErr = false;
   var devInfo = (navigator.userAgent||"").substring(0,100);
 
-  document.getElementById("ccLabel").textContent = EMP_ID ? "Fichaje personal" : OT ? "Obra: "+OT : CC.replace(/-/g," ").toUpperCase();
+  document.getElementById("ccLabel").textContent = "Control de asistencia";
 
   var $ = document.getElementById.bind(document);
   function R(h){ $("app").innerHTML = '<div class="wrap">'+h+'</div>'; }
@@ -103,7 +102,7 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
       pin=""; pinE=false;
       step2();
     } else {
-      step1();
+      stepCC();
     }
   }
   async function loadAtt(){
@@ -118,16 +117,28 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
     return regs.length?regs[regs.length-1].tipo:null;
   }
 
-  // STEP 1 - Select name
-  function step1(){
-    var list=emps.map(function(e){
-      return '<div class="item" onclick="APP.pick(\''+e.id+'\')">'+e.nombre+'</div>';
-    }).join("");
+  // STEP CC - Enter CC number
+  function stepCC(){
     R('<div class="card"><div style="text-align:center;font-size:40px;margin-bottom:12px">👋</div>'
       +'<h2 style="text-align:center">Control de asistencia</h2>'
-      +'<div class="sub" style="text-align:center">Selecciona tu nombre</div>'
-      +(emps.length?'<div class="list">'+list+'</div>':'<div style="text-align:center;padding:20px;color:#888;font-size:13px">No hay empleados registrados.</div>')
+      +'<div class="sub" style="text-align:center">Ingresa tu número de cédula</div>'
+      +(ccErr?'<div class="err">Cédula no encontrada. Verifica el número.</div>':'')
+      +'<div style="margin:16px 0"><input id="ccField" type="tel" placeholder="Ej: 59856395" value="'+ccInput+'" style="width:100%;padding:14px;border:1px solid '+(ccErr?'#DC2626':'#E0E0E0')+';border-radius:8px;font-size:18px;font-family:\'DM Mono\',monospace;text-align:center;letter-spacing:2px" onkeypress="if(event.key===\'Enter\')APP.buscarCC()"/></div>'
+      +'<button class="btn bk" onclick="APP.buscarCC()">Continuar →</button>'
+      +'<div style="text-align:center;margin-top:12px;font-size:10px;color:#aaa">PIN: últimos 4 dígitos de tu cédula</div>'
       +'</div>');
+    setTimeout(function(){var f=document.getElementById("ccField");if(f)f.focus();},100);
+  }
+
+  function buscarCC(){
+    var field=document.getElementById("ccField");
+    if(!field)return;
+    ccInput=field.value.replace(/\D/g,"");
+    if(ccInput.length<4){ccErr=true;stepCC();return;}
+    var found=emps.find(function(e){return(e.documento||"").replace(/\D/g,"")===ccInput;});
+    if(!found){ccErr=true;stepCC();return;}
+    me=found;ccErr=false;pin="";pinE=false;
+    step2();
   }
 
   function pick(id){
@@ -135,6 +146,11 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
     if(!me)return;
     pin=""; pinE=false;
     step2();
+  }
+
+  // STEP 1 - Select name (fallback, kept for compatibility)
+  function step1(){
+    stepCC();
   }
 
   // STEP 2 - PIN
@@ -349,7 +365,7 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
   }
 
   // Expose to global
-  window.APP={pick:pick,pk:pk,step1:step1,home:home,fichaje:fichaje,snap:snap,doFichaje:doFichaje,stopCam:stopCam,novForm:novForm,novSend:novSend,novList:novList};
+  window.APP={pick:pick,pk:pk,step1:step1,home:home,fichaje:fichaje,snap:snap,doFichaje:doFichaje,stopCam:stopCam,novForm:novForm,novSend:novSend,novList:novList,buscarCC:buscarCC};
 
   // INIT
   loadEmps();
