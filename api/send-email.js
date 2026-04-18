@@ -15,6 +15,40 @@ export default async function handler(req, res) {
 
     const empresa = body.from_name || "Habitaris";
 
+    // ── 0) OTP code email (PIN reset / 2FA) ──
+    if (body.type === "otp") {
+      var code = body.code || "000000";
+      var nombre = body.nombre || "Empleado";
+      var otpHtml = '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5F4F1;font-family:Arial,sans-serif">'
+        + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:40px 20px"><tr><td align="center">'
+        + '<table width="480" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">'
+        + '<tr><td style="background:#111;padding:24px;text-align:center"><img src="https://suite.habitaris.co/logo-habitaris-blanco.png" alt="Habitaris" width="140"/></td></tr>'
+        + '<tr><td style="padding:32px 40px;text-align:center">'
+        + '<div style="font-size:18px;font-weight:bold;color:#111;margin-bottom:8px">Código de verificación</div>'
+        + '<div style="font-size:13px;color:#666;margin-bottom:24px">Hola ' + nombre + ', usa este código para verificar tu identidad:</div>'
+        + '<div style="background:#F5F4F1;border:2px solid #E5E3DE;border-radius:8px;padding:20px;margin:0 auto;width:fit-content">'
+        + '<div style="font-size:32px;font-weight:800;letter-spacing:8px;font-family:monospace;color:#111">' + code + '</div></div>'
+        + '<div style="font-size:11px;color:#999;margin-top:16px">Este código expira en 10 minutos.<br>Si no solicitaste este código, ignora este correo.</div>'
+        + '</td></tr>'
+        + '<tr><td style="background:#F5F4F1;padding:16px;text-align:center;border-top:1px solid #E5E3DE">'
+        + '<div style="font-size:10px;color:#aaa">Habitaris S.A.S · NIT 901.922.136-8</div></td></tr>'
+        + '</table></td></tr></table></body></html>';
+
+      var rOtp = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "Habitaris <comercial@habitaris.co>",
+          to: [recipientEmail],
+          subject: code + " — Código de verificación Habitaris",
+          html: otpHtml,
+        }),
+      });
+      var dOtp = await rOtp.json();
+      if (rOtp.ok) return res.status(200).json({ ok: true, id: dOtp.id });
+      return res.status(rOtp.status).json({ ok: false, error: dOtp.message || "Send failed" });
+    }
+
     // ── 1) Generic email (meetings, notifications) ──
     if (body.to && body.subject && body.message && !body.type) {
       var b = body.brand || {};
