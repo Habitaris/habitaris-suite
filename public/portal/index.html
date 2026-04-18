@@ -98,7 +98,7 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
   // ── LOGIN ──
   var pin="",pinErr=false,emps=[];
   function renderLogin(){
-    $("app").innerHTML='<div class="login-wrap"><div class="login-card"><div class="login-top"><h1>Habitaris</h1><p>Portal del Empleado</p></div><div class="login-body" id="loginBody"></div></div></div>';
+    $("app").innerHTML='<div class="login-wrap"><div class="login-card"><div class="login-top"><img src="/logo-habitaris-blanco.jpg" alt="Habitaris" style="height:28px;margin-bottom:6px"/><p>Portal del Empleado</p></div><div class="login-body" id="loginBody"></div></div></div>';
     if(EMP_ID && emps.length>0){
       var found=emps.find(function(e){return e.id===EMP_ID;});
       if(found){me=found;renderPinScreen();return;}
@@ -360,7 +360,7 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
       // Verify current PIN first, then allow change
       tab="seguridad";
       me.pin_changed=true; // force as changed so it doesn't loop
-      $("app").innerHTML='<div class="login-wrap"><div class="login-card"><div class="login-top"><h1>Habitaris</h1><p>Cambiar PIN</p></div><div class="login-body" id="loginBody"></div></div></div>';
+      $("app").innerHTML='<div class="login-wrap"><div class="login-card"><div class="login-top"><img src="/logo-habitaris-blanco.jpg" alt="Habitaris" style="height:28px;margin-bottom:6px"/><p>Cambiar PIN</p></div><div class="login-body" id="loginBody"></div></div></div>';
       portalChangePin("Nuevo PIN","Elige tu nuevo PIN de 4 dígitos");
     }
   };
