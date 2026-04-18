@@ -190,11 +190,7 @@ function ModuleBar({ mod, onBack, lang, setLang, onLogout }) {
       </button>
       <div style={{ width:1, height:18, background:"rgba(255,255,255,0.15)" }}/>
       <span style={{ fontSize:13, color:"rgba(255,255,255,0.35)" }}>{mod.icon}</span>
-      {ap.logo ? (
-        <img src={ap.logo} alt="Logo" style={{ height:22, objectFit:"contain" }}/>
-      ) : (
-        <img src="/logo-habitaris-blanco.jpg" alt="Habitaris" style={{height:22}} />
-      )}
+      <img src={ap.logoBlanco || "/logo-habitaris-blanco.jpg"} alt="Habitaris" style={{height:22, objectFit:"contain"}} />
       <span style={{ fontSize:13, color:"rgba(255,255,255,0.4)" }}>/ {mod.label}</span>
       <div style={{ flex:1 }}/>
       <LangSwitch lang={lang} setLang={setLang} />
