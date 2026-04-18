@@ -479,7 +479,7 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
             .then(function(d){
               if(d.ok){
                 me.pin=pNewPin1;me.pin_changed=true;
-                $("loginBody").innerHTML='<div style="text-align:center;padding:24px"><div style="font-size:28px;margin-bottom:8px">✅</div><div style="font-size:15px;font-weight:700">PIN actualizado</div><div style="font-size:12px;color:#888;margin:6px 0 16px">Ahora te enviaremos un código de verificación</div><button class="btn btn-p" style="width:100%;justify-content:center" onclick="APP.skip2FA()">Continuar al portal</button></div>';
+                $("loginBody").innerHTML='<div style="text-align:center;padding:24px"><div style="font-size:28px;margin-bottom:8px">✅</div><div style="font-size:15px;font-weight:700">PIN actualizado</div><div style="font-size:12px;color:#888;margin:6px 0 16px">Tu nuevo PIN está activo</div><button class="btn btn-p" style="width:100%;justify-content:center" onclick="APP.skip2FA()">Continuar al portal</button></div>';
               } else { alert("Error: "+(d.error||"")); portalChangePin(); }
             }).catch(function(e){alert("Error: "+e.message);portalChangePin();});
         } else {
