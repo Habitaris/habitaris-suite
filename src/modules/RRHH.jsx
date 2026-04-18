@@ -4491,21 +4491,25 @@ function TabContratacion({onNuevaPropuesta}) {
 
 const TABS = [
   { id:"dashboard", lbl:"Dashboard",          I:TrendingUp,   desc:"KPIs y métricas de RRHH" },
-  { id:"cargos",    lbl:"Cargos y Salarios",   I:Users,        desc:"Plantilla y cargas sociales" },
-  { id:"jornada",   lbl:"Jornada Laboral",      I:Clock,        desc:"Horas, festivos y productividad" },
-  { id:"activos",   lbl:"Activos y Estructura", I:Package,      desc:"NIIF, licencias y gastos" },
-  { id:"equipos",   lbl:"Equipos de Trabajo",   I:Users,        desc:"Configura equipos para APUs" },
-    { id:"asistencia", lbl:"Asistencia Obra", I:Camera, desc:"Control GPS+Foto de entrada/salida" },
-  { id:"partes",    lbl:"Partes de Trabajo",    I:ClipboardList,desc:"Vista admin — empleados imputan desde Portal" },
+  { id:"_sep1", lbl:"NÓMINA", sep:true },
+  { id:"nomina",     lbl:"Liquidador Nómina",    I:DollarSign,   desc:"Nómina mensual Colombia 2026" },
   { id:"novedades", lbl:"Novedades Nómina",     I:FileText,     desc:"Vacaciones, bajas, permisos y horas extra" },
   { id:"festivos",  lbl:"Festivos Colombia",    I:Calendar,     desc:"Calendario de festivos y días no laborables" },
-  { id:"nomina",     lbl:"Liquidador Nómina",    I:DollarSign,   desc:"Nómina mensual Colombia 2026" },
-  { id:"personal",   lbl:"Personal",             I:Users,        desc:"Fichas de empleados, expediente y condiciones" },
   { id:"calculadora", lbl:"Calculadora Salarial", I:BarChart2,    desc:"Simulador neto/bruto, costes y propuesta de empleo" },
+  { id:"_sep2", lbl:"PERSONAL", sep:true },
+  { id:"personal",   lbl:"Personal",             I:Users,        desc:"Fichas de empleados, expediente y condiciones" },
   { id:"contratacion", lbl:"Contratación",      I:FileText,     desc:"Propuestas, datos candidato y firma de contratos" },
   { id:"evaluaciones", lbl:"Evaluaciones",       I:ClipboardList,desc:"Plantillas psicotécnicas y DISC por cargo" },
+  { id:"_sep3", lbl:"EMPLEADOS", sep:true },
+  { id:"portal",    lbl:"Portal y Asistencia",  I:Eye,          desc:"Fichaje, portal empleado, links y configuración" },
+  { id:"_sep4", lbl:"OPERACIONES", sep:true },
+  { id:"cargos",    lbl:"Cargos y Salarios",   I:Users,        desc:"Plantilla y cargas sociales" },
+  { id:"jornada",   lbl:"Jornada Laboral",      I:Clock,        desc:"Horas, festivos y productividad" },
+  { id:"equipos",   lbl:"Equipos de Trabajo",   I:Users,        desc:"Configura equipos para APUs" },
+  { id:"partes",    lbl:"Partes de Trabajo",    I:ClipboardList,desc:"Vista admin — empleados imputan desde Portal" },
+  { id:"_sep5", lbl:"ADMINISTRACIÓN", sep:true },
+  { id:"activos",   lbl:"Activos y Estructura", I:Package,      desc:"NIIF, licencias y gastos" },
   { id:"docs",      lbl:"Documentos",           I:Briefcase,    desc:"Nóminas, contratos y certificados" },
-  { id:"portal",    lbl:"Portal Empleado",      I:Eye,          desc:"Vista del trabajador" },
 ];
 
 export default function HabitarisRRHH({ pais = "CO" }) {
@@ -4563,6 +4567,9 @@ export default function HabitarisRRHH({ pais = "CO" }) {
           <div style={{ width:210, flexShrink:0, background:T.surface, borderRight:`1px solid ${T.border}`,
             display:"flex", flexDirection:"column", paddingTop:8, overflowY:"auto" }}>
             {TABS.map(t => {
+              if(t.sep) return (
+                <div key={t.id} style={{padding:"12px 16px 4px",fontSize:9,fontWeight:800,color:T.inkLight,letterSpacing:1.2,textTransform:"uppercase"}}>{t.lbl}</div>
+              );
               const act = tab === t.id;
               return (
                 <button key={t.id} onClick={()=>setTab(t.id)} style={{
@@ -4589,14 +4596,97 @@ export default function HabitarisRRHH({ pais = "CO" }) {
 
           {/* Contenido principal */}
           <div style={{ flex:1, overflowY:"auto", paddingBottom:40 }}>
-            {tab === "portal"
-              ? <PortalEmpleado partes={partes} savePartes={savePartes} novedades={novedades} saveNovedades={saveNovedades} fichas={fichas} saveFichas={saveFichas} docs={docs} saveDocs={saveDocs} cargos={cargos} empleados={empleados} saveEmpleados={saveEmpleados}/>
-              : (
                 <div style={{ padding:"24px 28px", maxWidth:1100 }}>
                   <div style={{ marginBottom:18 }}>
-                    <h2 style={{ fontSize:19, fontWeight:700, color:T.ink, letterSpacing:-.2 }}>{TABS.find(t=>t.id===tab)?.lbl}</h2>
-                    <p style={{ fontSize:11, color:T.inkLight, marginTop:2 }}>{TABS.find(t=>t.id===tab)?.desc}</p>
+                    <h2 style={{ fontSize:19, fontWeight:700, color:T.ink, letterSpacing:-.2 }}>{TABS.find(t=>t.id===tab&&!t.sep)?.lbl||""}</h2>
+                    <p style={{ fontSize:11, color:T.inkLight, marginTop:2 }}>{TABS.find(t=>t.id===tab&&!t.sep)?.desc||""}</p>
                   </div>
+
+                  {tab==="portal" && (
+                    <div className="fade-up">
+                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:16}}>
+                        <Card style={{borderLeft:"3px solid #1E6B42"}}>
+                          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+                            <div style={{fontSize:28}}>📍</div>
+                            <div>
+                              <div style={{fontSize:14,fontWeight:700}}>Control de Asistencia</div>
+                              <div style={{fontSize:11,color:T.inkLight}}>Fichaje con foto + GPS · Cédula + PIN</div>
+                            </div>
+                          </div>
+                          <div style={{fontSize:12,color:T.inkMid,marginBottom:12,lineHeight:1.5}}>
+                            Link único para todos los empleados. Cada uno ingresa con su cédula y PIN personal.
+                          </div>
+                          <div style={{background:T.accent,borderRadius:6,padding:"10px 14px",fontFamily:"'DM Mono',monospace",fontSize:12,color:T.ink,marginBottom:10,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                            <span>suite.habitaris.co/fichar</span>
+                            <button onClick={()=>{navigator.clipboard.writeText("https://suite.habitaris.co/fichar");alert("Link copiado");}} style={{padding:"3px 10px",fontSize:10,border:"1px solid "+T.border,borderRadius:4,background:"#fff",cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>📋 Copiar</button>
+                          </div>
+                          <div style={{display:"flex",gap:6}}>
+                            <button onClick={()=>window.open("/fichar","_blank")} style={{flex:1,padding:"8px",fontSize:11,fontWeight:600,border:"1px solid #1E6B42",borderRadius:6,background:"#E8F4EE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#1E6B42"}}>Abrir fichaje →</button>
+                          </div>
+                        </Card>
+
+                        <Card style={{borderLeft:"3px solid #2563eb"}}>
+                          <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:12}}>
+                            <div style={{fontSize:28}}>🏠</div>
+                            <div>
+                              <div style={{fontSize:14,fontWeight:700}}>Portal del Empleado</div>
+                              <div style={{fontSize:11,color:T.inkLight}}>Autogestión: vacaciones, certificaciones, ficha</div>
+                            </div>
+                          </div>
+                          <div style={{fontSize:12,color:T.inkMid,marginBottom:12,lineHeight:1.5}}>
+                            El empleado solicita vacaciones, descarga certificaciones laborales, consulta su ficha y gestiona su seguridad.
+                          </div>
+                          <div style={{background:T.accent,borderRadius:6,padding:"10px 14px",fontFamily:"'DM Mono',monospace",fontSize:12,color:T.ink,marginBottom:10,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                            <span>suite.habitaris.co/portal</span>
+                            <button onClick={()=>{navigator.clipboard.writeText("https://suite.habitaris.co/portal");alert("Link copiado");}} style={{padding:"3px 10px",fontSize:10,border:"1px solid "+T.border,borderRadius:4,background:"#fff",cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>📋 Copiar</button>
+                          </div>
+                          <div style={{display:"flex",gap:6}}>
+                            <button onClick={()=>window.open("/portal","_blank")} style={{flex:1,padding:"8px",fontSize:11,fontWeight:600,border:"1px solid #2563eb",borderRadius:6,background:"#EFF6FF",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#2563eb"}}>Abrir portal →</button>
+                          </div>
+                        </Card>
+                      </div>
+
+                      <Card style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px"}}>
+                        <div style={{fontSize:12,color:T.inkMid}}>💬 Comparte estos links con todos tus empleados por WhatsApp</div>
+                        <button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n📍 Fichaje: https://suite.habitaris.co/fichar\n🏠 Portal: https://suite.habitaris.co/portal\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank")} style={{padding:"7px 16px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669",whiteSpace:"nowrap"}}>💬 Enviar por WhatsApp</button>
+                      </Card>
+
+                      <div style={{marginTop:16}}>
+                        <div style={{fontSize:14,fontWeight:700,marginBottom:10}}>Funcionalidades del portal</div>
+                        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+                          {[
+                            ["📍 Mi asistencia","Historial de fichajes, horas, GPS"],
+                            ["🏖️ Vacaciones / Licencia","Solicitar → aprobación RRHH"],
+                            ["📋 Certificación laboral","Con o sin salario, PDF inmediato"],
+                            ["📨 Mis solicitudes","Estado: pendiente/aprobada/rechazada"],
+                            ["👤 Mi ficha","Datos personales (solo lectura)"],
+                            ["⚙️ Seguridad","Cambiar PIN, activar 2FA (opcional)"],
+                          ].map(([t,d])=>(
+                            <div key={t} style={{background:T.surface,border:"1px solid "+T.border,borderRadius:6,padding:"10px 12px"}}>
+                              <div style={{fontSize:12,fontWeight:600}}>{t}</div>
+                              <div style={{fontSize:10,color:T.inkLight,marginTop:2}}>{d}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div style={{marginTop:16}}>
+                        <div style={{fontSize:14,fontWeight:700,marginBottom:10}}>Seguridad</div>
+                        <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
+                          {[
+                            ["🔐 Fichaje","Cédula + PIN · Cambio obligatorio primer acceso · Foto + GPS verifican identidad"],
+                            ["🔐 Portal","Cédula + PIN · 2FA opcional (código email) · Recuperación por email registrado"],
+                          ].map(([t,d])=>(
+                            <div key={t} style={{background:T.surface,border:"1px solid "+T.border,borderRadius:6,padding:"10px 12px"}}>
+                              <div style={{fontSize:12,fontWeight:600}}>{t}</div>
+                              <div style={{fontSize:10,color:T.inkLight,marginTop:2,lineHeight:1.5}}>{d}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {tab==="dashboard" && (
                     <div className="fade-up" style={{padding:"20px 0"}}>
                       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
@@ -4625,48 +4715,12 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                           </div>
                         ))}
                       </div>
-
-                      {/* Links empleados */}
-                      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:16}}>
-                        <div style={{background:"#fff",border:"1px solid #E0E0E0",borderRadius:8,padding:"16px 18px",boxShadow:"0 1px 3px rgba(0,0,0,.06)"}}>
-                          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-                            <div style={{fontSize:24}}>📍</div>
-                            <div>
-                              <div style={{fontSize:13,fontWeight:700}}>Control de Asistencia</div>
-                              <div style={{fontSize:10,color:"#888"}}>Fichaje con foto + GPS — cédula + PIN</div>
-                            </div>
-                          </div>
-                          <div style={{display:"flex",gap:6}}>
-                            <button onClick={()=>window.open("/fichar","_blank")} style={{flex:1,padding:"8px",fontSize:11,fontWeight:600,border:"1px solid #1E6B42",borderRadius:6,background:"#E8F4EE",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#1E6B42"}}>Abrir fichaje →</button>
-                            <button onClick={()=>{navigator.clipboard.writeText("https://suite.habitaris.co/fichar");alert("Link copiado:\nhttps://suite.habitaris.co/fichar");}} style={{padding:"8px 12px",fontSize:11,fontWeight:600,border:"1px solid #E0E0E0",borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#666"}}>📋</button>
-                          </div>
-                        </div>
-                        <div style={{background:"#fff",border:"1px solid #E0E0E0",borderRadius:8,padding:"16px 18px",boxShadow:"0 1px 3px rgba(0,0,0,.06)"}}>
-                          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-                            <div style={{fontSize:24}}>🏠</div>
-                            <div>
-                              <div style={{fontSize:13,fontWeight:700}}>Portal del Empleado</div>
-                              <div style={{fontSize:10,color:"#888"}}>Autogestión: asistencia, vacaciones, certificaciones</div>
-                            </div>
-                          </div>
-                          <div style={{display:"flex",gap:6}}>
-                            <button onClick={()=>window.open("/portal","_blank")} style={{flex:1,padding:"8px",fontSize:11,fontWeight:600,border:"1px solid #2563eb",borderRadius:6,background:"#EFF6FF",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#2563eb"}}>Abrir portal →</button>
-                            <button onClick={()=>{navigator.clipboard.writeText("https://suite.habitaris.co/portal");alert("Link copiado:\nhttps://suite.habitaris.co/portal");}} style={{padding:"8px 12px",fontSize:11,fontWeight:600,border:"1px solid #E0E0E0",borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#666"}}>📋</button>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div style={{background:"#fff",border:"1px solid #E0E0E0",borderRadius:8,padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                        <div style={{fontSize:11,color:"#888"}}>💬 Comparte estos links con tus empleados por WhatsApp — un solo link para todos</div>
-                        <button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n📍 Fichaje: https://suite.habitaris.co/fichar\n🏠 Portal: https://suite.habitaris.co/portal\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank")} style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669",whiteSpace:"nowrap"}}>💬 Enviar por WhatsApp</button>
-                      </div>
                     </div>
                   )}
                   {tab==="cargos"    && <TabCargos    cargos={cargos}    saveCargos={saveCargos}    jornada={jornada}/>}
                   {tab==="jornada"   && <TabJornada   jornada={jornada}  saveJornada={saveJornada}/>}
                   {tab==="activos"   && <TabActivos   activos={activos}  saveActivos={saveActivos}  licencias={licencias} saveLicencias={saveLicencias} gastos={gastos} saveGastos={saveGastos}/>}
                   {tab==="equipos"   && <TabEquipo    equipo={equipos}   setEquipo={saveEquipos}    cargos={cargos} pais={currentUser?.pais||"CO"}/>}
-                  {tab==="asistencia"&& <TabAsistencia equipo={equipos} asistencia={asistencia} setAsistencia={saveAsistencia} pais={currentUser?.pais||"CO"}/>}
                   {tab==="partes"    && <TabPartes    partes={partes}    setPartes={savePartes}    equipo={equipos} cargos={cargos} currentUser={null} pais={currentUser?.pais||"CO"}/>}
                   {tab==="novedades" && <TabNovedades novedades={novedades} saveNovedades={saveNovedades}/>}
                   {tab==="festivos"  && <TabFestivos/>}
