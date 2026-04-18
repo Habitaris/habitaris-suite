@@ -4594,15 +4594,9 @@ export default function HabitarisRRHH({ pais = "CO" }) {
         {/* HEADER */}
         <div style={{ background:T.surface, borderBottom:`1px solid ${T.border}`, padding:"11px 28px", display:"flex", alignItems:"center", justifyContent:"space-between", position:"sticky", top:0, zIndex:100 }}>
           <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-            <svg width={26} height={26} viewBox="0 0 34 34" fill="none">
-              <rect x="2.5" y="4.5" width="25" height="25" stroke={T.ink} strokeWidth="1.2"/>
-              <rect x="7.5" y="10" width="4" height="13" fill={T.ink}/>
-              <rect x="7.5" y="15.5" width="13" height="3" fill={T.ink}/>
-              <rect x="16.5" y="10" width="4" height="13" fill={T.ink}/>
-            </svg>
+            <img src={HAB_LOGO} alt="Habitaris" style={{height:26,objectFit:"contain"}}/>
             <div>
-              <span style={{ fontSize:13, fontWeight:800, letterSpacing:3.5, textTransform:"uppercase", color:T.ink }}>HABITARIS</span>
-              <span style={{ fontSize:11, color:T.inkLight, marginLeft:10 }}>/ Recursos Humanos</span>
+              <span style={{ fontSize:11, color:T.inkLight }}>/ Recursos Humanos</span>
             </div>
           </div>
           <div style={{ display:"flex", gap:6 }}>

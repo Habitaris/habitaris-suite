@@ -66,7 +66,7 @@ function getBrand() {
       email: cfg.empresa?.email || "info@habitaris.co",
       web: cfg.empresa?.web || "www.habitaris.co",
       logo: cfg.apariencia?.logo || "/logo-habitaris-negro.svg",
-      logoBlanco: cfg.apariencia?.logoBlanco || "/logo-habitaris-blanco.png",
+      logoBlanco: cfg.apariencia?.logoBlanco || "/logo-habitaris-blanco.jpg",
       logoNegro: cfg.apariencia?.logoNegro || "/logo-habitaris-negro.svg",
       colorPrimario: cfg.apariencia?.colorPrimario || "#111111",
       colorAcento: cfg.apariencia?.colorAcento || "#111111",
@@ -539,7 +539,7 @@ export default function IdentidadCorporativa() {
     email: cfg.empresa?.email || "info@habitaris.co",
     web: cfg.empresa?.web || "www.habitaris.co",
     logo: cfg.apariencia?.logo || "/logo-habitaris-negro.svg",
-    logoBlanco: cfg.apariencia?.logoBlanco || "/logo-habitaris-blanco.png",
+    logoBlanco: cfg.apariencia?.logoBlanco || "/logo-habitaris-blanco.jpg",
     logoNegro: cfg.apariencia?.logoNegro || "/logo-habitaris-negro.svg",
     colorPrimario: cfg.apariencia?.colorPrimario || "#111111",
     colorAcento: cfg.apariencia?.colorAcento || "#111111",
@@ -719,7 +719,7 @@ export default function IdentidadCorporativa() {
         <div style={{background:"#fff",borderRadius:12,border:"1px solid #E4E1DB",padding:24}}>
           <h3 style={{margin:"0 0 12px",fontSize:16,fontWeight:700}}>Vista previa</h3>
           <div style={{padding:16,borderRadius:8,background:apariencia.colorPrimario||"#111",color:"#fff",fontFamily:apariencia.tipografia||"DM Sans"}}>
-            <img src={apariencia.logoBlanco || apariencia.logo || "/logo-habitaris-blanco.png"} alt="" style={{height:28,objectFit:"contain",marginBottom:8,display:"block"}} />
+            <img src={apariencia.logoBlanco || apariencia.logo || "/logo-habitaris-blanco.jpg"} alt="" style={{height:28,objectFit:"contain",marginBottom:8,display:"block"}} />
             <div style={{fontSize:14,fontWeight:700,letterSpacing:1}}>{cfg.empresa?.nombre||"HABITARIS"}</div>
             <div style={{fontSize:10,opacity:0.6,marginTop:2}}>{apariencia.slogan||"Tu slogan"}</div>
           </div>

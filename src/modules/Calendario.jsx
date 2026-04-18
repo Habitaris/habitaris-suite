@@ -52,7 +52,7 @@ function getBrand() {
     const cfg = JSON.parse(store.getSync("habitaris_config")) || {};
     return {
       nombre: cfg.empresa?.nombre || "Habitaris",
-      logoBlanco: ((cfg.apariencia?.logoBlanco||"/logo-habitaris-blanco.png").startsWith("/")?(cfg.app?.url||"https://suite.habitaris.co")+(cfg.apariencia?.logoBlanco||"/logo-habitaris-blanco.png"):(cfg.apariencia?.logoBlanco||"/logo-habitaris-blanco.png")),
+      logoBlanco: ((cfg.apariencia?.logoBlanco||"/logo-habitaris-blanco.jpg").startsWith("/")?(cfg.app?.url||"https://suite.habitaris.co")+(cfg.apariencia?.logoBlanco||"/logo-habitaris-blanco.jpg"):(cfg.apariencia?.logoBlanco||"/logo-habitaris-blanco.jpg")),
       logoNegro: ((cfg.apariencia?.logoNegro||"/logo-habitaris-negro.svg").startsWith("/")?(cfg.app?.url||"https://suite.habitaris.co")+(cfg.apariencia?.logoNegro||"/logo-habitaris-negro.svg"):(cfg.apariencia?.logoNegro||"/logo-habitaris-negro.svg")),
       colorPrimario: cfg.apariencia?.colorPrimario || "#111111",
       tipografia: cfg.apariencia?.tipografia || "DM Sans",
@@ -61,7 +61,7 @@ function getBrand() {
       email: cfg.empresa?.email || "info@habitaris.co",
       web: cfg.empresa?.web || "www.habitaris.co",
     };
-  } catch { return { nombre:"Habitaris", colorPrimario:"#111", tipografia:"DM Sans", slogan:"Arquitectura · Interiorismo", logoBlanco:"/logo-habitaris-blanco.png" }; }
+  } catch { return { nombre:"Habitaris", colorPrimario:"#111", tipografia:"DM Sans", slogan:"Arquitectura · Interiorismo", logoBlanco:"/logo-habitaris-blanco.jpg" }; }
 }
 
 function generarSlots(disp, fecha, citas, slotsPublicos) {

@@ -96,7 +96,7 @@ export default function LoginScreen({ onSuccess }) {
   return (
     <div style={s.page}>
       <div style={s.left}>
-        <img src="/logo-habitaris-blanco.png" alt="Habitaris" style={s.logo}
+        <img src="/logo-habitaris-blanco.jpg" alt="Habitaris" style={s.logo}
           onError={e=>{ e.target.style.display='none' }}/>
         <div style={{color:'#FFF',fontSize:22,fontWeight:700,letterSpacing:-0.5,textAlign:'center'}}>Habitaris</div>
         <div style={s.tagline}>Suite de Gestión</div>

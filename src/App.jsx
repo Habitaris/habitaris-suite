@@ -110,7 +110,7 @@ function Home({ onSelect, lang, setLang, onLogout }) {
           {ap.logo ? (
             <img src={ap.logo} alt="Logo" style={{ height:28, objectFit:"contain" }}/>
           ) : (
-            <img src="/logo-habitaris-blanco.png" alt="Habitaris" style={{height:28}} />
+            <img src="/logo-habitaris-blanco.jpg" alt="Habitaris" style={{height:28}} />
           )}
           {ap.slogan && <span style={{ fontFamily:`'${bf}',sans-serif`, fontSize:8, letterSpacing:1.5, color:"rgba(255,255,255,.35)", textTransform:"uppercase" }}>{ap.slogan}</span>}
         </div>
@@ -193,7 +193,7 @@ function ModuleBar({ mod, onBack, lang, setLang, onLogout }) {
       {ap.logo ? (
         <img src={ap.logo} alt="Logo" style={{ height:22, objectFit:"contain" }}/>
       ) : (
-        <img src="/logo-habitaris-blanco.png" alt="Habitaris" style={{height:22}} />
+        <img src="/logo-habitaris-blanco.jpg" alt="Habitaris" style={{height:22}} />
       )}
       <span style={{ fontSize:13, color:"rgba(255,255,255,0.4)" }}>/ {mod.label}</span>
       <div style={{ flex:1 }}/>
