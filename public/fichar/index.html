@@ -300,7 +300,7 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
     var regs=att.filter(function(a){return a.employee_id===me.id;});
     var ent=regs.find(function(a){return a.tipo==="entrada";});
     var sal=regs.find(function(a){return a.tipo==="salida";});
-    var st=!ent?"Sin fichar":isIn?"🟢 En "+CC.replace(/-/g," "):"Jornada finalizada";
+    var st=!ent?"Sin fichar":isIn?"🟢 En servicio":"Jornada finalizada";
     var sc=!ent?"#D97706":isIn?"#059669":"#6B7280";
     var et=ent?ft(ent.timestamp):"–", sa=sal?ft(sal.timestamp):"–";
     var pend=nov.filter(function(n){return n.estado==="pendiente";}).length;
@@ -309,7 +309,7 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
     R('<div class="card">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">'
       +'<div><div style="font-size:16px;font-weight:700">'+me.nombre+'</div>'
-      +'<div style="font-size:11px;color:#888">'+(me.cargo||CC.replace(/-/g," "))+'</div></div>'
+      +'<div style="font-size:11px;color:#888">'+(me.cargo||"Empleado")+'</div></div>'
       +'<div style="font-size:12px;font-weight:600;color:'+sc+'">'+st+'</div></div>'
       +'<div style="display:flex;gap:8px;margin-bottom:16px">'
       +'<div style="flex:1;background:#F5F5F5;border-radius:8px;padding:12px;text-align:center">'
@@ -396,7 +396,7 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
         body:JSON.stringify({
           employee_id:me.id, employee_nombre:me.nombre, tipo:tipo,
           lat:gps?gps.lat:null, lng:gps?gps.lng:null, precision:gps?gps.prec:null,
-          foto_url:foto, centro_costo:OT?null:CC, ot_id:OT||null,
+          foto_url:foto, centro_costo:null, ot_id:null,
           gps_error:gps?null:(gpsE||"no disponible"), device_info:devInfo
         })
       });
@@ -445,7 +445,7 @@ h2{font-size:18px;font-weight:700;margin-bottom:4px}
     try{
       await fetch("/api/novelties",{
         method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({employee_id:me.id,employee_nombre:me.nombre,tipo:tipo,fecha_inicio:fi,fecha_fin:ff||null,motivo:mot,adjunto_url:adjData,centro_costo:OT?null:CC,ot_id:OT||null})
+        body:JSON.stringify({employee_id:me.id,employee_nombre:me.nombre,tipo:tipo,fecha_inicio:fi,fecha_fin:ff||null,motivo:mot,adjunto_url:adjData,centro_costo:null,ot_id:null})
       });
     }catch(e){console.error(e);}
     await loadNov();

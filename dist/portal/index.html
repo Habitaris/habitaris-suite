@@ -140,7 +140,7 @@ td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
       else if(k==="⌫") keys+='<div class="key del" onclick="APP.pinKey(\'del\')">⌫</div>';
       else keys+='<div class="key" onclick="APP.pinKey(\''+k+'\')">'+k+'</div>';
     });
-    $("loginBody").innerHTML='<div style="text-align:center;margin-bottom:8px"><div style="font-size:15px;font-weight:700">Hola, '+me.nombre+'</div><div style="font-size:12px;color:#888;margin-top:2px">Ingresa tu PIN (4 dígitos)</div></div>'
+    $("loginBody").innerHTML='<div style="text-align:center;margin-bottom:8px"><div style="font-size:15px;font-weight:700">Hola, '+me.nombre+'</div><div style="font-size:12px;color:#888;margin-top:2px">Ingresa tu PIN'+(me.pin_changed?'':' (últimos 4 dígitos de tu cédula)')+'</div></div>'
       +dots
       +(pinErr?'<div class="pin-err">PIN incorrecto</div>':'')
       +'<div class="numpad">'+keys+'</div>'
