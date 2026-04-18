@@ -91,6 +91,152 @@ const STit=({children,color})=><div style={{fontSize:12,fontWeight:700,color:col
 const Pill=({e})=>{const m={borrador:{bg:"#F5F4F1",c:"#888"},aprobada:{bg:T.greenBg,c:T.green},pagada:{bg:"#E8E8E8",c:"#111"},"anticipo fijo":{bg:T.blueBg,c:T.blue},"ajuste real":{bg:T.greenBg,c:T.green}};const s=m[e]||m.borrador;return<span style={{padding:"2px 8px",borderRadius:10,fontSize:9,fontWeight:700,background:s.bg,color:s.c}}>{e}</span>;};
 const Btn=({children,pri,small,onClick,disabled,style:sx})=><button onClick={onClick} disabled={disabled} style={{padding:small?"4px 10px":"7px 14px",borderRadius:5,border:pri?"none":`1px solid ${T.border}`,background:pri?T.ink:T.surface,color:pri?"#fff":T.ink,fontSize:small?10:11,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:disabled?"default":"pointer",opacity:disabled?0.5:1,display:"inline-flex",alignItems:"center",gap:5,...sx}}>{children}</button>;
 
+/* ── ASISTENCIA POR EMPLEADO (sub-tab) ── */
+function AsistenciaPanel({selN, MESES, mes, anio}) {
+  const [regs, setRegs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [mesAtt, setMesAtt] = useState(mes);
+
+  useEffect(()=>{
+    if(!selN?.empId) { setLoading(false); return; }
+    setLoading(true);
+    (async()=>{
+      try {
+        const r = await fetch("/api/attendance?employee_id="+selN.empId+"&limit=200");
+        const d = await r.json();
+        setRegs(d.data||[]);
+      } catch(e) { console.error(e); }
+      setLoading(false);
+    })();
+  },[selN?.empId]);
+
+  // Filter by selected month
+  const mesStr = String(anio)+"-"+String(mesAtt+1).padStart(2,"0");
+  const filtered = regs.filter(r=>(r.fecha||"").startsWith(mesStr)).sort((a,b)=>a.timestamp<b.timestamp?-1:1);
+
+  // Group by date
+  const byDate = {};
+  filtered.forEach(r=>{
+    if(!byDate[r.fecha]) byDate[r.fecha]=[];
+    byDate[r.fecha].push(r);
+  });
+  const dates = Object.keys(byDate).sort();
+
+  // Stats
+  const diasConEntrada = dates.filter(d=>byDate[d].some(r=>r.tipo==="entrada")).length;
+  const diasConSalida = dates.filter(d=>byDate[d].some(r=>r.tipo==="salida")).length;
+  const totalHoras = dates.reduce((sum,d)=>{
+    const ent = byDate[d].find(r=>r.tipo==="entrada");
+    const sal = byDate[d].find(r=>r.tipo==="salida");
+    if(ent&&sal){
+      const diff = (new Date(sal.timestamp)-new Date(ent.timestamp))/3600000;
+      return sum + Math.max(0, diff);
+    }
+    return sum;
+  }, 0);
+
+  const fichajeLink = "https://suite.habitaris.co/fichar?emp="+selN.empId;
+
+  return (
+    <div>
+      {/* Header */}
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+        <div>
+          <div style={{fontSize:13,fontWeight:700}}>📍 Registros de asistencia — {selN.nombre}</div>
+          <div style={{fontSize:10,color:T.inkLight}}>PIN: últimos 4 dígitos de CC · Fichaje con foto + GPS</div>
+        </div>
+        <div style={{display:"flex",gap:6}}>
+          <select value={mesAtt} onChange={e=>setMesAtt(parseInt(e.target.value))} style={{padding:"5px 10px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>
+            {MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}
+          </select>
+          <Btn small onClick={()=>{navigator.clipboard.writeText(fichajeLink);alert("Link copiado:\n"+fichajeLink);}}>📱 Link</Btn>
+          <Btn small onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent("Fichaje Habitaris - "+selN.nombre+"\n"+fichajeLink+"\nPIN: últimos 4 dígitos de tu cédula"),"_blank");}}>💬 WhatsApp</Btn>
+        </div>
+      </div>
+
+      {/* KPIs */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:12}}>
+        {[
+          ["Días con entrada",diasConEntrada,T.green],
+          ["Días con salida",diasConSalida,T.blue],
+          ["Fichajes total",filtered.length,T.ink],
+          ["Horas registradas",totalHoras.toFixed(1)+"h",T.amber],
+        ].map(([l,v,c])=>(
+          <div key={l} style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:6,padding:"10px 12px",textAlign:"center"}}>
+            <div style={{fontSize:8,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:.8}}>{l}</div>
+            <div style={{fontSize:18,fontWeight:800,color:c,fontFamily:"'DM Mono',monospace"}}>{v}</div>
+          </div>
+        ))}
+      </div>
+
+      {loading && <div style={{textAlign:"center",padding:24,color:T.inkLight}}>Cargando fichajes...</div>}
+
+      {!loading && dates.length===0 && (
+        <Card style={{textAlign:"center",padding:"30px 20px"}}>
+          <div style={{fontSize:32,marginBottom:8}}>📭</div>
+          <div style={{fontSize:13,color:T.inkMid}}>Sin registros en {MESES[mesAtt]} {anio}</div>
+          <div style={{fontSize:11,color:T.inkLight,marginTop:6}}>Envía el link de fichaje al trabajador para que empiece a registrar su asistencia</div>
+        </Card>
+      )}
+
+      {!loading && dates.length>0 && (
+        <Card style={{padding:0,overflow:"hidden"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:12}}>
+            <thead>
+              <tr style={{borderBottom:`2px solid ${T.ink}`,background:T.surface}}>
+                {["Fecha","Entrada","Salida","Horas","GPS","Foto"].map(h=>(
+                  <th key={h} style={{padding:"6px 10px",textAlign:"left",fontSize:9,fontWeight:700,color:T.inkLight,letterSpacing:.8,textTransform:"uppercase"}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {dates.map((d,i)=>{
+                const dayRegs = byDate[d];
+                const entrada = dayRegs.find(r=>r.tipo==="entrada");
+                const salida = dayRegs.find(r=>r.tipo==="salida");
+                const horas = (entrada&&salida) ? ((new Date(salida.timestamp)-new Date(entrada.timestamp))/3600000).toFixed(1) : null;
+                const dt = new Date(d+"T12:00:00");
+                const dayName = dt.toLocaleDateString("es-CO",{weekday:"short"});
+                const dayNum = dt.toLocaleDateString("es-CO",{day:"numeric",month:"short"});
+                const isSun = dt.getDay()===0;
+                return (
+                  <tr key={d} style={{borderBottom:`1px solid ${T.border}`,background:i%2===0?T.card:"#FAFAF8",opacity:isSun?0.5:1}}>
+                    <td style={{padding:"6px 10px"}}>
+                      <div style={{fontWeight:600,fontSize:12,textTransform:"capitalize"}}>{dayName} {dayNum}</div>
+                    </td>
+                    <td style={{padding:"6px 10px",fontFamily:"'DM Mono',monospace",fontSize:12,color:entrada?T.green:T.inkLight}}>
+                      {entrada?new Date(entrada.timestamp).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"}):"–"}
+                    </td>
+                    <td style={{padding:"6px 10px",fontFamily:"'DM Mono',monospace",fontSize:12,color:salida?T.red:T.inkLight}}>
+                      {salida?new Date(salida.timestamp).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"}):"–"}
+                    </td>
+                    <td style={{padding:"6px 10px",fontFamily:"'DM Mono',monospace",fontWeight:600,fontSize:12}}>
+                      {horas ? horas+"h" : "–"}
+                    </td>
+                    <td style={{padding:"6px 10px",fontSize:11}}>
+                      {entrada?.gps_lat ? (
+                        <a href={`https://www.google.com/maps?q=${entrada.gps_lat},${entrada.gps_lng}`} target="_blank" rel="noreferrer" style={{color:T.blue,textDecoration:"none"}}>
+                          📍 {entrada.precision_m||""}m
+                        </a>
+                      ) : <span style={{color:T.inkLight}}>–</span>}
+                    </td>
+                    <td style={{padding:"6px 10px"}}>
+                      {entrada?.foto_url ? (
+                        <img src={entrada.foto_url} alt="foto" style={{width:32,height:32,borderRadius:4,objectFit:"cover",cursor:"pointer",border:`1px solid ${T.border}`}}
+                          onClick={()=>{const w=window.open();w.document.write(`<img src="${entrada.foto_url}" style="max-width:100%"/>`);}}/>
+                      ) : <span style={{color:T.inkLight,fontSize:11}}>–</span>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </Card>
+      )}
+    </div>
+  );
+}
+
 /* ── LIQUIDACIÓN FINAL (sub-tab dentro del liquidador) ── */
 const TIPOS_TERM = [
   { id:"renuncia", label:"Renuncia voluntaria", icon:"📝", color:T.blue, indemniza:false },
@@ -453,7 +599,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
           ))}
         </div>
         <div style={{display:"flex",gap:0,marginBottom:14,borderBottom:`1px solid ${T.border}`}}>
-          {[{id:"liquidacion",lbl:"📋 Liquidación"},{id:"quincenal",lbl:"💵 Quincenal Q1/Q2"},{id:"empleador",lbl:"🏢 Costo empleador"},{id:"colilla",lbl:"🧾 Colilla"},{id:"auditoria",lbl:"🔍 Auditoría"},{id:"liqfinal",lbl:"🚪 Liquidación Final"}].map(t=>(
+          {[{id:"liquidacion",lbl:"📋 Liquidación"},{id:"quincenal",lbl:"💵 Quincenal Q1/Q2"},{id:"empleador",lbl:"🏢 Costo empleador"},{id:"colilla",lbl:"🧾 Colilla"},{id:"asistencia",lbl:"📍 Asistencia"},{id:"auditoria",lbl:"🔍 Auditoría"},{id:"liqfinal",lbl:"🚪 Liquidación Final"}].map(t=>(
             <button key={t.id} onClick={()=>setSubTab(t.id)} style={{padding:"8px 16px",fontSize:11,fontWeight:subTab===t.id?700:400,border:"none",borderBottom:subTab===t.id?`2px solid ${T.ink}`:"2px solid transparent",background:"transparent",color:subTab===t.id?T.ink:T.inkLight,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{t.lbl}</button>
           ))}
         </div>
@@ -896,6 +1042,10 @@ ${items.map(r=>"<tr><td>"+r.c+"</td><td class='r'>"+(r.d>0?fmt(r.d):"—")+"</td
               }}>📥 Descargar colilla PDF</Btn>
             </div>
           </Card>
+        )}
+
+        {subTab==="asistencia"&&(
+          <AsistenciaPanel selN={selN} MESES={MESES} mes={mes} anio={anio}/>
         )}
 
         {subTab==="auditoria"&&(
