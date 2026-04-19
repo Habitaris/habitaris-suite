@@ -237,6 +237,128 @@ function AsistenciaPanel({selN, MESES, mes, anio}) {
   );
 }
 
+/* ── NOVEDADES PANEL (sub-tab dentro del liquidador) ── */
+function NovedadesPanel({selN, anio, MESES, novHist, setNovHist, novYear, setNovYear, fmt}) {
+  const [loading, setLoading] = useState(true);
+  const [filtroMes, setFiltroMes] = useState("all");
+
+  useEffect(()=>{
+    setLoading(true);
+    fetch("/api/novelties?employee_id="+selN.empId).then(r=>r.json()).then(d=>{
+      setNovHist(d.data||[]);setLoading(false);
+    }).catch(()=>{setNovHist([]);setLoading(false);});
+  },[selN.empId]);
+
+  // Vacation calc: 15 days/year proportional to time worked
+  const fechaIng = selN.fechaIngreso ? new Date(selN.fechaIngreso+"T12:00:00") : null;
+  const hoy = new Date();
+  const diasTrabajados = fechaIng ? Math.max(0,Math.floor((hoy-fechaIng)/86400000)) : 0;
+  const aniosTrab = diasTrabajados/365;
+  const vacGanados = Math.round(aniosTrab*15*10)/10;
+  const vacTomados = novHist.filter(n=>n.tipo==="vacaciones"&&n.estado!=="rechazada").reduce((s,n)=>{
+    if(!n.fecha_inicio)return s;
+    const fi=new Date(n.fecha_inicio), ff=n.fecha_fin?new Date(n.fecha_fin):fi;
+    return s+Math.max(1,Math.floor((ff-fi)/86400000)+1);
+  },0);
+  const vacDisp = Math.max(0, Math.round((vacGanados-vacTomados)*10)/10);
+
+  // Filter by year and month
+  const filtered = novHist.filter(n=>{
+    const d = new Date(n.created_at||n.fecha_inicio||"");
+    if(d.getFullYear()!==novYear) return false;
+    if(filtroMes!=="all" && d.getMonth()!==parseInt(filtroMes)) return false;
+    return true;
+  }).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+
+  // Group by year for all-years view
+  const years = [...new Set(novHist.map(n=>new Date(n.created_at||n.fecha_inicio||"").getFullYear()))].sort((a,b)=>b-a);
+  if(years.indexOf(novYear)===-1 && years.length) years.unshift(novYear);
+  if(years.indexOf(hoy.getFullYear())===-1) years.unshift(hoy.getFullYear());
+
+  const tipoIcon = {vacaciones:"🏖️",licencia_remunerada:"📋",licencia_no_remunerada:"⚠️",permiso:"🕐",incapacidad:"🏥",ausencia:"❌"};
+  const estadoBadge = (e)=>e==="aprobada"?`<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;background:#E8F4EE;color:#1E6B42">aprobada</span>`:e==="rechazada"?`<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;background:#FEF2F2;color:#dc2626">rechazada</span>`:`<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;background:#FFFBEB;color:#D97706">pendiente</span>`;
+
+  if(loading) return <div style={{textAlign:"center",padding:40}}><div style={{width:20,height:20,border:`3px solid ${T.border}`,borderTopColor:T.ink,borderRadius:"50%",animation:"spin 1s linear infinite",margin:"0 auto"}}/></div>;
+
+  return(
+    <div>
+      {/* KPIs Vacaciones */}
+      <Card accent={T.ink}>
+        <STit>🏖️ Vacaciones — {selN.nombre}</STit>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8,marginBottom:8}}>
+          <div style={{background:T.greenBg,borderRadius:6,padding:10,textAlign:"center"}}>
+            <div style={{fontSize:7,fontWeight:700,color:T.green,textTransform:"uppercase",letterSpacing:1}}>Ganados</div>
+            <div style={{fontSize:20,fontWeight:800,fontFamily:"'DM Mono',monospace",color:T.green}}>{vacGanados.toFixed(1)}d</div>
+          </div>
+          <div style={{background:T.blueBg,borderRadius:6,padding:10,textAlign:"center"}}>
+            <div style={{fontSize:7,fontWeight:700,color:T.blue,textTransform:"uppercase",letterSpacing:1}}>Tomados</div>
+            <div style={{fontSize:20,fontWeight:800,fontFamily:"'DM Mono',monospace",color:T.blue}}>{vacTomados}d</div>
+          </div>
+          <div style={{background:"#FFF8EE",borderRadius:6,padding:10,textAlign:"center"}}>
+            <div style={{fontSize:7,fontWeight:700,color:T.amber,textTransform:"uppercase",letterSpacing:1}}>Disponibles</div>
+            <div style={{fontSize:20,fontWeight:800,fontFamily:"'DM Mono',monospace",color:T.amber}}>{vacDisp}d</div>
+          </div>
+          <div style={{background:T.accent,borderRadius:6,padding:10,textAlign:"center"}}>
+            <div style={{fontSize:7,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:1}}>Antigüedad</div>
+            <div style={{fontSize:20,fontWeight:800,fontFamily:"'DM Mono',monospace",color:T.inkMid}}>{aniosTrab.toFixed(1)}a</div>
+          </div>
+        </div>
+        <div style={{fontSize:9,color:T.inkLight}}>15 días hábiles/año (Art.186 CST) · Ingreso: {selN.fechaIngreso||"—"}</div>
+      </Card>
+
+      {/* Filters */}
+      <Card accent={T.ink}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <STit>📋 Histórico de novedades</STit>
+          <div style={{display:"flex",gap:6}}>
+            <select value={novYear} onChange={e=>setNovYear(parseInt(e.target.value))} style={{padding:"4px 8px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>
+              {years.map(y=><option key={y} value={y}>{y}</option>)}
+            </select>
+            <select value={filtroMes} onChange={e=>setFiltroMes(e.target.value)} style={{padding:"4px 8px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>
+              <option value="all">Todo el año</option>
+              {MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {filtered.length===0 ? (
+          <div style={{textAlign:"center",padding:24,color:T.inkLight}}>
+            <div style={{fontSize:24,marginBottom:6}}>📭</div>
+            <div style={{fontSize:12}}>Sin novedades en {novYear}{filtroMes!=="all"?" · "+MESES[parseInt(filtroMes)]:""}</div>
+          </div>
+        ) : (
+          <table style={{width:"100%",fontSize:11,borderCollapse:"collapse"}}>
+            <thead><tr style={{borderBottom:`2px solid ${T.ink}`}}>
+              <th style={{padding:"5px 8px",textAlign:"left",fontSize:8,fontWeight:700,color:T.inkLight,letterSpacing:1}}>FECHA</th>
+              <th style={{padding:"5px 8px",textAlign:"left",fontSize:8,fontWeight:700,color:T.inkLight,letterSpacing:1}}>TIPO</th>
+              <th style={{padding:"5px 8px",textAlign:"left",fontSize:8,fontWeight:700,color:T.inkLight,letterSpacing:1}}>PERIODO</th>
+              <th style={{padding:"5px 8px",textAlign:"left",fontSize:8,fontWeight:700,color:T.inkLight,letterSpacing:1}}>MOTIVO</th>
+              <th style={{padding:"5px 8px",textAlign:"left",fontSize:8,fontWeight:700,color:T.inkLight,letterSpacing:1}}>ESTADO</th>
+            </tr></thead>
+            <tbody>
+              {filtered.map((n,i)=>(
+                <tr key={i} style={{borderBottom:`1px solid ${T.border}`}}>
+                  <td style={{padding:"5px 8px",fontWeight:600}}>{new Date(n.created_at).toLocaleDateString("es-CO",{day:"numeric",month:"short"})}</td>
+                  <td style={{padding:"5px 8px"}}>{tipoIcon[n.tipo]||"📋"} {n.tipo}</td>
+                  <td style={{padding:"5px 8px",fontFamily:"'DM Mono',monospace",fontSize:10}}>{n.fecha_inicio||""}{n.fecha_fin?" → "+n.fecha_fin:""}</td>
+                  <td style={{padding:"5px 8px",color:T.inkMid,maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{n.motivo||"—"}</td>
+                  <td style={{padding:"5px 8px"}} dangerouslySetInnerHTML={{__html:estadoBadge(n.estado)}}/>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        <div style={{display:"flex",gap:8,marginTop:12}}>
+          <div style={{fontSize:9,color:T.inkLight,flex:1}}>
+            {filtered.length} novedad(es) en {novYear}{filtroMes!=="all"?" · "+MESES[parseInt(filtroMes)]:""}
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 /* ── LIQUIDACIÓN FINAL (sub-tab dentro del liquidador) ── */
 const TIPOS_TERM = [
   { id:"renuncia", label:"Renuncia voluntaria", icon:"📝", color:T.blue, indemniza:false },
@@ -265,9 +387,14 @@ function calcLiqFinal(selN, tipo, fechaSalida) {
   if(tipo==="sin_justa"){
     if(isFijo){
       // Art. 64 CST — Término fijo: salario por el tiempo restante del contrato, mínimo 15 días
-      const ffc=durMeses>0
-        ? new Date(fi.getFullYear(),fi.getMonth()+durMeses,fi.getDate()-1)
-        : new Date(fi.getFullYear(),fi.getMonth()+12,fi.getDate()-1); // fallback 1 año si no hay duración
+      let ffc;
+      if(selN.fechaFinContrato) {
+        ffc=new Date(selN.fechaFinContrato+"T12:00:00"); // fecha real del contrato
+      } else if(durMeses>0) {
+        ffc=new Date(fi.getFullYear(),fi.getMonth()+durMeses,fi.getDate()-1);
+      } else {
+        ffc=new Date(fi.getFullYear()+1,fi.getMonth(),fi.getDate()-1); // fallback 1 año
+      }
       const dr=Math.max(0,Math.floor((ffc-ff)/86400000));
       indem=Math.round((sal/30)*Math.max(15,dr));
     } else {
@@ -478,6 +605,8 @@ export function TabNomina(){
   const festivosMes=holidays.filter(h=>h.date.getMonth()===mes);
   const [novDias,setNovDias]=useState({});  // {dayKey: novType}
   const [selNovTipo,setSelNovTipo]=useState("incapacidad");
+  const [novHist,setNovHist]=useState([]);
+  const [novYear,setNovYear]=useState(hoy.getFullYear());
 
   useEffect(()=>{
     setLoading(true);
@@ -487,7 +616,7 @@ export function TabNomina(){
     Promise.all([fetchEmps(),loadN(anio,mes)]).then(([emps,saved])=>{
       const ex=saved||[];
       const lista=emps.map(e=>{const f=ex.find(n=>n.empId===e.id);if(f){if(f.festMes===undefined)f.festMes=festCount;return f;}
-        return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:0.5,hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.entidadBancaria||"",cuenta:e.cuentaBancaria||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",duracionMeses:e.duracion_meses||0,auxT:e.auxilio_transporte||AUX_TR,netoRef:e.salario_neto||0,anio,mes};});
+        return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:0.5,hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.entidadBancaria||"",cuenta:e.cuentaBancaria||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",duracionMeses:e.duracion_meses||0,fechaFinContrato:e.fecha_fin_contrato||"",auxT:e.auxilio_transporte||AUX_TR,netoRef:e.salario_neto||0,anio,mes};});
       setNoms(lista);setLoading(false);
     });
   },[anio,mes]);
@@ -618,7 +747,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
           ))}
         </div>
         <div style={{display:"flex",gap:0,marginBottom:14,borderBottom:`1px solid ${T.border}`}}>
-          {[{id:"nomina",lbl:"💰 Nómina"},{id:"asistencia",lbl:"📍 Asistencia"},{id:"reporte",lbl:"📊 Reporte"},{id:"liqfinal",lbl:"🚪 Liquidación Final"}].map(t=>(
+          {[{id:"nomina",lbl:"💰 Nómina"},{id:"novedades",lbl:"📋 Novedades"},{id:"asistencia",lbl:"📍 Asistencia"},{id:"descargables",lbl:"📥 Descargables"},{id:"liqfinal",lbl:"🚪 Liquidación Final"}].map(t=>(
             <button key={t.id} onClick={()=>setSubTab(t.id)} style={{padding:"8px 16px",fontSize:11,fontWeight:subTab===t.id?700:400,border:"none",borderBottom:subTab===t.id?`2px solid ${T.ink}`:"2px solid transparent",background:"transparent",color:subTab===t.id?T.ink:T.inkLight,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{t.lbl}</button>
           ))}
         </div>
@@ -771,7 +900,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
           </div>
         )}
 
-        {subTab==="nomina"&&(
+        {subTab==="descargables"&&(
           <div style={{borderTop:`2px solid ${T.border}`,marginTop:16,paddingTop:16}}>
           <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:T.ink}}>💵 Desglose Quincenal</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
@@ -930,7 +1059,7 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
           </div>
         )}
 
-        {subTab==="reporte"&&(
+        {subTab==="descargables"&&(
           <div>
           <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:T.ink}}>🏢 Costo Empleador</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
@@ -963,7 +1092,7 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
           </div>
         )}
 
-        {subTab==="nomina"&&(
+        {subTab==="descargables"&&(
           <div style={{borderTop:`2px solid ${T.border}`,marginTop:16,paddingTop:16}}>
           <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:T.ink}}>🧾 Comprobante de Nómina</div>
           <Card style={{maxWidth:680,margin:"0 auto",border:`2px solid ${T.ink}`}}>
@@ -1072,11 +1201,15 @@ ${items.map(r=>"<tr><td>"+r.c+"</td><td class='r'>"+(r.d>0?fmt(r.d):"—")+"</td
           </div>
         )}
 
+        {subTab==="novedades"&&(
+          <NovedadesPanel selN={selN} anio={anio} MESES={MESES} novHist={novHist} setNovHist={setNovHist} novYear={novYear} setNovYear={setNovYear} fmt={fmt}/>
+        )}
+
         {subTab==="asistencia"&&(
           <AsistenciaPanel selN={selN} MESES={MESES} mes={mes} anio={anio}/>
         )}
 
-        {subTab==="reporte"&&(
+        {subTab==="descargables"&&(
           <div style={{borderTop:`2px solid ${T.border}`,marginTop:16,paddingTop:16}}>
           <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:T.ink}}>🔍 Auditoría de Fórmulas</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
