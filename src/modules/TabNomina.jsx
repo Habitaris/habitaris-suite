@@ -453,7 +453,7 @@ export function TabNomina(){
   const[guard,setGuard]=useState(false);
   const[sel,setSel]=useState(null);
   const[vista,setVista]=useState("lista");
-  const[subTab,setSubTab]=useState("liquidacion");
+  const[subTab,setSubTab]=useState("nomina");
   const holidays=useMemo(()=>getHolidays(anio),[anio]);
   const festivosMes=holidays.filter(h=>h.date.getMonth()===mes);
   const [novDias,setNovDias]=useState({});  // {dayKey: novType}
@@ -487,7 +487,7 @@ export function TabNomina(){
     return(
       <div className="fade-up" style={{maxWidth:1050,margin:"0 auto"}}>
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
-          <Btn onClick={()=>{setVista("lista");setSubTab("liquidacion");}}>← Volver</Btn>
+          <Btn onClick={()=>{setVista("lista");setSubTab("nomina");}}>← Volver</Btn>
           <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selN.nombre}</div><div style={{fontSize:11,color:T.inkLight}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio}</div></div>
           {ed&&<Btn pri small onClick={()=>u({estado:"aprobada"})}>✓ Aprobar</Btn>}
           <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
@@ -598,12 +598,12 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
           ))}
         </div>
         <div style={{display:"flex",gap:0,marginBottom:14,borderBottom:`1px solid ${T.border}`}}>
-          {[{id:"liquidacion",lbl:"📋 Liquidación"},{id:"quincenal",lbl:"💵 Quincenal Q1/Q2"},{id:"empleador",lbl:"🏢 Costo empleador"},{id:"colilla",lbl:"🧾 Colilla"},{id:"asistencia",lbl:"📍 Asistencia"},{id:"auditoria",lbl:"🔍 Auditoría"},{id:"liqfinal",lbl:"🚪 Liquidación Final"}].map(t=>(
+          {[{id:"nomina",lbl:"💰 Nómina"},{id:"asistencia",lbl:"📍 Asistencia"},{id:"reporte",lbl:"📊 Reporte"},{id:"liqfinal",lbl:"🚪 Liquidación Final"}].map(t=>(
             <button key={t.id} onClick={()=>setSubTab(t.id)} style={{padding:"8px 16px",fontSize:11,fontWeight:subTab===t.id?700:400,border:"none",borderBottom:subTab===t.id?`2px solid ${T.ink}`:"2px solid transparent",background:"transparent",color:subTab===t.id?T.ink:T.inkLight,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{t.lbl}</button>
           ))}
         </div>
 
-        {subTab==="liquidacion"&&(
+        {subTab==="nomina"&&(
           <div>
             {/* ── CALENDARIO + NOVEDADES ── */}
             <Card accent={T.ink} style={{marginBottom:12}}>
@@ -751,7 +751,9 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
           </div>
         )}
 
-        {subTab==="quincenal"&&(
+        {subTab==="nomina"&&(
+          <div style={{borderTop:`2px solid ${T.border}`,marginTop:16,paddingTop:16}}>
+          <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:T.ink}}>💵 Desglose Quincenal</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
             <Card accent={T.blue}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><STit color={T.blue}>Q1 — Primera quincena</STit><Pill e="anticipo fijo"/></div>
@@ -905,9 +907,12 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
               </div>
             </Card>
           </div>
+          </div>
         )}
 
-        {subTab==="empleador"&&(
+        {subTab==="reporte"&&(
+          <div>
+          <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:T.ink}}>🏢 Costo Empleador</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
             <Card accent={T.blue}><STit color={T.blue}>🏢 Aportes empleador</STit>
               <div style={{fontSize:9,color:T.inkLight,marginBottom:6}}>Base: IBC {fmt(calc.ibc)}</div>
@@ -935,9 +940,12 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
               <div style={{marginTop:8,fontSize:10,color:T.inkMid}}>Costo/hora (240h): <strong style={{fontFamily:"'DM Mono',monospace"}}>{fmt(calc.costoT/240)}</strong></div>
             </Card>
           </div>
+          </div>
         )}
 
-        {subTab==="colilla"&&(
+        {subTab==="nomina"&&(
+          <div style={{borderTop:`2px solid ${T.border}`,marginTop:16,paddingTop:16}}>
+          <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:T.ink}}>🧾 Comprobante de Nómina</div>
           <Card style={{maxWidth:680,margin:"0 auto",border:`2px solid ${T.ink}`}}>
             <div style={{textAlign:"center",borderBottom:`2px solid ${T.ink}`,paddingBottom:12,marginBottom:12}}>
               <div style={{fontSize:15,fontWeight:800,letterSpacing:2}}>HABITARIS S.A.S</div>
@@ -1041,13 +1049,16 @@ ${items.map(r=>"<tr><td>"+r.c+"</td><td class='r'>"+(r.d>0?fmt(r.d):"—")+"</td
               }}>📥 Descargar colilla PDF</Btn>
             </div>
           </Card>
+          </div>
         )}
 
         {subTab==="asistencia"&&(
           <AsistenciaPanel selN={selN} MESES={MESES} mes={mes} anio={anio}/>
         )}
 
-        {subTab==="auditoria"&&(
+        {subTab==="reporte"&&(
+          <div style={{borderTop:`2px solid ${T.border}`,marginTop:16,paddingTop:16}}>
+          <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:T.ink}}>🔍 Auditoría de Fórmulas</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
             <Card accent={T.ink}>
               <STit>📐 Base de cálculo</STit>
@@ -1157,6 +1168,7 @@ ${items.map(r=>"<tr><td>"+r.c+"</td><td class='r'>"+(r.d>0?fmt(r.d):"—")+"</td
               </div>
             </Card>
           </div>
+          </div>
         )}
 
         {subTab==="liqfinal"&&(
@@ -1207,7 +1219,7 @@ ${items.map(r=>"<tr><td>"+r.c+"</td><td class='r'>"+(r.d>0?fmt(r.d):"—")+"</td
               <td style={{padding:"9px 12px",fontSize:11,color:T.green,fontFamily:"'DM Mono',monospace"}}>{fmt(c.q2)}</td>
               <td style={{padding:"9px 12px",fontSize:11,color:T.inkMid,fontFamily:"'DM Mono',monospace"}}>{fmt(c.costoT)}</td>
               <td style={{padding:"9px 12px"}}><Pill e={n.estado}/></td>
-              <td style={{padding:"9px 12px"}}><Btn small onClick={()=>{setSel(n.id);setVista("detalle");setSubTab("liquidacion");}}>Ver →</Btn></td>
+              <td style={{padding:"9px 12px"}}><Btn small onClick={()=>{setSel(n.id);setVista("detalle");setSubTab("nomina");}}>Ver →</Btn></td>
             </tr>);})}</tbody>
         </table>
       </Card>}
