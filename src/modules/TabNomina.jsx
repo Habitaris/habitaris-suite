@@ -135,8 +135,8 @@ function AsistenciaPanel({selN, MESES, mes, anio}) {
     return sum;
   }, 0);
 
-  const fichajeLink = "https://suite.habitaris.co/fichar";
-  const portalLink = "https://suite.habitaris.co/portal";
+  const fichajeLink = "https://suite.habitaris.co/empleado";
+  const portalLink = "https://suite.habitaris.co/empleado";
 
   return (
     <div>

@@ -1,592 +1,132 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Empleado · Habitaris</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#111111"/>
+<title>Mi Habitaris</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'DM Sans',sans-serif;background:#F0EEE9;color:#111;min-height:100vh;-webkit-tap-highlight-color:transparent}
-.topbar{background:#111;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;position:sticky;top:0;z-index:100}
-.topbar img{height:22px}
-.topbar .user{color:rgba(255,255,255,.6);font-size:11px;font-weight:500}
-.topbar .salir{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.55);font-size:10px;font-weight:600;padding:4px 12px;border-radius:4px;cursor:pointer;font-family:'DM Sans',sans-serif}
-.wrap{max-width:460px;margin:0 auto;padding:16px}
-.card{background:#fff;border-radius:12px;padding:20px;margin-bottom:12px;border:1px solid #E5E3DE;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-.card-t{font-size:14px;font-weight:700;margin-bottom:12px}
-.btn-fichar{width:100%;padding:18px;border-radius:12px;border:none;font-size:16px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .15s}
-.btn-entrada{background:#1E6B42;color:#fff}
-.btn-salida{background:#D97706;color:#fff}
-.btn-disabled{background:#E5E3DE;color:#999;cursor:default}
-.tabs{display:flex;gap:0;overflow-x:auto;border-bottom:2px solid #E5E3DE;margin-bottom:16px;-webkit-overflow-scrolling:touch}
-.tab{padding:10px 14px;font-size:11px;font-weight:600;color:#999;border:none;background:none;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
-.tab.on{color:#111;border-bottom-color:#111;font-weight:700}
+body{font-family:'DM Sans',sans-serif;background:#F0EEE9;min-height:100vh;color:#1A1A19}
+.topbar{background:#111;padding:14px 20px;display:flex;align-items:center;justify-content:space-between}
+.topbar .logo{height:22px}.topbar .user{color:#fff;font-size:11px;opacity:.6}
+.topbar .salir{color:#fff;font-size:10px;opacity:.4;cursor:pointer;border:1px solid rgba(255,255,255,.2);padding:4px 10px;border-radius:4px;background:none;font-family:inherit}
+.tabs{display:flex;gap:0;border-bottom:2px solid #E5E3DE;background:#fff;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tab{padding:12px 14px;font-size:11px;font-weight:500;color:#9B9B99;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .2s}
+.tab.on{color:#1A1A19;font-weight:700;border-bottom-color:#1A1A19}
+.main{max-width:900px;margin:0 auto;padding:20px}
+.card{background:#fff;border:1px solid #E5E3DE;border-radius:8px;padding:16px 18px;margin-bottom:12px}
+.card-t{font-size:13px;font-weight:700;margin-bottom:10px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.kpi{background:#FAFAF8;border:1px solid #E5E3DE;border-radius:6px;padding:10px;text-align:center}
+.kpi .l{font-size:7px;font-weight:700;color:#9B9B99;text-transform:uppercase;letter-spacing:.8px}
+.kpi .v{font-size:20px;font-weight:800;font-family:'DM Mono',monospace;margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{padding:6px 10px;text-align:left;font-size:9px;font-weight:700;color:#9B9B99;letter-spacing:.8px;text-transform:uppercase;border-bottom:2px solid #1A1A19}
+td{padding:6px 10px;border-bottom:1px solid #E5E3DE}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700}
+.b-g{background:#E8F4EE;color:#1E6B42}.b-a{background:#FFFBEB;color:#D97706}.b-r{background:#FEF2F2;color:#dc2626}.b-m{background:#F5F4F1;color:#666}
+.btn{padding:8px 16px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:#1A1A19;color:#fff}.btn-s{background:#FAFAF8;border:1px solid #E5E3DE;color:#1A1A19}.btn-g{background:#E8F4EE;border:1px solid #1E6B42;color:#1E6B42}
+.form-g{margin-bottom:14px}.form-g label{display:block;font-size:10px;font-weight:700;color:#9B9B99;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.form-g input,.form-g select,.form-g textarea{width:100%;padding:10px 12px;border:1px solid #E5E3DE;border-radius:6px;font-size:13px;font-family:'DM Sans',sans-serif;background:#fff}
+.form-g textarea{resize:vertical;min-height:70px}
+.empty{text-align:center;padding:30px 20px;color:#9B9B99;font-size:13px}
+.mono{font-family:'DM Mono',monospace}
 .login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.login-card{background:#fff;border-radius:16px;overflow:hidden;width:100%;max-width:380px;box-shadow:0 4px 24px rgba(0,0,0,.1)}
+.login-card{width:340px;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)}
 .login-top{background:#111;padding:28px 24px;text-align:center}
 .login-top p{font-size:11px;color:rgba(255,255,255,.4);margin-top:4px}
-.login-body{padding:24px}
-.dots{display:flex;gap:10px;justify-content:center;margin:16px 0}
-.dot{width:14px;height:14px;border-radius:50%;border:2px solid #E5E3DE;transition:all .15s}
-.dot.on{background:#111;border-color:#111}
-.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:240px;margin:0 auto}
-.key{width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;border-radius:50%;border:1px solid #E5E3DE;cursor:pointer;user-select:none;transition:all .1s;background:#fff;margin:0 auto}
-.key:active{background:#E5E3DE;transform:scale(.95)}
-.key.del{font-size:18px;border:none;color:#999}
-.pin-err{color:#dc2626;font-size:12px;text-align:center;margin:8px 0}
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;border:none;transition:all .15s}
-.btn-p{background:#111;color:#fff}
-.btn-s{background:#F5F4F1;color:#555;border:1px solid #E5E3DE}
-.btn-g{background:#1E6B42;color:#fff}
-.err{color:#dc2626;font-size:12px;text-align:center;margin-bottom:8px}
-.spin{width:24px;height:24px;border:3px solid #E5E3DE;border-top-color:#111;border-radius:50%;animation:sp 1s linear infinite;margin:0 auto 8px}
+.login-body{background:#fff;padding:24px}
+.dots{display:flex;justify-content:center;gap:12px;margin:16px 0}
+.dot{width:14px;height:14px;border-radius:50%;background:#E5E3DE;transition:.2s}.dot.on{background:#1E6B42}
+.numpad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:200px;margin:0 auto}
+.key{padding:14px;font-size:18px;font-weight:600;border:1px solid #E5E3DE;border-radius:8px;background:#FAFAF8;cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;-webkit-user-select:none}
+.key:active{background:#ddd}.key.del{background:#FEF2F2;color:#dc2626}
+.pin-err{color:#dc2626;font-size:12px;text-align:center;margin-bottom:8px}
+.fichar-zone{background:#fff;border:1px solid #E5E3DE;border-radius:12px;padding:20px;margin-bottom:16px;text-align:center}
+.fichar-btn{width:100%;padding:18px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;display:flex;align-items:center;justify-content:center;gap:10px;transition:all .15s}
+.fichar-btn.entrada{background:#1E6B42;color:#fff}.fichar-btn.salida{background:#dc2626;color:#fff}
+.fichar-btn:active{transform:scale(.98)}
+.centro-tag{font-size:10px;color:#9B9B99;margin-top:8px}
+.centro-tag b{color:#1A1A19}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;font-size:11px;text-align:center}
+.cal-hdr{padding:4px;font-size:8px;font-weight:700;color:#9B9B99;text-transform:uppercase}
+.cal-day{padding:6px 2px;border-radius:4px}.cal-day.festivo{background:#FEF2F2;color:#dc2626;font-weight:700}
+.cal-day.today{background:#1A1A19;color:#fff;font-weight:700;border-radius:50%}.cal-day.empty{color:transparent}
+.spin{width:20px;height:20px;border:3px solid #E5E3DE;border-top-color:#111;border-radius:50%;animation:sp 1s linear infinite;margin:0 auto}
 @keyframes sp{to{transform:rotate(360deg)}}
-.centro-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:600}
-.centro-ok{background:#E8F4EE;color:#1E6B42;border:1px solid #D4EDDF}
-.centro-warn{background:#FFFBEB;color:#D97706;border:1px solid #FDE68A}
-.centro-err{background:#FEF2F2;color:#dc2626;border:1px solid #FECACA}
-table{width:100%;border-collapse:collapse;font-size:12px}
-th{text-align:left;padding:8px;font-size:9px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #E5E3DE}
-td{padding:8px;border-bottom:1px solid #F0EEE9}
-.kpi{display:flex;gap:8px;margin-bottom:12px}
-.kpi>div{flex:1;background:#F5F4F1;border-radius:8px;padding:10px;text-align:center}
-.kpi .n{font-size:18px;font-weight:800;font-family:'DM Mono',monospace}
-.kpi .l{font-size:8px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
-.mini-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;font-size:10px;text-align:center}
-.mini-cal .hdr{font-size:8px;font-weight:700;color:#999;padding:4px 0}
-.mini-cal .day{padding:4px 0;border-radius:4px}
-.mini-cal .day.festivo{background:#FEF2F2;color:#dc2626;font-weight:700}
-.mini-cal .day.hoy{background:#111;color:#fff;font-weight:700;border-radius:50%}
-.mini-cal .day.dom{color:#ccc}
-select,input[type="date"],input[type="tel"],textarea{font-family:'DM Sans',sans-serif;padding:10px 12px;border:1px solid #E5E3DE;border-radius:8px;font-size:13px;width:100%;box-sizing:border-box}
+@media(max-width:600px){.kpis{grid-template-columns:repeat(2,1fr)}.main{padding:12px}.tab{padding:10px 10px;font-size:10px}}
 </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
 (function(){
-  var me=null,emps=[],att=[],novs=[],tab="fichar";
+  var me=null,att=[],novs=[],tab="fichar",emps=[];
   var ccInput="",ccErr=false,pin="",pinErr=false;
-  var gps=null,gpsE=null,foto=null,vs=null;
-  var calYear=new Date().getFullYear();
-  var curMonth=new Date().getMonth();
-  var has2FA=false;
-
+  var gps=null,gpsErr=null,foto=null,vs=null;
+  var curMonth=new Date().getMonth(),calYear=new Date().getFullYear();
+  var devInfo=(navigator.userAgent||"").substring(0,100);
+  var devLabel=/iPhone/i.test(devInfo)?"iPhone":/iPad/i.test(devInfo)?"iPad":/Android/i.test(devInfo)?"Android":/Mac/i.test(devInfo)?"Mac":/Windows/i.test(devInfo)?"Windows":"Dispositivo";
   var $=document.getElementById.bind(document);
-
-  // ── GPS ──
-  function tryGPS(){
-    if(navigator.geolocation){
-      navigator.geolocation.getCurrentPosition(
-        function(p){gps={lat:p.coords.latitude,lng:p.coords.longitude,prec:Math.round(p.coords.accuracy)};},
-        function(e){gpsE=e.message;},
-        {enableHighAccuracy:true,timeout:30000,maximumAge:0}
-      );
-    }
-  }
-  tryGPS();
-
-  // ── Helpers ──
   function today(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
-  function ft(ts){return new Date(ts).toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"});}
-  function devLabel(){var ua=navigator.userAgent||"";return /iPhone/i.test(ua)?"iPhone":/iPad/i.test(ua)?"iPad":/Android/i.test(ua)?"Android":/Mac/i.test(ua)?"Mac":/Windows/i.test(ua)?"Windows":"Dispositivo";}
-
-  // ── Centro de trabajo auto-detect ──
-  function detectCentro(){
-    if(!gps||!me) return {nombre:"Sin GPS",status:"warn"};
-    // Compare with assigned centers (stored in hiring_processes)
-    // For now, just show GPS coords - full implementation needs center addresses in DB
-    return {nombre:"GPS: "+gps.lat.toFixed(4)+", "+gps.lng.toFixed(4),status:"ok",lat:gps.lat,lng:gps.lng};
-  }
-
-  // ── Festivos Colombia ──
-  function easter(y){var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da);}
-  function nxtMon(d){var w=d.getDay();if(w===1)return new Date(d);return new Date(d.getFullYear(),d.getMonth(),d.getDate()+(w===0?1:8-w));}
-  function addD(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);}
-  function getHolidays(y){
-    var e=easter(y),h=[];
-    var F=function(m,d,n){h.push({date:new Date(y,m-1,d),name:n});};
-    var E=function(m,d,n){h.push({date:nxtMon(new Date(y,m-1,d)),name:n});};
-    F(1,1,"Año Nuevo");F(5,1,"Día del Trabajo");F(7,20,"Independencia");F(8,7,"Batalla de Boyacá");F(12,8,"Inmaculada Concepción");F(12,25,"Navidad");
-    h.push({date:addD(e,-3),name:"Jueves Santo"});h.push({date:addD(e,-2),name:"Viernes Santo"});
-    h.push({date:nxtMon(addD(e,39)),name:"Ascensión"});h.push({date:nxtMon(addD(e,60)),name:"Corpus Christi"});h.push({date:nxtMon(addD(e,68)),name:"Sagrado Corazón"});
-    E(1,6,"Reyes Magos");E(3,19,"San José");E(6,29,"San Pedro y San Pablo");E(8,15,"Asunción");E(10,12,"Día de la Raza");E(11,1,"Todos los Santos");E(11,11,"Independencia de Cartagena");
-    return h.sort(function(a,b){return a.date-b.date;});
-  }
-
-  // ── API ──
-  async function loadEmps(){
-    try{var r=await fetch("/api/employees-public");var d=await r.json();emps=d.data||[];}catch(e){emps=[];}
-  }
-  async function loadAtt(){
-    try{var r=await fetch("/api/attendance?fecha="+today()+"&employee_id="+me.id);var d=await r.json();att=d.data||[];}catch(e){att=[];}
-  }
-  async function loadNov(){
-    try{var r=await fetch("/api/novelties?employee_id="+me.id);var d=await r.json();novs=d.data||[];}catch(e){novs=[];}
-  }
-
-  // ── RENDER ──
-  function render(){
-    if(!me){renderLogin();return;}
-    var tabs=[
-      {id:"fichar",lbl:"📍 Fichar"},
-      {id:"asistencia",lbl:"📅 Asistencia"},
-      {id:"vacaciones",lbl:"🏖️ Vacaciones"},
-      {id:"certificacion",lbl:"📋 Certificación"},
-      {id:"calendario",lbl:"📆 Calendario"},
-      {id:"seguridad",lbl:"⚙️ Seguridad"},
-    ];
-    var tabsHtml=tabs.map(function(t){return '<button class="tab'+(tab===t.id?' on':'')+'" onclick="APP.setTab(\''+t.id+'\')">'+t.lbl+'</button>';}).join("");
-
-    $("app").innerHTML='<div class="topbar"><img src="/logo-habitaris-blanco.jpg" alt="Habitaris"/><span class="user">'+me.nombre+'</span><button class="salir" onclick="APP.logout()">Salir</button></div>'
-      +'<div class="wrap"><div class="tabs">'+tabsHtml+'</div><div id="content"></div></div>';
-    renderContent();
-  }
-
-  function renderContent(){
-    if(tab==="fichar") renderFichar();
-    else if(tab==="asistencia") renderAsistencia();
-    else if(tab==="vacaciones") renderVacaciones();
-    else if(tab==="certificacion") renderCertificacion();
-    else if(tab==="calendario") renderCalendario();
-    else if(tab==="seguridad") renderSeguridad();
-  }
-
-  // ── TAB: FICHAR ──
-  function renderFichar(){
-    var regs=att.filter(function(a){return a.employee_id===me.id&&a.fecha===today();});
-    var ent=regs.find(function(a){return a.tipo==="entrada";});
-    var sal=regs.find(function(a){return a.tipo==="salida";});
-    var lastTipo=regs.length?regs[regs.length-1].tipo:null;
-    var isIn=lastTipo==="entrada";
-    var centro=detectCentro();
-    var centroClass=centro.status==="ok"?"centro-ok":centro.status==="warn"?"centro-warn":"centro-err";
-
-    $("content").innerHTML='<div class="card">'
-      +'<div style="text-align:center;margin-bottom:16px">'
-      +'<div style="font-size:14px;font-weight:700">'+me.nombre+'</div>'
-      +'<div style="font-size:11px;color:#999">'+me.cargo+'</div>'
-      +'<div style="margin-top:8px"><span class="'+centroClass+'">📍 '+centro.nombre+'</span></div>'
-      +'</div>'
-      +'<div class="kpi"><div><div class="n">'+(ent?ft(ent.timestamp):"–")+'</div><div class="l">Entrada</div></div>'
-      +'<div><div class="n">'+(sal?ft(sal.timestamp):"–")+'</div><div class="l">Salida</div></div></div>'
-      +(isIn
-        ?'<button class="btn-fichar btn-salida" onclick="APP.iniciarFichaje(\'salida\')">🔴 Registrar salida</button>'
-        :(!ent
-          ?'<button class="btn-fichar btn-entrada" onclick="APP.iniciarFichaje(\'entrada\')">🟢 Registrar entrada</button>'
-          :'<button class="btn-fichar btn-disabled" disabled>✅ Jornada registrada</button>'
-        )
-      )
-      +'<div style="text-align:center;margin-top:8px;font-size:10px;color:#999">Selfie + GPS · '+devLabel()+'</div>'
-      +'</div>';
-  }
-
-  // ── TAB: ASISTENCIA ──
-  function renderAsistencia(){
-    var MESES=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-    var sel='<select onchange="APP.setMonth(this.value)" style="padding:6px 10px;font-size:11px">';
-    MESES.forEach(function(m,i){sel+='<option value="'+i+'"'+(i===curMonth?' selected':'')+'>'+m+'</option>';});
-    sel+='</select>';
-
-    // Load all attendance for selected month
-    var y=new Date().getFullYear();
-    var monthRegs=att.filter(function(a){
-      return a.employee_id===me.id;
-    });
-
-    var rows="";
-    if(monthRegs.length===0) rows='<tr><td colspan="4" style="text-align:center;padding:20px;color:#999;font-size:12px">Sin registros este mes</td></tr>';
-    else monthRegs.forEach(function(r){
-      rows+='<tr><td>'+r.fecha+'</td><td>'+r.tipo+'</td><td>'+ft(r.timestamp)+'</td><td style="font-size:10px;color:#999">'+(r.gps_lat?'📍':'–')+'</td></tr>';
-    });
-
-    $("content").innerHTML='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
-      +'<div class="card-t" style="margin:0">📅 Mi asistencia</div>'+sel+'</div>'
-      +'<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Hora</th><th>GPS</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
-  }
-
-  // ── TAB: VACACIONES ──
-  function renderVacaciones(){
-    var pendientes=novs.filter(function(n){return n.estado==="pendiente";}).length;
-    var aprobadas=novs.filter(function(n){return n.estado==="aprobada";}).length;
-
-    var rows="";
-    novs.forEach(function(n){
-      var color=n.estado==="aprobada"?"#1E6B42":n.estado==="rechazada"?"#dc2626":"#D97706";
-      rows+='<tr><td>'+new Date(n.created_at).toLocaleDateString("es-CO",{day:"numeric",month:"short"})+'</td>'
-        +'<td>'+n.tipo+'</td><td>'+n.fecha_inicio+(n.fecha_fin?' → '+n.fecha_fin:'')+'</td>'
-        +'<td><span style="color:'+color+';font-weight:600;font-size:11px">'+n.estado+'</span></td></tr>';
-    });
-    if(!rows) rows='<tr><td colspan="4" style="text-align:center;padding:20px;color:#999;font-size:12px">Sin solicitudes</td></tr>';
-
-    $("content").innerHTML='<div class="card"><div class="card-t">🏖️ Solicitar vacaciones o licencia</div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
-      +'<div><label style="font-size:10px;font-weight:600;color:#999;display:block;margin-bottom:4px">TIPO</label>'
-      +'<select id="novTipo"><option value="vacaciones">🏖️ Vacaciones</option><option value="licencia_rem">📋 Licencia remunerada</option><option value="licencia_no_rem">⚠️ Licencia no remunerada</option><option value="permiso">🕐 Permiso</option><option value="incapacidad">🏥 Incapacidad</option></select></div>'
-      +'<div></div>'
-      +'<div><label style="font-size:10px;font-weight:600;color:#999;display:block;margin-bottom:4px">FECHA INICIO</label><input type="date" id="novFi"/></div>'
-      +'<div><label style="font-size:10px;font-weight:600;color:#999;display:block;margin-bottom:4px">FECHA FIN</label><input type="date" id="novFf"/></div>'
-      +'</div>'
-      +'<div style="margin-bottom:12px"><label style="font-size:10px;font-weight:600;color:#999;display:block;margin-bottom:4px">MOTIVO</label><textarea id="novMot" rows="2" placeholder="Motivo de la solicitud..."></textarea></div>'
-      +'<button class="btn btn-p" style="width:100%;justify-content:center" onclick="APP.enviarNov()">📨 Enviar solicitud</button>'
-      +'<div style="font-size:10px;color:#999;text-align:center;margin-top:8px">Tu solicitud quedará pendiente de aprobación por RRHH.</div>'
-      +'</div>'
-      +'<div class="card"><div class="card-t">📨 Mis solicitudes</div>'
-      +'<div class="kpi"><div><div class="n">'+novs.length+'</div><div class="l">Total</div></div>'
-      +'<div><div class="n" style="color:#D97706">'+pendientes+'</div><div class="l">Pendientes</div></div>'
-      +'<div><div class="n" style="color:#1E6B42">'+aprobadas+'</div><div class="l">Aprobadas</div></div></div>'
-      +'<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Periodo</th><th>Estado</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
-  }
-
-  // ── TAB: CERTIFICACION ──
-  function renderCertificacion(){
-    $("content").innerHTML='<div class="card"><div class="card-t">📋 Certificación laboral</div>'
-      +'<div style="font-size:12px;color:#555;margin-bottom:16px;line-height:1.6">Genera tu certificación laboral en PDF. Puedes elegir si incluir o no el salario.</div>'
-      +'<div style="display:flex;gap:8px">'
-      +'<button class="btn btn-p" style="flex:1;justify-content:center" onclick="APP.genCert(true)">📋 Con salario</button>'
-      +'<button class="btn btn-s" style="flex:1;justify-content:center" onclick="APP.genCert(false)">📋 Sin salario</button>'
-      +'</div></div>';
-  }
-
-  // ── TAB: CALENDARIO ──
-  function renderCalendario(){
-    var holidays=getHolidays(calYear);
-    var hoy=new Date();
-    var MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-    var DL=["L","M","X","J","V","S","D"];
-
-    var yearSel='<select onchange="APP.setCalYear(this.value)" style="padding:6px 10px;font-size:12px;font-weight:700">';
-    for(var yi=2025;yi<=2030;yi++) yearSel+='<option value="'+yi+'"'+(yi===calYear?' selected':'')+'>'+yi+'</option>';
-    yearSel+='</select>';
-
-    // Mini calendars
-    var minis="";
-    for(var mi=0;mi<12;mi++){
-      var first=new Date(calYear,mi,1);
-      var dim=new Date(calYear,mi+1,0).getDate();
-      var startD=first.getDay();startD=startD===0?6:startD-1;
-      var cells='<div class="mini-cal">';
-      DL.forEach(function(d){cells+='<div class="hdr">'+d+'</div>';});
-      for(var s=0;s<startD;s++) cells+='<div class="day"></div>';
-      for(var d=1;d<=dim;d++){
-        var dt=new Date(calYear,mi,d);
-        var isFestivo=holidays.some(function(h){return h.date.getDate()===d&&h.date.getMonth()===mi;});
-        var isHoy=hoy.getFullYear()===calYear&&hoy.getMonth()===mi&&hoy.getDate()===d;
-        var isDom=dt.getDay()===0;
-        cells+='<div class="day'+(isHoy?' hoy':isFestivo?' festivo':isDom?' dom':'')+'" title="'+(isFestivo?holidays.find(function(h){return h.date.getDate()===d&&h.date.getMonth()===mi;}).name:'')+'">'+d+'</div>';
-      }
-      cells+='</div>';
-      minis+='<div style="background:#fff;border:1px solid #E5E3DE;border-radius:8px;padding:10px"><div style="font-size:11px;font-weight:700;margin-bottom:6px;text-align:center">'+MESES[mi]+'</div>'+cells+'</div>';
-    }
-
-    // Upcoming holidays
-    var upcoming=holidays.filter(function(h){return h.date>=hoy;}).slice(0,5);
-    var upList="";
-    upcoming.forEach(function(h){
-      var dias=Math.ceil((h.date-hoy)/(1000*60*60*24));
-      upList+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #F0EEE9;font-size:12px">'
-        +'<span>'+h.name+'</span>'
-        +'<span style="color:#999;font-size:11px">'+h.date.toLocaleDateString("es-CO",{day:"numeric",month:"short"})+(dias<=30?' <span style="color:#D97706;font-weight:600">'+dias+'d</span>':'')+'</span></div>';
-    });
-
-    $("content").innerHTML='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
-      +'<div class="card-t" style="margin:0">📆 Calendario laboral Colombia</div>'+yearSel+'</div>'
-      +'<div class="kpi"><div><div class="n">'+holidays.length+'</div><div class="l">Festivos</div></div>'
-      +'<div><div class="n">'+holidays.filter(function(h){return h.date>=hoy;}).length+'</div><div class="l">Restantes</div></div></div>'
-      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">'+minis+'</div>'
-      +'</div>'
-      +'<div class="card"><div class="card-t">📌 Próximos festivos</div>'+upList+'</div>';
-  }
-
-  // ── TAB: SEGURIDAD ──
-  function renderSeguridad(){
-    $("content").innerHTML='<div class="card"><div class="card-t">⚙️ Seguridad de tu cuenta</div>'
-      +'<div style="margin-bottom:16px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:'+(has2FA?'#E8F4EE':'#FAFAF8')+';border:1px solid '+(has2FA?'#1E6B42':'#E5E3DE')+';border-radius:8px">'
-      +'<div><div style="font-size:13px;font-weight:700">Verificación en 2 pasos</div>'
-      +'<div style="font-size:11px;color:#999;margin-top:2px">Código por email cada vez que inicies sesión</div></div>'
-      +'<button class="btn '+(has2FA?'btn-s':'btn-g')+'" onclick="APP.toggle2FA()">'+(has2FA?'Desactivar':'Activar')+'</button>'
-      +'</div></div>'
-      +'<div style="margin-bottom:16px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#FAFAF8;border:1px solid #E5E3DE;border-radius:8px">'
-      +'<div><div style="font-size:13px;font-weight:700">Cambiar PIN</div>'
-      +'<div style="font-size:11px;color:#999;margin-top:2px">Cambia tu PIN de acceso</div></div>'
-      +'<button class="btn btn-s" onclick="APP.changeMyPin()">Cambiar</button>'
-      +'</div></div>'
-      +'<div style="padding:10px;background:#F5F4F1;border-radius:6px;font-size:11px;color:#999">'
-      +'<strong>Email registrado:</strong> '+(me.email_masked||"No registrado")+'<br/>'
-      +'Para cambiar tu email, contacta a RRHH.</div></div>';
-  }
-
-  // ── FICHAR ACTION ──
-  function iniciarFichaje(tipo){
-    tryGPS();
-    $("content").innerHTML='<div class="card" style="text-align:center">'
-      +'<div style="font-size:14px;font-weight:700;margin-bottom:12px">'+(tipo==="entrada"?"🟢 Registrar entrada":"🔴 Registrar salida")+'</div>'
-      +'<div style="font-size:12px;color:#555;margin-bottom:16px">Toma una selfie para confirmar</div>'
-      +'<video id="cam" autoplay playsinline muted style="width:100%;border-radius:8px;background:#000;max-height:300px"></video>'
-      +'<canvas id="canv" style="display:none"></canvas>'
-      +'<div style="display:flex;gap:8px;margin-top:12px">'
-      +'<button class="btn btn-p" style="flex:1;justify-content:center" onclick="APP.snap(\''+tipo+'\')">📸 Capturar</button>'
-      +'<button class="btn btn-s" style="flex:1;justify-content:center" onclick="APP.stopCam();APP.renderFichar()">← Cancelar</button>'
-      +'</div></div>';
-    startCamera();
-  }
-  function startCamera(){
-    navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:640,height:480}}).then(function(s){
-      vs=s;var v=document.getElementById("cam");if(v)v.srcObject=s;
-    }).catch(function(e){
-      $("content").innerHTML='<div class="card" style="text-align:center"><div style="font-size:13px;color:#dc2626;margin-bottom:12px">No se pudo acceder a la cámara</div><button class="btn btn-s" onclick="APP.renderFichar()">← Volver</button></div>';
-    });
-  }
-  function stopCam(){if(vs){vs.getTracks().forEach(function(t){t.stop();});vs=null;}}
-  function snap(tipo){
-    var v=document.getElementById("cam"),c=document.getElementById("canv");
-    if(!v)return;
-    c.width=v.videoWidth||640;c.height=v.videoHeight||480;
-    c.getContext("2d").drawImage(v,0,0);
-    foto=c.toDataURL("image/jpeg",0.7);
-    stopCam();
-    doFichaje(tipo);
-  }
-  async function doFichaje(tipo){
-    $("content").innerHTML='<div class="card" style="text-align:center;padding:30px"><div class="spin"></div><div style="font-size:13px;color:#888">Registrando '+tipo+'...</div></div>';
-    try{
-      var r=await fetch("/api/attendance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-        employee_id:me.id,employee_nombre:me.nombre,tipo:tipo,fecha:today(),timestamp:new Date().toISOString(),
-        foto_url:foto,centro_costo:null,ot_id:null,
-        gps_lat:gps?gps.lat:null,gps_lng:gps?gps.lng:null,gps_precision:gps?gps.prec:null,
-        gps_error:gps?null:(gpsE||"no disponible"),device_info:navigator.userAgent.substring(0,100)
-      })});
-      var d=await r.json();
-      if(d.ok){await loadAtt();foto=null;tab="fichar";renderContent();}
-      else{$("content").innerHTML='<div class="card" style="text-align:center"><div class="err">Error: '+(d.error||"")+'</div><button class="btn btn-s" onclick="APP.renderFichar()">Volver</button></div>';}
-    }catch(e){$("content").innerHTML='<div class="card" style="text-align:center"><div class="err">Error de conexión</div><button class="btn btn-s" onclick="APP.renderFichar()">Volver</button></div>';}
-  }
-
-  // ── ENVIAR NOVEDAD ──
-  async function enviarNov(){
-    var tipo=document.getElementById("novTipo").value;
-    var fi=document.getElementById("novFi").value;
-    var ff=document.getElementById("novFf").value;
-    var mot=document.getElementById("novMot").value;
-    if(!fi){alert("Fecha inicio es obligatoria");return;}
-    try{
-      var r=await fetch("/api/novelties",{method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({employee_id:me.id,employee_nombre:me.nombre,tipo:tipo,fecha_inicio:fi,fecha_fin:ff||null,motivo:mot})});
-      var d=await r.json();
-      if(d.ok){alert("✅ Solicitud enviada");await loadNov();renderContent();}
-      else{alert("Error: "+(d.error||""));}
-    }catch(e){alert("Error de conexión");}
-  }
-
-  // ── CERTIFICACION ──
-  function genCert(conSalario){
-    var hoyStr=new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
-    var salText=conSalario?'<p>Devengando un salario mensual de <b>$'+Number(me.salario_base||0).toLocaleString("es-CO")+'</b> COP.</p><br/>':'';
-    var body='<h1>CERTIFICACIÓN LABORAL</h1><div class="body"><p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que:</p><br/>'
-      +'<p><b>'+me.nombre+'</b>, identificado(a) con C.C. No. <b>'+me.documento+'</b>, labora en esta empresa desde el <b>'
-      +(me.fecha_inicio?new Date(me.fecha_inicio+"T12:00:00").toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"}):"—")
-      +'</b>, desempeñando el cargo de <b>'+me.cargo+'</b>.</p><br/>'+salText
-      +'<p>La presente certificación se expide a solicitud del interesado, en Bogotá D.C., a los '+hoyStr+'.</p></div>'
-      +'<div class="sig"><div><br/><b>Representante Legal</b><br/>Habitaris S.A.S</div></div>';
-    var fn="Certificacion_"+me.nombre.replace(/ /g,"_");
-    var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+fn+'</title>'
-      +'<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>'
-      +'<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>'
-      +'<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;padding:20px 0}'
-      +'#content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.45;box-shadow:0 0 8px rgba(0,0,0,.15)}'
-      +'.hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:14px;overflow:hidden}.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}.hdr img{height:36px}'
-      +'h1{font-size:13pt;text-align:center;margin:16px 0 12px;clear:both}.body{font-size:10.5pt;line-height:1.7;text-align:justify}'
-      +'.sig{margin-top:50px;width:50%}.sig div{border-top:1px solid #111;padding-top:6px;font-size:9pt}'
-      +'.np{text-align:center;margin:16px auto;max-width:794px}'
-      +'.btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}'
-      +'@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}'
-      +'</style></head><body><div id="content"><div class="hdr"><div class="l"><img src="/logo-habitaris.jpeg" alt="Habitaris"/></div>'
-      +'<div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>'
-      +body+'</div><div class="np"><button class="btn" onclick="(function(){var el=document.getElementById(\'content\');el.style.boxShadow=\'none\';document.querySelector(\'.np\').style.display=\'none\';html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:\'#fff\'}).then(function(c){var img=c.toDataURL(\'image/jpeg\',0.98);var pW=210,pH=(c.height*pW)/c.width;var pdf=new jspdf.jsPDF({orientation:\'portrait\',unit:\'mm\',format:\'a4\'});pdf.addImage(img,\'JPEG\',0,0,pW,pH);pdf.save(\''+fn+'.pdf\');el.style.boxShadow=\'0 0 8px rgba(0,0,0,.15)\';document.querySelector(\'.np\').style.display=\'\'})})()\">📥 Descargar PDF</button></div></body></html>';
-    var w=window.open();w.document.write(html);w.document.close();
-  }
-
-  // ── 2FA ──
-  async function toggle2FA(){
-    var newState=!has2FA;
-    try{
-      await fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"set_2fa",emp_id:me.id,enabled:newState})});
-      has2FA=newState;renderSeguridad();
-      alert(newState?"✅ Verificación en 2 pasos activada.":"Verificación en 2 pasos desactivada.");
-    }catch(e){alert("Error: "+e.message);}
-  }
-
-  // ── LOGIN ──
-  function renderLogin(){
-    $("app").innerHTML='<div class="login-wrap"><div class="login-card"><div class="login-top"><img src="/logo-habitaris-blanco.jpg" alt="Habitaris" style="height:28px;margin-bottom:6px"/><p>Portal del Empleado</p></div><div class="login-body" id="loginBody"></div></div></div>';
-    renderCCScreen();
-  }
-  function renderCCScreen(){
-    $("loginBody").innerHTML='<div style="text-align:center;margin-bottom:12px"><div style="font-size:28px">👋</div><div style="font-size:15px;font-weight:700;margin-top:6px">Bienvenido</div><div style="font-size:12px;color:#888;margin-top:2px">Ingresa tu número de cédula</div></div>'
-      +(ccErr?'<div class="err">Cédula no encontrada</div>':'')
-      +'<div style="margin:12px 0"><input id="ccField" type="tel" placeholder="Tu número de cédula" value="'+ccInput+'" style="text-align:center;letter-spacing:2px;font-family:\'DM Mono\',monospace;font-size:18px'+(ccErr?';border-color:#dc2626':'')+'" onkeypress="if(event.key===\'Enter\')APP.buscarCC()"/></div>'
-      +'<button class="btn btn-p" style="width:100%;justify-content:center" onclick="APP.buscarCC()">Continuar →</button>'
-      +'<div style="text-align:center;margin-top:10px;font-size:10px;color:#aaa">PIN: últimos 4 dígitos de tu cédula</div>';
-    setTimeout(function(){var f=document.getElementById("ccField");if(f)f.focus();},100);
-  }
-  function buscarCC(){
-    var field=document.getElementById("ccField");if(!field)return;
-    ccInput=field.value.replace(/\D/g,"");
-    if(ccInput.length<4){ccErr=true;renderCCScreen();return;}
-    var found=emps.find(function(e){return(e.documento||"").replace(/\D/g,"")===ccInput;});
-    if(!found){ccErr=true;renderCCScreen();return;}
-    me=found;ccErr=false;pin="";pinErr=false;
-    renderPinScreen();
-  }
-  function renderPinScreen(){
-    var dots='<div class="dots">';for(var i=0;i<4;i++)dots+='<div class="dot'+(i<pin.length?' on':'')+'"></div>';dots+='</div>';
-    var keys="";[1,2,3,4,5,6,7,8,9,"",0,"⌫"].forEach(function(k){
-      if(k==="")keys+='<div></div>';
-      else if(k==="⌫")keys+='<div class="key del" onclick="APP.pinKey(\'del\')">⌫</div>';
-      else keys+='<div class="key" onclick="APP.pinKey(\''+k+'\')">'+k+'</div>';
-    });
-    $("loginBody").innerHTML='<div style="text-align:center;margin-bottom:8px"><div style="font-size:15px;font-weight:700">Hola, '+me.nombre.split(" ")[0]+'</div><div style="font-size:12px;color:#888;margin-top:2px">Ingresa tu PIN'+(me.pin_changed?'':' (últimos 4 dígitos de tu cédula)')+'</div></div>'
-      +dots+(pinErr?'<div class="pin-err">PIN incorrecto</div>':'')
-      +'<div class="numpad">'+keys+'</div>'
-      +'<div style="text-align:center;margin-top:12px"><button onclick="APP.forgotPin()" style="border:none;background:none;color:#2563eb;font-size:11px;cursor:pointer;font-family:inherit">¿Olvidaste tu PIN?</button></div>'
-      +'<div style="text-align:center;margin-top:6px"><button onclick="APP.backToCC()" style="border:none;background:none;color:#888;font-size:11px;cursor:pointer;font-family:inherit">← Cambiar cédula</button></div>';
-  }
-  function pinKey(k){
-    if(k==="del"){pin=pin.slice(0,-1);renderPinScreen();return;}
-    pin+=k;
-    if(pin.length===4){
-      if(pin===me.pin){
-        pinErr=false;pin="";
-        if(!me.pin_changed){portalChangePin("Crea tu PIN personal","Por seguridad, cambia tu PIN temporal.");}
-        else{checkAndEnter();}
-      } else {pinErr=true;pin="";renderPinScreen();}
-    } else renderPinScreen();
-  }
-
-  // ── 2FA CHECK ──
-  async function checkAndEnter(){
-    try{var r=await fetch("/api/employees-public?emp="+me.id);var d=await r.json();if(d.ok&&d.data&&d.data[0])has2FA=!!d.data[0].twofa_enabled;}catch(e){}
-    if(has2FA){send2FA();}
-    else{enterPortal();}
-  }
-  function enterPortal(){loadAtt().then(function(){return loadNov();}).then(function(){render();});}
-  function send2FA(){
-    $("loginBody").innerHTML='<div style="text-align:center;padding:30px"><div class="spin"></div><div style="font-size:13px;color:#888">Enviando código...</div></div>';
-    fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"send_otp",emp_id:me.id,purpose:"2fa"})})
-      .then(function(r){return r.json();})
-      .then(function(d){if(d.ok)otpScreen("2fa");else{alert("Error enviando código");renderPinScreen();}})
-      .catch(function(e){alert("Error");renderPinScreen();});
-  }
+  function tryGPS(){if(navigator.geolocation)navigator.geolocation.getCurrentPosition(function(p){gps={lat:p.coords.latitude,lng:p.coords.longitude,prec:Math.round(p.coords.accuracy)};},function(e){gpsErr=e.message;},{enableHighAccuracy:true,timeout:30000,maximumAge:0});}
+  tryGPS();
+  function haversine(a,b,c,d){var R=6371000,dL=(c-a)*Math.PI/180,dN=(d-b)*Math.PI/180,x=Math.sin(dL/2)*Math.sin(dL/2)+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dN/2)*Math.sin(dN/2);return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+  function detectCentro(){if(!gps||!me)return{nombre:"Sin GPS",auto:false};var cs=me.centros||[];if(!cs.length)return{nombre:"GPS activo",auto:false};for(var i=0;i<cs.length;i++){var c=cs[i];if(c.lat&&c.lng){var d=haversine(gps.lat,gps.lng,c.lat,c.lng);if(d<300)return{nombre:c.nombre||c.direccion,auto:true,dist:Math.round(d)};}}return{nombre:"Fuera de centro",auto:false};}
+  function festivosCO(y){function easter(y){var a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=(h+l-7*m+114)%31+1;return new Date(y,mo-1,da);}var e=easter(y);function add(d,n){var r=new Date(d);r.setDate(r.getDate()+n);return r;}function nMon(d){var x=d.getDay();if(x===1)return d;return add(d,x===0?1:8-x);}var list=[];[[0,1,"Año Nuevo"],[4,1,"Día del Trabajo"],[6,20,"Independencia"],[7,7,"Batalla Boyacá"],[11,8,"Inmaculada"],[11,25,"Navidad"]].forEach(function(f){list.push({fecha:new Date(y,f[0],f[1]),nombre:f[2]});});[[0,6,"Reyes Magos"],[2,19,"San José"],[5,29,"San Pedro y Pablo"],[7,15,"Asunción"],[9,12,"Día Raza"],[10,1,"Todos Santos"],[10,11,"Independencia Cartagena"]].forEach(function(f){list.push({fecha:nMon(new Date(y,f[0],f[1])),nombre:f[2]});});[[-3,"Jueves Santo"],[-2,"Viernes Santo"],[43,"Ascensión"],[64,"Corpus Christi"],[71,"Sagrado Corazón"]].forEach(function(r){list.push({fecha:r[0]<0?add(e,r[0]):nMon(add(e,r[0])),nombre:r[1]});});return list.sort(function(a,b){return a.fecha-b.fecha;});}
+  async function loadEmps(){try{var r=await fetch("/api/employees-public");var d=await r.json();emps=d.data||[];}catch(e){emps=[];}renderLogin();}
+  async function loadAtt(){try{var r=await fetch("/api/attendance?employee_id="+me.id);var d=await r.json();att=d.data||[];}catch(e){att=[];}}
+  async function loadNov(){try{var r=await fetch("/api/novelties?employee_id="+me.id);var d=await r.json();novs=d.data||[];}catch(e){novs=[];}}
+  function renderLogin(){$("app").innerHTML='<div class="login-wrap"><div class="login-card"><div class="login-top"><img src="/logo-habitaris-blanco.jpg" alt="Habitaris" style="height:28px;margin-bottom:6px"/><p>Mi Habitaris</p></div><div class="login-body" id="loginBody"></div></div></div>';renderCCScreen();}
+  function renderCCScreen(){$("loginBody").innerHTML='<div style="text-align:center;margin-bottom:12px"><div style="font-size:28px">👋</div><div style="font-size:15px;font-weight:700;margin-top:6px">Bienvenido</div><div style="font-size:12px;color:#888;margin-top:2px">Ingresa tu número de cédula</div></div>'+(ccErr?'<div style="color:#dc2626;font-size:12px;text-align:center;margin-bottom:8px">Cédula no encontrada</div>':'')+'<div style="margin:12px 0"><input id="ccField" type="tel" placeholder="Tu número de cédula" value="'+ccInput+'" style="width:100%;padding:14px;border:1px solid '+(ccErr?'#dc2626':'#E5E3DE')+';border-radius:8px;font-size:18px;font-family:\'DM Mono\',monospace;text-align:center;letter-spacing:2px" onkeypress="if(event.key===\'Enter\')APP.buscarCC()"/></div><button class="btn btn-p" style="width:100%;justify-content:center" onclick="APP.buscarCC()">Continuar →</button><div style="text-align:center;margin-top:10px;font-size:10px;color:#aaa">PIN: últimos 4 dígitos de tu cédula</div>';setTimeout(function(){var f=document.getElementById("ccField");if(f)f.focus();},100);}
+  function buscarCC(){var f=document.getElementById("ccField");if(!f)return;ccInput=f.value.replace(/\D/g,"");if(ccInput.length<4){ccErr=true;renderCCScreen();return;}var found=emps.find(function(e){return(e.documento||"").replace(/\D/g,"")===ccInput;});if(!found){ccErr=true;renderCCScreen();return;}me=found;ccErr=false;pin="";pinErr=false;renderPinScreen();}
+  function renderPinScreen(){var dots='<div class="dots">';for(var i=0;i<4;i++)dots+='<div class="dot'+(i<pin.length?' on':'')+'"></div>';dots+='</div>';var keys="";[1,2,3,4,5,6,7,8,9,"",0,"⌫"].forEach(function(k){if(k==="")keys+='<div></div>';else if(k==="⌫")keys+='<div class="key del" onclick="APP.pinKey(\'del\')">⌫</div>';else keys+='<div class="key" onclick="APP.pinKey(\''+k+'\')">'+k+'</div>';});$("loginBody").innerHTML='<div style="text-align:center;margin-bottom:8px"><div style="font-size:15px;font-weight:700">Hola, '+me.nombre.split(" ")[0]+'</div><div style="font-size:12px;color:#888;margin-top:2px">Ingresa tu PIN'+(me.pin_changed?'':' (últimos 4 dígitos de tu cédula)')+'</div></div>'+dots+(pinErr?'<div class="pin-err">PIN incorrecto</div>':'')+'<div class="numpad">'+keys+'</div><div style="text-align:center;margin-top:12px"><button onclick="APP.forgotPin()" style="border:none;background:none;color:#2563eb;font-size:11px;cursor:pointer;font-family:inherit">¿Olvidaste tu PIN?</button></div><div style="text-align:center;margin-top:6px"><button onclick="APP.backToCC()" style="border:none;background:none;color:#888;font-size:11px;cursor:pointer;font-family:inherit">← Cambiar cédula</button></div>';}
+  function handlePinKey(k){if(k==="del"){pin=pin.slice(0,-1);renderPinScreen();return;}pin+=k;if(pin.length===4){if(pin===me.pin){pinErr=false;pin="";if(!me.pin_changed)changePinFlow("Crea tu PIN personal","Por seguridad, cambia tu PIN temporal.");else checkAndEnter();}else{pinErr=true;pin="";renderPinScreen();}}else renderPinScreen();}
+  var has2FA=false;
+  async function checkAndEnter(){try{var r=await fetch("/api/employees-public?emp="+me.id);var d=await r.json();if(d.ok&&d.data&&d.data[0])has2FA=!!d.data[0].twofa_enabled;}catch(e){}if(has2FA){send2FA();}else{enterApp();}}
+  function send2FA(){$("loginBody").innerHTML='<div style="text-align:center;padding:30px"><div class="spin"></div><div style="font-size:13px;color:#888;margin-top:8px">Enviando código...</div></div>';fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"send_otp",emp_id:me.id,purpose:"2fa"})}).then(function(r){return r.json();}).then(function(d){if(d.ok)renderOTPScreen("2fa");else{alert("Error");renderPinScreen();}}).catch(function(e){alert("Error");renderPinScreen();});}
   var otpVal="";
-  function otpScreen(purpose){
-    otpVal="";
-    $("loginBody").innerHTML='<div style="text-align:center"><div style="font-size:28px;margin-bottom:8px">✉️</div><div style="font-size:15px;font-weight:700">Verificación</div><div style="font-size:12px;color:#888;margin:6px 0 16px">Código enviado a: <b>'+me.email_masked+'</b></div>'
-      +'<div style="margin:12px 0"><input id="otpField" type="tel" maxlength="6" placeholder="000000" style="width:180px;font-size:22px;font-family:monospace;text-align:center;letter-spacing:5px" oninput="APP.otpKey(this.value,\''+purpose+'\')"/></div>'
-      +'<div style="font-size:10px;color:#999;margin-bottom:12px">6 dígitos · Expira en 10 min</div>'
-      +'<button onclick="APP.send2FA()" style="border:none;background:none;color:#2563eb;font-size:11px;cursor:pointer;font-family:inherit">Reenviar código</button><br/>'
-      +'<button onclick="APP.backToCC()" style="border:none;background:none;color:#888;font-size:11px;cursor:pointer;font-family:inherit;margin-top:8px">← Cancelar</button></div>';
-    setTimeout(function(){var f=document.getElementById("otpField");if(f)f.focus();},100);
-  }
-  function otpKey(val,purpose){
-    otpVal=val.replace(/\D/g,"");
-    if(otpVal.length===6){
-      $("loginBody").innerHTML='<div style="text-align:center;padding:30px"><div class="spin"></div><div style="font-size:13px;color:#888">Verificando...</div></div>';
-      fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"verify_otp",emp_id:me.id,code:otpVal})})
-        .then(function(r){return r.json();})
-        .then(function(d){
-          if(d.ok){if(purpose==="recovery")portalChangePin("Nuevo PIN","Código verificado. Crea tu PIN nuevo.");else enterPortal();}
-          else{alert("Código incorrecto o expirado");otpScreen(purpose);}
-        }).catch(function(e){alert("Error");otpScreen(purpose);});
-    }
-  }
-
-  // ── FORGOT PIN ──
-  function forgotPin(){
-    if(!me||!me.email_masked){alert("No hay email registrado. Contacta a RRHH.");return;}
-    $("loginBody").innerHTML='<div style="text-align:center"><div style="font-size:28px;margin-bottom:8px">📧</div><div style="font-size:15px;font-weight:700">Recuperar PIN</div><div style="font-size:12px;color:#888;margin:6px 0 16px">Enviaremos un código a:<br/><b>'+me.email_masked+'</b></div>'
-      +'<button class="btn btn-p" style="width:100%;justify-content:center" onclick="APP.sendRecoveryOTP()">Enviar código</button>'
-      +'<button onclick="APP.backToCC()" style="border:none;background:none;color:#888;font-size:11px;cursor:pointer;font-family:inherit;margin-top:12px;display:block;width:100%;text-align:center">← Volver</button></div>';
-  }
-  function sendRecoveryOTP(){
-    $("loginBody").innerHTML='<div style="text-align:center;padding:30px"><div class="spin"></div><div style="font-size:13px;color:#888">Enviando...</div></div>';
-    fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"send_otp",emp_id:me.id,purpose:"recovery"})})
-      .then(function(r){return r.json();})
-      .then(function(d){if(d.ok)otpScreen("recovery");else{alert("Error");renderPinScreen();}})
-      .catch(function(e){alert("Error");renderPinScreen();});
-  }
-
-  // ── CHANGE PIN ──
+  function renderOTPScreen(purpose){otpVal="";$("loginBody").innerHTML='<div style="text-align:center"><div style="font-size:28px;margin-bottom:8px">✉️</div><div style="font-size:15px;font-weight:700">Verificación</div><div style="font-size:12px;color:#888;margin:6px 0 16px">Código enviado a: <b>'+me.email_masked+'</b></div><div style="margin:12px 0"><input id="otpField" type="tel" maxlength="6" placeholder="000000" style="width:180px;padding:14px;border:1px solid #E5E3DE;border-radius:8px;font-size:22px;font-family:monospace;text-align:center;letter-spacing:5px" oninput="APP.otpKey(this.value,\''+purpose+'\')"/></div><div style="font-size:10px;color:#999">Expira en 10 min</div><button onclick="APP.sendRecoveryOTP()" style="border:none;background:none;color:#2563eb;font-size:11px;cursor:pointer;font-family:inherit;margin-top:8px">Reenviar</button></div>';setTimeout(function(){var f=document.getElementById("otpField");if(f)f.focus();},100);}
+  function handleOTPKey(v,p){otpVal=v.replace(/\D/g,"");if(otpVal.length===6){$("loginBody").innerHTML='<div style="text-align:center;padding:30px"><div class="spin"></div></div>';fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"verify_otp",emp_id:me.id,code:otpVal})}).then(function(r){return r.json();}).then(function(d){if(d.ok){if(p==="recovery")changePinFlow("Nuevo PIN","Código verificado.");else enterApp();}else{alert("Código incorrecto");renderOTPScreen(p);}}).catch(function(e){alert("Error");renderOTPScreen(p);});}}
+  function forgotPin(){if(!me||!me.email_masked){alert("No hay email. Contacta RRHH.");return;}$("loginBody").innerHTML='<div style="text-align:center"><div style="font-size:28px;margin-bottom:8px">📧</div><div style="font-size:15px;font-weight:700">Recuperar PIN</div><div style="font-size:12px;color:#888;margin:6px 0 16px">Código a: <b>'+me.email_masked+'</b></div><button class="btn btn-p" style="width:100%;justify-content:center" onclick="APP.sendRecoveryOTP()">Enviar código</button><button onclick="APP.backToCC()" style="border:none;background:none;color:#888;font-size:11px;cursor:pointer;font-family:inherit;margin-top:12px;display:block;width:100%;text-align:center">← Volver</button></div>';}
+  function sendRecoveryOTP(){$("loginBody").innerHTML='<div style="text-align:center;padding:30px"><div class="spin"></div></div>';fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"send_otp",emp_id:me.id,purpose:"recovery"})}).then(function(r){return r.json();}).then(function(d){if(d.ok)renderOTPScreen("recovery");else{alert("Error");renderPinScreen();}}).catch(function(){renderPinScreen();});}
   var np1="",np2="";
-  function portalChangePin(title,subtitle){np1="";np2="";renderNewPin(1,title||"Nuevo PIN",subtitle||"Elige 4 dígitos");}
-  function renderNewPin(phase,title,subtitle){
-    var p=phase===1?np1:np2;
-    var dots='<div class="dots">';for(var i=0;i<4;i++)dots+='<div class="dot'+(i<p.length?' on':'')+'"></div>';dots+='</div>';
-    var keys="";[1,2,3,4,5,6,7,8,9,"",0,"⌫"].forEach(function(k){
-      if(k==="")keys+='<div></div>';
-      else if(k==="⌫")keys+='<div class="key del" onclick="APP.npk(\'del\','+phase+')">⌫</div>';
-      else keys+='<div class="key" onclick="APP.npk(\''+k+'\','+phase+')">'+k+'</div>';
-    });
-    $("loginBody").innerHTML='<div style="text-align:center"><div style="font-size:28px;margin-bottom:8px">'+(phase===1?'🔐':'✅')+'</div><div style="font-size:15px;font-weight:700">'+(title||"")+'</div><div style="font-size:12px;color:#888;margin:4px 0 12px">'+(phase===1?(subtitle||""):"Confirma tu nuevo PIN")+'</div>'+dots+'<div class="numpad">'+keys+'</div></div>';
-  }
-  function npk(k,phase){
-    if(phase===1){
-      if(k==="del"){np1=np1.slice(0,-1);renderNewPin(1);return;}
-      np1+=k;if(np1.length===4)renderNewPin(2);else renderNewPin(1);
-    } else {
-      if(k==="del"){np2=np2.slice(0,-1);renderNewPin(2);return;}
-      np2+=k;
-      if(np2.length===4){
-        if(np1===np2){
-          $("loginBody").innerHTML='<div style="text-align:center;padding:30px"><div class="spin"></div><div style="font-size:13px;color:#888">Guardando PIN...</div></div>';
-          fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"change_pin",emp_id:me.id,new_pin:np1})})
-            .then(function(r){return r.json();})
-            .then(function(d){
-              if(d.ok){me.pin=np1;me.pin_changed=true;
-                $("loginBody").innerHTML='<div style="text-align:center;padding:24px"><div style="font-size:28px;margin-bottom:8px">✅</div><div style="font-size:15px;font-weight:700">PIN actualizado</div><button class="btn btn-p" style="width:100%;justify-content:center;margin-top:16px" onclick="APP.enterPortal()">Continuar</button></div>';
-              } else {alert("Error");portalChangePin();}
-            }).catch(function(e){alert("Error");portalChangePin();});
-        } else {
-          np2="";
-          $("loginBody").innerHTML='<div style="text-align:center;padding:20px"><div class="err">Los PIN no coinciden</div><button class="btn btn-p" style="justify-content:center" onclick="APP.retryPin()">Intentar de nuevo</button></div>';
-        }
-      } else renderNewPin(2);
-    }
-  }
+  function changePinFlow(t,s){np1="";np2="";renderNewPin(1,t,s);}
+  function renderNewPin(ph,t,s){var p=ph===1?np1:np2;var dots="";for(var i=0;i<4;i++)dots+='<div class="dot'+(i<p.length?' on':'')+'"></div>';var keys="";[1,2,3,4,5,6,7,8,9,"",0,"⌫"].forEach(function(k){if(k==="")keys+='<div></div>';else if(k==="⌫")keys+='<div class="key del" onclick="APP.npk(\'del\','+ph+')">⌫</div>';else keys+='<div class="key" onclick="APP.npk(\''+k+'\','+ph+')">'+k+'</div>';});$("loginBody").innerHTML='<div style="text-align:center"><div style="font-size:28px;margin-bottom:8px">'+(ph===1?'🔐':'✅')+'</div><div style="font-size:15px;font-weight:700">'+(t||"Nuevo PIN")+'</div><div style="font-size:12px;color:#888;margin:4px 0 12px">'+(ph===1?(s||"Elige 4 dígitos"):"Confirma tu PIN")+'</div><div class="dots">'+dots+'</div><div class="numpad">'+keys+'</div></div>';}
+  function handleNPK(k,ph){if(ph===1){if(k==="del"){np1=np1.slice(0,-1);renderNewPin(1);return;}np1+=k;if(np1.length===4)renderNewPin(2);else renderNewPin(1);}else{if(k==="del"){np2=np2.slice(0,-1);renderNewPin(2);return;}np2+=k;if(np2.length===4){if(np1===np2){$("loginBody").innerHTML='<div style="text-align:center;padding:30px"><div class="spin"></div></div>';fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"change_pin",emp_id:me.id,new_pin:np1})}).then(function(r){return r.json();}).then(function(d){if(d.ok){me.pin=np1;me.pin_changed=true;$("loginBody").innerHTML='<div style="text-align:center;padding:24px"><div style="font-size:28px;margin-bottom:8px">✅</div><div style="font-size:15px;font-weight:700">PIN actualizado</div><button class="btn btn-p" style="width:100%;justify-content:center;margin-top:12px" onclick="APP.enterApp()">Continuar</button></div>';}else{alert("Error");changePinFlow();}}).catch(function(){changePinFlow();});}else{np2="";$("loginBody").innerHTML='<div style="text-align:center;padding:20px"><div style="color:#dc2626;font-size:13px;margin-bottom:12px">Los PIN no coinciden</div><button class="btn btn-p" onclick="APP.retryPin()">Reintentar</button></div>';}}else renderNewPin(2);}}
+  async function enterApp(){$("app").innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh"><div class="spin"></div></div>';await loadAtt();await loadNov();tryGPS();render();}
+  function render(){$("app").innerHTML='<div class="topbar"><img class="logo" src="/logo-habitaris-blanco.jpg" alt="Habitaris"/><span class="user">'+me.nombre+'</span><button class="salir" onclick="APP.logout()">Salir</button></div><div class="tabs" id="tabs"></div><div class="main" id="content"></div>';renderTabs();renderContent();}
+  function renderTabs(){var items=[{id:"fichar",lbl:"📍 Fichar"},{id:"asistencia",lbl:"📋 Asistencia"},{id:"solicitudes",lbl:"📨 Solicitudes"},{id:"vacaciones",lbl:"🏖️ Vacaciones"},{id:"certificacion",lbl:"📄 Certificación"},{id:"calendario",lbl:"📅 Calendario"},{id:"seguridad",lbl:"⚙️ Seguridad"}];$("tabs").innerHTML=items.map(function(t){return '<div class="tab'+(tab===t.id?' on':'')+'" onclick="APP.setTab(\''+t.id+'\')">'+t.lbl+'</div>';}).join("");}
+  function renderContent(){var fn={fichar:renderFichar,asistencia:renderAsistencia,solicitudes:renderSolicitudes,vacaciones:renderVacaciones,certificacion:renderCertificacion,calendario:renderCalendario,seguridad:renderSeguridad};if(fn[tab])fn[tab]();}
 
-  // ── INIT ──
-  loadEmps().then(function(){render();});
+  function renderFichar(){var tr=att.filter(function(a){return a.fecha===today()&&a.employee_id===me.id;});var lt=tr.length?tr[tr.length-1].tipo:null;var isIn=lt==="entrada";var ent=tr.find(function(a){return a.tipo==="entrada";});var sal=tr.find(function(a){return a.tipo==="salida";});var c=detectCentro();var done=ent&&sal;$("content").innerHTML='<div class="fichar-zone"><div style="font-size:18px;font-weight:700;margin-bottom:4px">'+me.nombre+'</div><div style="font-size:12px;color:#9B9B99;margin-bottom:16px">'+me.cargo+'</div><div style="display:flex;justify-content:center;gap:24px;margin-bottom:16px"><div><div style="font-size:9px;color:#9B9B99;text-transform:uppercase;letter-spacing:1px">Entrada</div><div class="mono" style="font-size:18px;font-weight:800">'+(ent?new Date(ent.timestamp).toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}):"–")+'</div></div><div><div style="font-size:9px;color:#9B9B99;text-transform:uppercase;letter-spacing:1px">Salida</div><div class="mono" style="font-size:18px;font-weight:800">'+(sal?new Date(sal.timestamp).toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}):"–")+'</div></div></div><button class="fichar-btn '+(isIn?"salida":"entrada")+'" onclick="APP.startFichaje()"'+(done?' disabled style="opacity:.5;cursor:default"':'')+'>'+(done?"✅ Jornada completa":(isIn?"🔴 Registrar salida":"🟢 Registrar entrada"))+'</button><div class="centro-tag">'+(c.auto?'📍 Centro: <b>'+c.nombre+'</b> ('+c.dist+'m)':'📍 '+(gps?'GPS activo':'Obteniendo ubicación...'))+'</div></div><div class="card"><div class="card-t">📝 Reportar novedad</div><div style="font-size:12px;color:#9B9B99;margin-bottom:8px">Permiso, ausencia o incidencia</div><button class="btn btn-s" onclick="APP.setTab(\'vacaciones\')">Solicitar →</button></div>';}
 
-  // ── APP EXPOSURE ──
-  window.APP={
-    setTab:function(t){tab=t;renderContent();},
-    setMonth:function(m){curMonth=parseInt(m);renderAsistencia();},
-    setCalYear:function(y){calYear=parseInt(y);renderCalendario();},
-    buscarCC:buscarCC,
-    backToCC:function(){me=null;pin="";pinErr=false;ccInput="";renderLogin();},
-    pinKey:pinKey,
-    forgotPin:forgotPin,
-    sendRecoveryOTP:sendRecoveryOTP,
-    send2FA:send2FA,
-    otpKey:otpKey,
-    npk:npk,
-    retryPin:function(){portalChangePin();},
-    enterPortal:enterPortal,
-    logout:function(){me=null;att=[];novs=[];pin="";tab="fichar";ccInput="";render();},
-    iniciarFichaje:iniciarFichaje,
-    snap:snap,
-    stopCam:stopCam,
-    renderFichar:renderFichar,
-    enviarNov:enviarNov,
-    genCert:genCert,
-    toggle2FA:toggle2FA,
-    changeMyPin:function(){
-      $("app").innerHTML='<div class="login-wrap"><div class="login-card"><div class="login-top"><img src="/logo-habitaris-blanco.jpg" alt="Habitaris" style="height:28px;margin-bottom:6px"/><p>Cambiar PIN</p></div><div class="login-body" id="loginBody"></div></div></div>';
-      portalChangePin("Nuevo PIN","Elige tu nuevo PIN de 4 dígitos");
-    }
-  };
+  function startFichaje(){var tr=att.filter(function(a){return a.fecha===today()&&a.employee_id===me.id;});var lt=tr.length?tr[tr.length-1].tipo:null;var tipo=lt==="entrada"?"salida":"entrada";tryGPS();$("content").innerHTML='<div class="card" style="text-align:center"><div style="font-size:14px;font-weight:700;margin-bottom:12px">📷 Selfie de '+tipo+'</div><video id="cam" autoplay playsinline style="width:100%;max-width:320px;border-radius:8px;background:#000;margin-bottom:12px"></video><div style="display:flex;gap:8px;justify-content:center"><button class="btn btn-p" onclick="APP.snap(\''+tipo+'\')">📸 Capturar</button><button class="btn btn-s" onclick="APP.cancelFichaje()">Cancelar</button></div></div>';navigator.mediaDevices.getUserMedia({video:{facingMode:"user",width:{ideal:640}}}).then(function(s){vs=s;var v=document.getElementById("cam");if(v)v.srcObject=s;}).catch(function(e){$("content").innerHTML='<div class="card" style="text-align:center"><div style="color:#dc2626;margin-bottom:8px">Error cámara</div><button class="btn btn-s" onclick="APP.cancelFichaje()">Volver</button></div>';});}
+  function snap(tipo){var v=document.getElementById("cam");if(!v)return;var c=document.createElement("canvas");c.width=v.videoWidth||640;c.height=v.videoHeight||480;c.getContext("2d").drawImage(v,0,0);foto=c.toDataURL("image/jpeg",0.7);if(vs){vs.getTracks().forEach(function(t){t.stop();});vs=null;}doFichaje(tipo);}
+  async function doFichaje(tipo){$("content").innerHTML='<div class="card" style="text-align:center;padding:30px"><div class="spin"></div><div style="font-size:13px;color:#888;margin-top:8px">Registrando...</div></div>';var c=detectCentro();try{await fetch("/api/attendance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:me.id,employee_nombre:me.nombre,tipo:tipo,fecha:today(),timestamp:new Date().toISOString(),foto_url:foto,centro_costo:c.nombre||null,lat:gps?gps.lat:null,lng:gps?gps.lng:null,precision:gps?gps.prec:null,gps_error:gps?null:(gpsErr||"no disponible"),device_info:devInfo})});await loadAtt();tab="fichar";render();}catch(e){alert("Error: "+e.message);tab="fichar";render();}}
+  function cancelFichaje(){if(vs){vs.getTracks().forEach(function(t){t.stop();});vs=null;}tab="fichar";renderContent();}
+
+  function renderAsistencia(){var MS=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];var ma=att.filter(function(a){return a.employee_id===me.id&&new Date(a.timestamp).getMonth()===curMonth;});var dias={};ma.forEach(function(a){if(!dias[a.fecha])dias[a.fecha]={};dias[a.fecha][a.tipo]=a;});var rows=Object.keys(dias).sort().reverse().map(function(f){var d=dias[f];var e=d.entrada,s=d.salida;return '<tr><td>'+f+'</td><td>'+(e?new Date(e.timestamp).toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}):"–")+'</td><td>'+(s?new Date(s.timestamp).toLocaleTimeString("es-ES",{hour:"2-digit",minute:"2-digit"}):"–")+'</td><td>'+(e&&s?Math.round((new Date(s.timestamp)-new Date(e.timestamp))/3600000*10)/10+"h":"–")+'</td></tr>';}).join("");$("content").innerHTML='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="card-t" style="margin:0">📍 Mi asistencia</div><select onchange="APP.setMonth(this.value)" style="padding:4px 8px;border:1px solid #E5E3DE;border-radius:4px;font-size:11px;font-family:inherit">'+["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"].map(function(m,i){return '<option value="'+i+'"'+(i===curMonth?' selected':'')+'>'+m+'</option>';}).join("")+'</select></div><div class="kpis"><div class="kpi"><div class="l">Días</div><div class="v">'+Object.keys(dias).length+'</div></div><div class="kpi"><div class="l">Entradas</div><div class="v">'+ma.filter(function(a){return a.tipo==="entrada";}).length+'</div></div><div class="kpi"><div class="l">Salidas</div><div class="v">'+ma.filter(function(a){return a.tipo==="salida";}).length+'</div></div><div class="kpi"><div class="l">Dispositivo</div><div class="v" style="font-size:11px">'+devLabel+'</div></div></div>'+(rows?'<table><thead><tr><th>Fecha</th><th>Entrada</th><th>Salida</th><th>Horas</th></tr></thead><tbody>'+rows+'</tbody></table>':'<div class="empty">Sin registros</div>')+'</div>';}
+
+  function renderSolicitudes(){var total=novs.length,pend=novs.filter(function(n){return n.estado==="pendiente";}).length,apr=novs.filter(function(n){return n.estado==="aprobada";}).length;var rows=novs.sort(function(a,b){return new Date(b.created_at||0)-new Date(a.created_at||0);}).map(function(n){var st=n.estado==="aprobada"?'<span class="badge b-g">aprobada</span>':n.estado==="rechazada"?'<span class="badge b-r">rechazada</span>':'<span class="badge b-a">pendiente</span>';return '<tr><td>'+new Date(n.created_at).toLocaleDateString("es-CO",{day:"numeric",month:"short"})+'</td><td>'+n.tipo+'</td><td>'+(n.fecha_inicio||"")+(n.fecha_fin?" → "+n.fecha_fin:"")+'</td><td>'+st+'</td></tr>';}).join("");$("content").innerHTML='<div class="card"><div class="card-t">📨 Mis solicitudes</div><div class="kpis" style="grid-template-columns:repeat(3,1fr)"><div class="kpi"><div class="l">Total</div><div class="v">'+total+'</div></div><div class="kpi"><div class="l">Pendientes</div><div class="v" style="color:#D97706">'+pend+'</div></div><div class="kpi"><div class="l">Aprobadas</div><div class="v" style="color:#1E6B42">'+apr+'</div></div></div>'+(rows?'<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Periodo</th><th>Estado</th></tr></thead><tbody>'+rows+'</tbody></table>':'<div class="empty">No hay solicitudes</div>')+'</div>';}
+
+  function renderVacaciones(){$("content").innerHTML='<div class="card"><div class="card-t">🏖️ Solicitar vacaciones o licencia</div><div class="form-g"><label>Tipo</label><select id="novTipo"><option value="vacaciones">🏖️ Vacaciones</option><option value="licencia_remunerada">📋 Licencia remunerada</option><option value="licencia_no_remunerada">⚠️ Licencia no remunerada</option><option value="permiso">🕐 Permiso</option><option value="incapacidad">🏥 Incapacidad</option></select></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px"><div class="form-g"><label>Fecha inicio</label><input type="date" id="novFi"/></div><div class="form-g"><label>Fecha fin</label><input type="date" id="novFf"/></div></div><div class="form-g"><label>Motivo</label><textarea id="novMot" placeholder="Describe el motivo..."></textarea></div><button class="btn btn-p" onclick="APP.enviarNov()">📨 Enviar solicitud</button><div style="margin-top:10px;padding:8px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;font-size:10px;color:#D97706">Pendiente de aprobación por RRHH.</div></div>';}
+  async function enviarNov(){var t=document.getElementById("novTipo").value,fi=document.getElementById("novFi").value,ff=document.getElementById("novFf").value,m=document.getElementById("novMot").value;if(!fi){alert("Fecha inicio obligatoria");return;}try{await fetch("/api/novelties",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:me.id,employee_nombre:me.nombre,tipo:t,fecha_inicio:fi,fecha_fin:ff||null,motivo:m})});await loadNov();alert("✅ Solicitud enviada");tab="solicitudes";renderTabs();renderContent();}catch(e){alert("Error");}}
+
+  function renderCertificacion(){$("content").innerHTML='<div class="card"><div class="card-t">📄 Certificación laboral</div><div style="font-size:12px;color:#9B9B99;margin-bottom:14px">Genera y descarga tu certificación al instante.</div><div style="display:flex;gap:8px"><button class="btn btn-p" onclick="APP.genCert(true)">📄 Con salario</button><button class="btn btn-s" onclick="APP.genCert(false)">📄 Sin salario</button></div></div>';}
+  function genCert(cs){var h=new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});var st=cs?'<p>Devenga un salario de <b>$'+Math.round(me.salario_base||0).toLocaleString("es-CO")+'</b>'+(me.auxilio_transporte?' + aux. transporte <b>$'+Math.round(me.auxilio_transporte).toLocaleString("es-CO")+'</b>':'')+'.</p><br/>':'';var b='<h1>CERTIFICACIÓN LABORAL</h1><div class="body"><p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que:</p><br/><p><b>'+me.nombre+'</b>, C.C. <b>'+me.documento+'</b>, labora desde el <b>'+(me.fecha_inicio?new Date(me.fecha_inicio+"T12:00:00").toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"}):"—")+'</b>, cargo <b>'+me.cargo+'</b>.</p><br/>'+st+'<p>Expedida en Bogotá D.C., '+h+'.</p></div><div class="sig"><div><br/><b>Representante Legal</b><br/>Habitaris S.A.S</div></div><div class="foot">'+h+'</div>';var fn='Cert_'+(cs?'Sal':'Sin')+'_'+me.documento;var html='<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+fn+'</title><script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;padding:20px 0}#content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.45;box-shadow:0 0 8px rgba(0,0,0,.15)}.hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:14px;overflow:hidden}.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}.hdr img{height:36px}h1{font-size:13pt;text-align:center;margin:16px 0 12px}body{font-family:Helvetica,Arial,sans-serif}.body{font-size:10.5pt;line-height:1.7;text-align:justify}.sig{margin-top:50px;width:50%}.sig div{border-top:1px solid #111;padding-top:6px;font-size:9pt}.foot{font-size:6pt;color:#999;text-align:center;margin-top:20px}.np{text-align:center;margin:16px auto;max-width:794px}.btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}.btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}</style></head><body><div id="content"><div class="hdr"><div class="l"><img src="/logo-habitaris.jpeg" alt="Habitaris"/></div><div class="r"><div style="font-weight:600">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>'+b+'</div><div class="np"><button class="btn" onclick="(function(){var el=document.getElementById(\'content\');el.style.boxShadow=\'none\';document.querySelector(\'.np\').style.display=\'none\';html2canvas(el,{scale:2,useCORS:true,backgroundColor:\'#fff\'}).then(function(c){var img=c.toDataURL(\'image/jpeg\',0.98);var pdf=new jspdf.jsPDF(\'portrait\',\'mm\',\'a4\');var w=210,h=(c.height*w)/c.width;pdf.addImage(img,\'JPEG\',0,0,w,h);pdf.save(\''+fn+'.pdf\');el.style.boxShadow=\'0 0 8px rgba(0,0,0,.15)\';document.querySelector(\'.np\').style.display=\'\'})})()" >📥 PDF</button><button class="btn2" onclick="window.print()">🖨️ Imprimir</button></div></body></html>';var w=window.open();w.document.write(html);w.document.close();}
+
+  function renderCalendario(){var fs=festivosCO(calYear),hoy=new Date(),MS=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"],DS=["D","L","M","M","J","V","S"];var cals="";for(var m=0;m<12;m++){var p=new Date(calYear,m,1).getDay(),dm=new Date(calYear,m+1,0).getDate();var g='<div class="cal-grid">';DS.forEach(function(d){g+='<div class="cal-hdr">'+d+'</div>';});for(var e=0;e<p;e++)g+='<div class="cal-day empty">·</div>';for(var d=1;d<=dm;d++){var ef=fs.some(function(f){return f.fecha.getDate()===d&&f.fecha.getMonth()===m;});var eh=hoy.getDate()===d&&hoy.getMonth()===m&&hoy.getFullYear()===calYear;g+='<div class="cal-day'+(ef?' festivo':'')+(eh?' today':'')+'">'+d+'</div>';}g+='</div>';cals+='<div style="background:#fff;border:1px solid #E5E3DE;border-radius:6px;padding:8px;'+(m===hoy.getMonth()&&calYear===hoy.getFullYear()?'border:2px solid #1A1A19':'')+'"><div style="font-size:11px;font-weight:700;text-align:center;margin-bottom:4px">'+MS[m]+'</div>'+g+'</div>';}var list=fs.map(function(f){var p=f.fecha<hoy;return '<tr style="'+(p?'opacity:.5':'')+'"><td style="font-weight:600">'+f.fecha.toLocaleDateString("es-CO",{day:"numeric",month:"short"})+'</td><td>'+f.nombre+'</td><td>'+(p?'<span class="badge b-m">Pasado</span>':'<span class="badge b-g">Próximo</span>')+'</td></tr>';}).join("");var rest=fs.filter(function(f){return f.fecha>=hoy;}).length;$("content").innerHTML='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div class="card-t" style="margin:0">📅 Calendario laboral '+calYear+'</div><div style="display:flex;gap:4px"><button class="btn btn-s" style="padding:4px 10px;font-size:14px" onclick="APP.setCalYear('+(calYear-1)+')">‹</button><button class="btn btn-s" style="padding:4px 10px;font-size:14px" onclick="APP.setCalYear('+(calYear+1)+')">›</button></div></div><div class="kpis" style="grid-template-columns:repeat(3,1fr)"><div class="kpi"><div class="l">Festivos</div><div class="v">'+fs.length+'</div></div><div class="kpi"><div class="l">Restantes</div><div class="v" style="color:#1E6B42">'+rest+'</div></div><div class="kpi"><div class="l">Días laborales</div><div class="v">'+(365-fs.length-104)+'</div></div></div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px">'+cals+'</div><div class="card-t">Listado de festivos</div><table><thead><tr><th>Fecha</th><th>Festivo</th><th>Estado</th></tr></thead><tbody>'+list+'</tbody></table></div>';}
+
+  function renderSeguridad(){$("content").innerHTML='<div class="card"><div class="card-t">⚙️ Seguridad</div><div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:'+(has2FA?'#E8F4EE':'#FAFAF8')+';border:1px solid '+(has2FA?'#1E6B42':'#E5E3DE')+';border-radius:8px"><div><div style="font-size:13px;font-weight:700">Verificación en 2 pasos</div><div style="font-size:11px;color:#9B9B99;margin-top:2px">Código por email al iniciar sesión</div></div><button class="btn '+(has2FA?'btn-s':'btn-g')+'" onclick="APP.toggle2FA()">'+(has2FA?'Desactivar':'Activar')+'</button></div></div><div style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center;padding:14px;background:#FAFAF8;border:1px solid #E5E3DE;border-radius:8px"><div><div style="font-size:13px;font-weight:700">Cambiar PIN</div><div style="font-size:11px;color:#9B9B99;margin-top:2px">Cambia tu PIN de acceso</div></div><button class="btn btn-s" onclick="APP.changeMyPin()">Cambiar</button></div></div><div style="padding:10px;background:#F5F4F1;border-radius:6px;font-size:11px;color:#9B9B99"><strong>Email:</strong> '+(me.email_masked||"No registrado")+'<br/>Para cambios, contacta a RRHH.</div></div>';}
+  async function toggle2FA(){var ns=!has2FA;try{await fetch("/api/employees-public",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"set_2fa",emp_id:me.id,enabled:ns})});has2FA=ns;renderContent();alert(ns?"✅ 2FA activada":"2FA desactivada");}catch(e){alert("Error");}}
+
+  window.APP={buscarCC:buscarCC,backToCC:function(){me=null;pin="";pinErr=false;ccInput="";renderCCScreen();},pinKey:handlePinKey,npk:handleNPK,otpKey:handleOTPKey,forgotPin:forgotPin,sendRecoveryOTP:sendRecoveryOTP,retryPin:function(){changePinFlow();},enterApp:enterApp,setTab:function(t){tab=t;renderTabs();renderContent();},setMonth:function(m){curMonth=parseInt(m);renderContent();},setCalYear:function(y){calYear=y;renderContent();},enviarNov:enviarNov,genCert:genCert,startFichaje:startFichaje,snap:snap,cancelFichaje:cancelFichaje,toggle2FA:toggle2FA,changeMyPin:function(){$("app").innerHTML='<div class="login-wrap"><div class="login-card"><div class="login-top"><img src="/logo-habitaris-blanco.jpg" alt="Habitaris" style="height:28px;margin-bottom:6px"/><p>Cambiar PIN</p></div><div class="login-body" id="loginBody"></div></div></div>';changePinFlow("Nuevo PIN","Elige 4 dígitos");},logout:function(){me=null;att=[];novs=[];pin="";tab="fichar";ccInput="";$("app").innerHTML="";loadEmps();}};
+  loadEmps();
 })();
 </script>
 </body>
