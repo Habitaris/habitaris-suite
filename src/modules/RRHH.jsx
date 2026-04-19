@@ -4703,23 +4703,6 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                         ))}
                       </div>
                     </div>
-                      </div>
-
-                      <div style={{marginTop:16}}>
-                        <div style={{fontSize:14,fontWeight:700,marginBottom:10}}>Seguridad</div>
-                        <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}}>
-                          {[
-                            ["🔐 Fichaje","Cédula + PIN · Cambio obligatorio primer acceso · Foto + GPS verifican identidad"],
-                            ["🔐 Portal","Cédula + PIN · 2FA opcional (código email) · Recuperación por email registrado"],
-                          ].map(([t,d])=>(
-                            <div key={t} style={{background:T.surface,border:"1px solid "+T.border,borderRadius:6,padding:"10px 12px"}}>
-                              <div style={{fontSize:12,fontWeight:600}}>{t}</div>
-                              <div style={{fontSize:10,color:T.inkLight,marginTop:2,lineHeight:1.5}}>{d}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
                   )}
 
                   {tab==="dashboard" && (
