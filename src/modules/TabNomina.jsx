@@ -263,8 +263,28 @@ function calcLiqFinal(selN, tipo, fechaSalida) {
   const intCes=Math.round((ces*diasTot*0.12)/360);
   let indem=0;
   if(tipo==="sin_justa"){
-    if(isFijo){const ffc=new Date(fi.getFullYear(),fi.getMonth()+durMeses,fi.getDate()-1);const dr=Math.max(0,Math.floor((ffc-ff)/86400000));indem=Math.round((sal/30)*Math.max(15,dr));}
-    else{const sd=sal/30;if(sal<=10*SMLMV){indem=anios<1?Math.round(30*sd*anios):Math.round(30*sd+(Math.floor(anios)-1+(anios%1))*20*sd);}else{indem=anios<1?Math.round(20*sd*anios):Math.round(20*sd+(Math.floor(anios)-1+(anios%1))*15*sd);}}
+    if(isFijo){
+      // Art. 64 CST — Término fijo: salario por el tiempo restante del contrato, mínimo 15 días
+      const ffc=durMeses>0
+        ? new Date(fi.getFullYear(),fi.getMonth()+durMeses,fi.getDate()-1)
+        : new Date(fi.getFullYear(),fi.getMonth()+12,fi.getDate()-1); // fallback 1 año si no hay duración
+      const dr=Math.max(0,Math.floor((ffc-ff)/86400000));
+      indem=Math.round((sal/30)*Math.max(15,dr));
+    } else {
+      // Art. 64 CST — Término indefinido
+      const sd=sal/30;
+      const aniosComp=Math.floor(anios);
+      const fraccion=anios-aniosComp;
+      if(sal<=10*SMLMV){
+        // ≤10 SMLMV: 30d primer año + 20d por cada año adicional (proporcional)
+        if(anios<=1) indem=Math.round(30*sd*Math.max(anios,1));
+        else indem=Math.round(30*sd + (aniosComp-1+fraccion)*20*sd);
+      } else {
+        // >10 SMLMV: 20d primer año + 15d por cada año adicional (proporcional)
+        if(anios<=1) indem=Math.round(20*sd*Math.max(anios,1));
+        else indem=Math.round(20*sd + (aniosComp-1+fraccion)*15*sd);
+      }
+    }
   }
   const sub=salPend+vac+prima+ces+intCes;
   return {sal,aux,fi,ff,diasTot,diaUltMes,diasSem,anios,isFijo,durMeses,salPend,vac,prima,ces,intCes,indem,sub,total:sub+indem,
