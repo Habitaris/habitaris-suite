@@ -37,11 +37,10 @@ const fmt = n => n == null || isNaN(n) ? "$0" : "$" + Math.round(n).toLocaleStri
 const fPct = n => (n * 100).toFixed(2) + "%";
 
 async function fetchEmps(){try{
+  const estados=["firmado","afiliaciones","completado"];
+  const datas=await Promise.all(estados.map(est=>fetch("/api/hiring?estado="+est).then(r=>r.json()).catch(()=>({ok:false}))));
   const results=[];
-  for(const est of["firmado","afiliaciones","completado"]){
-    const r=await fetch("/api/hiring?estado="+est);const d=await r.json();
-    if(d.ok&&Array.isArray(d.data))results.push(...d.data);
-  }
+  datas.forEach(d=>{if(d.ok&&Array.isArray(d.data))results.push(...d.data);});
   return results;
 }catch{return[];}}
 async function loadN(a,m){try{const r=await fetch("/api/hiring?kv=nomina&anio="+a+"&mes="+m);const d=await r.json();return d.ok?d.data:[];}catch{return[];}}
@@ -1185,7 +1184,29 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
           </div>
         ))}
       </div>
-      {loading?<div style={{textAlign:"center",padding:40,color:T.inkLight}}>Cargando empleados desde Supabase…</div>:
+      {loading?<Card style={{padding:0,overflow:"hidden"}}>
+        <div style={{padding:"10px 16px",borderBottom:`1px solid ${T.border}`,display:"flex",alignItems:"center",gap:12}}>
+          <div className="sk-bar" style={{width:140,height:14}}/>
+          <div style={{flex:1}}/>
+          <div className="sk-bar" style={{width:160,height:10}}/>
+        </div>
+        <table style={{width:"100%",borderCollapse:"collapse"}}>
+          <thead><tr style={{background:T.accent}}>
+            {["Empleado","Cargo","Salario","Bono","Días","Neto","Q1","Q2","Costo","Estado",""].map((l,i)=>(
+              <th key={i} style={{padding:"7px 12px",fontSize:9,fontWeight:700,color:T.inkLight,textAlign:"left",letterSpacing:.6,textTransform:"uppercase"}}>{l}</th>
+            ))}
+          </tr></thead>
+          <tbody>{[0,1,2].map(i=>(
+            <tr key={i} style={{borderTop:`1px solid ${T.border}`}}>
+              {[120,90,70,50,30,70,60,60,70,60,40].map((w,j)=>(
+                <td key={j} style={{padding:"10px 12px"}}>
+                  <div className="sk-bar" style={{width:w,height:11,animationDelay:(i*0.15+j*0.05)+"s"}}/>
+                </td>
+              ))}
+            </tr>
+          ))}</tbody>
+        </table>
+      </Card>:
       noms.length===0?<Card style={{textAlign:"center",padding:40}}><div style={{fontSize:28,marginBottom:8}}>📋</div><div style={{fontSize:13,fontWeight:600,color:T.ink}}>Sin empleados vinculados</div><div style={{fontSize:11,color:T.inkLight,marginTop:4}}>Los empleados con contrato firmado aparecerán automáticamente.</div></Card>:
       <Card style={{padding:0,overflow:"hidden"}}>
         <div style={{padding:"10px 16px",borderBottom:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>

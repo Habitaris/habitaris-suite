@@ -5,3 +5,23 @@ input[spellcheck="true"]:focus,
 textarea[spellcheck="true"]:focus {
   outline-color: #1E6B42;
 }
+
+/* Skeleton loader — shimmer effect for loading states */
+.sk-bar {
+  display: inline-block;
+  border-radius: 4px;
+  background: linear-gradient(
+    90deg,
+    #F5F4F1 0%,
+    #EDEBE6 50%,
+    #F5F4F1 100%
+  );
+  background-size: 200% 100%;
+  animation: sk-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes sk-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
