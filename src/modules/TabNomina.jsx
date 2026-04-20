@@ -756,7 +756,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
         {/* Payment form */}
         {pagoForm&&(
           <div style={{background:T.surface,border:`2px solid ${T.ink}`,borderRadius:8,padding:16,marginBottom:14}}>
-            <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{pagoForm.tipo==="q1"?"💵 Confirmar pago anticipo Q1":"✅ Confirmar liquidación de nómina"}</div>
+            <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{pagoForm.tipo==="q1"?"💵 Confirmar pago anticipo Q1":"💵 Confirmar pago de nómina"}</div>
             <div style={{fontSize:11,color:T.inkLight,marginBottom:12}}>
               {pagoForm.tipo==="q1"?`Anticipo: ${fmt(calc.q1)} · ${selN.nombre}`:`Neto: ${fmt(isQ?calc.q2:calc.neto)} · ${selN.nombre}`}
             </div>
