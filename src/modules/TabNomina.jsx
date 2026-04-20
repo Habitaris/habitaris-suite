@@ -919,8 +919,6 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
             {[
               {id:"q1q2",icon:"💵",label:"Tirillas Q1 / Q2",desc:"Desglose quincenal con referencias bancarias"},
               {id:"colilla",icon:"🧾",label:"Comprobante de nómina (Colilla)",desc:"Devengados, deducciones, neto a pagar"},
-              {id:"costo",icon:"🏢",label:"Reporte costo empleador",desc:"Aportes, provisiones, costo total y factor prestacional"},
-              {id:"auditoria",icon:"🔍",label:"Auditoría de fórmulas",desc:"Base de cálculo, parámetros y normativa aplicada"},
             ].map(d=>(
               <div key={d.id} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
                 onClick={()=>setDescView(d.id)}
@@ -1099,9 +1097,8 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
           </div>
         )}
 
-        {subTab==="descargables"&&descView==="costo"&&(
-          <div>
-          <button onClick={()=>setDescView(null)} style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:`1px solid ${T.border}`,borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",marginBottom:12,color:T.inkMid}}>← Volver a documentos</button>
+        {subTab==="nomina"&&(
+          <div style={{borderTop:`2px solid ${T.border}`,marginTop:20,paddingTop:16}}>
           <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:T.ink}}>🏢 Costo Empleador</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
             <Card accent={T.blue}><STit color={T.blue}>🏢 Aportes empleador</STit>
@@ -1251,9 +1248,8 @@ ${items.map(r=>"<tr><td>"+r.c+"</td><td class='r'>"+(r.d>0?fmt(r.d):"—")+"</td
           <AsistenciaPanel selN={selN} MESES={MESES} mes={mes} anio={anio}/>
         )}
 
-        {subTab==="descargables"&&descView==="auditoria"&&(
-          <div>
-          <button onClick={()=>setDescView(null)} style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:`1px solid ${T.border}`,borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",marginBottom:12,color:T.inkMid}}>← Volver a documentos</button>
+        {subTab==="nomina"&&(
+          <div style={{borderTop:`2px solid ${T.border}`,marginTop:20,paddingTop:16}}>
           <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:T.ink}}>🔍 Auditoría de Fórmulas</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
             <Card accent={T.ink}>
