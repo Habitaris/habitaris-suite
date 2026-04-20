@@ -775,14 +775,19 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                 const liq=pagoForm.tipo==="q1"?calc.q1:(isQ?calc.q2:calc.neto);
                 const tipo=pagoForm.tipo==="q1"?"anticipo":"nomina";
                 const nuevoEstado=pagoForm.tipo==="q1"?"q1_pagado":"pagada";
-                pubNomina(tipo,liq,pagoForm.ref,pagoForm.soporte?pagoForm.soporte.name:null).then(r=>r.json()).then(d=>{
+                pubNomina(tipo,liq,pagoForm.ref,pagoForm.soporte?pagoForm.soporte.name:null).then(r=>r.json()).then(async d=>{
                   if(d.ok){
-                    u({estado:nuevoEstado,refPago:pagoForm.ref,soportePago:pagoForm.soporte?pagoForm.soporte.name:null});
+                    // Build updated array locally so saveN has the fresh value (avoids React setState closure bug)
+                    const updatedNoms=noms.map(n=>n.id===selN.id?{...n,estado:nuevoEstado,refPago:pagoForm.ref,soportePago:pagoForm.soporte?pagoForm.soporte.name:null}:n);
+                    setNoms(updatedNoms);
                     // Save soporte in kv if exists
                     if(pagoForm.soporte){
                       fetch("/api/hiring?kv=soporte_pago&anio="+anio+"&mes="+mes,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:{empId:selN.empId,tipo,ref:pagoForm.ref,archivo:pagoForm.soporte.name,data:pagoForm.soporte.data}})});
                     }
-                    guardar();
+                    // Persist the updated array directly - don't rely on guardar() which uses stale closure
+                    setGuard(true);
+                    await saveN(anio,mes,updatedNoms);
+                    setGuard(false);
                     setPagoForm(null);
                     alert("✅ "+(pagoForm.tipo==="q1"?"Anticipo Q1 pagado":"Nómina pagada")+" · Ref: "+pagoForm.ref);
                   }
