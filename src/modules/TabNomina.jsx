@@ -89,7 +89,7 @@ const Sel=({label,value,onChange,opts})=><div style={{marginBottom:8}}>{label&&<
 const Row=({lbl,val,color,bold,sub,indent,bg})=><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:`${sub?2:4}px ${indent?10:0}px`,background:bg||"transparent",borderRadius:bg?3:0,marginBottom:bg?3:0}}><span style={{fontSize:sub?10:11,color:sub?T.inkLight:(color||T.inkMid),fontWeight:bold?700:400}}>{indent&&<span style={{color:T.inkXLight,marginRight:4}}>└</span>}{lbl}</span><span style={{fontSize:sub?10:12,fontWeight:bold?800:500,color:color||T.ink,fontFamily:"'DM Mono',monospace"}}>{fmt(val)}</span></div>;
 const Div=()=><div style={{height:1,background:T.border,margin:"6px 0"}}/>;
 const STit=({children,color})=><div style={{fontSize:12,fontWeight:700,color:color||T.ink,marginBottom:8}}>{children}</div>;
-const Pill=({e})=>{const m={borrador:{bg:"#F5F4F1",c:"#888"},q1_pagado:{bg:T.blueBg,c:T.blue},liquidada:{bg:T.greenBg,c:T.green},aprobada:{bg:T.greenBg,c:T.green},pagada:{bg:"#E8E8E8",c:"#111"}};const s=m[e]||m.borrador;return<span style={{padding:"2px 8px",borderRadius:10,fontSize:9,fontWeight:700,background:s.bg,color:s.c}}>{e==="q1_pagado"?"Q1 pagado":e}</span>;};
+const Pill=({e})=>{const m={borrador:{bg:"#F5F4F1",c:"#888"},q1_pagado:{bg:T.blueBg,c:T.blue},liquidada:{bg:T.greenBg,c:T.green},pagada:{bg:T.greenBg,c:T.green},aprobada:{bg:T.greenBg,c:T.green}};const s=m[e]||m.borrador;const label=e==="q1_pagado"?"Q1 pagado · Falta Q2":e==="liquidada"?"pagada":e;return<span style={{padding:"2px 8px",borderRadius:10,fontSize:9,fontWeight:700,background:s.bg,color:s.c}}>{label}</span>;};
 const Btn=({children,pri,small,onClick,disabled,style:sx})=><button onClick={onClick} disabled={disabled} style={{padding:small?"4px 10px":"7px 14px",borderRadius:5,border:pri?"none":`1px solid ${T.border}`,background:pri?T.ink:T.surface,color:pri?"#fff":T.ink,fontSize:small?10:11,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:disabled?"default":"pointer",opacity:disabled?0.5:1,display:"inline-flex",alignItems:"center",gap:5,...sx}}>{children}</button>;
 
 /* ── ASISTENCIA POR EMPLEADO (sub-tab) ── */
@@ -649,11 +649,11 @@ export function TabNomina(){
           <Btn onClick={()=>{setVista("lista");setSubTab("nomina");}}>← Volver</Btn>
           <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selN.nombre}</div><div style={{fontSize:11,color:T.inkLight}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio} · <span style={{fontWeight:600,color:selN.modalidadPago==="mensual"?T.ink:T.blue}}>{selN.modalidadPago==="mensual"?"Pago mensual":"Pago quincenal"}</span></div></div>
           <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
-          {isQ&&selN.estado==="borrador"&&<Btn small onClick={()=>setPagoForm({tipo:"q1",ref:"",soporte:null})}>💵 Q1 pagado</Btn>}
-          {isQ&&selN.estado==="q1_pagado"&&<Btn pri small onClick={()=>setPagoForm({tipo:"nomina",ref:"",soporte:null})}>✅ Nómina liquidada</Btn>}
-          {!isQ&&selN.estado==="borrador"&&<Btn pri small onClick={()=>setPagoForm({tipo:"nomina",ref:"",soporte:null})}>✅ Nómina liquidada</Btn>}
-          {selN.estado==="liquidada"&&<Pill e="liquidada"/>}
-          {(selN.estado==="q1_pagado"||selN.estado==="liquidada")&&selN.refPago&&<span style={{fontSize:9,color:T.inkLight,padding:"4px 8px",background:T.accent,borderRadius:4}}>Ref: {selN.refPago}</span>}
+          {isQ&&selN.estado==="borrador"&&<Btn small onClick={()=>setPagoForm({tipo:"q1",ref:"",soporte:null})}>💵 Pagar Q1 (anticipo)</Btn>}
+          {isQ&&selN.estado==="q1_pagado"&&<Btn pri small onClick={()=>setPagoForm({tipo:"nomina",ref:"",soporte:null})}>💵 Pagar Q2 (liquidar)</Btn>}
+          {!isQ&&selN.estado==="borrador"&&<Btn pri small onClick={()=>setPagoForm({tipo:"nomina",ref:"",soporte:null})}>💵 Pagar nómina</Btn>}
+          {(selN.estado==="liquidada"||selN.estado==="pagada")&&<Pill e="pagada"/>}
+          {(selN.estado==="q1_pagado"||selN.estado==="liquidada"||selN.estado==="pagada")&&selN.refPago&&<span style={{fontSize:9,color:T.inkLight,padding:"4px 8px",background:T.accent,borderRadius:4}}>Ref: {selN.refPago}</span>}
           <Btn small onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n👤 Portal del empleado:\nhttps://suite.habitaris.co/empleado\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");}}>💬 Link empleados</Btn>
           <Btn small onClick={()=>{
             const nDias=selN.novDias||{};
@@ -776,7 +776,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                 if(!pagoForm.ref.trim()){alert("Ingresa la referencia bancaria");return;}
                 const liq=pagoForm.tipo==="q1"?calc.q1:(isQ?calc.q2:calc.neto);
                 const tipo=pagoForm.tipo==="q1"?"anticipo":"nomina";
-                const nuevoEstado=pagoForm.tipo==="q1"?"q1_pagado":"liquidada";
+                const nuevoEstado=pagoForm.tipo==="q1"?"q1_pagado":"pagada";
                 pubNomina(tipo,liq,pagoForm.ref,pagoForm.soporte?pagoForm.soporte.name:null).then(r=>r.json()).then(d=>{
                   if(d.ok){
                     u({estado:nuevoEstado,refPago:pagoForm.ref,soportePago:pagoForm.soporte?pagoForm.soporte.name:null});
@@ -786,7 +786,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                     }
                     guardar();
                     setPagoForm(null);
-                    alert("✅ "+(pagoForm.tipo==="q1"?"Anticipo Q1 pagado":"Nómina liquidada")+" · Ref: "+pagoForm.ref);
+                    alert("✅ "+(pagoForm.tipo==="q1"?"Anticipo Q1 pagado":"Nómina pagada")+" · Ref: "+pagoForm.ref);
                   }
                 });
               }} style={{padding:"8px 20px",background:T.ink,color:"#fff",border:"none",borderRadius:4,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Confirmar pago</button>
@@ -1179,7 +1179,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
         </div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
-        {[["Empleados",noms.length,T.ink],["Liquidadas",noms.filter(n=>n.estado==="liquidada").length,T.green],["Neto total",fmt(totN),T.ink],["Total Q1",fmt(totQ1),T.blue],["Total Q2",fmt(totQ2),T.green]].map(([l,v,c])=>(
+        {[["Empleados",noms.length,T.ink],["Pagadas",noms.filter(n=>n.estado==="liquidada"||n.estado==="pagada").length,T.green],["Neto total",fmt(totN),T.ink],["Total Q1",fmt(totQ1),T.blue],["Total Q2",fmt(totQ2),T.green]].map(([l,v,c])=>(
           <div key={l} style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:6,padding:"12px 14px",boxShadow:T.shadow}}>
             <div style={{fontSize:8,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:.6,marginBottom:2}}>{l}</div>
             <div style={{fontSize:18,fontWeight:800,color:c,fontFamily:"'DM Mono',monospace"}}>{v}</div>
