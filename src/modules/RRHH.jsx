@@ -19,7 +19,7 @@ import {
   Download, Upload, Calendar, Briefcase, DollarSign,
   TrendingUp, Eye, Send, ArrowLeft, LogOut, Home,
   Paperclip, FileText, Bell, Plane, Shield, ChevronRight, Info,
-  Stethoscope, Star, Camera} from "lucide-react";
+  Stethoscope, Star, Camera, MapPin} from "lucide-react";
 
 /* ─────────────────────────────────────────────
    STYLES
@@ -1333,6 +1333,146 @@ function TabCosteHora({ cargos, jornada, activos, licencias, gastos, equipos }) 
           </Card>
         );
       })()}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   TABS: CENTROS DE TRABAJO / COSTE
+───────────────────────────────────────────── */
+
+function TabCentros() {
+  const [centros, setCentros] = useState([]);
+  const [emps, setEmps] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editId, setEditId] = useState(null);
+  const [form, setForm] = useState({nombre:"",direccion:"",lat:"",lng:"",codigo:""});
+
+  const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+  useEffect(()=>{
+    Promise.all([
+      fetch("/api/hiring?kv=centros&anio=0&mes=0").then(r=>r.json()).then(d=>d.ok&&d.data?d.data:[]),
+      Promise.resolve().then(async()=>{
+        const results=[];
+        for(const est of["firmado","afiliaciones","completado"]){
+          const r=await fetch("/api/hiring?estado="+est);const d=await r.json();
+          if(d.ok&&Array.isArray(d.data))results.push(...d.data);
+        }
+        return results;
+      })
+    ]).then(([c,e])=>{
+      setCentros(Array.isArray(c)?c:[]);
+      setEmps(e);
+      setLoading(false);
+    });
+  },[]);
+
+  const save=(list)=>{
+    setCentros(list);
+    fetch("/api/hiring?kv=centros&anio=0&mes=0",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:list})});
+  };
+
+  const addCentro=()=>{
+    if(!form.nombre.trim())return;
+    const nuevo={id:uid(),nombre:form.nombre,direccion:form.direccion,lat:parseFloat(form.lat)||0,lng:parseFloat(form.lng)||0,codigo:form.codigo||"",activo:true,empleados:[],created_at:new Date().toISOString()};
+    save([...centros,nuevo]);
+    setForm({nombre:"",direccion:"",lat:"",lng:"",codigo:""});
+  };
+
+  const updateCentro=(id,fields)=>{
+    save(centros.map(c=>c.id===id?{...c,...fields}:c));
+  };
+
+  const toggleEmpleado=(centroId,empId)=>{
+    save(centros.map(c=>{
+      if(c.id!==centroId)return c;
+      const list=c.empleados||[];
+      return{...c,empleados:list.includes(empId)?list.filter(x=>x!==empId):[...list,empId]};
+    }));
+  };
+
+  if(loading)return <div style={{textAlign:"center",padding:40,color:C.inkLight}}>Cargando centros...</div>;
+
+  return(
+    <div className="fade-up" style={{padding:"20px 0"}}>
+      {/* KPIs */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:16}}>
+        {[
+          ["Centros activos",centros.filter(c=>c.activo).length,C.ink],
+          ["Centros inactivos",centros.filter(c=>!c.activo).length,C.inkLight],
+          ["Empleados asignados",[...new Set(centros.flatMap(c=>c.empleados||[]))].length,C.green],
+          ["Sin asignar",emps.filter(e=>!centros.some(c=>(c.empleados||[]).includes(e.id))).length,"#D97706"],
+        ].map(([l,v,c])=>(
+          <div key={l} style={{background:"#fff",border:"1px solid #E0E0E0",borderRadius:8,padding:"14px 16px"}}>
+            <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:4}}>{l}</div>
+            <div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:c}}>{v}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* New centro form */}
+      <div style={{background:"#fff",border:"1px solid #E0E0E0",borderRadius:8,padding:16,marginBottom:16}}>
+        <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>Nuevo centro de trabajo</div>
+        <div style={{display:"grid",gridTemplateColumns:"2fr 2fr 1fr",gap:8,marginBottom:8}}>
+          <input placeholder="Nombre del centro *" value={form.nombre} onChange={e=>setForm({...form,nombre:e.target.value})} style={{padding:"8px 12px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/>
+          <input placeholder="Dirección" value={form.direccion} onChange={e=>setForm({...form,direccion:e.target.value})} style={{padding:"8px 12px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/>
+          <input placeholder="Código coste" value={form.codigo} onChange={e=>setForm({...form,codigo:e.target.value})} style={{padding:"8px 12px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+          <input placeholder="Latitud GPS" value={form.lat} onChange={e=>setForm({...form,lat:e.target.value})} style={{padding:"8px 12px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:12,fontFamily:"'DM Mono',monospace"}}/>
+          <input placeholder="Longitud GPS" value={form.lng} onChange={e=>setForm({...form,lng:e.target.value})} style={{padding:"8px 12px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:12,fontFamily:"'DM Mono',monospace"}}/>
+          <button onClick={addCentro} style={{padding:"8px 16px",background:"#111",color:"#fff",border:"none",borderRadius:4,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>+ Crear centro</button>
+        </div>
+      </div>
+
+      {/* Centros list */}
+      {centros.length===0?
+        <div style={{textAlign:"center",padding:40,background:"#fff",border:"1px solid #E0E0E0",borderRadius:8}}>
+          <div style={{fontSize:28,marginBottom:8}}>📍</div>
+          <div style={{fontSize:13,fontWeight:600}}>Sin centros de trabajo</div>
+          <div style={{fontSize:11,color:"#999",marginTop:4}}>Crea el primer centro arriba para empezar a asignar empleados</div>
+        </div>
+      :centros.map(centro=>(
+        <div key={centro.id} style={{background:"#fff",border:"1px solid "+(centro.activo?"#E0E0E0":"#fcc"),borderRadius:8,padding:16,marginBottom:10,opacity:centro.activo?1:.6}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
+            <div>
+              <div style={{fontSize:14,fontWeight:700}}>{centro.nombre}</div>
+              <div style={{fontSize:11,color:"#999",marginTop:2}}>{centro.direccion||"Sin dirección"}{centro.codigo?" · Código: "+centro.codigo:""}</div>
+              {centro.lat?<div style={{fontSize:10,color:"#bbb",fontFamily:"'DM Mono',monospace",marginTop:2}}>GPS: {centro.lat}, {centro.lng}</div>:null}
+            </div>
+            <div style={{display:"flex",gap:6}}>
+              <button onClick={()=>updateCentro(centro.id,{activo:!centro.activo})} style={{padding:"4px 10px",fontSize:10,border:"1px solid #E0E0E0",borderRadius:4,background:centro.activo?"#fff":"#E8F4EE",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{centro.activo?"Desactivar":"Activar"}</button>
+              <button onClick={()=>setEditId(editId===centro.id?null:centro.id)} style={{padding:"4px 10px",fontSize:10,border:"1px solid #E0E0E0",borderRadius:4,background:editId===centro.id?"#111":"#fff",color:editId===centro.id?"#fff":"#111",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{editId===centro.id?"Cerrar":"Asignar empleados"}</button>
+            </div>
+          </div>
+
+          {/* Assigned employees chips */}
+          <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:editId===centro.id?10:0}}>
+            {(centro.empleados||[]).map(eid=>{
+              const emp=emps.find(e=>e.id===eid);
+              if(!emp)return null;
+              return <span key={eid} style={{padding:"3px 8px",fontSize:10,background:"#E8F4EE",color:"#1E6B42",borderRadius:10,fontWeight:600}}>{emp.candidato_nombre?.split(" ").slice(-2).join(" ")||"?"}</span>;
+            })}
+            {(centro.empleados||[]).length===0&&<span style={{fontSize:10,color:"#bbb",fontStyle:"italic"}}>Sin empleados asignados</span>}
+          </div>
+
+          {/* Assign panel */}
+          {editId===centro.id&&(
+            <div style={{background:"#FAFAF8",border:"1px solid #E5E3DE",borderRadius:6,padding:12,marginTop:8}}>
+              <div style={{fontSize:11,fontWeight:700,marginBottom:8}}>Selecciona empleados para este centro:</div>
+              {emps.map(emp=>{
+                const assigned=(centro.empleados||[]).includes(emp.id);
+                return <label key={emp.id} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:"1px solid #f0f0f0",cursor:"pointer",fontSize:12}}>
+                  <input type="checkbox" checked={assigned} onChange={()=>toggleEmpleado(centro.id,emp.id)} style={{accentColor:"#1E6B42"}}/>
+                  <span style={{fontWeight:assigned?600:400}}>{emp.candidato_nombre}</span>
+                  <span style={{fontSize:10,color:"#999"}}>{emp.cargo}</span>
+                </label>;
+              })}
+            </div>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
@@ -4559,6 +4699,7 @@ const TABS = [
   { id:"_sep3", lbl:"EMPLEADOS", sep:true },
   { id:"portal",    lbl:"Portal y Asistencia",  I:Eye,          desc:"Fichaje, portal empleado, links y configuración" },
   { id:"_sep4", lbl:"OPERACIONES", sep:true },
+  { id:"centros",   lbl:"Centros de Trabajo",  I:MapPin,       desc:"Centros de coste, ubicaciones y asignaciones" },
   { id:"cargos",    lbl:"Cargos y Salarios",   I:Users,        desc:"Plantilla y cargas sociales" },
   { id:"jornada",   lbl:"Jornada Laboral",      I:Clock,        desc:"Horas, festivos y productividad" },
   { id:"equipos",   lbl:"Equipos de Trabajo",   I:Users,        desc:"Configura equipos para APUs" },
@@ -4735,6 +4876,7 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                       </div>
                     </div>
                   )}
+                  {tab==="centros"   && <TabCentros/>}
                   {tab==="cargos"    && <TabCargos    cargos={cargos}    saveCargos={saveCargos}    jornada={jornada}/>}
                   {tab==="jornada"   && <TabJornada   jornada={jornada}  saveJornada={saveJornada}/>}
                   {tab==="activos"   && <TabActivos   activos={activos}  saveActivos={saveActivos}  licencias={licencias} saveLicencias={saveLicencias} gastos={gastos} saveGastos={saveGastos}/>}

@@ -88,7 +88,7 @@ const Sel=({label,value,onChange,opts})=><div style={{marginBottom:8}}>{label&&<
 const Row=({lbl,val,color,bold,sub,indent,bg})=><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:`${sub?2:4}px ${indent?10:0}px`,background:bg||"transparent",borderRadius:bg?3:0,marginBottom:bg?3:0}}><span style={{fontSize:sub?10:11,color:sub?T.inkLight:(color||T.inkMid),fontWeight:bold?700:400}}>{indent&&<span style={{color:T.inkXLight,marginRight:4}}>└</span>}{lbl}</span><span style={{fontSize:sub?10:12,fontWeight:bold?800:500,color:color||T.ink,fontFamily:"'DM Mono',monospace"}}>{fmt(val)}</span></div>;
 const Div=()=><div style={{height:1,background:T.border,margin:"6px 0"}}/>;
 const STit=({children,color})=><div style={{fontSize:12,fontWeight:700,color:color||T.ink,marginBottom:8}}>{children}</div>;
-const Pill=({e})=>{const m={borrador:{bg:"#F5F4F1",c:"#888"},aprobada:{bg:T.greenBg,c:T.green},pagada:{bg:"#E8E8E8",c:"#111"},"anticipo fijo":{bg:T.blueBg,c:T.blue},"ajuste real":{bg:T.greenBg,c:T.green}};const s=m[e]||m.borrador;return<span style={{padding:"2px 8px",borderRadius:10,fontSize:9,fontWeight:700,background:s.bg,color:s.c}}>{e}</span>;};
+const Pill=({e})=>{const m={borrador:{bg:"#F5F4F1",c:"#888"},q1_pagado:{bg:T.blueBg,c:T.blue},liquidada:{bg:T.greenBg,c:T.green},aprobada:{bg:T.greenBg,c:T.green},pagada:{bg:"#E8E8E8",c:"#111"}};const s=m[e]||m.borrador;return<span style={{padding:"2px 8px",borderRadius:10,fontSize:9,fontWeight:700,background:s.bg,color:s.c}}>{e==="q1_pagado"?"Q1 pagado":e}</span>;};
 const Btn=({children,pri,small,onClick,disabled,style:sx})=><button onClick={onClick} disabled={disabled} style={{padding:small?"4px 10px":"7px 14px",borderRadius:5,border:pri?"none":`1px solid ${T.border}`,background:pri?T.ink:T.surface,color:pri?"#fff":T.ink,fontSize:small?10:11,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:disabled?"default":"pointer",opacity:disabled?0.5:1,display:"inline-flex",alignItems:"center",gap:5,...sx}}>{children}</button>;
 
 /* ── ASISTENCIA POR EMPLEADO (sub-tab) ── */
@@ -634,35 +634,20 @@ export function TabNomina(){
   const totQ2=noms.reduce((s,n)=>s+calcN(n).q2,0);
 
   if(vista==="detalle"&&selN&&calc){
-    const ed=selN.estado==="borrador";
+    const ed=selN.estado==="borrador"||selN.estado==="q1_pagado";
+    const isQ=selN.modalidadPago!=="mensual";
     const u=(f)=>upd(selN.id,f);
+    const pubNomina=(tipo,liq)=>fetch("/api/hiring",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"pub_nomina",employee_id:selN.empId,anio,mes,tipo,nombre_mes:MESES[mes],devengado:calc.dev,deducciones:calc.totD,neto:calc.neto,liquido:liq,modalidad:selN.modalidadPago||"quincenal"})});
     return(
       <div className="fade-up" style={{maxWidth:1050,margin:"0 auto"}}>
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
           <Btn onClick={()=>{setVista("lista");setSubTab("nomina");}}>← Volver</Btn>
           <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selN.nombre}</div><div style={{fontSize:11,color:T.inkLight}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio} · <span style={{fontWeight:600,color:selN.modalidadPago==="mensual"?T.ink:T.blue}}>{selN.modalidadPago==="mensual"?"Pago mensual":"Pago quincenal"}</span></div></div>
-          {ed&&<Btn pri small onClick={()=>u({estado:"aprobada"})}>✓ Aprobar</Btn>}
           <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
-          {selN.estado==="aprobada"&&<Btn small onClick={()=>{
-            const isQ=selN.modalidadPago!=="mensual";
-            const liq=isQ?calc.q2:calc.neto;
-            // Publish nómina
-            fetch("/api/hiring",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-              action:"pub_nomina",employee_id:selN.empId,anio,mes,tipo:"nomina",
-              nombre_mes:MESES[mes],devengado:calc.dev,deducciones:calc.totD,neto:calc.neto,liquido:liq,modalidad:selN.modalidadPago||"quincenal"
-            })}).then(r=>r.json()).then(d=>{
-              if(d.ok){
-                // Also publish anticipo if quincenal
-                if(isQ){
-                  fetch("/api/hiring",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-                    action:"pub_nomina",employee_id:selN.empId,anio,mes,tipo:"anticipo",
-                    nombre_mes:MESES[mes],devengado:selN.sal,deducciones:0,neto:calc.q1,liquido:calc.q1,modalidad:"quincenal"
-                  })});
-                }
-                alert("✅ Nómina publicada en el portal del empleado");
-              }
-            });
-          }}>📤 Publicar</Btn>}
+          {isQ&&selN.estado==="borrador"&&<Btn small onClick={()=>{pubNomina("anticipo",calc.q1).then(r=>r.json()).then(d=>{if(d.ok){u({estado:"q1_pagado"});guardar();alert("✅ Anticipo Q1 pagado y publicado al portal");}});}}>💵 Q1 pagado</Btn>}
+          {isQ&&selN.estado==="q1_pagado"&&<Btn pri small onClick={()=>{pubNomina("nomina",calc.q2).then(r=>r.json()).then(d=>{if(d.ok){u({estado:"liquidada"});guardar();alert("✅ Nómina liquidada y publicada al portal");}});}}>✅ Nómina liquidada</Btn>}
+          {!isQ&&selN.estado==="borrador"&&<Btn pri small onClick={()=>{pubNomina("nomina",calc.neto).then(r=>r.json()).then(d=>{if(d.ok){u({estado:"liquidada"});guardar();alert("✅ Nómina liquidada y publicada al portal");}});}}>✅ Nómina liquidada</Btn>}
+          {selN.estado==="liquidada"&&<Pill e="liquidada"/>}
           <Btn small onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n👤 Portal del empleado:\nhttps://suite.habitaris.co/empleado\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");}}>💬 Link empleados</Btn>
           <Btn small onClick={()=>{
             const nDias=selN.novDias||{};
@@ -1214,7 +1199,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
         </div>
       </div>
       <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
-        {[["Empleados",noms.length,T.ink],["Aprobadas",noms.filter(n=>n.estado==="aprobada").length,T.green],["Neto total",fmt(totN),T.ink],["Total Q1",fmt(totQ1),T.blue],["Total Q2",fmt(totQ2),T.green]].map(([l,v,c])=>(
+        {[["Empleados",noms.length,T.ink],["Liquidadas",noms.filter(n=>n.estado==="liquidada").length,T.green],["Neto total",fmt(totN),T.ink],["Total Q1",fmt(totQ1),T.blue],["Total Q2",fmt(totQ2),T.green]].map(([l,v,c])=>(
           <div key={l} style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:6,padding:"12px 14px",boxShadow:T.shadow}}>
             <div style={{fontSize:8,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:.6,marginBottom:2}}>{l}</div>
             <div style={{fontSize:18,fontWeight:800,color:c,fontFamily:"'DM Mono',monospace"}}>{v}</div>
