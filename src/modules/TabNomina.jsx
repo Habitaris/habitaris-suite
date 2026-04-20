@@ -121,6 +121,18 @@ const Row=({lbl,val,color,bold,sub,indent,bg})=><div style={{display:"flex",just
 const Div=()=><div style={{height:1,background:T.border,margin:"6px 0"}}/>;
 const STit=({children,color})=><div style={{fontSize:12,fontWeight:700,color:color||T.ink,marginBottom:8}}>{children}</div>;
 const Pill=({e})=>{const m={borrador:{bg:"#F5F4F1",c:"#888"},q1_pagado:{bg:T.blueBg,c:T.blue},liquidada:{bg:T.greenBg,c:T.green},pagada:{bg:T.greenBg,c:T.green},aprobada:{bg:T.greenBg,c:T.green}};const s=m[e]||m.borrador;const label=e==="q1_pagado"?"Q1 pagado · Falta Q2":e==="liquidada"?"pagada":e;return<span style={{padding:"2px 8px",borderRadius:10,fontSize:9,fontWeight:700,background:s.bg,color:s.c}}>{label}</span>;};
+// EstadoPills: renderiza pills separados por tipo de pago (Q1, Q2 o Mes) según la modalidad del empleado
+const EstadoPills=({n})=>{
+  const pillStyle=(paid)=>({display:"inline-block",padding:"2px 7px",borderRadius:10,fontSize:9,fontWeight:700,background:paid?T.greenBg:"#F5F4F1",color:paid?T.green:"#999",minWidth:36,textAlign:"center"});
+  if(n.modalidadPago==="mensual"){
+    const paid=n.estado==="pagada"||n.estado==="liquidada";
+    return <span style={pillStyle(paid)}>{paid?"✓ Mes":"Mes"}</span>;
+  }
+  // Quincenal
+  const q1Paid=n.estado==="q1_pagado"||n.estado==="pagada"||n.estado==="liquidada";
+  const q2Paid=n.estado==="pagada"||n.estado==="liquidada";
+  return <div style={{display:"flex",gap:4}}><span style={pillStyle(q1Paid)}>{q1Paid?"✓ Q1":"Q1"}</span><span style={pillStyle(q2Paid)}>{q2Paid?"✓ Q2":"Q2"}</span></div>;
+};
 const Btn=({children,pri,small,onClick,disabled,style:sx})=><button onClick={onClick} disabled={disabled} style={{padding:small?"4px 10px":"7px 14px",borderRadius:5,border:pri?"none":`1px solid ${T.border}`,background:pri?T.ink:T.surface,color:pri?"#fff":T.ink,fontSize:small?10:11,fontWeight:600,fontFamily:"'DM Sans',sans-serif",cursor:disabled?"default":"pointer",opacity:disabled?0.5:1,display:"inline-flex",alignItems:"center",gap:5,...sx}}>{children}</button>;
 
 /* ── ASISTENCIA POR EMPLEADO (sub-tab) ── */
@@ -807,7 +819,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
 </body></html>`;
             const w=window.open('','_blank');w.document.write(html);w.document.close();
           }}>📄 Reporte novedades</Btn>
-          <Pill e={selN.estado}/>
+          <EstadoPills n={selN}/>
         </div>
 
         {/* Payment form */}
@@ -1350,7 +1362,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
               <td style={{padding:"9px 12px",fontSize:11,color:T.blue,fontFamily:"'DM Mono',monospace"}}>{n.modalidadPago==="mensual"?"—":fmt(c.q1)}</td>
               <td style={{padding:"9px 12px",fontSize:11,color:T.green,fontFamily:"'DM Mono',monospace"}}>{n.modalidadPago==="mensual"?"—":fmt(c.q2)}</td>
               <td style={{padding:"9px 12px",fontSize:11,color:T.inkMid,fontFamily:"'DM Mono',monospace"}}>{fmt(c.costoT)}</td>
-              <td style={{padding:"9px 12px"}}><Pill e={n.estado}/></td>
+              <td style={{padding:"9px 12px"}}><EstadoPills n={n}/></td>
               <td style={{padding:"9px 12px"}}><Btn small onClick={()=>{setSel(n.id);setVista("detalle");setSubTab("nomina");}}>Ver →</Btn></td>
             </tr>);})}</tbody>
         </table>
