@@ -921,50 +921,43 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
 
         {subTab==="descargables"&&(
           <Card accent={T.ink}>
-            <STit>📥 Documentos descargables</STit>
-            <div style={{fontSize:11,color:T.inkLight,marginBottom:14}}>Previsualiza e imprime cualquier documento de {selN.nombre} — {MESES[mes]} {anio}</div>
+            <STit>📥 Documentos</STit>
+            <div style={{fontSize:11,color:T.inkLight,marginBottom:14}}>{selN.nombre} — {MESES[mes]} {anio}</div>
             {[
               ...(selN.modalidadPago!=="mensual"?[
-                {icon:"💵",label:"Tirilla Q1 — Primera quincena",desc:`Anticipo fijo ${fmt(calc.q1)} · Ref: NOM ${MESES[mes].substring(0,3).toUpperCase()}${String(anio).slice(-2)} Q1`,action:"q1"},
-                {icon:"💵",label:"Tirilla Q2 — Segunda quincena",desc:`Ajuste real ${fmt(calc.q2)} · Neto mes: ${fmt(calc.neto)}`,action:"q2"},
+                {icon:"📋",label:"Justificante de anticipo",desc:`Anticipo ${fmt(calc.q1)} · 15 de ${MESES[mes]}`,action:"anticipo"},
               ]:[]),
-              {icon:"🧾",label:"Comprobante de nómina (Colilla)",desc:`Devengado ${fmt(calc.dev)} · Deducciones ${fmt(calc.totD)} · Neto ${fmt(calc.neto)}`,action:"colilla"},
+              {icon:"📄",label:"Nómina",desc:`Devengado ${fmt(calc.dev)} · Deducciones ${fmt(calc.totD)} · Neto ${fmt(calc.neto)}`,action:"nomina"},
             ].map((d,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
                 onClick={()=>{
                   const mAbr=MESES[mes].substring(0,3).toUpperCase();
                   const a2=String(anio).slice(-2);
                   const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
-                  const ref=`NOM ${mAbr}${a2} ${d.action==="q1"?"Q1":d.action==="q2"?"Q2":"COL"} - ${ape}`;
-                  const fileName=`${d.action==="colilla"?"COLILLA":"TIRILLA-"+d.action.toUpperCase()}-${mAbr}${a2}-${ape}`;
+                  const ref=`NOM ${mAbr}${a2} ${d.action==="anticipo"?"ANT":"PAG"} - ${ape}`;
+                  const fileName=`${d.action==="anticipo"?"ANTICIPO":"NOMINA"}-${mAbr}${a2}-${ape}`;
+                  const isQuinc=selN.modalidadPago!=="mensual";
                   const items=[{c:"Salario básico",d:calc.salProp,dd:0},calc.aux>0&&{c:`Aux. transporte (${calc.diasComm}d)`,d:calc.aux,dd:0},calc.bono>0&&{c:`Bono asistencia (${calc.diasAsist}d)`,d:calc.bono,dd:0},calc.totHex>0&&{c:"Horas extra",d:calc.totHex,dd:0},calc.recFest>0&&{c:"Recargo festivos",d:calc.recFest,dd:0},{c:"EPS (4%)",d:0,dd:calc.epsE},{c:"Pensión (4%)",d:0,dd:calc.penE},calc.rteF>0&&{c:"Retención fuente",d:0,dd:calc.rteF},calc.otrasDed>0&&{c:"Otras deducciones",d:0,dd:calc.otrasDed}].filter(Boolean);
                   let bodyHtml="";
-                  if(d.action==="q1"){
-                    bodyHtml=`<h1>TIRILLA NÓMINA — Q1</h1><div class="sub">${MESES[mes]} ${anio} · Primera quincena</div>
+                  if(d.action==="anticipo"){
+                    bodyHtml=`<h1>Justificante de anticipo</h1><div class="sub">${MESES[mes]} ${anio} · Pago 15/${MESES[mes].slice(0,3)}</div>
                     <div class="info"><div><span>Nombre: </span><b>${selN.nombre}</b></div><div><span>Documento: </span><b>${selN.cc}</b></div><div><span>Cargo: </span>${selN.cargo}</div><div><span>Contrato: </span>${selN.tipoContrato}</div></div>
-                    <div class="neto"><div class="lbl"><div>ANTICIPO Q1</div><div>Pago: 15/${MESES[mes].slice(0,3)}</div></div><div class="v">${fmt(calc.q1)}</div></div>
-                    <div style="font-size:9pt;color:#666;margin:10px 0">Anticipo fijo = ${((selN.q1Pct||0.5)*100).toFixed(0)}% del salario base (${fmt(selN.sal)})</div>
-                    <div style="background:#f5f5f5;padding:8px 12px;border-radius:4px;font-size:9pt;margin:8px 0"><b>Ref bancaria:</b> ${ref}</div>
-                    <div class="sig"><div><div class="line"></div><div class="name">Habitaris S.A.S</div><div class="role">Empleador</div></div><div><div class="line"></div><div class="name">${selN.nombre}</div><div class="role">Trabajador</div></div></div>`;
-                  } else if(d.action==="q2"){
-                    bodyHtml=`<h1>TIRILLA NÓMINA — Q2</h1><div class="sub">${MESES[mes]} ${anio} · Segunda quincena (ajuste)</div>
-                    <div class="info"><div><span>Nombre: </span><b>${selN.nombre}</b></div><div><span>Documento: </span><b>${selN.cc}</b></div><div><span>Cargo: </span>${selN.cargo}</div><div><span>Días: </span><b>${calc.dias}/30</b></div></div>
-                    <table><thead><tr><th>CONCEPTO</th><th class="r">DEVENGADO</th><th class="r">DEDUCCIÓN</th></tr></thead><tbody>
-                    ${items.map(r=>"<tr><td>"+r.c+"</td><td class='r'>"+(r.d>0?fmt(r.d):"—")+"</td><td class='r'>"+(r.dd>0?fmt(r.dd):"—")+"</td></tr>").join("")}
-                    <tr class="tot"><td>NETO MES</td><td class="r">${fmt(calc.dev)}</td><td class="r">${fmt(calc.totD)}</td></tr>
-                    <tr style="border-top:1px solid #ddd"><td style="padding:5px 8px;color:#888;font-style:italic">(-) Anticipo Q1 pagado (15/${MESES[mes].slice(0,3)})</td><td class="r"></td><td class="r" style="color:#888">${fmt(calc.q1)}</td></tr>
-                    <tr style="border-top:1px solid #333"><td style="padding:6px 8px;font-weight:600;font-size:9pt">PAGO Q2 (AJUSTE)</td><td class="r"></td><td class="r" style="font-weight:700;font-size:11pt;font-family:'SF Mono',Menlo,monospace">${fmt(calc.q2)}</td></tr>
-                    </tbody></table>
-                    <div style="font-size:7.5pt;color:#999;margin:10px 0;padding-top:6px;border-top:1px solid #f0f0f0"><b>Ref bancaria:</b> ${ref}</div>
+                    <div class="neto"><div class="lbl"><div>Anticipo primera quincena</div><div>${((selN.q1Pct||0.5)*100).toFixed(0)}% del salario base (${fmt(selN.sal)})</div></div><div class="v">${fmt(calc.q1)}</div></div>
+                    <div style="font-size:7.5pt;color:#999;margin:10px 0">Ref: ${ref}</div>
                     <div class="sig"><div><div class="line"></div><div class="name">Habitaris S.A.S</div><div class="role">Empleador</div></div><div><div class="line"></div><div class="name">${selN.nombre}</div><div class="role">Trabajador</div></div></div>`;
                   } else {
-                    bodyHtml=`<h1>COMPROBANTE DE NÓMINA</h1><div class="sub">${MESES[mes]} ${anio} · ${fileName}</div>
-                    <div class="info"><div><span>Nombre: </span><b>${selN.nombre}</b></div><div><span>Documento: </span><b>${selN.cc}</b></div><div><span>Cargo: </span>${selN.cargo}</div><div><span>Contrato: </span>${selN.tipoContrato}</div><div><span>Ingreso: </span>${selN.fechaIngreso}</div><div><span>Días: </span><b>${calc.dias}/30</b></div><div><span>Banco: </span><b>${selN.banco||"—"}</b></div><div><span>Cuenta: </span><b>${selN.cuenta||"—"}</b></div></div>
-                    <table><thead><tr><th>CONCEPTO</th><th class="r">DEVENGADO</th><th class="r">DEDUCCIÓN</th></tr></thead><tbody>
+                    bodyHtml=`<h1>Nómina</h1><div class="sub">${MESES[mes]} ${anio} · ${selN.tipoContrato}</div>
+                    <div class="info"><div><span>Nombre: </span><b>${selN.nombre}</b></div><div><span>Documento: </span><b>${selN.cc}</b></div><div><span>Cargo: </span>${selN.cargo}</div><div><span>Ingreso: </span>${selN.fechaIngreso}</div><div><span>Días: </span><b>${calc.dias}/30</b></div><div><span>Banco: </span><b>${selN.banco||"—"}</b></div></div>
+                    <table><thead><tr><th>Concepto</th><th class="r">Devengado</th><th class="r">Deducción</th></tr></thead><tbody>
                     ${items.map(r=>"<tr><td>"+r.c+"</td><td class='r'>"+(r.d>0?fmt(r.d):"—")+"</td><td class='r'>"+(r.dd>0?fmt(r.dd):"—")+"</td></tr>").join("")}
-                    <tr class="tot"><td>TOTALES</td><td class="r">${fmt(calc.dev)}</td><td class="r">${fmt(calc.totD)}</td></tr></tbody></table>
-                    <div class="neto"><div class="lbl"><div>NETO A PAGAR</div><div>${selN.modalidadPago==="mensual"?"Pago mensual":"Q1: "+fmt(calc.q1)+" + Q2: "+fmt(calc.q2)}</div></div><div class="v">${fmt(calc.neto)}</div></div>
-                    ${selN.modalidadPago!=="mensual"?`<div class="q"><div class="qb"><div class="l">Q1 — 15/${MESES[mes].slice(0,3)}</div><div class="v">${fmt(calc.q1)}</div></div><div class="qb"><div class="l">Q2 — Fin/${MESES[mes].slice(0,3)}</div><div class="v">${fmt(calc.q2)}</div></div></div>`:""}
+                    <tr class="tot"><td>Totales</td><td class="r">${fmt(calc.dev)}</td><td class="r">${fmt(calc.totD)}</td></tr>
+                    </tbody></table>
+                    <div class="neto"><div class="lbl"><div>Neto a pagar</div><div>${isQuinc?"Pago quincenal":"Pago mensual"}</div></div><div class="v">${fmt(calc.neto)}</div></div>
+                    ${isQuinc?`<table style="margin:4px 0"><tbody>
+                    <tr><td style="color:#888;font-style:italic;border:none;padding:4px 8px">(-) Anticipo pagado (15/${MESES[mes].slice(0,3)})</td><td class="r" style="border:none;color:#888;padding:4px 8px">${fmt(calc.q1)}</td></tr>
+                    <tr style="border-top:1px solid #333"><td style="font-weight:600;border:none;padding:6px 8px">Saldo a pagar</td><td class="r" style="font-weight:700;font-size:11pt;font-family:'SF Mono',Menlo,monospace;border:none;padding:6px 8px">${fmt(calc.q2)}</td></tr>
+                    </tbody></table>`:""}
+                    <div style="font-size:7.5pt;color:#999;margin:10px 0">Ref: ${ref}</div>
                     <div class="sig"><div><div class="line"></div><div class="name">Habitaris S.A.S</div><div class="role">Empleador</div></div><div><div class="line"></div><div class="name">${selN.nombre}</div><div class="role">Trabajador</div></div></div>`;
                   }
                   const css=`*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#e8e8e8;padding:20px 0}#content{background:#fff;width:794px;margin:0 auto;padding:40px 50px;font-size:8.5pt;color:#333;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,.1)}.hdr{padding-bottom:12px;margin-bottom:16px;border-bottom:1px solid #ddd;overflow:hidden}.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:7.5pt;color:#999;padding-top:8px}.hdr img{height:30px}h1{font-size:10pt;font-weight:600;text-align:center;margin:10px 0 2px;letter-spacing:.3px;clear:both}.sub{text-align:center;font-size:7.5pt;color:#999;margin-bottom:14px}.info{margin-bottom:14px;font-size:8pt;overflow:hidden;border:1px solid #eee;border-radius:3px;padding:8px 12px}.info div{float:left;width:50%;padding:2px 0;color:#555}.info span{color:#999}.info b{color:#333}table{width:100%;border-collapse:collapse;font-size:8pt;clear:both;margin-bottom:4px}th{padding:5px 8px;text-align:left;font-size:6.5pt;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #ddd}td{padding:4px 8px;border-bottom:1px solid #f2f2f2;color:#444}.r{text-align:right;font-family:'SF Mono',Menlo,monospace;font-size:8pt}.tot td{border-top:1px solid #333;border-bottom:none;font-weight:600;color:#333;padding:6px 8px}.neto{border:1px solid #333;border-radius:3px;padding:10px 14px;margin:8px 0;overflow:hidden}.neto .lbl{float:left;padding-top:2px}.neto .lbl div:first-child{font-size:7pt;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#333}.neto .lbl div:last-child{font-size:6.5pt;color:#999;margin-top:1px}.neto .v{float:right;font-size:15pt;font-weight:700;font-family:'SF Mono',Menlo,monospace;color:#111}.q{overflow:hidden;margin:6px 0}.qb{float:left;width:49%;border:1px solid #e0e0e0;border-radius:3px;padding:5px;text-align:center}.qb:last-child{float:right}.qb .v{font-size:11pt;font-weight:700;font-family:'SF Mono',Menlo,monospace;color:#333}.qb .l{font-size:6pt;font-weight:600;text-transform:uppercase;color:#999;letter-spacing:.3px}.sig{margin-top:60px;overflow:hidden;padding:0 20px}.sig>div{float:left;width:44%;text-align:center}.sig>div:last-child{float:right}.sig .line{border-top:1px solid #999;margin-bottom:6px}.sig .name{font-size:8pt;font-weight:600;color:#333}.sig .role{font-size:7pt;color:#999;margin-top:1px}.foot{font-size:6pt;color:#bbb;text-align:center;margin-top:20px;clear:both;letter-spacing:.3px}.np{text-align:center;margin:16px auto;max-width:794px}.btn{background:#333;color:#fff;border:none;padding:8px 20px;border-radius:3px;cursor:pointer;font-size:10pt;font-weight:500;margin:0 4px;font-family:inherit}.btn2{background:#fff;color:#333;border:1px solid #ccc;padding:8px 20px;border-radius:3px;cursor:pointer;font-size:10pt;margin:0 4px;font-family:inherit}@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:25px 30px;box-shadow:none}}`;
