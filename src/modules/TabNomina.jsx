@@ -618,8 +618,8 @@ export function TabNomina(){
     const festCount=hols.filter(h=>h.date.getMonth()===mes&&h.date.getDay()!==0).length;
     Promise.all([fetchEmps(),loadN(anio,mes)]).then(([emps,saved])=>{
       const ex=saved||[];
-      const lista=emps.map(e=>{const f=ex.find(n=>n.empId===e.id);if(f){if(f.festMes===undefined)f.festMes=festCount;if(!f.fechaFinContrato)f.fechaFinContrato=e.fecha_fin_contrato||"";if(!f.duracionMeses)f.duracionMeses=e.duracion_meses||0;if(!f.fechaIngreso)f.fechaIngreso=e.fecha_inicio||"";if(!f.tipoContrato)f.tipoContrato=e.tipo_contrato||"";return f;}
-        return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:0.5,hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.entidadBancaria||"",cuenta:e.cuentaBancaria||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",duracionMeses:e.duracion_meses||0,fechaFinContrato:e.fecha_fin_contrato||"",auxT:e.auxilio_transporte||AUX_TR,netoRef:e.salario_neto||0,anio,mes};});
+      const lista=emps.map(e=>{const f=ex.find(n=>n.empId===e.id);if(f){if(f.festMes===undefined)f.festMes=festCount;if(!f.fechaFinContrato)f.fechaFinContrato=e.fecha_fin_contrato||"";if(!f.duracionMeses)f.duracionMeses=e.duracion_meses||0;if(!f.fechaIngreso)f.fechaIngreso=e.fecha_inicio||"";if(!f.tipoContrato)f.tipoContrato=e.tipo_contrato||"";if(!f.modalidadPago){f.modalidadPago=e.modalidad_pago||"quincenal";if(f.modalidadPago==="mensual"&&f.q1Pct>0)f.q1Pct=0;}return f;}
+        return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:(e.modalidad_pago||"quincenal")==="mensual"?0:0.5,modalidadPago:e.modalidad_pago||"quincenal",hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.entidadBancaria||"",cuenta:e.cuentaBancaria||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",duracionMeses:e.duracion_meses||0,fechaFinContrato:e.fecha_fin_contrato||"",auxT:e.auxilio_transporte||AUX_TR,netoRef:e.salario_neto||0,anio,mes};});
       setNoms(lista);setLoading(false);
     });
   },[anio,mes]);
@@ -919,8 +919,10 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
             <STit>📥 Documentos descargables</STit>
             <div style={{fontSize:11,color:T.inkLight,marginBottom:14}}>Previsualiza e imprime cualquier documento de {selN.nombre} — {MESES[mes]} {anio}</div>
             {[
-              {icon:"💵",label:"Tirilla Q1 — Primera quincena",desc:`Anticipo fijo ${fmt(calc.q1)} · Ref: NOM ${MESES[mes].substring(0,3).toUpperCase()}${String(anio).slice(-2)} Q1`,action:"q1"},
-              {icon:"💵",label:"Tirilla Q2 — Segunda quincena",desc:`Ajuste real ${fmt(calc.q2)} · Neto mes: ${fmt(calc.neto)}`,action:"q2"},
+              ...(selN.modalidadPago!=="mensual"?[
+                {icon:"💵",label:"Tirilla Q1 — Primera quincena",desc:`Anticipo fijo ${fmt(calc.q1)} · Ref: NOM ${MESES[mes].substring(0,3).toUpperCase()}${String(anio).slice(-2)} Q1`,action:"q1"},
+                {icon:"💵",label:"Tirilla Q2 — Segunda quincena",desc:`Ajuste real ${fmt(calc.q2)} · Neto mes: ${fmt(calc.neto)}`,action:"q2"},
+              ]:[]),
               {icon:"🧾",label:"Comprobante de nómina (Colilla)",desc:`Devengado ${fmt(calc.dev)} · Deducciones ${fmt(calc.totD)} · Neto ${fmt(calc.neto)}`,action:"colilla"},
             ].map((d,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
