@@ -601,6 +601,7 @@ export function TabNomina(){
   const[sel,setSel]=useState(null);
   const[vista,setVista]=useState("lista");
   const[subTab,setSubTab]=useState("nomina");
+  const[descView,setDescView]=useState(null); // which descargable is open: null=list, "q1q2"|"costo"|"colilla"|"auditoria"
   const holidays=useMemo(()=>getHolidays(anio),[anio]);
   const festivosMes=holidays.filter(h=>h.date.getMonth()===mes);
   const [novDias,setNovDias]=useState({});  // {dayKey: novType}
@@ -748,7 +749,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
         </div>
         <div style={{display:"flex",gap:0,marginBottom:14,borderBottom:`1px solid ${T.border}`}}>
           {[{id:"nomina",lbl:"💰 Nómina"},{id:"novedades",lbl:"📋 Novedades"},{id:"asistencia",lbl:"📍 Asistencia"},{id:"descargables",lbl:"📥 Descargables"},{id:"liqfinal",lbl:"🚪 Liquidación Final"}].map(t=>(
-            <button key={t.id} onClick={()=>setSubTab(t.id)} style={{padding:"8px 16px",fontSize:11,fontWeight:subTab===t.id?700:400,border:"none",borderBottom:subTab===t.id?`2px solid ${T.ink}`:"2px solid transparent",background:"transparent",color:subTab===t.id?T.ink:T.inkLight,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{t.lbl}</button>
+            <button key={t.id} onClick={()=>{setSubTab(t.id);setDescView(null);}} style={{padding:"8px 16px",fontSize:11,fontWeight:subTab===t.id?700:400,border:"none",borderBottom:subTab===t.id?`2px solid ${T.ink}`:"2px solid transparent",background:"transparent",color:subTab===t.id?T.ink:T.inkLight,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{t.lbl}</button>
           ))}
         </div>
 
@@ -900,8 +901,35 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
           </div>
         )}
 
-        {subTab==="descargables"&&(
-          <div style={{borderTop:`2px solid ${T.border}`,marginTop:16,paddingTop:16}}>
+        {subTab==="descargables"&&!descView&&(
+          <Card accent={T.ink}>
+            <STit>📥 Documentos descargables</STit>
+            <div style={{fontSize:11,color:T.inkLight,marginBottom:14}}>Previsualiza e imprime cualquier documento de {selN.nombre} — {MESES[mes]} {anio}</div>
+            {[
+              {id:"q1q2",icon:"💵",label:"Tirillas Q1 / Q2",desc:"Desglose quincenal con referencias bancarias"},
+              {id:"colilla",icon:"🧾",label:"Comprobante de nómina (Colilla)",desc:"Devengados, deducciones, neto a pagar"},
+              {id:"costo",icon:"🏢",label:"Reporte costo empleador",desc:"Aportes, provisiones, costo total y factor prestacional"},
+              {id:"auditoria",icon:"🔍",label:"Auditoría de fórmulas",desc:"Base de cálculo, parámetros y normativa aplicada"},
+            ].map(d=>(
+              <div key={d.id} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
+                onClick={()=>setDescView(d.id)}
+                onMouseEnter={e=>e.currentTarget.style.borderColor=T.ink}
+                onMouseLeave={e=>e.currentTarget.style.borderColor=T.border}>
+                <div style={{fontSize:22,width:36,textAlign:"center"}}>{d.icon}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13,fontWeight:700,color:T.ink}}>{d.label}</div>
+                  <div style={{fontSize:10,color:T.inkLight,marginTop:1}}>{d.desc}</div>
+                </div>
+                <div style={{fontSize:11,fontWeight:600,color:T.ink,background:T.accent,borderRadius:4,padding:"6px 14px"}}>Ver →</div>
+              </div>
+            ))}
+          </Card>
+        )}
+
+        {subTab==="descargables"&&descView==="q1q2"&&(
+          <div>
+          <button onClick={()=>setDescView(null)} style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:`1px solid ${T.border}`,borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",marginBottom:12,color:T.inkMid}}>← Volver a documentos</button>
+          <div style={{borderTop:`2px solid ${T.border}`,paddingTop:16}}>
           <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:T.ink}}>💵 Desglose Quincenal</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
             <Card accent={T.blue}>
@@ -1057,10 +1085,12 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
             </Card>
           </div>
           </div>
+          </div>
         )}
 
-        {subTab==="descargables"&&(
+        {subTab==="descargables"&&descView==="costo"&&(
           <div>
+          <button onClick={()=>setDescView(null)} style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:`1px solid ${T.border}`,borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",marginBottom:12,color:T.inkMid}}>← Volver a documentos</button>
           <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:T.ink}}>🏢 Costo Empleador</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12}}>
             <Card accent={T.blue}><STit color={T.blue}>🏢 Aportes empleador</STit>
@@ -1092,8 +1122,9 @@ ${calc.rteF>0?`<div class="row"><span>Retención fuente</span><b>-${fmt(calc.rte
           </div>
         )}
 
-        {subTab==="descargables"&&(
-          <div style={{borderTop:`2px solid ${T.border}`,marginTop:16,paddingTop:16}}>
+        {subTab==="descargables"&&descView==="colilla"&&(
+          <div>
+          <button onClick={()=>setDescView(null)} style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:`1px solid ${T.border}`,borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",marginBottom:12,color:T.inkMid}}>← Volver a documentos</button>
           <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:T.ink}}>🧾 Comprobante de Nómina</div>
           <Card style={{maxWidth:680,margin:"0 auto",border:`2px solid ${T.ink}`}}>
             <div style={{textAlign:"center",borderBottom:`2px solid ${T.ink}`,paddingBottom:12,marginBottom:12}}>
@@ -1209,8 +1240,9 @@ ${items.map(r=>"<tr><td>"+r.c+"</td><td class='r'>"+(r.d>0?fmt(r.d):"—")+"</td
           <AsistenciaPanel selN={selN} MESES={MESES} mes={mes} anio={anio}/>
         )}
 
-        {subTab==="descargables"&&(
-          <div style={{borderTop:`2px solid ${T.border}`,marginTop:16,paddingTop:16}}>
+        {subTab==="descargables"&&descView==="auditoria"&&(
+          <div>
+          <button onClick={()=>setDescView(null)} style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:`1px solid ${T.border}`,borderRadius:6,background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",marginBottom:12,color:T.inkMid}}>← Volver a documentos</button>
           <div style={{fontSize:13,fontWeight:700,marginBottom:10,color:T.ink}}>🔍 Auditoría de Fórmulas</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
             <Card accent={T.ink}>
