@@ -601,6 +601,7 @@ export function TabNomina(){
   const[sel,setSel]=useState(null);
   const[vista,setVista]=useState("lista");
   const[subTab,setSubTab]=useState("nomina");
+  const[pagoForm,setPagoForm]=useState(null); // null=hidden, {tipo:"q1"|"nomina", ref:"", soporte:null}
   const holidays=useMemo(()=>getHolidays(anio),[anio]);
   const festivosMes=holidays.filter(h=>h.date.getMonth()===mes);
   const [novDias,setNovDias]=useState({});  // {dayKey: novType}
@@ -644,10 +645,11 @@ export function TabNomina(){
           <Btn onClick={()=>{setVista("lista");setSubTab("nomina");}}>← Volver</Btn>
           <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selN.nombre}</div><div style={{fontSize:11,color:T.inkLight}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio} · <span style={{fontWeight:600,color:selN.modalidadPago==="mensual"?T.ink:T.blue}}>{selN.modalidadPago==="mensual"?"Pago mensual":"Pago quincenal"}</span></div></div>
           <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
-          {isQ&&selN.estado==="borrador"&&<Btn small onClick={()=>{pubNomina("anticipo",calc.q1).then(r=>r.json()).then(d=>{if(d.ok){u({estado:"q1_pagado"});guardar();alert("✅ Anticipo Q1 pagado y publicado al portal");}});}}>💵 Q1 pagado</Btn>}
-          {isQ&&selN.estado==="q1_pagado"&&<Btn pri small onClick={()=>{pubNomina("nomina",calc.q2).then(r=>r.json()).then(d=>{if(d.ok){u({estado:"liquidada"});guardar();alert("✅ Nómina liquidada y publicada al portal");}});}}>✅ Nómina liquidada</Btn>}
-          {!isQ&&selN.estado==="borrador"&&<Btn pri small onClick={()=>{pubNomina("nomina",calc.neto).then(r=>r.json()).then(d=>{if(d.ok){u({estado:"liquidada"});guardar();alert("✅ Nómina liquidada y publicada al portal");}});}}>✅ Nómina liquidada</Btn>}
+          {isQ&&selN.estado==="borrador"&&<Btn small onClick={()=>setPagoForm({tipo:"q1",ref:"",soporte:null})}>💵 Q1 pagado</Btn>}
+          {isQ&&selN.estado==="q1_pagado"&&<Btn pri small onClick={()=>setPagoForm({tipo:"nomina",ref:"",soporte:null})}>✅ Nómina liquidada</Btn>}
+          {!isQ&&selN.estado==="borrador"&&<Btn pri small onClick={()=>setPagoForm({tipo:"nomina",ref:"",soporte:null})}>✅ Nómina liquidada</Btn>}
           {selN.estado==="liquidada"&&<Pill e="liquidada"/>}
+          {(selN.estado==="q1_pagado"||selN.estado==="liquidada")&&selN.refPago&&<span style={{fontSize:9,color:T.inkLight,padding:"4px 8px",background:T.accent,borderRadius:4}}>Ref: {selN.refPago}</span>}
           <Btn small onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n👤 Portal del empleado:\nhttps://suite.habitaris.co/empleado\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");}}>💬 Link empleados</Btn>
           <Btn small onClick={()=>{
             const nDias=selN.novDias||{};
@@ -746,6 +748,49 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
           }}>📄 Reporte novedades</Btn>
           <Pill e={selN.estado}/>
         </div>
+
+        {/* Payment form */}
+        {pagoForm&&(
+          <div style={{background:T.surface,border:`2px solid ${T.ink}`,borderRadius:8,padding:16,marginBottom:14}}>
+            <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{pagoForm.tipo==="q1"?"💵 Confirmar pago anticipo Q1":"✅ Confirmar liquidación de nómina"}</div>
+            <div style={{fontSize:11,color:T.inkLight,marginBottom:12}}>
+              {pagoForm.tipo==="q1"?`Anticipo: ${fmt(calc.q1)} · ${selN.nombre}`:`Neto: ${fmt(isQ?calc.q2:calc.neto)} · ${selN.nombre}`}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
+              <div>
+                <label style={{fontSize:10,fontWeight:600,color:T.inkMid,display:"block",marginBottom:4}}>Referencia bancaria *</label>
+                <input value={pagoForm.ref} onChange={e=>setPagoForm({...pagoForm,ref:e.target.value})} placeholder="Ej: TRF-2026-0420-001" style={{width:"100%",padding:"8px 12px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:12,fontFamily:"'DM Mono',monospace"}}/>
+              </div>
+              <div>
+                <label style={{fontSize:10,fontWeight:600,color:T.inkMid,display:"block",marginBottom:4}}>Soporte de pago (opcional)</label>
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e=>{const f=e.target.files[0];if(f&&f.size<5*1024*1024){const r=new FileReader();r.onload=()=>setPagoForm(p=>({...p,soporte:{name:f.name,size:f.size,data:r.result}}));r.readAsDataURL(f);}else if(f){alert("Archivo max 5MB");}}} style={{fontSize:11,padding:"6px 0"}}/>
+                {pagoForm.soporte&&<div style={{fontSize:9,color:T.green,marginTop:2}}>✓ {pagoForm.soporte.name}</div>}
+              </div>
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>{
+                if(!pagoForm.ref.trim()){alert("Ingresa la referencia bancaria");return;}
+                const liq=pagoForm.tipo==="q1"?calc.q1:(isQ?calc.q2:calc.neto);
+                const tipo=pagoForm.tipo==="q1"?"anticipo":"nomina";
+                const nuevoEstado=pagoForm.tipo==="q1"?"q1_pagado":"liquidada";
+                pubNomina(tipo,liq).then(r=>r.json()).then(d=>{
+                  if(d.ok){
+                    u({estado:nuevoEstado,refPago:pagoForm.ref,soportePago:pagoForm.soporte?pagoForm.soporte.name:null});
+                    // Save soporte in kv if exists
+                    if(pagoForm.soporte){
+                      fetch("/api/hiring?kv=soporte_pago&anio="+anio+"&mes="+mes,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:{empId:selN.empId,tipo,ref:pagoForm.ref,archivo:pagoForm.soporte.name,data:pagoForm.soporte.data}})});
+                    }
+                    guardar();
+                    setPagoForm(null);
+                    alert("✅ "+(pagoForm.tipo==="q1"?"Anticipo Q1 pagado":"Nómina liquidada")+" · Ref: "+pagoForm.ref);
+                  }
+                });
+              }} style={{padding:"8px 20px",background:T.ink,color:"#fff",border:"none",borderRadius:4,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Confirmar pago</button>
+              <button onClick={()=>setPagoForm(null)} style={{padding:"8px 20px",background:"#fff",color:T.ink,border:`1px solid ${T.border}`,borderRadius:4,fontSize:12,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Cancelar</button>
+            </div>
+          </div>
+        )}
+
         <div style={{display:"grid",gridTemplateColumns:selN.modalidadPago==="mensual"?"repeat(3,1fr)":"repeat(5,1fr)",gap:8,marginBottom:14}}>
           {(selN.modalidadPago==="mensual"
             ?[["Devengado",calc.dev,T.ink],["Deducciones",calc.totD,T.red],["Neto mes",calc.neto,T.green]]
