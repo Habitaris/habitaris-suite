@@ -836,13 +836,13 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
               </div>
               <div>
                 <label style={{fontSize:10,fontWeight:600,color:T.inkMid,display:"block",marginBottom:4}}>Soporte de pago (opcional)</label>
-                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e=>{const f=e.target.files[0];if(f&&f.size<5*1024*1024){const r=new FileReader();r.onload=()=>setPagoForm(p=>({...p,soporte:{name:f.name,size:f.size,data:r.result}}));r.readAsDataURL(f);}else if(f){alert("Archivo max 5MB");}}} style={{fontSize:11,padding:"6px 0"}}/>
+                <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={e=>{const f=e.target.files[0];if(f&&f.size<5*1024*1024){const r=new FileReader();r.onload=()=>setPagoForm(p=>({...p,soporte:{name:f.name,size:f.size,data:r.result}}));r.readAsDataURL(f);}else if(f){window.toast("Archivo demasiado grande · Máximo 5MB","error");}}} style={{fontSize:11,padding:"6px 0"}}/>
                 {pagoForm.soporte&&<div style={{fontSize:9,color:T.green,marginTop:2}}>✓ {pagoForm.soporte.name}</div>}
               </div>
             </div>
             <div style={{display:"flex",gap:8}}>
               <button onClick={()=>{
-                if(!pagoForm.ref.trim()){alert("Ingresa la referencia bancaria");return;}
+                if(!pagoForm.ref.trim()){window.toast("Ingresa la referencia bancaria","warning");return;}
                 const liq=pagoForm.tipo==="q1"?calc.q1:(isQ?calc.q2:calc.neto);
                 const tipo=pagoForm.tipo==="q1"?"anticipo":"nomina";
                 const nuevoEstado=pagoForm.tipo==="q1"?"q1_pagado":"pagada";
@@ -860,7 +860,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                     await saveN(anio,mes,updatedNoms);
                     setGuard(false);
                     setPagoForm(null);
-                    alert("✅ "+(pagoForm.tipo==="q1"?"Anticipo Q1 pagado":"Nómina pagada")+" · Ref: "+pagoForm.ref);
+                    window.toast("✓ "+(pagoForm.tipo==="q1"?"Anticipo Q1 pagado":"Nómina pagada")+" · Ref: "+pagoForm.ref,"success",5000);
                   }
                 });
               }} style={{padding:"8px 20px",background:T.ink,color:"#fff",border:"none",borderRadius:4,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Confirmar pago</button>

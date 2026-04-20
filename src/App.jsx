@@ -1,6 +1,7 @@
 import React, { useState, Suspense, useMemo } from 'react'
 import { store } from "./core/store.js";
 import { tenant } from "./core/tenant.js";
+import { ToastContainer } from "./core/Toast.jsx";
 
 import CRM  from './modules/CRM.jsx'
 import RRHH from './modules/RRHH.jsx'
@@ -209,6 +210,15 @@ function ModuleBar({ mod, onBack, lang, setLang, onLogout }) {
 }
 
 export default function App() {
+  return (
+    <>
+      <AppInner />
+      <ToastContainer />
+    </>
+  );
+}
+
+function AppInner() {
   const [storeReady, setStoreReady] = useState(false);
   const [active, setActive] = useState(() => sessionStorage.getItem("hab:active_module") || null)
   const [lang, setLang]     = useState("es")
