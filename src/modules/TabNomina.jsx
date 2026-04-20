@@ -615,7 +615,7 @@ export function TabNomina(){
     const festCount=hols.filter(h=>h.date.getMonth()===mes&&h.date.getDay()!==0).length;
     Promise.all([fetchEmps(),loadN(anio,mes)]).then(([emps,saved])=>{
       const ex=saved||[];
-      const lista=emps.map(e=>{const f=ex.find(n=>n.empId===e.id);if(f){if(f.festMes===undefined)f.festMes=festCount;return f;}
+      const lista=emps.map(e=>{const f=ex.find(n=>n.empId===e.id);if(f){if(f.festMes===undefined)f.festMes=festCount;if(!f.fechaFinContrato)f.fechaFinContrato=e.fecha_fin_contrato||"";if(!f.duracionMeses)f.duracionMeses=e.duracion_meses||0;if(!f.fechaIngreso)f.fechaIngreso=e.fecha_inicio||"";if(!f.tipoContrato)f.tipoContrato=e.tipo_contrato||"";return f;}
         return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:0.5,hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.entidadBancaria||"",cuenta:e.cuentaBancaria||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",duracionMeses:e.duracion_meses||0,fechaFinContrato:e.fecha_fin_contrato||"",auxT:e.auxilio_transporte||AUX_TR,netoRef:e.salario_neto||0,anio,mes};});
       setNoms(lista);setLoading(false);
     });
