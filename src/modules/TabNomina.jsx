@@ -904,10 +904,12 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                 {calc.otrasDed>0&&<Row lbl="Otras deducciones" val={calc.otrasDed} color={T.red}/>}
                 <Div/><Row lbl="TOTAL DEDUCCIONES" val={calc.totD} bold color={T.red} bg={T.redBg}/>
               </Card>
-              <div style={{background:T.ink,color:"#fff",borderRadius:8,padding:"14px 16px",marginBottom:10}}>
-                <div style={{fontSize:9,fontWeight:700,letterSpacing:1,opacity:.6,textTransform:"uppercase"}}>NETO A PAGAR</div>
-                <div style={{fontSize:26,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{fmt(calc.neto)}</div>
-                <div style={{fontSize:10,opacity:.5,marginTop:4}}>Q1: {fmt(calc.q1)} · Q2: {fmt(calc.q2)}</div>
+              <div style={{border:`1px solid ${T.ink}`,borderRadius:6,padding:"12px 16px",marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div>
+                  <div style={{fontSize:8,fontWeight:600,letterSpacing:1,color:T.inkMid,textTransform:"uppercase"}}>Neto a pagar</div>
+                  <div style={{fontSize:9,color:T.inkLight,marginTop:2}}>{selN.modalidadPago==="mensual"?"Pago mensual":`Q1: ${fmt(calc.q1)} · Q2: ${fmt(calc.q2)}`}</div>
+                </div>
+                <div style={{fontSize:22,fontWeight:700,fontFamily:"'DM Mono',monospace",color:T.ink}}>{fmt(calc.neto)}</div>
               </div>
               <Card style={{background:T.accent}}><div style={{fontSize:10,fontFamily:"'DM Mono',monospace",color:T.inkMid,lineHeight:1.8}}>
                 Sal.prop = {fmt(selN.sal)} × {calc.dias}/30<br/>EPS = IBC × 4% = {fmt(calc.ibc)} × 0.04<br/>Pen = IBC × 4%<br/>Neto = {fmt(calc.dev)} − {fmt(calc.totD)}
