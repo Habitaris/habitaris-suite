@@ -652,7 +652,6 @@ export function TabNomina(){
           {isQ&&selN.estado==="borrador"&&<Btn small onClick={()=>setPagoForm({tipo:"q1",ref:"",soporte:null})}>💵 Pagar Q1 (anticipo)</Btn>}
           {isQ&&selN.estado==="q1_pagado"&&<Btn pri small onClick={()=>setPagoForm({tipo:"nomina",ref:"",soporte:null})}>💵 Pagar Q2 (liquidar)</Btn>}
           {!isQ&&selN.estado==="borrador"&&<Btn pri small onClick={()=>setPagoForm({tipo:"nomina",ref:"",soporte:null})}>💵 Pagar nómina</Btn>}
-          {(selN.estado==="liquidada"||selN.estado==="pagada")&&<Pill e="pagada"/>}
           {(selN.estado==="q1_pagado"||selN.estado==="liquidada"||selN.estado==="pagada")&&selN.refPago&&<span style={{fontSize:9,color:T.inkLight,padding:"4px 8px",background:T.accent,borderRadius:4}}>Ref: {selN.refPago}</span>}
           <Btn small onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n👤 Portal del empleado:\nhttps://suite.habitaris.co/empleado\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");}}>💬 Link empleados</Btn>
           <Btn small onClick={()=>{
