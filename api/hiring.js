@@ -83,7 +83,7 @@ export default async function handler(req,res){
         // Remove existing for same month/year/tipo
         list=list.filter(n=>!(n.anio===b.anio&&n.mes===b.mes&&n.tipo===b.tipo));
         // Add new
-        list.push({id:b.id||Date.now().toString(36),anio:b.anio,mes:b.mes,tipo:b.tipo,nombre_mes:b.nombre_mes,devengado:b.devengado,deducciones:b.deducciones,neto:b.neto,liquido:b.liquido,modalidad:b.modalidad,publicada_at:new Date().toISOString(),recibida_at:null});
+        list.push({id:b.id||Date.now().toString(36),anio:b.anio,mes:b.mes,tipo:b.tipo,nombre_mes:b.nombre_mes,devengado:b.devengado,deducciones:b.deducciones,neto:b.neto,liquido:b.liquido,modalidad:b.modalidad,html:b.html||null,ref:b.ref||null,soporte_name:b.soporte_name||null,publicada_at:new Date().toISOString(),recibida_at:null});
         list.sort((a,c)=>(c.anio*100+c.mes)-(a.anio*100+a.mes));
         // Save
         var valN=JSON.stringify(list);

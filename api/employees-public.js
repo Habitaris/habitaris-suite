@@ -105,7 +105,26 @@ export default async function handler(req, res) {
       // Get nóminas for employee
       if (body.action === "get_nominas") {
         var noms = await kvGet("hab:nominas:" + body.emp_id);
-        return res.status(200).json({ ok: true, data: noms ? JSON.parse(noms) : [] });
+        var list = noms ? JSON.parse(noms) : [];
+        // Strip HTML to keep listing light (it can be 20-30KB per nómina)
+        var light = list.map(function(n){
+          var c = {};
+          for (var k in n) if (k !== "html") c[k] = n[k];
+          c.has_pdf = !!n.html;
+          return c;
+        });
+        return res.status(200).json({ ok: true, data: light });
+      }
+
+      // Return the full HTML (PDF) of a specific nómina
+      if (body.action === "get_nomina_html") {
+        var nomsH = await kvGet("hab:nominas:" + body.emp_id);
+        var listH = nomsH ? JSON.parse(nomsH) : [];
+        var foundH = listH.find(function(n){ return n.id === body.nomina_id; });
+        if (foundH && foundH.html) {
+          return res.status(200).json({ ok: true, html: foundH.html, ref: foundH.ref || null });
+        }
+        return res.status(404).json({ ok: false, error: "HTML not available" });
       }
 
       // Mark nómina as received
