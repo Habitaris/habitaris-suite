@@ -4749,7 +4749,6 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                   {tab==="evaluaciones" && <TabEvaluaciones/>}
                   {tab==="docs"      && <TabDocumentos docs={docs}       saveDocs={saveDocs}        fichas={fichas} cargos={cargos}/>}
                 </div>
-              )}
           </div>
         </div>
       </div>
