@@ -962,6 +962,20 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                     <tr class="liq"><td>Líquido a percibir</td><td class="r"></td><td class="r">${fmt(liquido)}</td></tr>
                     </tbody></table>
 
+                    ${(()=>{
+                      const nDias=selN.novDias||{};
+                      const novEntries=Object.entries(nDias).filter(([k])=>k.startsWith(anio+"-"+String(mes+1).padStart(2,"0"))).sort();
+                      const tipoLabel={incapacidad:"Incapacidad",vacaciones:"Vacaciones",licencia:"Licencia rem.",licNoRem:"Licencia no rem.",ausencia:"Ausencia"};
+                      if(novEntries.length===0) return "";
+                      const festivos=calc.festMes||0;
+                      const diasLab=30-novEntries.length;
+                      return `<div class="section-title">Novedades del período</div>
+                      <table class="acum"><thead><tr><th>Fecha</th><th>Tipo</th><th class="r">Días</th></tr></thead><tbody>
+                      ${novEntries.map(([k,v])=>{const d=new Date(k+"T12:00:00");return `<tr><td>${d.toLocaleDateString("es-CO",{day:"numeric",month:"short"})}</td><td>${tipoLabel[v]||v}</td><td class="r">1</td></tr>`;}).join("")}
+                      </tbody></table>
+                      <div style="font-size:7pt;color:#999;margin:4px 0 0">Días laborados: ${diasLab} · Festivos: ${festivos} · Novedades: ${novEntries.length}</div>`;
+                    })()}
+
                     <div class="section-title">Acumulados año ${anio} (${MESES[startY].slice(0,3)} — ${MESES[mes].slice(0,3)} · ${mesesYTD} mes${mesesYTD>1?"es":""})</div>
                     <table class="acum"><thead><tr><th>Concepto</th><th class="r">Mes actual</th><th class="r">Acumulado año</th></tr></thead><tbody>
                     <tr><td>Salario bruto</td><td class="r">${fmt(calc.dev)}</td><td class="r">${fmt(calc.dev*mesesYTD)}</td></tr>
