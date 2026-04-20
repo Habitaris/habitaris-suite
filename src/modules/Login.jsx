@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import { HAB_LOGO } from './habLogo.js'
 
 const sb = createClient(
   'https://xlzkasdskatnikuavefh.supabase.co',
@@ -72,7 +73,7 @@ export default function LoginScreen({ onSuccess }) {
               alignItems:'center', justifyContent:'center', padding:48, flexShrink:0 },
     right:  { flex:1, background:'#FAFAF8', display:'flex', alignItems:'center',
               justifyContent:'center', padding:40 },
-    logo:   { width:140, marginBottom:40, filter:'brightness(0) invert(1)' },
+    logo:   { width:160, marginBottom:40, filter:'invert(1)', mixBlendMode:'screen' },
     tagline:{ color:'rgba(255,255,255,0.45)', fontSize:12, letterSpacing:3,
               textTransform:'uppercase', marginTop:8 },
     card:   { width:'100%', maxWidth:360 },
@@ -96,7 +97,7 @@ export default function LoginScreen({ onSuccess }) {
   return (
     <div style={s.page}>
       <div style={s.left}>
-        <img src="/logo-habitaris-blanco.jpg" alt="Habitaris" style={s.logo}
+        <img src={HAB_LOGO} alt="Habitaris" style={s.logo}
           onError={e=>{ e.target.style.display='none' }}/>
         <div style={{color:'#FFF',fontSize:22,fontWeight:700,letterSpacing:-0.5,textAlign:'center'}}>Habitaris</div>
         <div style={s.tagline}>Suite de Gestión</div>
