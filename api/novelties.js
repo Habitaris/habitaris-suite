@@ -7,7 +7,7 @@ function sbHeaders() {
 
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PATCH,DELETE,OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
 
@@ -40,7 +40,9 @@ export default async function handler(req, res) {
         horas_extra: body.horas_extra || 0,
         motivo: body.motivo || "",
         adjunto_url: body.adjunto_url || null,
-        estado: "pendiente",
+        estado: body.source === "rrhh" ? "aprobada" : "pendiente",
+        aprobado_por: body.source === "rrhh" ? (body.aprobado_por || "admin") : null,
+        aprobado_at: body.source === "rrhh" ? new Date().toISOString() : null,
         centro_costo: body.centro_costo || null,
         ot_id: body.ot_id || null,
       };
@@ -65,6 +67,23 @@ export default async function handler(req, res) {
       var data3 = await r3.json();
       if (r3.ok) return res.status(200).json({ ok: true, data: data3 });
       return res.status(r3.status).json({ ok: false, error: data3.message || "Update failed" });
+    }
+
+    // DELETE — remove novelty by id or by employee+date+tipo
+    if (req.method === "DELETE") {
+      var body = req.body || {};
+      var filter = "";
+      if (body.id) {
+        filter = "id=eq." + body.id;
+      } else if (body.employee_id && body.fecha_inicio && body.tipo) {
+        filter = "employee_id=eq." + body.employee_id + "&fecha_inicio=eq." + body.fecha_inicio + "&tipo=eq." + body.tipo;
+      } else {
+        return res.status(400).json({ ok: false, error: "id or (employee_id+fecha_inicio+tipo) required" });
+      }
+      var r4 = await fetch(SB_URL + "/rest/v1/hr_novelties?" + filter, {
+        method: "DELETE", headers: sbHeaders()
+      });
+      return res.status(200).json({ ok: true, deleted: true });
     }
 
     return res.status(405).json({ error: "Method not allowed" });

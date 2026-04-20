@@ -782,7 +782,8 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                   if(!ed)return;
                   const k=anio+"-"+String(mes+1).padStart(2,"0")+"-"+String(day).padStart(2,"0");
                   const cur={...nDias};
-                  if(cur[k]===selNovTipo)delete cur[k]; else cur[k]=selNovTipo;
+                  const wasSet=cur[k]===selNovTipo;
+                  if(wasSet)delete cur[k]; else cur[k]=selNovTipo;
                   // Update counts
                   const nc={incapacidad:0,vacaciones:0,licencia:0,licNoRem:0,ausencia:0};
                   Object.values(cur).forEach(v=>{if(nc[v]!==undefined)nc[v]++;});
@@ -790,6 +791,16 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                   // Solo reducen: incapacidad, lic NO rem, ausencia, vacaciones
                   const diasRed = nc.incapacidad + nc.vacaciones + nc.licNoRem + nc.ausencia;
                   u({novDias:cur,dias:Math.max(0,30-diasRed),diasIncap:nc.incapacidad,diasVac:nc.vacaciones,diasLicRem:nc.licencia,diasLicNoRem:nc.licNoRem});
+                  // Sync to hr_novelties
+                  const tipoMap={incapacidad:"incapacidad",vacaciones:"vacaciones",licencia:"licencia_remunerada",licNoRem:"licencia_no_remunerada",ausencia:"ausencia"};
+                  const apiTipo=tipoMap[selNovTipo]||selNovTipo;
+                  if(wasSet){
+                    // Remove from hr_novelties
+                    fetch("/api/novelties",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,fecha_inicio:k,tipo:apiTipo})}).catch(()=>{});
+                  } else {
+                    // Add to hr_novelties (auto-approved from RRHH)
+                    fetch("/api/novelties",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,employee_nombre:selN.nombre,tipo:apiTipo,fecha_inicio:k,fecha_fin:k,motivo:"Registrado por RRHH",source:"rrhh"})}).catch(()=>{});
+                  }
                 };
 
                 return <>
