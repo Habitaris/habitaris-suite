@@ -940,11 +940,19 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                   const items=[{c:"Salario básico",d:calc.salProp,dd:0},calc.aux>0&&{c:`Aux. transporte (${calc.diasComm}d)`,d:calc.aux,dd:0},calc.bono>0&&{c:`Bono asistencia (${calc.diasAsist}d)`,d:calc.bono,dd:0},calc.totHex>0&&{c:"Horas extra",d:calc.totHex,dd:0},calc.recFest>0&&{c:"Recargo festivos",d:calc.recFest,dd:0},{c:"EPS (4%)",d:0,dd:calc.epsE},{c:"Pensión (4%)",d:0,dd:calc.penE},calc.rteF>0&&{c:"Retención fuente",d:0,dd:calc.rteF},calc.otrasDed>0&&{c:"Otras deducciones",d:0,dd:calc.otrasDed}].filter(Boolean);
                   let bodyHtml="";
                   if(d.action==="anticipo"){
-                    bodyHtml=`<h1>Justificante de anticipo</h1><div class="sub">${MESES[mes]} ${anio} · Pago 15/${MESES[mes].slice(0,3)}</div>
-                    <div class="info"><div><span>Nombre: </span><b>${selN.nombre}</b></div><div><span>Documento: </span><b>${selN.cc}</b></div><div><span>Cargo: </span>${selN.cargo}</div><div><span>Contrato: </span>${selN.tipoContrato}</div></div>
-                    <div class="neto"><div class="lbl"><div>Anticipo primera quincena</div><div>${((selN.q1Pct||0.5)*100).toFixed(0)}% del salario base (${fmt(selN.sal)})</div></div><div class="v">${fmt(calc.q1)}</div></div>
-                    <div style="font-size:7.5pt;color:#999;margin:10px 0">Ref: ${ref}</div>
-                    <div class="sig"><div><div class="line"></div><div class="name">Habitaris S.A.S</div><div class="role">Empleador</div></div><div><div class="line"></div><div class="name">${selN.nombre}</div><div class="role">Trabajador</div></div></div>`;
+                    const fiDate2=new Date((selN.fechaIngreso||"2026-01-01")+"T12:00:00");
+                    const antigDias2=Math.floor((new Date()-fiDate2)/86400000);
+                    const antigMeses2=Math.floor(antigDias2/30);
+                    const antigAnios2=Math.floor(antigMeses2/12);
+                    const antigTxt2=antigAnios2>0?antigAnios2+"a "+(antigMeses2%12)+"m":antigMeses2+"m "+(antigDias2%30)+"d";
+                    bodyHtml=`<h1>Justificante de anticipo</h1>
+                    <div class="info"><div><span>Nombre: </span><b>${selN.nombre}</b></div><div><span>Documento: </span><b>${selN.cc}</b></div><div><span>Cargo: </span>${selN.cargo}</div><div><span>Contrato: </span>${selN.tipoContrato}</div><div><span>Fecha de pago: </span><b>15 de ${MESES[mes]} ${anio}</b></div><div><span>Antigüedad: </span><b>${antigTxt2}</b></div></div>
+                    <table><thead><tr><th>Concepto</th><th class="r">Base</th><th class="r">Importe</th></tr></thead><tbody>
+                    <tr><td>Anticipo primera quincena (${((selN.q1Pct||0.5)*100).toFixed(0)}% salario base)</td><td class="r">${fmt(selN.sal)}</td><td class="r">${fmt(calc.q1)}</td></tr>
+                    <tr class="liq"><td>Líquido a percibir</td><td class="r"></td><td class="r">${fmt(calc.q1)}</td></tr>
+                    </tbody></table>
+                    <div style="font-size:7pt;color:#bbb;margin:12px 0">Ref: ${ref} · Este importe será descontado en la nómina del período</div>
+                    <div class="sig"><div><div class="line"></div><div class="name">Habitaris S.A.S</div><div class="role">Administración de personal</div></div><div><div class="line"></div><div class="name">${selN.nombre}</div><div class="role">Recibí conforme</div></div></div>`;
                   } else {
                     const allItems=[...items];
                     if(isQuinc) allItems.push({c:"Anticipo de nómina (15/"+MESES[mes].slice(0,3)+")",d:0,dd:calc.q1});
