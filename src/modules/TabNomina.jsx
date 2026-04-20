@@ -640,7 +640,7 @@ export function TabNomina(){
       <div className="fade-up" style={{maxWidth:1050,margin:"0 auto"}}>
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
           <Btn onClick={()=>{setVista("lista");setSubTab("nomina");}}>← Volver</Btn>
-          <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selN.nombre}</div><div style={{fontSize:11,color:T.inkLight}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio}</div></div>
+          <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selN.nombre}</div><div style={{fontSize:11,color:T.inkLight}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio} · <span style={{fontWeight:600,color:selN.modalidadPago==="mensual"?T.ink:T.blue}}>{selN.modalidadPago==="mensual"?"Pago mensual":"Pago quincenal"}</span></div></div>
           {ed&&<Btn pri small onClick={()=>u({estado:"aprobada"})}>✓ Aprobar</Btn>}
           <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
           <Btn small onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n👤 Portal del empleado:\nhttps://suite.habitaris.co/empleado\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");}}>💬 Link empleados</Btn>
@@ -741,8 +741,11 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
           }}>📄 Reporte novedades</Btn>
           <Pill e={selN.estado}/>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:8,marginBottom:14}}>
-          {[["Devengado",calc.dev,T.ink],["Deducciones",calc.totD,T.red],["Neto mes",calc.neto,T.green],["Q1 anticipo",calc.q1,T.blue],["Q2 ajuste",calc.q2,calc.q2>=0?T.green:T.red]].map(([l,v,c])=>(
+        <div style={{display:"grid",gridTemplateColumns:selN.modalidadPago==="mensual"?"repeat(3,1fr)":"repeat(5,1fr)",gap:8,marginBottom:14}}>
+          {(selN.modalidadPago==="mensual"
+            ?[["Devengado",calc.dev,T.ink],["Deducciones",calc.totD,T.red],["Neto mes",calc.neto,T.green]]
+            :[["Devengado",calc.dev,T.ink],["Deducciones",calc.totD,T.red],["Neto mes",calc.neto,T.green],["Q1 anticipo",calc.q1,T.blue],["Q2 ajuste",calc.q2,calc.q2>=0?T.green:T.red]]
+          ).map(([l,v,c])=>(
             <div key={l} style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:6,padding:"10px 12px",textAlign:"center"}}>
               <div style={{fontSize:8,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:.8,marginBottom:2}}>{l}</div>
               <div style={{fontSize:17,fontWeight:800,color:c,fontFamily:"'DM Mono',monospace"}}>{fmt(v)}</div>
@@ -872,7 +875,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
               <Card><STit>Parámetros</STit>
                 <Inp label="Salario base" type="number" value={selN.sal} onChange={v=>u({sal:v})} suf="COP" disabled={!ed} small/>
                 <Inp label="Bono (Art.128)" type="number" value={selN.bono} onChange={v=>u({bono:v})} suf="COP" disabled={!ed} small/>
-                <Inp label="Anticipo Q1 (%)" type="number" value={(selN.q1Pct||0.5)*100} onChange={v=>u({q1Pct:v/100})} suf="%" disabled={!ed} small/>
+                {selN.modalidadPago!=="mensual"&&<Inp label="Anticipo Q1 (%)" type="number" value={(selN.q1Pct||0.5)*100} onChange={v=>u({q1Pct:v/100})} suf="%" disabled={!ed} small/>}
                 <Sel label="Régimen" value={selN.reg} onChange={v=>u({reg:v})} opts={[{v:"contributivo",l:"Contributivo (EPS)"},{v:"subsidiado",l:"Subsidiado (SISBEN)"}]}/>
                 <Sel label="Nivel ARL" value={selN.arl} onChange={v=>u({arl:parseInt(v)})} opts={ARL_OPTS.map((a,i)=>({v:i,l:`${a.lbl} — ${fPct(a.t)}`}))}/>
                 <Inp label="Otros ingresos" type="number" value={selN.otrosIng||0} onChange={v=>u({otrosIng:v})} suf="COP" disabled={!ed} small/>
@@ -1114,9 +1117,11 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                   ["Devengado bruto",fmt(calc.dev),"Lo que se genera"],
                   ["(-) Deducciones empleado",fmt(calc.totD),"EPS + Pen + RteF"],
                   ["= NETO A PAGAR",fmt(calc.neto),"Lo que recibe el trabajador"],
-                  ["","",""],
-                  ["Q1 — Anticipo fijo",fmt(calc.q1),fmt(selN.sal)+" × "+((selN.q1Pct||0.5)*100)+"%"],
-                  ["Q2 — Ajuste real",fmt(calc.q2),"Neto − Q1"],
+                  ...(selN.modalidadPago!=="mensual"?[
+                    ["","",""],
+                    ["Q1 — Anticipo fijo",fmt(calc.q1),fmt(selN.sal)+" × "+((selN.q1Pct||0.5)*100)+"%"],
+                    ["Q2 — Ajuste real",fmt(calc.q2),"Neto − Q1"],
+                  ]:[]),
                   ["","",""],
                   ["(+) Aportes empleador",fmt(calc.totAp),"Lo que paga la empresa adicional"],
                   ["(+) Provisiones",fmt(calc.totPr),"Reserva mensual obligatoria"],
@@ -1201,8 +1206,8 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
               <td style={{padding:"9px 12px",fontSize:11,color:T.inkLight,fontFamily:"'DM Mono',monospace"}}>{n.bono>0?fmt(n.bono):"—"}</td>
               <td style={{padding:"9px 12px",fontSize:11,fontFamily:"'DM Mono',monospace"}}>{n.dias}</td>
               <td style={{padding:"9px 12px",fontSize:12,fontWeight:700,color:T.green,fontFamily:"'DM Mono',monospace"}}>{fmt(c.neto)}</td>
-              <td style={{padding:"9px 12px",fontSize:11,color:T.blue,fontFamily:"'DM Mono',monospace"}}>{fmt(c.q1)}</td>
-              <td style={{padding:"9px 12px",fontSize:11,color:T.green,fontFamily:"'DM Mono',monospace"}}>{fmt(c.q2)}</td>
+              <td style={{padding:"9px 12px",fontSize:11,color:T.blue,fontFamily:"'DM Mono',monospace"}}>{n.modalidadPago==="mensual"?"—":fmt(c.q1)}</td>
+              <td style={{padding:"9px 12px",fontSize:11,color:T.green,fontFamily:"'DM Mono',monospace"}}>{n.modalidadPago==="mensual"?"—":fmt(c.q2)}</td>
               <td style={{padding:"9px 12px",fontSize:11,color:T.inkMid,fontFamily:"'DM Mono',monospace"}}>{fmt(c.costoT)}</td>
               <td style={{padding:"9px 12px"}}><Pill e={n.estado}/></td>
               <td style={{padding:"9px 12px"}}><Btn small onClick={()=>{setSel(n.id);setVista("detalle");setSubTab("nomina");}}>Ver →</Btn></td>
