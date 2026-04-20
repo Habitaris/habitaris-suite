@@ -643,6 +643,26 @@ export function TabNomina(){
           <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selN.nombre}</div><div style={{fontSize:11,color:T.inkLight}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio} · <span style={{fontWeight:600,color:selN.modalidadPago==="mensual"?T.ink:T.blue}}>{selN.modalidadPago==="mensual"?"Pago mensual":"Pago quincenal"}</span></div></div>
           {ed&&<Btn pri small onClick={()=>u({estado:"aprobada"})}>✓ Aprobar</Btn>}
           <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
+          {selN.estado==="aprobada"&&<Btn small onClick={()=>{
+            const isQ=selN.modalidadPago!=="mensual";
+            const liq=isQ?calc.q2:calc.neto;
+            // Publish nómina
+            fetch("/api/hiring",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+              action:"pub_nomina",employee_id:selN.empId,anio,mes,tipo:"nomina",
+              nombre_mes:MESES[mes],devengado:calc.dev,deducciones:calc.totD,neto:calc.neto,liquido:liq,modalidad:selN.modalidadPago||"quincenal"
+            })}).then(r=>r.json()).then(d=>{
+              if(d.ok){
+                // Also publish anticipo if quincenal
+                if(isQ){
+                  fetch("/api/hiring",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+                    action:"pub_nomina",employee_id:selN.empId,anio,mes,tipo:"anticipo",
+                    nombre_mes:MESES[mes],devengado:selN.sal,deducciones:0,neto:calc.q1,liquido:calc.q1,modalidad:"quincenal"
+                  })});
+                }
+                alert("✅ Nómina publicada en el portal del empleado");
+              }
+            });
+          }}>📤 Publicar</Btn>}
           <Btn small onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n👤 Portal del empleado:\nhttps://suite.habitaris.co/empleado\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");}}>💬 Link empleados</Btn>
           <Btn small onClick={()=>{
             const nDias=selN.novDias||{};

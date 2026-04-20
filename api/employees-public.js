@@ -102,6 +102,25 @@ export default async function handler(req, res) {
         return res.status(200).json({ ok: true });
       }
 
+      // Get nóminas for employee
+      if (body.action === "get_nominas") {
+        var noms = await kvGet("hab:nominas:" + body.emp_id);
+        return res.status(200).json({ ok: true, data: noms ? JSON.parse(noms) : [] });
+      }
+
+      // Mark nómina as received
+      if (body.action === "nomina_recibida") {
+        var noms2 = await kvGet("hab:nominas:" + body.emp_id);
+        var list = noms2 ? JSON.parse(noms2) : [];
+        var found = list.find(n => n.id === body.nomina_id);
+        if (found) {
+          found.recibida_at = new Date().toISOString();
+          await kvSet("hab:nominas:" + body.emp_id, JSON.stringify(list));
+          return res.status(200).json({ ok: true });
+        }
+        return res.status(404).json({ ok: false, error: "Nómina not found" });
+      }
+
       return res.status(400).json({ ok: false, error: "Unknown action" });
     }
     return res.status(405).json({ error: "Method not allowed" });

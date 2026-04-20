@@ -74,6 +74,30 @@ export default async function handler(req,res){
         return res.json({ok:true});
       }
 
+      // Publish nómina to employee portal
+      if(b.action==="pub_nomina"){
+        var empId=b.employee_id, kvNom="hab:nominas:"+empId;
+        var existing=await fetch(SB_URL+"/rest/v1/kv_store?key=eq."+kvNom+"&select=value",{headers:sbH()});
+        var exData=await existing.json();
+        var list=(exData&&exData[0])?JSON.parse(exData[0].value):[];
+        // Remove existing for same month/year/tipo
+        list=list.filter(n=>!(n.anio===b.anio&&n.mes===b.mes&&n.tipo===b.tipo));
+        // Add new
+        list.push({id:b.id||Date.now().toString(36),anio:b.anio,mes:b.mes,tipo:b.tipo,nombre_mes:b.nombre_mes,devengado:b.devengado,deducciones:b.deducciones,neto:b.neto,liquido:b.liquido,modalidad:b.modalidad,publicada_at:new Date().toISOString(),recibida_at:null});
+        list.sort((a,c)=>(c.anio*100+c.mes)-(a.anio*100+a.mes));
+        // Save
+        var valN=JSON.stringify(list);
+        var rpN=await fetch(SB_URL+"/rest/v1/kv_store?key=eq."+kvNom,{method:"PATCH",headers:{...sbH(),Prefer:"return=minimal"},body:JSON.stringify({value:valN})});
+        if(rpN.status===204||rpN.status===200){
+          var chkN=await fetch(SB_URL+"/rest/v1/kv_store?key=eq."+kvNom+"&select=key",{headers:sbH()});
+          var chkNd=await chkN.json();
+          if(!Array.isArray(chkNd)||chkNd.length===0){
+            await fetch(SB_URL+"/rest/v1/kv_store",{method:"POST",headers:sbH(),body:JSON.stringify({key:kvNom,value:valN,tenant_id:"habitaris"})});
+          }
+        }
+        return res.json({ok:true,count:list.length});
+      }
+
       // Delete action — cascade: psicotecnico_results → hiring_processes
       if(b.action==="delete"&&b.id){
         await fetch(SB_URL+"/rest/v1/psicotecnico_results?hiring_id=eq."+b.id,{method:"DELETE",headers:sbH()});
