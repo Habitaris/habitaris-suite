@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { HAB_LOGO } from "./habLogo.js";
 import { downloadPDF } from "./pdfUtil.js";
 import { buildNominaHtml } from "./nominaHtml.js";
+import { BannerPagos } from "./BannerPagos.jsx";
 
 const SMLMV = 1_750_905, AUX_TR = 249_095, UVT = 49_799;
 const ARL_OPTS = [
@@ -44,14 +45,16 @@ function lblFecha(fecha, hoy){
 }
 
 // Estado de alerta de una fecha objetivo. Devuelve {nivel, dias, msg} o null.
-// nivel: "rojo" vencido/hoy, "amarillo" ≤2d, "azul" ≤5d, null fuera de rango
+// nivel: "rojo" vencido/hoy/mañana, "amarillo" 2-3d, "azul" 4-14d, null >14d
+// Rango amplio: el usuario ve el aviso ~2 semanas antes del pago para prepararse con tiempo.
 function alertaPago(fechaObjetivo, hoy){
   const diffMs = fechaObjetivo - hoy;
   const dias = Math.floor(diffMs / (1000*60*60*24));
   if (dias < 0) return {nivel:"rojo", dias, msg:`Vencido hace ${-dias} día${-dias===1?"":"s"}`};
   if (dias === 0) return {nivel:"rojo", dias, msg:"Vence HOY"};
-  if (dias <= 2) return {nivel:"amarillo", dias, msg:`Vence en ${dias} día${dias===1?"":"s"}`};
-  if (dias <= 5) return {nivel:"azul", dias, msg:`Vence en ${dias} días`};
+  if (dias === 1) return {nivel:"rojo", dias, msg:"Vence mañana"};
+  if (dias <= 3) return {nivel:"amarillo", dias, msg:`Vence en ${dias} días`};
+  if (dias <= 14) return {nivel:"azul", dias, msg:`Vence en ${dias} días`};
   return null;
 }
 
@@ -678,33 +681,6 @@ export function TabNomina(){
   const totQ1=noms.reduce((s,n)=>s+calcN(n).q1,0);
   const totQ2=noms.reduce((s,n)=>s+calcN(n).q2,0);
 
-  // Alertas de vencimiento de pago. Solo para el mes actual (no para meses pasados/futuros)
-  const alertas=useMemo(()=>{
-    const today=new Date();today.setHours(0,0,0,0);
-    // Solo calcular alertas si la vista es del mes/año actual
-    const esMesActual = today.getFullYear()===anio && today.getMonth()===mes;
-    if(!esMesActual) return [];
-    const a=[];
-    // Q1 quincenal: vence el 15 (o último hábil anterior)
-    const finMesDate=new Date(anio,mes+1,0);
-    const fechaQ1=ultimoDiaHabil(new Date(anio,mes,15),holidays);
-    const pendQ1=noms.filter(n=>n.modalidadPago!=="mensual"&&n.estado==="borrador");
-    if(pendQ1.length>0){
-      const alt=alertaPago(fechaQ1,today);
-      if(alt) a.push({tipo:"Q1",fecha:fechaQ1,pendientes:pendQ1,alt});
-    }
-    // Q2 quincenal + mensual: vence último día del mes (o último hábil anterior)
-    const fechaFin=ultimoDiaHabil(finMesDate,holidays);
-    const pendQ2=noms.filter(n=>n.modalidadPago!=="mensual"&&n.estado==="q1_pagado");
-    const pendMensual=noms.filter(n=>n.modalidadPago==="mensual"&&n.estado==="borrador");
-    const pendFin=[...pendQ2,...pendMensual];
-    if(pendFin.length>0){
-      const alt=alertaPago(fechaFin,today);
-      if(alt) a.push({tipo:"Fin de mes",fecha:fechaFin,pendientes:pendFin,altQ2:pendQ2.length,altMensual:pendMensual.length,alt});
-    }
-    return a;
-  },[noms,anio,mes,holidays]);
-
   if(vista==="detalle"&&selN&&calc){
     const ed=selN.estado==="borrador"||selN.estado==="q1_pagado";
     const isQ=selN.modalidadPago!=="mensual";
@@ -1252,44 +1228,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
           <Btn pri onClick={guardar} disabled={guard}>{guard?"Guardando…":"💾 Guardar"}</Btn>
         </div>
       </div>
-      {/* Banner de alertas de vencimiento */}
-      {alertas.length>0 && (
-        <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
-          {alertas.map((a,i)=>{
-            const colors={
-              rojo:{bg:"#FEF2F2",border:"#FCA5A5",ink:"#991B1B",accent:"#DC2626"},
-              amarillo:{bg:"#FFFBEB",border:"#FCD34D",ink:"#92400E",accent:"#D97706"},
-              azul:{bg:"#EFF6FF",border:"#93C5FD",ink:"#1E3A8A",accent:"#2563EB"}
-            }[a.alt.nivel];
-            const icono=a.alt.nivel==="rojo"?"🚨":a.alt.nivel==="amarillo"?"⚠️":"🔔";
-            const titulo=a.tipo==="Q1"
-              ? `Anticipo Q1 quincenal · ${a.alt.msg}`
-              : a.altQ2&&a.altMensual?`Nómina de fin de mes · ${a.alt.msg}`
-                : a.altMensual?`Nómina mensual · ${a.alt.msg}`
-                : `Q2 quincenal · ${a.alt.msg}`;
-            const nombresPend=a.pendientes.map(p=>{
-              const partes=(p.nombre||"").split(" ");
-              return partes.length>=3?partes.slice(-2).join(" "):p.nombre;
-            });
-            const fechaLbl=lblFecha(a.fecha,new Date(new Date().setHours(0,0,0,0)));
-            return(
-              <div key={i} style={{background:colors.bg,border:`1px solid ${colors.border}`,borderRadius:6,padding:"12px 16px",display:"flex",alignItems:"center",gap:14}}>
-                <div style={{fontSize:18}}>{icono}</div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:12,fontWeight:700,color:colors.ink,marginBottom:2}}>{titulo}</div>
-                  <div style={{fontSize:11,color:colors.ink}}>
-                    Fecha de pago: <strong>{fechaLbl}</strong>
-                    {a.fecha.getDate()!==(a.tipo==="Q1"?15:new Date(anio,mes+1,0).getDate()) && 
-                      <span style={{color:colors.accent,fontStyle:"italic"}}> (último día hábil anterior)</span>}
-                    {" · "}
-                    <strong>{a.pendientes.length} empleado{a.pendientes.length===1?"":"s"} pendiente{a.pendientes.length===1?"":"s"}</strong>: {nombresPend.join(", ")}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {(()=>{const h=new Date();return h.getFullYear()===anio&&h.getMonth()===mes;})() && <BannerPagos noms={noms} />}
       <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
         {[["Empleados",noms.length,T.ink],["Pagadas",noms.filter(n=>n.estado==="liquidada"||n.estado==="pagada").length,T.green],["Neto total",fmt(totN),T.ink],["Total Q1",fmt(totQ1),T.blue],["Total Q2",fmt(totQ2),T.green]].map(([l,v,c])=>(
           <div key={l} style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:6,padding:"12px 14px",boxShadow:T.shadow}}>

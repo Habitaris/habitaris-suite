@@ -140,6 +140,19 @@ export default async function handler(req, res) {
         return res.status(404).json({ ok: false, error: "Nómina not found" });
       }
 
+      // Delete a published nómina (used to fix data mistakes, e.g. when reverting an incorrect payment)
+      if (body.action === "delete_nomina") {
+        var nomsD = await kvGet("hab:nominas:" + body.emp_id);
+        var listD = nomsD ? JSON.parse(nomsD) : [];
+        var before = listD.length;
+        var filtered = listD.filter(n => n.id !== body.nomina_id);
+        if (filtered.length === before) {
+          return res.status(404).json({ ok: false, error: "Nómina not found" });
+        }
+        await kvSet("hab:nominas:" + body.emp_id, JSON.stringify(filtered));
+        return res.status(200).json({ ok: true, removed: 1, remaining: filtered.length });
+      }
+
       return res.status(400).json({ ok: false, error: "Unknown action" });
     }
     return res.status(405).json({ error: "Method not allowed" });

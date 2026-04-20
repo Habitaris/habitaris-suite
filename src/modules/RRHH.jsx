@@ -4,6 +4,7 @@ import { TabNomina } from "./TabNomina.jsx";
 import CalcSalarial from "./CalcSalarial.jsx";
 import TabFestivos from "./TabFestivos.jsx";
 import TabLiquidacion from "./TabLiquidacion.jsx";
+import { BannerPagos } from "./BannerPagos.jsx";
 import { downloadPDF } from "./pdfUtil.js";
 import { HAB_LOGO } from "./habLogo.js";
 
@@ -4848,6 +4849,7 @@ export default function HabitarisRRHH({ pais = "CO" }) {
 
                   {tab==="dashboard" && (
                     <div className="fade-up" style={{padding:"20px 0"}}>
+                      <BannerPagos />
                       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:16}}>
                         {[
                           ["👷 Cargos",cargos.length,"#111"],
