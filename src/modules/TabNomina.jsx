@@ -607,6 +607,9 @@ export function TabNomina(){
   const [selNovTipo,setSelNovTipo]=useState("incapacidad");
   const [novHist,setNovHist]=useState([]);
   const [novYear,setNovYear]=useState(hoy.getFullYear());
+  const [buscar,setBuscar]=useState("");
+  const [sortBy,setSortBy]=useState("nombre");
+  const [sortDir,setSortDir]=useState("asc");
 
   useEffect(()=>{
     setLoading(true);
@@ -941,9 +944,11 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                     <div class="info"><div><span>Nombre: </span><b>${selN.nombre}</b></div><div><span>Documento: </span><b>${selN.cc}</b></div><div><span>Cargo: </span>${selN.cargo}</div><div><span>Días: </span><b>${calc.dias}/30</b></div></div>
                     <table><thead><tr><th>CONCEPTO</th><th class="r">DEVENGADO</th><th class="r">DEDUCCIÓN</th></tr></thead><tbody>
                     ${items.map(r=>"<tr><td>"+r.c+"</td><td class='r'>"+(r.d>0?fmt(r.d):"—")+"</td><td class='r'>"+(r.dd>0?fmt(r.dd):"—")+"</td></tr>").join("")}
-                    <tr class="tot"><td>TOTALES</td><td class="r">${fmt(calc.dev)}</td><td class="r">${fmt(calc.totD)}</td></tr></tbody></table>
-                    <div class="neto"><div class="lbl"><div>PAGO Q2 (AJUSTE)</div><div>Neto ${fmt(calc.neto)} − Q1 ${fmt(calc.q1)}</div></div><div class="v">${fmt(calc.q2)}</div></div>
-                    <div style="background:#f5f5f5;padding:8px 12px;border-radius:4px;font-size:9pt;margin:8px 0"><b>Ref bancaria:</b> ${ref}</div>
+                    <tr class="tot"><td>NETO MES</td><td class="r">${fmt(calc.dev)}</td><td class="r">${fmt(calc.totD)}</td></tr>
+                    <tr style="background:#EFF6FF;border-top:1px solid #2563eb44"><td style="padding:5px 8px;color:#2563eb;font-weight:600">(-) Anticipo Q1 pagado (15/${MESES[mes].slice(0,3)})</td><td class="r"></td><td class="r" style="color:#2563eb;font-weight:700;font-size:10pt">${fmt(calc.q1)}</td></tr>
+                    <tr style="background:#111;color:#fff"><td style="padding:6px 8px;font-weight:800;font-size:10pt">PAGO Q2 (AJUSTE)</td><td class="r"></td><td class="r" style="font-weight:800;font-size:12pt;font-family:monospace">${fmt(calc.q2)}</td></tr>
+                    </tbody></table>
+                    <div style="background:#f5f5f5;padding:8px 12px;border-radius:4px;font-size:9pt;margin:12px 0"><b>Ref bancaria:</b> ${ref}</div>
                     <div class="sig"><div>Empleador<br><span style="color:#999">Habitaris S.A.S</span></div><div>Trabajador<br><span style="color:#999">${selN.nombre}</span></div></div>`;
                   } else {
                     bodyHtml=`<h1>COMPROBANTE DE NÓMINA</h1><div class="sub">${MESES[mes]} ${anio} · ${fileName}</div>
@@ -1158,17 +1163,37 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
       {loading?<div style={{textAlign:"center",padding:40,color:T.inkLight}}>Cargando empleados desde Supabase…</div>:
       noms.length===0?<Card style={{textAlign:"center",padding:40}}><div style={{fontSize:28,marginBottom:8}}>📋</div><div style={{fontSize:13,fontWeight:600,color:T.ink}}>Sin empleados vinculados</div><div style={{fontSize:11,color:T.inkLight,marginTop:4}}>Los empleados con contrato firmado aparecerán automáticamente.</div></Card>:
       <Card style={{padding:0,overflow:"hidden"}}>
-        <div style={{padding:"10px 16px",borderBottom:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <span style={{fontSize:12,fontWeight:700}}>Nómina {MESES[mes]} {anio}</span>
-          <span style={{fontSize:10,color:T.inkLight}}>Costo empresa total: <strong style={{color:T.ink}}>{fmt(totC)}</strong></span>
+        <div style={{padding:"10px 16px",borderBottom:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
+          <span style={{fontSize:12,fontWeight:700,whiteSpace:"nowrap"}}>Nómina {MESES[mes]} {anio}</span>
+          <input value={buscar} onChange={e=>setBuscar(e.target.value)} placeholder="🔍 Buscar empleado…" style={{flex:1,maxWidth:280,padding:"6px 12px",border:`1px solid ${T.border}`,borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif",outline:"none"}}/>
+          <span style={{fontSize:10,color:T.inkLight,whiteSpace:"nowrap"}}>Costo empresa: <strong style={{color:T.ink}}>{fmt(totC)}</strong></span>
         </div>
+        {(()=>{
+          const getApellido=(nom)=>{const p=(nom||"").split(" ");return p.length>=3?p.slice(-2).join(" "):p.length>=2?p[p.length-1]:nom||"";};
+          const q=buscar.toLowerCase();
+          const filtered=noms.filter(n=>!q||(n.nombre||"").toLowerCase().includes(q)||(n.cc||"").includes(q)||(n.cargo||"").toLowerCase().includes(q));
+          const sorted=[...filtered].sort((a,b)=>{
+            let va,vb;
+            if(sortBy==="nombre"){va=getApellido(a.nombre);vb=getApellido(b.nombre);}
+            else if(sortBy==="cargo"){va=a.cargo||"";vb=b.cargo||"";}
+            else if(sortBy==="sal"){va=a.sal||0;vb=b.sal||0;}
+            else if(sortBy==="neto"){va=calcN(a).neto;vb=calcN(b).neto;}
+            else{va=a.nombre||"";vb=b.nombre||"";}
+            const cmp=typeof va==="number"?va-vb:String(va).localeCompare(String(vb),"es");
+            return sortDir==="asc"?cmp:-cmp;
+          });
+          const toggleSort=(col)=>{if(sortBy===col)setSortDir(d=>d==="asc"?"desc":"asc");else{setSortBy(col);setSortDir("asc");}};
+          const sortIcon=(col)=>sortBy===col?(sortDir==="asc"?"▲":"▼"):"";
+          return <>
         <table style={{width:"100%",borderCollapse:"collapse"}}>
-          <thead><tr style={{background:T.accent}}>{["Empleado","Cargo","Salario","Bono","Días","Neto","Q1","Q2","Costo total","Estado",""].map(h=>(
-            <th key={h} style={{padding:"7px 12px",fontSize:9,fontWeight:700,color:T.inkLight,textAlign:"left",letterSpacing:.6,textTransform:"uppercase"}}>{h}</th>
-          ))}</tr></thead>
-          <tbody>{noms.map(n=>{const c=calcN(n);return(
+          <thead><tr style={{background:T.accent}}>
+            {[{k:"nombre",l:"Empleado"},{k:"cargo",l:"Cargo"},{k:"sal",l:"Salario"},{k:"",l:"Bono"},{k:"",l:"Días"},{k:"neto",l:"Neto"},{k:"",l:"Q1"},{k:"",l:"Q2"},{k:"",l:"Costo"},{k:"",l:"Estado"},{k:"",l:""}].map(h=>(
+              <th key={h.l} onClick={h.k?()=>toggleSort(h.k):undefined} style={{padding:"7px 12px",fontSize:9,fontWeight:700,color:sortBy===h.k?T.ink:T.inkLight,textAlign:"left",letterSpacing:.6,textTransform:"uppercase",cursor:h.k?"pointer":"default",userSelect:"none"}}>{h.l} {sortIcon(h.k)}</th>
+            ))}
+          </tr></thead>
+          <tbody>{sorted.length===0?<tr><td colSpan={11} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:12}}>Sin resultados para "{buscar}"</td></tr>:sorted.map(n=>{const c=calcN(n);return(
             <tr key={n.id} style={{borderTop:`1px solid ${T.border}`,cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.background=T.accent} onMouseLeave={e=>e.currentTarget.style.background=""}>
-              <td style={{padding:"9px 12px",fontWeight:600,fontSize:12}}>{n.nombre}</td>
+              <td style={{padding:"9px 12px"}}><div style={{fontWeight:600,fontSize:12}}>{(()=>{const p=(n.nombre||"").split(" ");if(p.length>=3){const ape=p.slice(-2).join(" ");const nom=p.slice(0,-2).join(" ");return <>{ape}<span style={{fontWeight:400,color:T.inkLight}}>, {nom}</span></>;}return n.nombre;})()}</div></td>
               <td style={{padding:"9px 12px",fontSize:11,color:T.inkLight}}>{n.cargo}</td>
               <td style={{padding:"9px 12px",fontSize:12,fontFamily:"'DM Mono',monospace"}}>{fmt(n.sal)}</td>
               <td style={{padding:"9px 12px",fontSize:11,color:T.inkLight,fontFamily:"'DM Mono',monospace"}}>{n.bono>0?fmt(n.bono):"—"}</td>
@@ -1181,6 +1206,10 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
               <td style={{padding:"9px 12px"}}><Btn small onClick={()=>{setSel(n.id);setVista("detalle");setSubTab("nomina");}}>Ver →</Btn></td>
             </tr>);})}</tbody>
         </table>
+        <div style={{padding:"8px 16px",borderTop:`1px solid ${T.border}`,fontSize:10,color:T.inkLight}}>
+          {sorted.length} de {noms.length} empleado(s){buscar?" · filtrado por \""+buscar+"\"":""}  · Ordenado por {sortBy==="nombre"?"apellido":sortBy} {sortDir==="asc"?"A→Z":"Z→A"}
+        </div>
+        </>;})()}
       </Card>}
       <div style={{marginTop:12,padding:"10px 14px",background:T.accent,borderRadius:4,fontSize:9,color:T.inkLight,display:"flex",gap:20}}>
         <span>CST Art. 127-128 · Ley 100/93 · Art. 114-1 ET</span>
