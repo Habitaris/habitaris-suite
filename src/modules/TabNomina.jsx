@@ -123,7 +123,10 @@ const Sel=({label,value,onChange,opts})=><div style={{marginBottom:8}}>{label&&<
 const Row=({lbl,val,color,bold,sub,indent,bg})=><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:`${sub?2:4}px ${indent?10:0}px`,background:bg||"transparent",borderRadius:bg?3:0,marginBottom:bg?3:0}}><span style={{fontSize:sub?10:11,color:sub?T.inkLight:(color||T.inkMid),fontWeight:bold?700:400}}>{indent&&<span style={{color:T.inkXLight,marginRight:4}}>└</span>}{lbl}</span><span style={{fontSize:sub?10:12,fontWeight:bold?800:500,color:color||T.ink,fontFamily:"'DM Mono',monospace"}}>{fmt(val)}</span></div>;
 const Div=()=><div style={{height:1,background:T.border,margin:"6px 0"}}/>;
 const STit=({children,color})=><div style={{fontSize:12,fontWeight:700,color:color||T.ink,marginBottom:8}}>{children}</div>;
-const Pill=({e})=>{const m={borrador:{bg:"#F5F4F1",c:"#888"},q1_pagado:{bg:T.blueBg,c:T.blue},liquidada:{bg:T.greenBg,c:T.green},pagada:{bg:T.greenBg,c:T.green},aprobada:{bg:T.greenBg,c:T.green}};const s=m[e]||m.borrador;const label=e==="q1_pagado"?"Q1 pagado · Falta Q2":e==="liquidada"?"pagada":e;return<span style={{padding:"2px 8px",borderRadius:10,fontSize:9,fontWeight:700,background:s.bg,color:s.c}}>{label}</span>;};
+// Pill de estado de nómina. El flujo actual solo usa: borrador → q1_pagado → pagada.
+// 'liquidada' y 'aprobada' son estados legacy (pre Punto 3) que pueden existir
+// en datos antiguos; se muestran con el mismo estilo verde y label "pagada".
+const Pill=({e})=>{const m={borrador:{bg:"#F5F4F1",c:"#888"},q1_pagado:{bg:T.blueBg,c:T.blue},liquidada:{bg:T.greenBg,c:T.green},pagada:{bg:T.greenBg,c:T.green},aprobada:{bg:T.greenBg,c:T.green}};const s=m[e]||m.borrador;const label=e==="q1_pagado"?"Q1 pagado · Falta Q2":(e==="liquidada"||e==="aprobada")?"pagada":e;return<span style={{padding:"2px 8px",borderRadius:10,fontSize:9,fontWeight:700,background:s.bg,color:s.c}}>{label}</span>;};
 // EstadoPills: renderiza pills separados por tipo de pago (Q1, Q2 o Mes) según la modalidad del empleado
 const EstadoPills=({n})=>{
   const pillStyle=(paid)=>({display:"inline-block",padding:"2px 7px",borderRadius:10,fontSize:9,fontWeight:700,background:paid?T.greenBg:"#F5F4F1",color:paid?T.green:"#999",minWidth:36,textAlign:"center"});
