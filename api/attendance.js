@@ -46,7 +46,7 @@ export default async function handler(req, res) {
       req.connection?.remoteAddress ||
       "desconocida";
 
-    const { data, error } = await supabase.from("attendance").insert([{
+    const baseRow = {
       employee_id,
       employee_nombre: employee_nombre || "",
       tipo,
@@ -60,12 +60,36 @@ export default async function handler(req, res) {
       novedad_desc: novedad_desc || null,
       foto_url:     foto_url || null,
       centro_costo: centro_costo || null,
-      centro_id:    centro_id || null,
-      ot_tipo:      ot_tipo || null,
+    };
+
+    // Intento con los campos nuevos (centro_id, ot_tipo). Si la tabla
+    // Supabase aún no tiene estas columnas el insert falla — reintenta
+    // sin ellos. Las columnas deberían añadirse con:
+    //   ALTER TABLE attendance ADD COLUMN centro_id text;
+    //   ALTER TABLE attendance ADD COLUMN ot_tipo text;
+    let inserted = null, insertError = null;
+    const attempt1 = await supabase.from("attendance").insert([{
+      ...baseRow,
+      centro_id: centro_id || null,
+      ot_tipo:   ot_tipo   || null,
     }]).select().single();
 
-    if (error) return res.status(500).json({ ok: false, error: error.message });
-    return res.status(200).json({ ok: true, data });
+    if (attempt1.error) {
+      // Detectar si es por columna faltante ("column ... does not exist" de Postgres)
+      const msg = (attempt1.error.message || "").toLowerCase();
+      if (msg.includes("column") && msg.includes("does not exist")) {
+        const attempt2 = await supabase.from("attendance").insert([baseRow]).select().single();
+        if (attempt2.error) { insertError = attempt2.error.message; }
+        else { inserted = attempt2.data; }
+      } else {
+        insertError = attempt1.error.message;
+      }
+    } else {
+      inserted = attempt1.data;
+    }
+
+    if (insertError) return res.status(500).json({ ok: false, error: insertError });
+    return res.status(200).json({ ok: true, data: inserted });
   }
 
   return res.status(405).json({ error: "Method not allowed" });
