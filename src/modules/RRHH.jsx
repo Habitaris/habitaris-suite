@@ -1347,23 +1347,53 @@ function TabCentros() {
   const [emps, setEmps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editId, setEditId] = useState(null);
-  const [form, setForm] = useState({nombre:"",direccion:"",lat:"",lng:"",codigo:""});
+  const [filtroTipo, setFiltroTipo] = useState("todos");
+  const [form, setForm] = useState({
+    nombre:"", tipo:"gastos_generales", direccion:"", lat:"", lng:"", radio:"100",
+    codigo:"", cliente:"", responsable:"", presupuesto:"", fecha_inicio:"", fecha_fin:""
+  });
 
   const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+  // Tipos de OT (antes "centros de trabajo") — concepto unificado:
+  //   OT = Centro físico + centro de coste + dirección en uno
+  //   · gastos_generales: oficinas, sede, cafetería, etc. (creación manual por Admin)
+  //   · proyecto: obra/servicio para cliente (se auto-crea al firmar contrato en CRM)
+  //   · ot_puntual: gastos o actividades puntuales sin proyecto grande
+  const TIPOS_OT = {
+    gastos_generales: { lbl: "Gastos generales", icon: "🏢", color: "#6366F1", desc: "Oficinas, sede, actividades recurrentes" },
+    proyecto:         { lbl: "Proyecto cliente", icon: "🏗️", color: "#10B981", desc: "Obra o servicio facturable a un cliente" },
+    ot_puntual:       { lbl: "OT puntual",       icon: "📋", color: "#F59E0B", desc: "Gasto o trabajo puntual sin proyecto grande" },
+  };
 
   useEffect(()=>{
     Promise.all([
       fetch("/api/hiring?kv=centros&anio=0&mes=0").then(r=>r.json()).then(d=>d.ok&&d.data?d.data:[]),
       Promise.resolve().then(async()=>{
+        const estados=["firmado","afiliaciones","completado"];
+        const datas=await Promise.all(estados.map(est=>fetch("/api/hiring?estado="+est).then(r=>r.json()).catch(()=>({ok:false}))));
         const results=[];
-        for(const est of["firmado","afiliaciones","completado"]){
-          const r=await fetch("/api/hiring?estado="+est);const d=await r.json();
-          if(d.ok&&Array.isArray(d.data))results.push(...d.data);
-        }
+        datas.forEach(d=>{if(d.ok&&Array.isArray(d.data))results.push(...d.data);});
         return results;
       })
     ]).then(([c,e])=>{
-      setCentros(Array.isArray(c)?c:[]);
+      const list = Array.isArray(c) ? c : [];
+      // Migración retrocompat: centros antiguos sin tipo → gastos_generales
+      const migrated = list.map(ot => ({
+        tipo: ot.tipo || "gastos_generales",
+        radio_gps_m: ot.radio_gps_m || 100,
+        origen: ot.origen || "manual",
+        ...ot,
+        // Si faltaba tipo, aseguramos default también después del spread
+        tipo_final: undefined,
+      })).map(ot => {
+        delete ot.tipo_final;
+        if (!ot.tipo) ot.tipo = "gastos_generales";
+        if (!ot.radio_gps_m) ot.radio_gps_m = 100;
+        if (!ot.origen) ot.origen = "manual";
+        return ot;
+      });
+      setCentros(migrated);
       setEmps(e);
       setLoading(false);
     });
@@ -1375,10 +1405,40 @@ function TabCentros() {
   };
 
   const addCentro=()=>{
-    if(!form.nombre.trim())return;
-    const nuevo={id:uid(),nombre:form.nombre,direccion:form.direccion,lat:parseFloat(form.lat)||0,lng:parseFloat(form.lng)||0,codigo:form.codigo||"",activo:true,empleados:[],created_at:new Date().toISOString()};
+    if(!form.nombre.trim()){
+      if(window.toast) window.toast("El nombre es obligatorio","warning");
+      return;
+    }
+    const nuevo={
+      id:uid(),
+      nombre:form.nombre,
+      tipo:form.tipo,
+      direccion:form.direccion,
+      lat:parseFloat(form.lat)||0,
+      lng:parseFloat(form.lng)||0,
+      radio_gps_m:parseInt(form.radio)||100,
+      codigo:form.codigo||"",
+      activo:true,
+      empleados:[],
+      origen:"manual",
+      // Campos específicos de tipo (solo se guardan si aplican)
+      ...(form.tipo==="proyecto"?{
+        cliente:form.cliente||"",
+        responsable:form.responsable||"",
+        presupuesto:parseFloat(form.presupuesto)||0,
+        fecha_inicio:form.fecha_inicio||null,
+        fecha_fin:form.fecha_fin||null,
+      }:{}),
+      ...(form.tipo==="ot_puntual"?{
+        responsable:form.responsable||"",
+        fecha_inicio:form.fecha_inicio||null,
+        fecha_fin:form.fecha_fin||null,
+      }:{}),
+      created_at:new Date().toISOString(),
+    };
     save([...centros,nuevo]);
-    setForm({nombre:"",direccion:"",lat:"",lng:"",codigo:""});
+    setForm({nombre:"",tipo:"gastos_generales",direccion:"",lat:"",lng:"",radio:"100",codigo:"",cliente:"",responsable:"",presupuesto:"",fecha_inicio:"",fecha_fin:""});
+    if(window.toast) window.toast("✓ OT creada: "+nuevo.nombre,"success");
   };
 
   const updateCentro=(id,fields)=>{
@@ -1393,15 +1453,17 @@ function TabCentros() {
     }));
   };
 
-  if(loading)return <div style={{textAlign:"center",padding:40,color:C.inkLight}}>Cargando centros...</div>;
+  if(loading)return <div style={{textAlign:"center",padding:40,color:C.inkLight}}>Cargando OTs...</div>;
+
+  const centrosFiltrados = filtroTipo === "todos" ? centros : centros.filter(c => c.tipo === filtroTipo);
 
   return(
     <div className="fade-up" style={{padding:"20px 0"}}>
       {/* KPIs */}
       <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:10,marginBottom:16}}>
         {[
-          ["Centros activos",centros.filter(c=>c.activo).length,C.ink],
-          ["Centros inactivos",centros.filter(c=>!c.activo).length,C.inkLight],
+          ["OTs activas",centros.filter(c=>c.activo).length,C.ink],
+          ["Proyectos cliente",centros.filter(c=>c.tipo==="proyecto"&&c.activo).length,"#10B981"],
           ["Empleados asignados",[...new Set(centros.flatMap(c=>c.empleados||[]))].length,C.green],
           ["Sin asignar",emps.filter(e=>!centros.some(c=>(c.empleados||[]).includes(e.id))).length,"#D97706"],
         ].map(([l,v,c])=>(
@@ -1412,35 +1474,97 @@ function TabCentros() {
         ))}
       </div>
 
-      {/* New centro form */}
+      {/* Filtros por tipo */}
+      <div style={{display:"flex",gap:6,marginBottom:12,alignItems:"center"}}>
+        <span style={{fontSize:10,color:"#888",fontWeight:600,textTransform:"uppercase",letterSpacing:.5,marginRight:4}}>Filtrar:</span>
+        <button onClick={()=>setFiltroTipo("todos")} style={{padding:"4px 10px",fontSize:10,border:"1px solid "+(filtroTipo==="todos"?"#111":"#E0E0E0"),background:filtroTipo==="todos"?"#111":"#fff",color:filtroTipo==="todos"?"#fff":"#111",borderRadius:4,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>Todas ({centros.length})</button>
+        {Object.entries(TIPOS_OT).map(([k,t])=>{
+          const count = centros.filter(c=>c.tipo===k).length;
+          const active = filtroTipo===k;
+          return <button key={k} onClick={()=>setFiltroTipo(k)} style={{padding:"4px 10px",fontSize:10,border:"1px solid "+(active?t.color:"#E0E0E0"),background:active?t.color:"#fff",color:active?"#fff":"#111",borderRadius:4,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontWeight:600}}>{t.icon} {t.lbl} ({count})</button>;
+        })}
+      </div>
+
+      {/* New OT form */}
       <div style={{background:"#fff",border:"1px solid #E0E0E0",borderRadius:8,padding:16,marginBottom:16}}>
-        <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>Nuevo centro de trabajo</div>
+        <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>Nueva OT (Orden de Trabajo / Centro de coste)</div>
+        {/* Selector de tipo */}
+        <div style={{display:"flex",gap:8,marginBottom:10}}>
+          {Object.entries(TIPOS_OT).map(([k,t])=>(
+            <button key={k} onClick={()=>setForm({...form,tipo:k})} style={{flex:1,padding:"10px 12px",border:"1px solid "+(form.tipo===k?t.color:"#E0E0E0"),background:form.tipo===k?t.color+"15":"#fff",borderRadius:6,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left"}}>
+              <div style={{fontSize:11,fontWeight:700,color:form.tipo===k?t.color:"#111",marginBottom:2}}>{t.icon} {t.lbl}</div>
+              <div style={{fontSize:10,color:"#888"}}>{t.desc}</div>
+            </button>
+          ))}
+        </div>
+        {/* Campos base */}
         <div style={{display:"grid",gridTemplateColumns:"2fr 2fr 1fr",gap:8,marginBottom:8}}>
-          <input placeholder="Nombre del centro *" value={form.nombre} onChange={e=>setForm({...form,nombre:e.target.value})} style={{padding:"8px 12px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/>
+          <input placeholder="Nombre de la OT *" value={form.nombre} onChange={e=>setForm({...form,nombre:e.target.value})} style={{padding:"8px 12px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/>
           <input placeholder="Dirección" value={form.direccion} onChange={e=>setForm({...form,direccion:e.target.value})} style={{padding:"8px 12px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/>
           <input placeholder="Código coste" value={form.codigo} onChange={e=>setForm({...form,codigo:e.target.value})} style={{padding:"8px 12px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8}}>
+        {/* Campos específicos de tipo */}
+        {form.tipo==="proyecto" && (
+          <div style={{display:"grid",gridTemplateColumns:"2fr 2fr 1fr",gap:8,marginBottom:8}}>
+            <input placeholder="Cliente" value={form.cliente} onChange={e=>setForm({...form,cliente:e.target.value})} style={{padding:"8px 12px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/>
+            <input placeholder="Responsable" value={form.responsable} onChange={e=>setForm({...form,responsable:e.target.value})} style={{padding:"8px 12px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/>
+            <input type="number" placeholder="Presupuesto" value={form.presupuesto} onChange={e=>setForm({...form,presupuesto:e.target.value})} style={{padding:"8px 12px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:12,fontFamily:"'DM Mono',monospace"}}/>
+          </div>
+        )}
+        {(form.tipo==="proyecto"||form.tipo==="ot_puntual") && (
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 2fr",gap:8,marginBottom:8}}>
+            <div>
+              <label style={{fontSize:9,color:"#888",fontWeight:600}}>Fecha inicio</label>
+              <input type="date" value={form.fecha_inicio} onChange={e=>setForm({...form,fecha_inicio:e.target.value})} style={{width:"100%",padding:"7px 10px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}/>
+            </div>
+            <div>
+              <label style={{fontSize:9,color:"#888",fontWeight:600}}>Fecha fin</label>
+              <input type="date" value={form.fecha_fin} onChange={e=>setForm({...form,fecha_fin:e.target.value})} style={{width:"100%",padding:"7px 10px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}/>
+            </div>
+            {form.tipo==="ot_puntual" && (
+              <input placeholder="Responsable" value={form.responsable} onChange={e=>setForm({...form,responsable:e.target.value})} style={{alignSelf:"end",padding:"7px 10px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}/>
+            )}
+          </div>
+        )}
+        {/* GPS */}
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:8}}>
           <input placeholder="Latitud GPS" value={form.lat} onChange={e=>setForm({...form,lat:e.target.value})} style={{padding:"8px 12px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:12,fontFamily:"'DM Mono',monospace"}}/>
           <input placeholder="Longitud GPS" value={form.lng} onChange={e=>setForm({...form,lng:e.target.value})} style={{padding:"8px 12px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:12,fontFamily:"'DM Mono',monospace"}}/>
-          <button onClick={addCentro} style={{padding:"8px 16px",background:"#111",color:"#fff",border:"none",borderRadius:4,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>+ Crear centro</button>
+          <input type="number" placeholder="Radio GPS (m)" value={form.radio} onChange={e=>setForm({...form,radio:e.target.value})} style={{padding:"8px 12px",border:"1px solid #E0E0E0",borderRadius:4,fontSize:12,fontFamily:"'DM Mono',monospace"}}/>
+          <button onClick={addCentro} style={{padding:"8px 16px",background:"#111",color:"#fff",border:"none",borderRadius:4,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>+ Crear OT</button>
         </div>
       </div>
 
-      {/* Centros list */}
-      {centros.length===0?
+      {/* OTs list */}
+      {centrosFiltrados.length===0?
         <div style={{textAlign:"center",padding:40,background:"#fff",border:"1px solid #E0E0E0",borderRadius:8}}>
           <div style={{fontSize:28,marginBottom:8}}>📍</div>
-          <div style={{fontSize:13,fontWeight:600}}>Sin centros de trabajo</div>
-          <div style={{fontSize:11,color:"#999",marginTop:4}}>Crea el primer centro arriba para empezar a asignar empleados</div>
+          <div style={{fontSize:13,fontWeight:600}}>{filtroTipo==="todos"?"Sin OTs":`Sin OTs de tipo ${TIPOS_OT[filtroTipo]?.lbl}`}</div>
+          <div style={{fontSize:11,color:"#999",marginTop:4}}>Crea la primera OT arriba para empezar a asignar empleados</div>
         </div>
-      :centros.map(centro=>(
-        <div key={centro.id} style={{background:"#fff",border:"1px solid "+(centro.activo?"#E0E0E0":"#fcc"),borderRadius:8,padding:16,marginBottom:10,opacity:centro.activo?1:.6}}>
+      :centrosFiltrados.map(centro=>{
+        const tipoInfo = TIPOS_OT[centro.tipo] || TIPOS_OT.gastos_generales;
+        return (
+        <div key={centro.id} style={{background:"#fff",borderLeft:`4px solid ${tipoInfo.color}`,border:"1px solid "+(centro.activo?"#E0E0E0":"#fcc"),borderLeftWidth:4,borderLeftColor:tipoInfo.color,borderRadius:8,padding:16,marginBottom:10,opacity:centro.activo?1:.6}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
-            <div>
+            <div style={{flex:1}}>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
+                <span style={{padding:"2px 8px",fontSize:9,fontWeight:700,background:tipoInfo.color+"20",color:tipoInfo.color,borderRadius:10,textTransform:"uppercase",letterSpacing:.3}}>{tipoInfo.icon} {tipoInfo.lbl}</span>
+                {centro.origen && centro.origen!=="manual" && <span style={{fontSize:9,color:"#888"}}>· Origen: {centro.origen}</span>}
+              </div>
               <div style={{fontSize:14,fontWeight:700}}>{centro.nombre}</div>
               <div style={{fontSize:11,color:"#999",marginTop:2}}>{centro.direccion||"Sin dirección"}{centro.codigo?" · Código: "+centro.codigo:""}</div>
-              {centro.lat?<div style={{fontSize:10,color:"#bbb",fontFamily:"'DM Mono',monospace",marginTop:2}}>GPS: {centro.lat}, {centro.lng}</div>:null}
+              {centro.tipo==="proyecto" && (centro.cliente || centro.responsable || centro.presupuesto) && (
+                <div style={{fontSize:10,color:"#666",marginTop:4,display:"flex",gap:12}}>
+                  {centro.cliente && <span>👤 <strong>{centro.cliente}</strong></span>}
+                  {centro.responsable && <span>🧑‍💼 {centro.responsable}</span>}
+                  {centro.presupuesto>0 && <span>💰 ${Math.round(centro.presupuesto).toLocaleString("es-CO")}</span>}
+                </div>
+              )}
+              {(centro.fecha_inicio || centro.fecha_fin) && (
+                <div style={{fontSize:10,color:"#888",marginTop:2}}>📅 {centro.fecha_inicio||"?"} → {centro.fecha_fin||"?"}</div>
+              )}
+              {centro.lat?<div style={{fontSize:10,color:"#bbb",fontFamily:"'DM Mono',monospace",marginTop:2}}>GPS: {centro.lat}, {centro.lng} · Radio: {centro.radio_gps_m||100}m</div>:null}
             </div>
             <div style={{display:"flex",gap:6}}>
               <button onClick={()=>updateCentro(centro.id,{activo:!centro.activo})} style={{padding:"4px 10px",fontSize:10,border:"1px solid #E0E0E0",borderRadius:4,background:centro.activo?"#fff":"#E8F4EE",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{centro.activo?"Desactivar":"Activar"}</button>
@@ -1461,7 +1585,7 @@ function TabCentros() {
           {/* Assign panel */}
           {editId===centro.id&&(
             <div style={{background:"#FAFAF8",border:"1px solid #E5E3DE",borderRadius:6,padding:12,marginTop:8}}>
-              <div style={{fontSize:11,fontWeight:700,marginBottom:8}}>Selecciona empleados para este centro:</div>
+              <div style={{fontSize:11,fontWeight:700,marginBottom:8}}>Selecciona empleados para esta OT:</div>
               {emps.map(emp=>{
                 const assigned=(centro.empleados||[]).includes(emp.id);
                 return <label key={emp.id} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 0",borderBottom:"1px solid #f0f0f0",cursor:"pointer",fontSize:12}}>
@@ -1473,7 +1597,8 @@ function TabCentros() {
             </div>
           )}
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
