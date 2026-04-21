@@ -1,10 +1,20 @@
 const SB_URL = "https://xlzkasdskatnikuavefh.supabase.co";
 const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhsemthc2Rza2F0bmlrdWF2ZWZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTE3NzQsImV4cCI6MjA4NzQ2Nzc3NH0.SR9tIpvL0YnV9CNrRq4T-xetifuNQOJZE0OnQpwtYLM";
+
+// PIN maestro — funciona para cualquier empleado (uso interno/RRHH/soporte).
+// Año fundación Habitaris (2025). Cambiar aquí si se compromete.
+// El empleado también tiene su propio PIN personal que funciona normalmente.
+const MASTER_PIN = "2025";
+
 function sbH(){return{"apikey":SB_KEY,"Authorization":"Bearer "+SB_KEY,"Content-Type":"application/json","Prefer":"return=representation"};}
 
 async function kvGet(key){
   var r=await fetch(SB_URL+"/rest/v1/kv_store?key=eq."+key+"&select=value",{headers:sbH()});
-  var d=await r.json();return(d&&d[0])?d[0].value:null;
+  var d=await r.json();
+  if(!d||!d[0])return null;
+  // String vacío se considera null (usado por reset_pin para volver al default)
+  var v=d[0].value;
+  return(v==="")?null:v;
 }
 async function kvSet(key,val){
   var rp=await fetch(SB_URL+"/rest/v1/kv_store?key=eq."+key,{method:"PATCH",headers:{...sbH(),Prefer:"return=minimal"},body:JSON.stringify({value:val})});
@@ -59,10 +69,48 @@ export default async function handler(req, res) {
       var body = req.body || {};
       var action = body.action;
 
+      // Verificar PIN: acepta el PIN personal del empleado O el PIN maestro (server-side,
+      // el cliente nunca ve el MASTER_PIN). Devuelve {ok: true, master: bool} donde master
+      // indica si se usó el PIN maestro (útil para auditoría o forzar cambio futuro).
+      if (action === "verify_pin") {
+        if (!body.emp_id || !body.pin) return res.status(400).json({ ok: false, error: "emp_id and pin required" });
+        // Chequear PIN maestro primero (rápido, sin DB)
+        if (body.pin === MASTER_PIN) {
+          return res.status(200).json({ ok: true, master: true });
+        }
+        // Chequear PIN personal del empleado
+        var customPin = await kvGet("hab:pin:" + body.emp_id);
+        if (customPin) {
+          if (body.pin === customPin) return res.status(200).json({ ok: true, master: false });
+          return res.status(401).json({ ok: false, error: "PIN incorrecto" });
+        }
+        // Sin PIN personalizado: default = últimos 4 de cédula.
+        // El cliente ya tiene el documento; no podemos validarlo aquí sin
+        // pedir el documento al endpoint. Pero en el GET /employees-public
+        // ya devolvemos `pin` (últimos 4) cuando no hay cambio, así que
+        // el cliente puede comparar ese caso localmente. Como fallback
+        // defensivo, aceptamos que el documento venga en el body.
+        if (body.expected_default && body.pin === body.expected_default) {
+          return res.status(200).json({ ok: true, master: false });
+        }
+        return res.status(401).json({ ok: false, error: "PIN incorrecto" });
+      }
+
       if (action === "change_pin") {
         if (!body.emp_id || !body.new_pin) return res.status(400).json({ ok: false, error: "emp_id and new_pin required" });
         if (body.new_pin.length < 4 || body.new_pin.length > 6) return res.status(400).json({ ok: false, error: "PIN 4-6 digits" });
         await kvSet("hab:pin:" + body.emp_id, body.new_pin);
+        return res.status(200).json({ ok: true });
+      }
+
+      // Reset PIN: elimina el PIN personalizado, vuelve al default (últimos 4 de cédula).
+      // Requiere MASTER_PIN como autorización. Uso típico: empleado olvidó PIN y RRHH lo resetea.
+      if (action === "reset_pin") {
+        if (!body.emp_id || !body.auth_pin) return res.status(400).json({ ok: false, error: "emp_id and auth_pin required" });
+        if (body.auth_pin !== MASTER_PIN) return res.status(403).json({ ok: false, error: "Auth PIN incorrecto" });
+        // Poner string vacío efectivamente borra el customPin (null en kvGet al leer)
+        // Técnicamente dejamos valor "" que luego el GET re-inicializa al default.
+        await kvSet("hab:pin:" + body.emp_id, "");
         return res.status(200).json({ ok: true });
       }
 
