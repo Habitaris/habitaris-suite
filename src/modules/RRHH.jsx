@@ -1476,11 +1476,17 @@ function TabCentros() {
     }
   };
 
-  // Calcular horas por empleado para una OT dada.
+  // Tarifa hora estándar Colombia 2026 (Ley 2101/2021 — jornada 42h/sem)
+  // 42 * 4.33 sem/mes ≈ 182h/mes. Aproximación suficiente para cálculo de coste
+  // por hora productiva. No incluye prestaciones (~65%) ni aportes patronales.
+  const HORAS_MES = 182;
+
+  // Calcular horas + costo por empleado para una OT dada.
   // Agrupa fichajes por (employee_id × fecha) y suma (salida - entrada) por día.
   // Si un día solo tiene entrada sin salida, no cuenta (requiere par completo).
+  // Costo = horas × (salario_base / HORAS_MES). Si no hay salario, costo=0.
   const calcHorasOT = (centroId) => {
-    if (!attendance) return { total:0, empleados:[], diasTotal:0 };
+    if (!attendance) return { total:0, empleados:[], diasTotal:0, costoTotal:0 };
     const delCentro = attendance.filter(a => a.centro_id === centroId);
     const porEmpFecha = {};
     delCentro.forEach(a => {
@@ -1494,14 +1500,26 @@ function TabCentros() {
       if (!d.entrada || !d.salida) return;
       const h = (new Date(d.salida) - new Date(d.entrada)) / 3600000;
       if (h <= 0 || h > 24) return; // Filtro sanity
-      if (!porEmp[d.emp_id]) porEmp[d.emp_id] = { emp_id:d.emp_id, emp_nombre:d.emp_nombre, dias:0, horas:0, ultimaFecha:null };
+      if (!porEmp[d.emp_id]) {
+        // Buscar salario del empleado en la lista de emps cargados
+        const empData = emps.find(e => e.id === d.emp_id);
+        const salarioBase = Number(empData?.salario_base) || 0;
+        const tarifaHora = salarioBase > 0 ? salarioBase / HORAS_MES : 0;
+        porEmp[d.emp_id] = {
+          emp_id: d.emp_id, emp_nombre: d.emp_nombre,
+          dias:0, horas:0, ultimaFecha:null,
+          tarifaHora, costo:0,
+        };
+      }
       porEmp[d.emp_id].horas += h;
       porEmp[d.emp_id].dias += 1;
+      porEmp[d.emp_id].costo += h * porEmp[d.emp_id].tarifaHora;
       if (!porEmp[d.emp_id].ultimaFecha || d.fecha > porEmp[d.emp_id].ultimaFecha) porEmp[d.emp_id].ultimaFecha = d.fecha;
     });
     const empleados = Object.values(porEmp).sort((a,b) => b.horas - a.horas);
     return {
       total: empleados.reduce((s,e) => s+e.horas, 0),
+      costoTotal: empleados.reduce((s,e) => s+e.costo, 0),
       empleados,
       diasTotal: empleados.reduce((s,e) => s+e.dias, 0),
       fichajesSinCerrar: Object.values(porEmpFecha).filter(d => d.entrada && !d.salida).length,
@@ -1658,33 +1676,56 @@ function TabCentros() {
             if (loadingAtt) return <div style={{background:"#FAFAF8",border:"1px solid #E5E3DE",borderRadius:6,padding:12,marginTop:8,fontSize:11,color:"#888",textAlign:"center"}}>Cargando fichajes…</div>;
             const stats = calcHorasOT(centro.id);
             const pres = Number(centro.presupuesto)||0;
+            const esProy = centro.tipo === "proyecto";
+            const tieneCoste = stats.costoTotal > 0;
+            const pctConsumido = (esProy && pres > 0) ? Math.min(100, (stats.costoTotal / pres) * 100) : 0;
+            const colorBarra = pctConsumido < 70 ? "#10B981" : pctConsumido < 100 ? "#F59E0B" : "#EF4444";
             return (
               <div style={{background:"#FAFAF8",border:"1px solid #E5E3DE",borderRadius:6,padding:12,marginTop:8}}>
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
-                  <div style={{fontSize:11,fontWeight:700}}>📊 Horas fichadas en esta OT</div>
+                  <div style={{fontSize:11,fontWeight:700}}>📊 Rentabilidad de esta OT</div>
                   <button onClick={()=>{setAttendance(null);loadAttendance();}} style={{padding:"2px 8px",fontSize:9,border:"1px solid #E0E0E0",borderRadius:4,background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",color:"#666"}}>↻ Refrescar</button>
                 </div>
-                {/* KPIs resumen */}
-                <div style={{display:"grid",gridTemplateColumns:centro.tipo==="proyecto"?"repeat(4,1fr)":"repeat(3,1fr)",gap:8,marginBottom:10}}>
+                {/* KPIs resumen: 4 para no-proyecto (incl. coste), 5 para proyecto (incl. presupuesto) */}
+                <div style={{display:"grid",gridTemplateColumns:`repeat(${esProy?5:4},1fr)`,gap:8,marginBottom:10}}>
                   <div style={{background:"#fff",border:"1px solid #E5E3DE",borderRadius:4,padding:"8px 10px"}}>
                     <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>Total horas</div>
-                    <div style={{fontSize:18,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{stats.total.toFixed(1)}h</div>
+                    <div style={{fontSize:16,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{stats.total.toFixed(1)}h</div>
                   </div>
                   <div style={{background:"#fff",border:"1px solid #E5E3DE",borderRadius:4,padding:"8px 10px"}}>
                     <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>Empleados</div>
-                    <div style={{fontSize:18,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{stats.empleados.length}</div>
+                    <div style={{fontSize:16,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{stats.empleados.length}</div>
                   </div>
                   <div style={{background:"#fff",border:"1px solid #E5E3DE",borderRadius:4,padding:"8px 10px"}}>
                     <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>Días fichados</div>
-                    <div style={{fontSize:18,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{stats.diasTotal}</div>
+                    <div style={{fontSize:16,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{stats.diasTotal}</div>
                   </div>
-                  {centro.tipo==="proyecto" && (
+                  <div style={{background:"#fff",border:"1px solid #E5E3DE",borderRadius:4,padding:"8px 10px"}}>
+                    <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>Coste real</div>
+                    <div style={{fontSize:tieneCoste?14:12,fontWeight:800,fontFamily:"'DM Mono',monospace",color:tieneCoste?"#111":"#bbb"}}>{tieneCoste?"$"+Math.round(stats.costoTotal).toLocaleString("es-CO"):"—"}</div>
+                  </div>
+                  {esProy && (
                     <div style={{background:"#fff",border:"1px solid #E5E3DE",borderRadius:4,padding:"8px 10px"}}>
                       <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>Presupuesto</div>
-                      <div style={{fontSize:14,fontWeight:800,fontFamily:"'DM Mono',monospace",color:pres>0?"#10B981":"#bbb"}}>{pres>0?"$"+Math.round(pres).toLocaleString("es-CO"):"—"}</div>
+                      <div style={{fontSize:pres>0?14:12,fontWeight:800,fontFamily:"'DM Mono',monospace",color:pres>0?"#10B981":"#bbb"}}>{pres>0?"$"+Math.round(pres).toLocaleString("es-CO"):"—"}</div>
                     </div>
                   )}
                 </div>
+                {/* Barra de progreso presupuesto → coste (solo proyectos con ambos valores) */}
+                {esProy && pres > 0 && tieneCoste && (
+                  <div style={{marginBottom:10}}>
+                    <div style={{display:"flex",justifyContent:"space-between",fontSize:10,marginBottom:4}}>
+                      <span style={{fontWeight:600,color:"#666"}}>Consumo de presupuesto</span>
+                      <span style={{fontWeight:700,color:colorBarra,fontFamily:"'DM Mono',monospace"}}>{pctConsumido.toFixed(1)}% · Margen: ${Math.round(pres - stats.costoTotal).toLocaleString("es-CO")}</span>
+                    </div>
+                    <div style={{width:"100%",height:8,background:"#E5E7EB",borderRadius:4,overflow:"hidden"}}>
+                      <div style={{width:`${pctConsumido}%`,height:"100%",background:colorBarra,transition:"width 0.3s ease"}}/>
+                    </div>
+                    {pctConsumido >= 100 && (
+                      <div style={{fontSize:10,color:"#EF4444",marginTop:4,fontWeight:600}}>⚠️ Presupuesto superado · Sobrecoste ${Math.round(stats.costoTotal - pres).toLocaleString("es-CO")}</div>
+                    )}
+                  </div>
+                )}
                 {/* Warning si hay fichajes sin cerrar */}
                 {stats.fichajesSinCerrar>0 && (
                   <div style={{background:"#FEF3C7",border:"1px solid #FCD34D",color:"#92400E",fontSize:10,padding:"6px 10px",borderRadius:4,marginBottom:8}}>
@@ -1698,29 +1739,48 @@ function TabCentros() {
                     <span style={{fontSize:10,color:"#bbb"}}>Los fichajes aparecerán aquí cuando los empleados asignados fichen desde el portal.</span>
                   </div>
                 ) : (
-                  <table style={{width:"100%",fontSize:11,borderCollapse:"collapse"}}>
-                    <thead>
-                      <tr style={{background:"#fff"}}>
-                        <th style={{textAlign:"left",padding:"6px 8px",borderBottom:"1px solid #E5E3DE",fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:.4,fontWeight:700}}>Empleado</th>
-                        <th style={{textAlign:"right",padding:"6px 8px",borderBottom:"1px solid #E5E3DE",fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:.4,fontWeight:700}}>Días</th>
-                        <th style={{textAlign:"right",padding:"6px 8px",borderBottom:"1px solid #E5E3DE",fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:.4,fontWeight:700}}>Horas</th>
-                        <th style={{textAlign:"right",padding:"6px 8px",borderBottom:"1px solid #E5E3DE",fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:.4,fontWeight:700}}>Última</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {stats.empleados.map(e => {
-                        const nombreCorto = (e.emp_nombre||"").split(" ").slice(-2).join(" ") || "?";
-                        return (
-                          <tr key={e.emp_id} style={{background:"#fff"}}>
-                            <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE"}}>{nombreCorto}</td>
-                            <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontFamily:"'DM Mono',monospace"}}>{e.dias}</td>
-                            <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:700}}>{e.horas.toFixed(1)}h</td>
-                            <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontSize:10,color:"#666"}}>{e.ultimaFecha}</td>
+                  <>
+                    <table style={{width:"100%",fontSize:11,borderCollapse:"collapse"}}>
+                      <thead>
+                        <tr style={{background:"#fff"}}>
+                          <th style={{textAlign:"left",padding:"6px 8px",borderBottom:"1px solid #E5E3DE",fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:.4,fontWeight:700}}>Empleado</th>
+                          <th style={{textAlign:"right",padding:"6px 8px",borderBottom:"1px solid #E5E3DE",fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:.4,fontWeight:700}}>Días</th>
+                          <th style={{textAlign:"right",padding:"6px 8px",borderBottom:"1px solid #E5E3DE",fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:.4,fontWeight:700}}>Horas</th>
+                          <th style={{textAlign:"right",padding:"6px 8px",borderBottom:"1px solid #E5E3DE",fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:.4,fontWeight:700}}>$/h</th>
+                          <th style={{textAlign:"right",padding:"6px 8px",borderBottom:"1px solid #E5E3DE",fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:.4,fontWeight:700}}>Coste</th>
+                          <th style={{textAlign:"right",padding:"6px 8px",borderBottom:"1px solid #E5E3DE",fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:.4,fontWeight:700}}>Última</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {stats.empleados.map(e => {
+                          const nombreCorto = (e.emp_nombre||"").split(" ").slice(-2).join(" ") || "?";
+                          return (
+                            <tr key={e.emp_id} style={{background:"#fff"}}>
+                              <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE"}}>{nombreCorto}</td>
+                              <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontFamily:"'DM Mono',monospace"}}>{e.dias}</td>
+                              <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:700}}>{e.horas.toFixed(1)}h</td>
+                              <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontFamily:"'DM Mono',monospace",color:e.tarifaHora?"#666":"#ccc",fontSize:10}}>{e.tarifaHora?"$"+Math.round(e.tarifaHora).toLocaleString("es-CO"):"—"}</td>
+                              <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:700,color:e.costo?"#111":"#ccc"}}>{e.costo?"$"+Math.round(e.costo).toLocaleString("es-CO"):"—"}</td>
+                              <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontSize:10,color:"#666"}}>{e.ultimaFecha}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                      {tieneCoste && (
+                        <tfoot>
+                          <tr style={{background:"#F5F3EE",fontWeight:700}}>
+                            <td style={{padding:"6px 8px",fontSize:10,textTransform:"uppercase",letterSpacing:.4,color:"#666"}}>Total</td>
+                            <td style={{padding:"6px 8px",textAlign:"right",fontFamily:"'DM Mono',monospace"}}>{stats.diasTotal}</td>
+                            <td style={{padding:"6px 8px",textAlign:"right",fontFamily:"'DM Mono',monospace"}}>{stats.total.toFixed(1)}h</td>
+                            <td></td>
+                            <td style={{padding:"6px 8px",textAlign:"right",fontFamily:"'DM Mono',monospace",color:"#111"}}>${Math.round(stats.costoTotal).toLocaleString("es-CO")}</td>
+                            <td></td>
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                        </tfoot>
+                      )}
+                    </table>
+                    <div style={{fontSize:9,color:"#aaa",marginTop:8,fontStyle:"italic"}}>Tarifa/hora = salario_base ÷ {HORAS_MES}h/mes (jornada legal 42h/sem Colombia 2026). No incluye prestaciones ni aportes patronales.</div>
+                  </>
                 )}
               </div>
             );
