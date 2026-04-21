@@ -39,7 +39,6 @@ export default async function handler(req, res) {
         gps_lat, gps_lng, gps_accuracy,
         foto_url, centro_costo, centro_id, ot_tipo,
         device_info,
-        novedad_desc,
       } = body;
 
       if (!employee_id || !tipo) {
@@ -53,6 +52,11 @@ export default async function handler(req, res) {
         req.connection?.remoteAddress ||
         "desconocida";
 
+      // Columnas reales de la tabla attendance (verificadas contra schema Supabase):
+      // centro_costo, centro_id, created_at, device_info, employee_id, employee_nombre,
+      // face_match, fecha, foto_url, gps_accuracy, gps_error, gps_lat, gps_lng, id,
+      // ip_address, lat, liveness_passed, lng, ot_id, ot_tipo, precision_m, timestamp, tipo.
+      // NO existe: novedad_desc.
       const row = {
         employee_id,
         employee_nombre: employee_nombre || "",
@@ -63,8 +67,7 @@ export default async function handler(req, res) {
         gps_lng:      gps_lng    || null,
         precision_m:  gps_accuracy || null,
         ip_address,
-        device_info:  device_info || null,
-        novedad_desc: novedad_desc || null,
+        device_info:  device_info ? (typeof device_info === "string" ? device_info : JSON.stringify(device_info)) : null,
         foto_url:     foto_url || null,
         centro_costo: centro_costo || null,
         centro_id:    centro_id || null,
