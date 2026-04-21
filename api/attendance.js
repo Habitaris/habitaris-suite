@@ -36,6 +36,7 @@ export default async function handler(req, res) {
         employee_id, employee_nombre,
         tipo,
         fecha,
+        timestamp: bodyTimestamp,
         gps_lat, gps_lng, gps_accuracy,
         foto_url, centro_costo, centro_id, ot_tipo,
         device_info,
@@ -62,7 +63,11 @@ export default async function handler(req, res) {
         employee_nombre: employee_nombre || "",
         tipo,
         fecha: fecha || new Date().toISOString().slice(0, 10),
-        timestamp: new Date().toISOString(),
+        // Timestamp: si el cliente manda uno válido (e.g., para imports/tests), lo respetamos.
+        // Si no, usamos el tiempo del servidor (caso normal del portal empleado).
+        timestamp: (bodyTimestamp && !isNaN(new Date(bodyTimestamp).getTime()))
+          ? new Date(bodyTimestamp).toISOString()
+          : new Date().toISOString(),
         gps_lat:      gps_lat    || null,
         gps_lng:      gps_lng    || null,
         precision_m:  gps_accuracy || null,
