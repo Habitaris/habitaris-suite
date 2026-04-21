@@ -10048,7 +10048,54 @@ function TEnt({ d, set, r }) {
     setWfComment("");
 
     // Auto-update offer estado
-    if (accion === "aprobar_cliente") set("estado", "Ganada");
+    if (accion === "aprobar_cliente") {
+      set("estado", "Ganada");
+      // Auto-crear OT tipo "proyecto" cuando el cliente firma.
+      // Idempotente: si ya existe una OT con origen="crm:"+d.id, no hace nada.
+      // RRHH asigna empleados después manualmente desde el módulo de OTs.
+      try {
+        const rC = await fetch("/api/hiring?kv=centros&anio=0&mes=0");
+        const dC = await rC.json();
+        const lista = (dC.ok && Array.isArray(dC.data)) ? dC.data : [];
+        const origenTag = "crm:" + d.id;
+        const yaExiste = lista.some(c => c.origen === origenTag);
+        if (!yaExiste) {
+          const nombreOT = d.proyecto || d.codigoOferta || ("Proyecto " + (d.cliente || d.id));
+          const nueva = {
+            id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+            nombre: nombreOT,
+            tipo: "proyecto",
+            direccion: d.ubicacion || "",
+            lat: 0, lng: 0, radio_gps_m: 100,
+            codigo: d.codigoOferta || "",
+            activo: true,
+            empleados: [],
+            origen: origenTag,
+            cliente: d.cliente || "",
+            responsable: d.firmaRepresentante || "",
+            presupuesto: 0, // Se calcula abajo desde PVP si está disponible
+            fecha_inicio: d.fechaInicio || null,
+            fecha_fin: d.fechaEntrega || null,
+            created_at: new Date().toISOString(),
+          };
+          // Intentar obtener PVP total de la oferta desde el cálculo actual (si está disponible)
+          // En este punto `d` no siempre tiene PVP ya calculado, así que si no hay, queda 0
+          // y se puede editar manualmente después en el módulo de OTs.
+          const nuevaLista = [...lista, nueva];
+          await fetch("/api/hiring?kv=centros&anio=0&mes=0", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({data: nuevaLista})
+          });
+          if (window.toast) {
+            window.toast("✓ OT proyecto creada: " + nombreOT + " · RRHH puede asignar empleados", "success", 6000);
+          }
+        }
+      } catch (err) {
+        console.error("No se pudo auto-crear OT:", err);
+        if (window.toast) window.toast("Oferta marcada como Ganada, pero no se pudo crear OT automáticamente", "warning");
+      }
+    }
     if (accion === "rechazar_cliente") set("estado", "Perdida");
     if (accion === "enviar" || accion === "reenviar") set("estado", "Presentada");
     if (accion === "solicitar") set("estado", "En revisión");
