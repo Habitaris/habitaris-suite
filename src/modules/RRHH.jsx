@@ -1348,6 +1348,13 @@ function TabCentros() {
   const [loading, setLoading] = useState(true);
   const [editId, setEditId] = useState(null);
   const [filtroTipo, setFiltroTipo] = useState("todos");
+  // Estado para panel de "Horas fichadas" (paso 4 Punto 1: rentabilidad por OT)
+  // - verHorasId: qué OT tiene el panel expandido (solo una a la vez)
+  // - attendance: todos los fichajes cargados (cached al abrir el primer panel)
+  // - loadingAtt: si se están cargando
+  const [verHorasId, setVerHorasId] = useState(null);
+  const [attendance, setAttendance] = useState(null);
+  const [loadingAtt, setLoadingAtt] = useState(false);
   const [form, setForm] = useState({
     nombre:"", tipo:"gastos_generales", direccion:"", lat:"", lng:"", radio:"100",
     codigo:"", cliente:"", responsable:"", presupuesto:"", fecha_inicio:"", fecha_fin:""
@@ -1451,6 +1458,54 @@ function TabCentros() {
       const list=c.empleados||[];
       return{...c,empleados:list.includes(empId)?list.filter(x=>x!==empId):[...list,empId]};
     }));
+  };
+
+  // Cargar attendance lazy — al abrir el primer panel de horas.
+  // Se cachea en estado, refresh manual vaciando el cache con setAttendance(null).
+  const loadAttendance = async () => {
+    if (attendance !== null || loadingAtt) return;
+    setLoadingAtt(true);
+    try {
+      const r = await fetch("/api/attendance?limit=1000");
+      const d = await r.json();
+      setAttendance((d.ok && Array.isArray(d.data)) ? d.data : []);
+    } catch (e) {
+      setAttendance([]);
+    } finally {
+      setLoadingAtt(false);
+    }
+  };
+
+  // Calcular horas por empleado para una OT dada.
+  // Agrupa fichajes por (employee_id × fecha) y suma (salida - entrada) por día.
+  // Si un día solo tiene entrada sin salida, no cuenta (requiere par completo).
+  const calcHorasOT = (centroId) => {
+    if (!attendance) return { total:0, empleados:[], diasTotal:0 };
+    const delCentro = attendance.filter(a => a.centro_id === centroId);
+    const porEmpFecha = {};
+    delCentro.forEach(a => {
+      const k = a.employee_id + "|" + a.fecha;
+      if (!porEmpFecha[k]) porEmpFecha[k] = { emp_id:a.employee_id, emp_nombre:a.employee_nombre, fecha:a.fecha };
+      if (a.tipo === "entrada") porEmpFecha[k].entrada = a.timestamp;
+      if (a.tipo === "salida") porEmpFecha[k].salida = a.timestamp;
+    });
+    const porEmp = {};
+    Object.values(porEmpFecha).forEach(d => {
+      if (!d.entrada || !d.salida) return;
+      const h = (new Date(d.salida) - new Date(d.entrada)) / 3600000;
+      if (h <= 0 || h > 24) return; // Filtro sanity
+      if (!porEmp[d.emp_id]) porEmp[d.emp_id] = { emp_id:d.emp_id, emp_nombre:d.emp_nombre, dias:0, horas:0, ultimaFecha:null };
+      porEmp[d.emp_id].horas += h;
+      porEmp[d.emp_id].dias += 1;
+      if (!porEmp[d.emp_id].ultimaFecha || d.fecha > porEmp[d.emp_id].ultimaFecha) porEmp[d.emp_id].ultimaFecha = d.fecha;
+    });
+    const empleados = Object.values(porEmp).sort((a,b) => b.horas - a.horas);
+    return {
+      total: empleados.reduce((s,e) => s+e.horas, 0),
+      empleados,
+      diasTotal: empleados.reduce((s,e) => s+e.dias, 0),
+      fichajesSinCerrar: Object.values(porEmpFecha).filter(d => d.entrada && !d.salida).length,
+    };
   };
 
   if(loading)return <div style={{textAlign:"center",padding:40,color:C.inkLight}}>Cargando OTs...</div>;
@@ -1568,6 +1623,7 @@ function TabCentros() {
             </div>
             <div style={{display:"flex",gap:6}}>
               <button onClick={()=>updateCentro(centro.id,{activo:!centro.activo})} style={{padding:"4px 10px",fontSize:10,border:"1px solid #E0E0E0",borderRadius:4,background:centro.activo?"#fff":"#E8F4EE",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{centro.activo?"Desactivar":"Activar"}</button>
+              <button onClick={()=>{const nowOpen=verHorasId===centro.id;setVerHorasId(nowOpen?null:centro.id);if(!nowOpen)loadAttendance();}} style={{padding:"4px 10px",fontSize:10,border:"1px solid #E0E0E0",borderRadius:4,background:verHorasId===centro.id?"#111":"#fff",color:verHorasId===centro.id?"#fff":"#111",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{verHorasId===centro.id?"Cerrar":"📊 Horas"}</button>
               <button onClick={()=>setEditId(editId===centro.id?null:centro.id)} style={{padding:"4px 10px",fontSize:10,border:"1px solid #E0E0E0",borderRadius:4,background:editId===centro.id?"#111":"#fff",color:editId===centro.id?"#fff":"#111",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{editId===centro.id?"Cerrar":"Asignar empleados"}</button>
             </div>
           </div>
@@ -1596,6 +1652,79 @@ function TabCentros() {
               })}
             </div>
           )}
+
+          {/* Horas fichadas panel — paso 4 Punto 1: rentabilidad por OT */}
+          {verHorasId===centro.id && (() => {
+            if (loadingAtt) return <div style={{background:"#FAFAF8",border:"1px solid #E5E3DE",borderRadius:6,padding:12,marginTop:8,fontSize:11,color:"#888",textAlign:"center"}}>Cargando fichajes…</div>;
+            const stats = calcHorasOT(centro.id);
+            const pres = Number(centro.presupuesto)||0;
+            return (
+              <div style={{background:"#FAFAF8",border:"1px solid #E5E3DE",borderRadius:6,padding:12,marginTop:8}}>
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10}}>
+                  <div style={{fontSize:11,fontWeight:700}}>📊 Horas fichadas en esta OT</div>
+                  <button onClick={()=>{setAttendance(null);loadAttendance();}} style={{padding:"2px 8px",fontSize:9,border:"1px solid #E0E0E0",borderRadius:4,background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",color:"#666"}}>↻ Refrescar</button>
+                </div>
+                {/* KPIs resumen */}
+                <div style={{display:"grid",gridTemplateColumns:centro.tipo==="proyecto"?"repeat(4,1fr)":"repeat(3,1fr)",gap:8,marginBottom:10}}>
+                  <div style={{background:"#fff",border:"1px solid #E5E3DE",borderRadius:4,padding:"8px 10px"}}>
+                    <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>Total horas</div>
+                    <div style={{fontSize:18,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{stats.total.toFixed(1)}h</div>
+                  </div>
+                  <div style={{background:"#fff",border:"1px solid #E5E3DE",borderRadius:4,padding:"8px 10px"}}>
+                    <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>Empleados</div>
+                    <div style={{fontSize:18,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{stats.empleados.length}</div>
+                  </div>
+                  <div style={{background:"#fff",border:"1px solid #E5E3DE",borderRadius:4,padding:"8px 10px"}}>
+                    <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>Días fichados</div>
+                    <div style={{fontSize:18,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{stats.diasTotal}</div>
+                  </div>
+                  {centro.tipo==="proyecto" && (
+                    <div style={{background:"#fff",border:"1px solid #E5E3DE",borderRadius:4,padding:"8px 10px"}}>
+                      <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>Presupuesto</div>
+                      <div style={{fontSize:14,fontWeight:800,fontFamily:"'DM Mono',monospace",color:pres>0?"#10B981":"#bbb"}}>{pres>0?"$"+Math.round(pres).toLocaleString("es-CO"):"—"}</div>
+                    </div>
+                  )}
+                </div>
+                {/* Warning si hay fichajes sin cerrar */}
+                {stats.fichajesSinCerrar>0 && (
+                  <div style={{background:"#FEF3C7",border:"1px solid #FCD34D",color:"#92400E",fontSize:10,padding:"6px 10px",borderRadius:4,marginBottom:8}}>
+                    ⚠️ {stats.fichajesSinCerrar} fichaje{stats.fichajesSinCerrar===1?"":"s"} de entrada sin salida registrada (no cuentan en el total)
+                  </div>
+                )}
+                {/* Tabla por empleado */}
+                {stats.empleados.length===0 ? (
+                  <div style={{textAlign:"center",padding:16,fontSize:11,color:"#999"}}>
+                    Sin fichajes registrados en esta OT todavía.<br/>
+                    <span style={{fontSize:10,color:"#bbb"}}>Los fichajes aparecerán aquí cuando los empleados asignados fichen desde el portal.</span>
+                  </div>
+                ) : (
+                  <table style={{width:"100%",fontSize:11,borderCollapse:"collapse"}}>
+                    <thead>
+                      <tr style={{background:"#fff"}}>
+                        <th style={{textAlign:"left",padding:"6px 8px",borderBottom:"1px solid #E5E3DE",fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:.4,fontWeight:700}}>Empleado</th>
+                        <th style={{textAlign:"right",padding:"6px 8px",borderBottom:"1px solid #E5E3DE",fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:.4,fontWeight:700}}>Días</th>
+                        <th style={{textAlign:"right",padding:"6px 8px",borderBottom:"1px solid #E5E3DE",fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:.4,fontWeight:700}}>Horas</th>
+                        <th style={{textAlign:"right",padding:"6px 8px",borderBottom:"1px solid #E5E3DE",fontSize:9,color:"#888",textTransform:"uppercase",letterSpacing:.4,fontWeight:700}}>Última</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stats.empleados.map(e => {
+                        const nombreCorto = (e.emp_nombre||"").split(" ").slice(-2).join(" ") || "?";
+                        return (
+                          <tr key={e.emp_id} style={{background:"#fff"}}>
+                            <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE"}}>{nombreCorto}</td>
+                            <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontFamily:"'DM Mono',monospace"}}>{e.dias}</td>
+                            <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:700}}>{e.horas.toFixed(1)}h</td>
+                            <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontSize:10,color:"#666"}}>{e.ultimaFecha}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            );
+          })()}
         </div>
         );
       })}
