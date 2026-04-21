@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       tipo,           // "entrada" | "salida" | "novedad"
       fecha,          // YYYY-MM-DD
       gps_lat, gps_lng, gps_accuracy,
-      foto_url, centro_costo,
+      foto_url, centro_costo, centro_id, ot_tipo,
       device_info,    // { ua, brand, model, os, browser }
       novedad_desc,   // solo si tipo===novedad
     } = body;
@@ -60,6 +60,8 @@ export default async function handler(req, res) {
       novedad_desc: novedad_desc || null,
       foto_url:     foto_url || null,
       centro_costo: centro_costo || null,
+      centro_id:    centro_id || null,
+      ot_tipo:      ot_tipo || null,
     }]).select().single();
 
     if (error) return res.status(500).json({ ok: false, error: error.message });
