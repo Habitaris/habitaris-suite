@@ -178,8 +178,9 @@ export default function FormularioPublico() {
 
   /* ALL hooks BEFORE any conditional return */
   useEffect(() => {
+    const pathMatch = window.location.pathname.match(/^\/formulario\/([A-Za-z0-9]+)\/?$/);
     const params = new URLSearchParams(window.location.search);
-    const linkId = params.get("id");
+    const linkId = pathMatch ? pathMatch[1] : params.get("id");
     if (linkId) {
       // New approach: fetch from Supabase
       (async () => {
