@@ -188,8 +188,9 @@ export default function FormularioPublico() {
           const { data, error } = await sb.from("form_links").select("*").eq("link_id", linkId).single();
           if (!error && data) {
             // Check expiration
-            if (data.expires_at && new Date(data.expires_at) < new Date()) { setDef({ _expired: true }); return; }
-            if (data.max_uses > 0 && (data.current_uses||0) >= data.max_uses) { setDef({ _expired: true }); return; }
+            if (!data.active) { setBlocked("inactive"); setDef(null); return; }
+            if (data.expires_at && new Date(data.expires_at) < new Date()) { setBlocked("expired"); setDef(null); return; }
+            if (data.max_uses > 0 && (data.current_uses||0) >= data.max_uses) { setBlocked("maxuses"); setDef(null); return; }
             // increment moved to submit only
             // Build form object
             setDef({ ...data.form_def, cliente: { nombre: data.client_name, email: data.client_email, tel: data.client_tel }, linkConfig: { linkId: data.link_id }, marca: data.marca || {}, modulo: data.modulo || "crm" });
