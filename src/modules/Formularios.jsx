@@ -1937,7 +1937,7 @@ function TabEstadisticas({ forms }) {
 /* ═══════════════════════════════════════════════════════════════
    ENVIADOS TAB — with checkboxes + password delete
    ═══════════════════════════════════════════════════════════════ */
-function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
+function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
   const [filtro, setFiltro] = useState("pendiente");
   const [sortDesc, setSortDesc] = useState(true);
   const getStatus = (e) => { if (e.blocked) return "bloqueado"; if (e.expiry && new Date(e.expiry) < new Date()) return "caducado"; if (e.maxUsos > 0 && (e.currentUsos||0) >= e.maxUsos) return "bloqueado"; return respuestas.some(r => (r.link_id||r.linkId)===e.linkId || (!r.link_id && !r.linkId && r.clienteEmail && r.clienteEmail===e.cliente?.email)) ? "respondido" : "pendiente"; };
@@ -1949,6 +1949,7 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
   const [showDelPass, setShowDelPass] = useState(false);
   const [delPassInput, setDelPassInput] = useState("");
   const [delAction, setDelAction] = useState(null);
+  const [rehabModal, setRehabModal] = useState(null);
 
   const toggleSel = (id) => setSelectedIds(prev => { const n = new Set(prev); n.has(id)?n.delete(id):n.add(id); return n; });
   const toggleAll = () => setSelectedIds(prev => prev.size===envios.length ? new Set() : new Set(envios.map(e=>e.id)));
@@ -2036,6 +2037,12 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
                     }
                   </td>
                   <td style={{...tds,whiteSpace:"nowrap"}}>
+                    {getStatus(e)==="caducado" && (
+                      <button onClick={()=>setRehabModal({linkId:e.linkId||e.id, cliente:e.cliente, formNombre:e.formNombre, expiry:e.expiry, maxUsos:e.maxUsos, currentUsos:e.currentUsos})}
+                        style={{padding:"3px 10px",fontSize:8,fontWeight:700,background:T.blue,color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",marginRight:4}}>
+                        🔄 Rehabilitar
+                      </button>
+                    )}
                     {isBlocked ? (
                       <button onClick={()=>{
                         onBlock(e.linkId||e.id, false)
@@ -2076,6 +2083,59 @@ function EnviadosTab({ envios, onBlock, onDelete, respuestas }) {
         </div>
       )}
     </div>
+    {rehabModal && (
+      <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,fontFamily:"'DM Sans',sans-serif"}} onClick={()=>setRehabModal(null)}>
+        <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:8,padding:24,maxWidth:440,width:"90%",boxShadow:"0 10px 40px rgba(0,0,0,0.2)"}}>
+          <div style={{fontSize:16,fontWeight:700,marginBottom:8}}>🔄 Rehabilitar enlace</div>
+          <div style={{fontSize:11,color:"#666",marginBottom:16,lineHeight:1.6}}>
+            <div><strong>Cliente:</strong> {rehabModal.cliente?.nombre || "—"}</div>
+            <div><strong>Formulario:</strong> {rehabModal.formNombre}</div>
+            {rehabModal.expiry && <div><strong>Caducó:</strong> {new Date(rehabModal.expiry).toLocaleDateString("es-CO")}</div>}
+            <div><strong>Usos:</strong> {rehabModal.currentUsos||0} de {rehabModal.maxUsos || "∞"}</div>
+          </div>
+          <label style={{display:"flex",alignItems:"center",gap:6,fontSize:11,marginBottom:16,cursor:"pointer",padding:"6px 10px",background:"#F5F4F1",borderRadius:6}}>
+            <input type="checkbox" id="rehab-reset" defaultChecked/>
+            <span>Resetear contador de usos a 0</span>
+          </label>
+          <div style={{display:"grid",gap:8}}>
+            <button onClick={async ()=>{
+              const r = document.getElementById("rehab-reset").checked;
+              const u = { expires_at: new Date(Date.now()+7*86400000).toISOString() };
+              if (r) u.current_uses = 0;
+              await onUpdateLink(rehabModal.linkId, u);
+              setRehabModal(null);
+            }} style={{padding:"10px 14px",background:T.green,color:"#fff",border:"none",borderRadius:6,cursor:"pointer",fontWeight:600,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>📅 Extender 7 días</button>
+            <button onClick={async ()=>{
+              const r = document.getElementById("rehab-reset").checked;
+              const u = { expires_at: new Date(Date.now()+30*86400000).toISOString() };
+              if (r) u.current_uses = 0;
+              await onUpdateLink(rehabModal.linkId, u);
+              setRehabModal(null);
+            }} style={{padding:"10px 14px",background:T.green,color:"#fff",border:"none",borderRadius:6,cursor:"pointer",fontWeight:600,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>📅 Extender 30 días</button>
+            <div style={{display:"flex",gap:8,alignItems:"stretch"}}>
+              <input type="date" id="rehab-custom-date" style={{flex:1,padding:"8px 10px",border:"1px solid #ddd",borderRadius:6,fontFamily:"'DM Sans',sans-serif",fontSize:12}}/>
+              <button onClick={async ()=>{
+                const d = document.getElementById("rehab-custom-date").value;
+                if (!d) { window.toast?.("Selecciona una fecha","error"); return; }
+                const r = document.getElementById("rehab-reset").checked;
+                const u = { expires_at: new Date(d+"T23:59:59").toISOString() };
+                if (r) u.current_uses = 0;
+                await onUpdateLink(rehabModal.linkId, u);
+                setRehabModal(null);
+              }} style={{padding:"8px 16px",background:T.blue,color:"#fff",border:"none",borderRadius:6,cursor:"pointer",fontWeight:600,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>Aplicar</button>
+            </div>
+            <button onClick={async ()=>{
+              const r = document.getElementById("rehab-reset").checked;
+              const u = { expires_at: null };
+              if (r) u.current_uses = 0;
+              await onUpdateLink(rehabModal.linkId, u);
+              setRehabModal(null);
+            }} style={{padding:"10px 14px",background:"#fff",color:"#111",border:"1px solid #ddd",borderRadius:6,cursor:"pointer",fontWeight:600,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>♾️ Sin caducidad</button>
+            <button onClick={()=>setRehabModal(null)} style={{padding:"8px 14px",background:"transparent",color:"#666",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,marginTop:4}}>Cancelar</button>
+          </div>
+        </div>
+      </div>
+    )}
   );
 }
 
@@ -2205,6 +2265,18 @@ export default function Formularios() {
       // Always refresh list, even if createLink had conflict
       await loadEnvios();
     } else { save("envios", [...(data.envios||[]), e]); }
+  };
+  const rehabilitarEnvio = async (linkId, updates) => {
+    if (SB.isConfigured()) {
+      try {
+        await SB.updateLink(linkId, updates);
+        await loadEnvios();
+        window.toast?.("Enlace rehabilitado", "success");
+      } catch(err) {
+        console.warn("rehabilitarEnvio error:", err);
+        window.toast?.("Error: " + err.message, "error");
+      }
+    }
   };
   const blockEnvio = async (linkId, block) => {
     if (SB.isConfigured()) {
@@ -2380,7 +2452,7 @@ export default function Formularios() {
         {tab === "mis_forms"   && <ListaForms forms={forms} setForms={setForms} onEdit={goConstructor} onNew={goNew}/>}
         {tab === "constructor" && <Constructor forms={forms} setForms={setForms} editId={editId} setEditId={setEditId} onSaved={onSaved} envios={envios} addEnvio={addEnvio}/>}
         {tab === "enviados"    && (
-          <EnviadosTab envios={envios} onBlock={blockEnvio} onDelete={deleteEnvio} respuestas={respuestas}/>
+          <EnviadosTab envios={envios} onBlock={blockEnvio} onDelete={deleteEnvio} onUpdateLink={rehabilitarEnvio} respuestas={respuestas}/>
         )}
         {tab === "respuestas"   && <TabRespuestas forms={forms} respuestas={respuestas} onReload={loadResponses} loading={respLoading} onDelete={deleteResponse} onClearAll={clearAllResponses}/>}
         {tab === "estadisticas" && <TabEstadisticas forms={forms}/>}
