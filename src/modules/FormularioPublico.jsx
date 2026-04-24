@@ -227,17 +227,17 @@ export default function FormularioPublico() {
 
     // Check if link was manually blocked
     const linkCfg = def.linkConfig || {};
-    if (linkCfg.blocked) { setBlocked("blocked"); return; }
+    if (linkCfg.blocked) { setBlocked("blocked"); setDef(null); return; }
 
     // Check link-level limits
     if (linkCfg.fechaCaducidad) {
       const expiry = new Date(linkCfg.fechaCaducidad);
-      if (expiry < new Date()) { setBlocked("expired"); return; }
+      if (expiry < new Date()) { setBlocked("expired"); setDef(null); return; }
     }
     if (linkCfg.maxUsos && linkCfg.maxUsos > 0) {
       const usedKey = "hab_link_uses_"+(linkCfg.linkId||def.id||"");
       const used = parseInt(store.getSync(usedKey)||"0");
-      if (used >= linkCfg.maxUsos) { setBlocked("maxuses"); return; }
+      if (used >= linkCfg.maxUsos) { setBlocked("maxuses"); setDef(null); return; }
     }
 
     // Also check via Supabase if configured
@@ -245,9 +245,9 @@ export default function FormularioPublico() {
     if (linkId && SB.isConfigured()) {
       SB.getLink(linkId).then(link => {
         if (!link) return;
-        if (!link.active) { setBlocked("inactive"); return; }
-        if (link.expires_at && new Date(link.expires_at) < new Date()) { setBlocked("expired"); return; }
-        if (link.max_uses > 0 && link.current_uses >= link.max_uses) { setBlocked("maxuses"); return; }
+        if (!link.active) { setBlocked("inactive"); setDef(null); return; }
+        if (link.expires_at && new Date(link.expires_at) < new Date()) { setBlocked("expired"); setDef(null); return; }
+        if (link.max_uses > 0 && link.current_uses >= link.max_uses) { setBlocked("maxuses"); setDef(null); return; }
       }).catch(()=>{});
     }
 
@@ -269,16 +269,32 @@ export default function FormularioPublico() {
   }, [def]);
 
   /* ── Loading / invalid ── */
-  if (!def) return (
-    <div style={{ minHeight:"100vh", background:BASE.bg, display:"flex", alignItems:"center", justifyContent:"center" }}>
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&display=swap');`}</style>
-      <div style={{ background:BASE.surface, borderRadius:12, padding:40, maxWidth:400, textAlign:"center" }}>
-        <div style={{ fontSize:40, marginBottom:16 }}>🔒</div>
-        <h2 style={{ ...F, fontSize:18, fontWeight:700, color:BASE.ink }}>Formulario no disponible</h2>
-        <p style={{ ...F, fontSize:13, color:BASE.inkMid, marginTop:8 }}>Este enlace no es válido o ha expirado.</p>
+  if (!def) {
+    const _cfg = (typeof store !== "undefined" && store.getSync) ? (store.getSync("habitaris_config") || {}) : {};
+    const _tel = String((_cfg && _cfg.empresa && _cfg.empresa.telefono) || "").replace(/[^0-9]/g, "");
+    const _msgs = {
+      expired:  { icon: "⏰", title: "Enlace caducado",    desc: "Este enlace ha caducado. Puedes solicitar un nuevo acceso.", btn: "Solicitar nuevo enlace" },
+      maxuses:  { icon: "🔁", title: "Enlace agotado",     desc: "Este enlace ya se usó el número máximo de veces permitidas.", btn: "Solicitar nuevo acceso" },
+      blocked:  { icon: "🚫", title: "Enlace desactivado", desc: "Este enlace fue desactivado. Si crees que es un error, contáctanos.", btn: "Contactar con nosotros" },
+      inactive: { icon: "🚫", title: "Enlace desactivado", desc: "Este enlace fue desactivado. Si crees que es un error, contáctanos.", btn: "Contactar con nosotros" },
+    };
+    const _m = _msgs[blocked] || { icon: "🔒", title: "Enlace no disponible", desc: "Este enlace no existe o no es válido.", btn: "Contactar con nosotros" };
+    const _wspText = encodeURIComponent("Hola, necesito acceso a un formulario de briefing.");
+    const _wspHref = _tel ? ("https://wa.me/" + _tel + "?text=" + _wspText) : null;
+    return (
+      <div style={{ minHeight:"100vh", background: BASE.bg, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:'"DM Sans", sans-serif', padding:20 }}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&display=swap');`}</style>
+        <div style={{ background: BASE.surface, borderRadius:12, padding:40, maxWidth:440, textAlign:"center", boxShadow:"0 8px 32px rgba(0,0,0,.06)" }}>
+          <div style={{ fontSize:48, marginBottom:12 }}>{_m.icon}</div>
+          <div style={{ fontSize:18, fontWeight:700, color:"#111", marginBottom:10 }}>{_m.title}</div>
+          <div style={{ fontSize:14, color:"#555", lineHeight:1.6, marginBottom:24 }}>{_m.desc}</div>
+          {_wspHref ? (
+            <a href={_wspHref} target="_blank" rel="noopener noreferrer" style={{ display:"inline-block", background:"#111", color:"#fff", padding:"12px 24px", borderRadius:8, fontWeight:700, fontSize:14, textDecoration:"none" }}>{_m.btn}</a>
+          ) : null}
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
 
   /* ── Blocked (expired / max uses) ── */
   if (blocked) {
