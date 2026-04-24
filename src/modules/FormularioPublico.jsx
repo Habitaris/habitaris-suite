@@ -173,8 +173,22 @@ export default function FormularioPublico() {
   const [animDir, setAnimDir] = useState("next");
   const [animKey, setAnimKey] = useState(0);
   const [blocked, setBlocked] = useState(null); // null | "expired" | "maxuses" | "inactive"
+  const [tenantCfg, setTenantCfg] = useState(null);
   const topRef = useRef(null);
   const openTimeRef = useRef(Date.now());
+
+  /* Load tenant config (for error-state CTAs, marca, etc.) */
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await sb.from("kv_store").select("value").eq("key", "habitaris_config").eq("tenant_id", "habitaris").maybeSingle();
+        if (data && data.value) {
+          const parsed = typeof data.value === "string" ? JSON.parse(data.value) : data.value;
+          setTenantCfg(parsed);
+        }
+      } catch (e) { /* silent - CTA just wont appear */ }
+    })();
+  }, []);
 
   /* ALL hooks BEFORE any conditional return */
   useEffect(() => {
@@ -271,7 +285,7 @@ export default function FormularioPublico() {
 
   /* ── Loading / invalid ── */
   if (!def) {
-    const _cfg = (typeof store !== "undefined" && store.getSync) ? (store.getSync("habitaris_config") || {}) : {};
+    const _cfg = tenantCfg || ((typeof store !== "undefined" && store.getSync) ? (store.getSync("habitaris_config") || {}) : {});
     const _tel = String((_cfg && _cfg.empresa && _cfg.empresa.telefono) || "").replace(/[^0-9]/g, "");
     const _msgs = {
       expired:  { icon: "⏰", title: "Enlace caducado",    desc: "Este enlace ha caducado. Puedes solicitar un nuevo acceso.", btn: "Solicitar nuevo enlace" },
