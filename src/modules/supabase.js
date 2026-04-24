@@ -355,6 +355,20 @@ export async function createLink(data) {
   return { error: null };
 }
 
+export async function updateLink(linkId, updates) {
+  const { url, key } = getSupaConfig();
+  const res = await fetch(url + "/rest/v1/form_links?link_id=eq." + encodeURIComponent(linkId), {
+    method: "PATCH",
+    headers: { ...headers(key), "Prefer": "return=representation" },
+    body: JSON.stringify(updates),
+  });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error("updateLink: " + res.status + " " + txt);
+  }
+  return { error: null };
+}
+
 export async function getLink(linkId) {
   const r = await query("form_links", `link_id=eq.${linkId}&limit=1`);
   return r && r.length > 0 ? r[0] : null;
