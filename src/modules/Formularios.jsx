@@ -2082,7 +2082,6 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
           </div>
         </div>
       )}
-    </div>
     {rehabModal && (
       <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,fontFamily:"'DM Sans',sans-serif"}} onClick={()=>setRehabModal(null)}>
         <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:8,padding:24,maxWidth:440,width:"90%",boxShadow:"0 10px 40px rgba(0,0,0,0.2)"}}>
@@ -2136,6 +2135,7 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
         </div>
       </div>
     )}
+    </div>
   );
 }
 
