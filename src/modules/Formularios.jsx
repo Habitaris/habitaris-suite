@@ -379,8 +379,9 @@ function Constructor({ forms, setForms, editId, setEditId, onSaved, envios, addE
   const [sharePais, setSharePais] = useState("Colombia");
   const [shareGenerated, setShareGenerated] = useState("");
   const [shareFileName, setShareFileName] = useState("");
-  const [linkMaxUsos, setLinkMaxUsos] = useState(0);
+  const [linkMaxUsos, setLinkMaxUsos] = useState(2);
   const [linkExpiry, setLinkExpiry] = useState("");
+  const [linkHorasDuracion, setLinkHorasDuracion] = useState(48);
   const [dragIdx, setDragIdx] = useState(null);
 
   const addCampo = (tipo) => {
@@ -613,7 +614,7 @@ render();
     const cfg = getConfig();
     const appUrl = (cfg.app?.url || "").replace(/\/$/,"");
     if (appUrl) {
-      const linkConfig = { linkId, maxUsos: linkMaxUsos||0, fechaCaducidad: linkExpiry||"" };
+      const linkConfig = { linkId, maxUsos: linkMaxUsos||0, fechaCaducidad: linkExpiry||"", horasDuracion: linkHorasDuracion||0 };
       const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre,paisProyecto:sharePais}, cliente:client||null, linkConfig, modulo, marca:{ logo:(cfg.apariencia?.logo||"").startsWith("/")?(cfg.app?.url||"https://suite.habitaris.co")+cfg.apariencia.logo:(cfg.apariencia?.logo||""), colorPrimario:cfg.apariencia?.colorPrimario||"#111", colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B", colorAcento:cfg.apariencia?.colorAcento||"#111111", tipografia:cfg.apariencia?.tipografia||"DM Sans", slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"", empresa:cfg.empresa?.nombre||"Habitaris", adminEmail:cfg.correo?.emailPrincipal||"comercial@habitaris.co", razonSocial:cfg.empresa?.razonSocial||"", domicilio:cfg.empresa?.domicilio||"" } };
       // Save to Supabase → short URL
       try {
@@ -1004,31 +1005,27 @@ render();
               </div>
             </div>
 
-            <div style={{background:"#F5F0FF",borderRadius:6,padding:"12px 14px",marginBottom:14,border:"1px solid #11111122"}}>
-              <div style={{fontSize:8,fontWeight:700,color:"#111111",textTransform:"uppercase",marginBottom:8}}>🔒 Control del enlace</div>
-              <div style={{display:"flex",gap:8}}>
-                <div style={{flex:1}}>
-                  <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Máximo de envíos</label>
-                  <select value={linkMaxUsos} onChange={e=>{setLinkMaxUsos(parseInt(e.target.value));setShareGenerated("");}}
-                    style={{...inp,width:"100%",fontSize:11}}>
-                    <option value={0}>♾️ Ilimitado</option>
-                    <option value={1}>1 vez</option>
-                    <option value={2}>2 veces</option>
-                    <option value={3}>3 veces</option>
-                    <option value={5}>5 veces</option>
-                    <option value={10}>10 veces</option>
-                  </select>
-                </div>
-                <div style={{flex:1}}>
-                  <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Fecha de caducidad</label>
-                  <input type="date" value={linkExpiry} onChange={e=>{setLinkExpiry(e.target.value);setShareGenerated("");e.target.blur();}}
-                    min={new Date().toISOString().split("T")[0]}
-                    style={{...inp,width:"100%",fontSize:11}}/>
-                </div>
+            <div style={{display:"grid",gap:10}}>
+              <div>
+                <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase",display:"block",marginBottom:4}}>Cantidad de clicks permitidos</label>
+                <input type="number" min={0} value={linkMaxUsos} onChange={e=>setLinkMaxUsos(parseInt(e.target.value)||0)} style={{width:"100%",padding:"6px 8px",fontSize:11,border:"1px solid #11111122",borderRadius:4,fontFamily:"inherit"}}/>
+                <div style={{fontSize:9,color:"#888",marginTop:3}}>0 = ilimitado</div>
               </div>
-              <div style={{fontSize:8,color:"#111111",marginTop:6,lineHeight:1.4}}>
-                {linkMaxUsos>0 ? `⚡ El cliente podrá enviar máximo ${linkMaxUsos} ${linkMaxUsos===1?"vez":"veces"}` : "♾️ Sin límite de envíos"}
-                {linkExpiry ? ` · ⏰ Caduca el ${new Date(linkExpiry+"T23:59:59").toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"})}` : " · Sin caducidad"}
+              <div>
+                <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase",display:"block",marginBottom:4}}>Duración del enlace</label>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(3, 1fr)",gap:6,marginBottom:6}}>
+                  {[24,48,72].map(h => (
+                    <button key={h} type="button" onClick={()=>{setLinkHorasDuracion(h);setLinkExpiry("");}} style={{padding:"8px 6px",fontSize:11,fontWeight:600,border:linkHorasDuracion===h&&!linkExpiry?"1.5px solid #111":"1px solid #11111133",background:linkHorasDuracion===h&&!linkExpiry?"#111":"#fff",color:linkHorasDuracion===h&&!linkExpiry?"#fff":"#111",borderRadius:4,cursor:"pointer",fontFamily:"inherit"}}>{h}h</button>
+                  ))}
+                </div>
+                <button type="button" onClick={()=>{setLinkHorasDuracion(0);setLinkExpiry("");}} style={{width:"100%",padding:"6px",fontSize:10,fontWeight:600,border:linkHorasDuracion===0&&!linkExpiry?"1.5px solid #111":"1px solid #11111133",background:linkHorasDuracion===0&&!linkExpiry?"#111":"#fff",color:linkHorasDuracion===0&&!linkExpiry?"#fff":"#111",borderRadius:4,cursor:"pointer",fontFamily:"inherit",marginBottom:6}}>♾️ Sin caducidad</button>
+                <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                  <label style={{fontSize:9,color:"#888",whiteSpace:"nowrap"}}>O fecha exacta:</label>
+                  <input type="date" value={linkExpiry} onChange={e=>setLinkExpiry(e.target.value)} style={{flex:1,padding:"4px 6px",fontSize:10,border:linkExpiry?"1.5px solid #111":"1px solid #11111133",borderRadius:4,fontFamily:"inherit"}}/>
+                </div>
+                <div style={{fontSize:9,color:"#888",marginTop:4}}>
+                  {linkExpiry ? ("Caduca el " + new Date(linkExpiry).toLocaleDateString("es-CO")) : (linkHorasDuracion>0 ? ("Caduca " + linkHorasDuracion + "h después de generar el enlace") : "Sin caducidad")}
+                </div>
               </div>
             </div>
 
@@ -2083,54 +2080,52 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
         </div>
       )}
     {rehabModal && (
-      <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,fontFamily:"'DM Sans',sans-serif"}} onClick={()=>setRehabModal(null)}>
-        <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:8,padding:24,maxWidth:440,width:"90%",boxShadow:"0 10px 40px rgba(0,0,0,0.2)"}}>
-          <div style={{fontSize:16,fontWeight:700,marginBottom:8}}>🔄 Rehabilitar enlace</div>
-          <div style={{fontSize:11,color:"#666",marginBottom:16,lineHeight:1.6}}>
+      <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16,fontFamily:""DM Sans", sans-serif"}} onClick={()=>setRehabModal(null)}>
+        <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:12,padding:20,maxWidth:420,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",maxHeight:"90vh",overflow:"auto"}}>
+          <div style={{fontSize:16,fontWeight:700,color:"#111",marginBottom:4}}>🔄 Rehabilitar enlace</div>
+          <div style={{fontSize:11,color:"#888",marginBottom:14}}>Ampliar vigencia sin cambiar el URL</div>
+          <div style={{background:"#f9fafb",borderRadius:6,padding:10,marginBottom:14,fontSize:11,lineHeight:1.5}}>
             <div><strong>Cliente:</strong> {rehabModal.cliente?.nombre || "—"}</div>
-            <div><strong>Formulario:</strong> {rehabModal.formNombre}</div>
+            <div><strong>Formulario:</strong> {rehabModal.formNombre || "—"}</div>
             {rehabModal.expiry && <div><strong>Caducó:</strong> {new Date(rehabModal.expiry).toLocaleDateString("es-CO")}</div>}
-            <div><strong>Usos:</strong> {rehabModal.currentUsos||0} de {rehabModal.maxUsos || "∞"}</div>
+            {(rehabModal.maxUsos||0)>0 && <div><strong>Usos:</strong> {rehabModal.currentUsos||0} de {rehabModal.maxUsos}</div>}
           </div>
-          <label style={{display:"flex",alignItems:"center",gap:6,fontSize:11,marginBottom:16,cursor:"pointer",padding:"6px 10px",background:"#F5F4F1",borderRadius:6}}>
-            <input type="checkbox" id="rehab-reset" defaultChecked/>
-            <span>Resetear contador de usos a 0</span>
-          </label>
-          <div style={{display:"grid",gap:8}}>
-            <button onClick={async ()=>{
-              const r = document.getElementById("rehab-reset").checked;
-              const u = { expires_at: new Date(Date.now()+7*86400000).toISOString() };
-              if (r) u.current_uses = 0;
-              await onUpdateLink(rehabModal.linkId, u);
-              setRehabModal(null);
-            }} style={{padding:"10px 14px",background:T.green,color:"#fff",border:"none",borderRadius:6,cursor:"pointer",fontWeight:600,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>📅 Extender 7 días</button>
-            <button onClick={async ()=>{
-              const r = document.getElementById("rehab-reset").checked;
-              const u = { expires_at: new Date(Date.now()+30*86400000).toISOString() };
-              if (r) u.current_uses = 0;
-              await onUpdateLink(rehabModal.linkId, u);
-              setRehabModal(null);
-            }} style={{padding:"10px 14px",background:T.green,color:"#fff",border:"none",borderRadius:6,cursor:"pointer",fontWeight:600,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>📅 Extender 30 días</button>
-            <div style={{display:"flex",gap:8,alignItems:"stretch"}}>
-              <input type="date" id="rehab-custom-date" style={{flex:1,padding:"8px 10px",border:"1px solid #ddd",borderRadius:6,fontFamily:"'DM Sans',sans-serif",fontSize:12}}/>
-              <button onClick={async ()=>{
-                const d = document.getElementById("rehab-custom-date").value;
-                if (!d) { window.toast?.("Selecciona una fecha","error"); return; }
-                const r = document.getElementById("rehab-reset").checked;
-                const u = { expires_at: new Date(d+"T23:59:59").toISOString() };
-                if (r) u.current_uses = 0;
-                await onUpdateLink(rehabModal.linkId, u);
-                setRehabModal(null);
-              }} style={{padding:"8px 16px",background:T.blue,color:"#fff",border:"none",borderRadius:6,cursor:"pointer",fontWeight:600,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>Aplicar</button>
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase",display:"block",marginBottom:4}}>Cantidad de clicks permitidos</label>
+            <input id="rehab-max-usos" type="number" min={0} defaultValue={rehabModal.maxUsos||2} style={{width:"100%",padding:"6px 8px",fontSize:12,border:"1px solid #11111122",borderRadius:4,fontFamily:"inherit"}}/>
+            <div style={{fontSize:9,color:"#888",marginTop:3}}>0 = ilimitado</div>
+          </div>
+          <div style={{marginBottom:12}}>
+            <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase",display:"block",marginBottom:4}}>Duración del enlace</label>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3, 1fr)",gap:6,marginBottom:6}}>
+              {[24,48,72].map(h => (
+                <button key={h} type="button" onClick={async()=>{
+                  const mu=parseInt(document.getElementById("rehab-max-usos").value)||0;
+                  await onUpdateLink(rehabModal.linkId,{expires_at:new Date(Date.now()+h*3600000).toISOString(),max_uses:mu,current_uses:0,active:true});
+                  setRehabModal(null);
+                }} style={{padding:"10px 6px",fontSize:12,fontWeight:700,border:"none",background:"#111",color:"#fff",borderRadius:6,cursor:"pointer",fontFamily:"inherit"}}>{h}h</button>
+              ))}
             </div>
-            <button onClick={async ()=>{
-              const r = document.getElementById("rehab-reset").checked;
-              const u = { expires_at: null };
-              if (r) u.current_uses = 0;
-              await onUpdateLink(rehabModal.linkId, u);
+            <button type="button" onClick={async()=>{
+              const mu=parseInt(document.getElementById("rehab-max-usos").value)||0;
+              await onUpdateLink(rehabModal.linkId,{expires_at:null,max_uses:mu,current_uses:0,active:true});
               setRehabModal(null);
-            }} style={{padding:"10px 14px",background:"#fff",color:"#111",border:"1px solid #ddd",borderRadius:6,cursor:"pointer",fontWeight:600,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}>♾️ Sin caducidad</button>
-            <button onClick={()=>setRehabModal(null)} style={{padding:"8px 14px",background:"transparent",color:"#666",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",fontSize:11,marginTop:4}}>Cancelar</button>
+            }} style={{width:"100%",padding:"8px",fontSize:11,fontWeight:600,border:"1px solid #11111133",background:"#fff",color:"#111",borderRadius:6,cursor:"pointer",fontFamily:"inherit",marginBottom:6}}>♾️ Sin caducidad</button>
+            <div style={{display:"flex",gap:6,alignItems:"center"}}>
+              <label style={{fontSize:9,color:"#888",whiteSpace:"nowrap"}}>O fecha exacta:</label>
+              <input id="rehab-custom-date" type="date" style={{flex:1,padding:"4px 6px",fontSize:11,border:"1px solid #11111133",borderRadius:4,fontFamily:"inherit"}}/>
+              <button type="button" onClick={async()=>{
+                const d=document.getElementById("rehab-custom-date").value;
+                if(!d){window.toast?.("Selecciona una fecha","error");return;}
+                const dt=new Date(d);dt.setHours(23,59,59,999);
+                const mu=parseInt(document.getElementById("rehab-max-usos").value)||0;
+                await onUpdateLink(rehabModal.linkId,{expires_at:dt.toISOString(),max_uses:mu,current_uses:0,active:true});
+                setRehabModal(null);
+              }} style={{padding:"4px 12px",fontSize:11,fontWeight:600,border:"none",background:"#111",color:"#fff",borderRadius:4,cursor:"pointer",fontFamily:"inherit"}}>Aplicar</button>
+            </div>
+          </div>
+          <div style={{textAlign:"center",marginTop:8}}>
+            <button type="button" onClick={()=>setRehabModal(null)} style={{background:"none",border:"none",color:"#888",fontSize:12,cursor:"pointer",fontFamily:"inherit",textDecoration:"underline"}}>Cancelar</button>
           </div>
         </div>
       </div>
