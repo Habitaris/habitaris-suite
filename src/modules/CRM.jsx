@@ -931,9 +931,9 @@ function FormBuilder() {
         client_tel: cl.tel || null,
         marca: f.marca || {},
         modulo: f.modulo || "crm",
-        max_uses: f.linkConfig?.maxUsos || 1,
+        max_uses: f.linkConfig?.maxUsos || 2,
         current_uses: 0,
-        expires_at: f.linkConfig?.fechaCaducidad ? new Date(f.linkConfig.fechaCaducidad).toISOString() : null,
+        expires_at: f.linkConfig?.horasDuracion ? new Date(Date.now() + f.linkConfig.horasDuracion * 3600000).toISOString() : (f.linkConfig?.fechaCaducidad ? new Date(f.linkConfig.fechaCaducidad).toISOString() : null),
         active: true,
       }, { onConflict: "link_id" });
       if (error) { console.error("form_links upsert error:", error); return null; }
