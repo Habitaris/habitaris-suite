@@ -2024,7 +2024,12 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
                   <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>{e.fecha}</td>
                   <td style={{...tds,fontSize:9}}>{e.hora}</td>
                   <td style={{...tds,fontWeight:600}}>{e.formNombre}</td>
-                  <td style={{...tds,fontWeight:600}}>{e.cliente?.nombre||"—"}</td>
+                  <td style={{...tds,fontWeight:600}}>
+                    <div>{e.cliente?.nombre||"—"}</div>
+                    {e.hasPartialData && !e.submittedAt && (
+                      <div style={{fontSize:9,fontWeight:500,color:"#0066cc",marginTop:2}} title="Tiene datos parciales sin enviar">📝 Avance: paso {(e.lastStep||0)+1} · {Object.keys(e.partialResponses||{}).length} campos guardados</div>
+                    )}
+                  </td>
                   <td style={{...tds,fontSize:9,color:T.blue}}>{e.cliente?.email||"—"}</td>
                   <td style={{...tds,fontSize:9}}>{e.cliente?.tel||"—"}</td>
                   <td style={tds}>
@@ -2240,6 +2245,11 @@ export default function Formularios() {
             fecha: l.created_at ? new Date(l.created_at).toLocaleDateString("es-CO") : "\u2014",
             hora: l.created_at ? new Date(l.created_at).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}) : "\u2014",
             linkId: l.link_id,
+            partialResponses: l.partial_responses || {},
+            lastStep: l.last_completed_step || 0,
+            hasPartialData: l.has_partial_data || false,
+            formCampos: (l.form_def && l.form_def.campos) || [],
+            submittedAt: l.submitted_at || null,
             maxUsos: l.max_uses||0,
             expiry: l.expires_at||"",
             blocked: !l.active,
