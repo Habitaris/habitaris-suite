@@ -38,7 +38,7 @@ export default async function handler(req, res) {
         method: "POST",
         headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Habitaris <comercial@habitaris.co>",
+          from: "Habitaris <noreply@habitaris.es>",
           to: [recipientEmail],
           subject: code + " — Código de verificación Habitaris",
           html: otpHtml,
@@ -75,7 +75,7 @@ export default async function handler(req, res) {
         : "";
 
       var subj = encodeURIComponent(body.subject || "Reunion");
-      var creatorEmail = body.fromEmail || "comercial@habitaris.co"; var baseUrl = "https://suite.habitaris.co/responder/?asunto=" + subj + "&email=" + encodeURIComponent(body.to) + "&creador=" + encodeURIComponent(creatorEmail) + (body.message ? "&fecha=" + encodeURIComponent((body.message.match(/Fecha: ([^\n]+)/)||["",""])[1]) + "&hora=" + encodeURIComponent((body.message.match(/Hora: ([^\n]+)/)||["",""])[1]) : "");
+      var creatorEmail = body.fromEmail || "noreply@habitaris.es"; var baseUrl = "https://suite.habitaris.co/responder/?asunto=" + subj + "&email=" + encodeURIComponent(body.to) + "&creador=" + encodeURIComponent(creatorEmail) + (body.message ? "&fecha=" + encodeURIComponent((body.message.match(/Fecha: ([^\n]+)/)||["",""])[1]) + "&hora=" + encodeURIComponent((body.message.match(/Hora: ([^\n]+)/)||["",""])[1]) : "");
       var actionsHtml = '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px"><tr>'
         + '<td width="33%" style="padding:4px"><a href="' + baseUrl + '&accion=confirmar" style="display:block;background:#059669;color:#fff;text-decoration:none;padding:12px;border-radius:6px;font-size:12px;font-weight:bold;text-align:center">✓ Confirmar</a></td>'
         + '<td width="33%" style="padding:4px"><a href="' + baseUrl + '&accion=reprogramar" style="display:block;background:#D97706;color:#fff;text-decoration:none;padding:12px;border-radius:6px;font-size:12px;font-weight:bold;text-align:center">🕐 Otra hora</a></td>'
@@ -95,18 +95,18 @@ export default async function handler(req, res) {
         + '</td></tr>'
         + '<tr><td style="background:#F5F4F1;padding:24px 40px;text-align:center;border-top:1px solid #E4E1DB">'
         + '<div style="font-size:11px;color:#888;font-weight:bold">Gracias por confiar en nosotros!</div>'
-        + '<div style="font-size:10px;color:#aaa;margin-top:8px">' + emp + ' · Bogota D.C. · comercial@habitaris.co</div>'
+        + '<div style="font-size:10px;color:#aaa;margin-top:8px">' + emp + ' · Bogota D.C. · noreply@habitaris.es</div>'
         + '</td></tr></table></td></tr></table></body></html>';
 
       var r2 = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: (body.fromName || emp) + " <comercial@habitaris.co>",
+          from: (body.fromName || emp) + " <noreply@habitaris.es>",
           to: [body.to],
           subject: body.subject,
           html: html,
-          reply_to: body.fromEmail || "comercial@habitaris.co",
+          reply_to: body.fromEmail || "noreply@habitaris.es",
         }),
       });
       var d2 = await r2.json();
@@ -146,7 +146,7 @@ export default async function handler(req, res) {
         method: "POST",
         headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: empresa + " <comercial@habitaris.co>",
+          from: empresa + " <noreply@habitaris.es>",
           to: [recipientEmail],
           subject: body.subject || "Nueva respuesta: " + (e.form_name || "Formulario"),
           html: formHtml,
@@ -184,7 +184,7 @@ export default async function handler(req, res) {
       + 'Es rapido y sencillo. Si tienes alguna pregunta,<br>no dudes en responder a este correo.</div></td></tr>'
       + '<tr><td style="background:#F5F4F1;padding:24px 40px;text-align:center;border-top:1px solid #E4E1DB">'
       + '<div style="font-size:11px;color:#888;font-weight:bold">Gracias por confiar en nosotros!</div>'
-      + '<div style="font-size:10px;color:#aaa;margin-top:8px">' + empresa + ' · Bogota D.C. · comercial@habitaris.co</div>'
+      + '<div style="font-size:10px;color:#aaa;margin-top:8px">' + empresa + ' · Bogota D.C. · noreply@habitaris.es</div>'
       + '</td></tr></table></td></tr></table></body></html>';
 
     var response = await fetch("https://api.resend.com/emails", {
@@ -194,7 +194,7 @@ export default async function handler(req, res) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: empresa + " <comercial@habitaris.co>",
+        from: empresa + " <noreply@habitaris.es>",
         to: [body.client_email],
         subject: "📋 " + formulario + " — " + empresa,
         html: defHtml,
