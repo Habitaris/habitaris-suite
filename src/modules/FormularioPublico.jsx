@@ -166,6 +166,7 @@ function Field({ campo, value, onChange, accent, allVals }) {
 /* ═══════════ MAIN ═══════════ */
 export default function FormularioPublico() {
   const [def, setDef] = useState(null);
+  const [linkId, setLinkId] = useState(null);
   const [vals, setVals] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
@@ -195,6 +196,7 @@ export default function FormularioPublico() {
     const pathMatch = window.location.pathname.match(/^\/formulario\/([A-Za-z0-9]+)\/?$/);
     const params = new URLSearchParams(window.location.search);
     const linkId = pathMatch ? pathMatch[1] : params.get("id");
+    if (linkId) setLinkId(linkId);
     if (linkId) {
       // New approach: fetch from Supabase
       (async () => {
@@ -207,6 +209,13 @@ export default function FormularioPublico() {
             if (data.max_uses > 0 && (data.current_uses||0) >= data.max_uses) { setBlocked("maxuses"); setDef(null); return; }
             // increment moved to submit only
             // Build form object
+            // Precargar respuestas parciales si el cliente vuelve
+            if (data.partial_responses && Object.keys(data.partial_responses || {}).length > 0) {
+              setVals(data.partial_responses);
+              if (typeof data.last_completed_step === "number" && data.last_completed_step > 0) {
+                setStep(data.last_completed_step);
+              }
+            }
             setDef({ ...data.form_def, cliente: { nombre: data.client_name, email: data.client_email, tel: data.client_tel }, linkConfig: { linkId: data.link_id }, marca: data.marca || {}, modulo: data.modulo || "crm" });
           } else { setDef(null); }
         } catch (e) { console.error("form_links fetch error:", e); setDef(null); }
@@ -446,6 +455,15 @@ export default function FormularioPublico() {
 
   const goTo = (idx, dir) => {
     setAnimDir(dir || "next"); setAnimKey(k => k + 1); setStep(idx); setError("");
+    // Auto-save respuestas parciales en BD (no bloquea UI)
+    if (linkId && SB.isConfigured()) {
+      const hasData = vals && Object.keys(vals).length > 0;
+      SB.updateLink(linkId, {
+        partial_responses: vals || {},
+        last_completed_step: idx,
+        has_partial_data: hasData
+      }).catch(()=>{});
+    }
     if (topRef.current) topRef.current.scrollIntoView({ behavior:"smooth" });
   };
 
@@ -525,6 +543,15 @@ export default function FormularioPublico() {
         });
         // Register submit event
         await SB.registerSubmit(def.id, def.nombre, linkCfg.linkId, cliente?.nombre, cliente?.email);
+        // Tras enviar exitoso: bloquear link (no permite mas usos), marcar submitted_at, limpiar parciales
+        if (linkCfg.linkId) {
+          SB.updateLink(linkCfg.linkId, {
+            active: false,
+            submitted_at: new Date().toISOString(),
+            partial_responses: {},
+            has_partial_data: false
+          }).catch(()=>{});
+        }
         // Record time spent (reliable — beforeunload often fails for async)
         const duration = Math.round((Date.now() - openTimeRef.current) / 1000);
         if (duration > 0) await SB.registerClose(def.id, linkCfg.linkId, duration).catch(()=>{});
