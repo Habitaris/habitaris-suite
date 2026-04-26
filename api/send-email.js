@@ -7,6 +7,16 @@ export default async function handler(req, res) {
 
   try {
     const body = req.body || {};
+    // ============================================================
+    // Router por body.type: tipos especiales que NO necesitan recipientEmail directo
+    // ============================================================
+    if (body.type === "reminder") {
+      return await handleReminder(body, res);
+    }
+    if (body.type === "cron_reminders") {
+      return await handleCronReminders(body, res);
+    }
+
     const recipientEmail = body.to || body.client_email;
     if (!recipientEmail) return res.status(400).json({ ok: false, error: "email required" });
 
@@ -22,7 +32,7 @@ export default async function handler(req, res) {
       var otpHtml = '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5F4F1;font-family:Arial,sans-serif">'
         + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:40px 20px"><tr><td align="center">'
         + '<table width="480" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">'
-        + '<tr><td style="background:#111;padding:24px;text-align:center"><img src="https://suite.habitaris.co/logo-habitaris-blanco.jpg" alt="Habitaris" width="140"/></td></tr>'
+        + '<tr><td style="background:#111;padding:24px;text-align:center"><img src="https://suite.habitaris.es/logo-habitaris-blanco.jpg" alt="Habitaris" width="140"/></td></tr>'
         + '<tr><td style="padding:32px 40px;text-align:center">'
         + '<div style="font-size:18px;font-weight:bold;color:#111;margin-bottom:8px">Código de verificación</div>'
         + '<div style="font-size:13px;color:#666;margin-bottom:24px">Hola ' + nombre + ', usa este código para verificar tu identidad:</div>'
@@ -54,7 +64,7 @@ export default async function handler(req, res) {
       var b = body.brand || {};
       var emp = b.empresa || empresa;
       var cp = b.colorPrimario || "#111111";
-      var logo = b.logo || "https://suite.habitaris.co/logo-habitaris-blanco.jpg";
+      var logo = b.logo || "https://suite.habitaris.es/logo-habitaris-blanco.jpg";
       var slogan = b.slogan || "";
       var rawMsg = (body.message || "").replace(/\\n/g, "\n");
       var msgHtml = rawMsg.split("\n").map(function(line) {
@@ -167,7 +177,7 @@ export default async function handler(req, res) {
       + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:40px 20px"><tr><td align="center">'
       + '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08)">'
       + '<tr><td style="background:#111111;padding:36px 40px;text-align:center">'
-      + '<img src="https://suite.habitaris.co/logo-habitaris-blanco.jpg" alt="Habitaris" width="180" style="display:inline-block;max-width:180px"/></td></tr>'
+      + '<img src="https://suite.habitaris.es/logo-habitaris-blanco.jpg" alt="Habitaris" width="180" style="display:inline-block;max-width:180px"/></td></tr>'
       + '<tr><td style="background:#3B3B3B;height:2px"></td></tr>'
       + '<tr><td style="padding:44px 40px 20px">'
       + '<div style="font-size:22px;color:#111;font-weight:bold;margin-bottom:12px">Hola ' + nombre + ' 👋</div>'
@@ -207,5 +217,176 @@ export default async function handler(req, res) {
   } catch (err) {
     console.error("send-email error:", err);
     return res.status(500).json({ ok: false, error: err.message });
+  }
+}
+
+
+// ============================================================
+// HELPERS — Reminder + Cron + Sender config (multi-tenant)
+// ============================================================
+
+function getSupabaseClient() {
+  const url = process.env.SUPABASE_URL || "https://xlzkasdskatnikuavefh.supabase.co";
+  const key = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+  if (!key) throw new Error("missing supabase key");
+  const headers = { apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json" };
+  return { url, headers };
+}
+
+// Lee la config de senders desde kv_store. Multi-tenant via tenant_id.
+// Devuelve { email, name } del sender mapeado al mappingKey.
+async function getSenderConfig(tenantId, mappingKey) {
+  const fallback = { email: "noreply@habitaris.es", name: "Habitaris" };
+  try {
+    const sb = getSupabaseClient();
+    const r = await fetch(sb.url + "/rest/v1/kv_store?key=eq.habitaris_email_senders&tenant_id=eq." + encodeURIComponent(tenantId || "habitaris") + "&select=value", { headers: sb.headers });
+    const arr = await r.json();
+    if (!Array.isArray(arr) || arr.length === 0) return fallback;
+    const cfg = JSON.parse(arr[0].value);
+    const aliasKey = (cfg.mappings && cfg.mappings[mappingKey]) || cfg.fallback || "noreply";
+    if (cfg.senders && cfg.senders[aliasKey]) return cfg.senders[aliasKey];
+    return fallback;
+  } catch (e) {
+    return fallback;
+  }
+}
+
+// Helper de envío via Resend.
+async function sendViaResend({ from, to, subject, html }) {
+  const RESEND_KEY = process.env.RESEND_API_KEY;
+  if (!RESEND_KEY) throw new Error("missing RESEND_API_KEY");
+  const r = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ from, to: Array.isArray(to) ? to : [to], subject, html })
+  });
+  const data = await r.json();
+  return { ok: r.ok, status: r.status, data };
+}
+
+// Plantilla HTML del recordatorio "briefing a medias"
+function reminderTemplate(link, sender) {
+  const clientName = link.client_name || "";
+  const formName = link.form_name || "tu formulario";
+  const lastStep = link.last_completed_step || 0;
+  const fieldCount = Object.keys(link.partial_responses || {}).length;
+  const greeting = clientName ? ("Hola " + clientName + ",") : "Hola,";
+  const subject = encodeURIComponent("Quiero terminar mi briefing - " + formName);
+  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/><title>Briefing a medias</title></head>
+<body style="margin:0;padding:0;background:#F5F0FF;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5F0FF;padding:40px 20px;">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
+        <tr><td style="padding:32px 40px 16px 40px;">
+          <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">Habitaris</div>
+          <h1 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#111;">` + greeting + `</h1>
+          <p style="margin:0;font-size:15px;color:#444;line-height:1.6;">Vimos que comenzaste a llenar tu <strong>` + formName + `</strong> pero no llegaste a enviarlo.</p>
+        </td></tr>
+        <tr><td style="padding:8px 40px 16px 40px;">
+          <div style="background:#F5F0FF;border-radius:8px;padding:16px 18px;font-size:13px;color:#666;">
+            <div style="margin-bottom:6px;">📝 <strong>Avance guardado:</strong> paso ` + (lastStep + 1) + ` · ` + fieldCount + ` campos</div>
+            <div>⏰ Tus respuestas están guardadas, solo tienes que continuar.</div>
+          </div>
+        </td></tr>
+        <tr><td style="padding:8px 40px 24px 40px;">
+          <p style="margin:0 0 18px 0;font-size:15px;color:#444;line-height:1.6;">¿Quieres terminarlo? Avísanos respondiendo a este correo y reactivamos tu enlace para que continúes donde lo dejaste.</p>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+            <tr><td style="background:#111;border-radius:8px;">
+              <a href="mailto:` + sender.email + `?subject=` + subject + `" style="display:inline-block;padding:12px 28px;font-size:14px;font-weight:600;color:#fff;text-decoration:none;">Responder y continuar</a>
+            </td></tr>
+          </table>
+        </td></tr>
+        <tr><td style="padding:16px 40px 24px 40px;border-top:1px solid #eee;">
+          <div style="font-size:11px;color:#aaa;line-height:1.5;">Este es un correo automático. Si recibiste este mensaje por error o ya enviaste tu briefing, ignóralo.</div>
+          <div style="font-size:10px;color:#bbb;margin-top:8px;">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia</div>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+}
+
+// Handler: enviar recordatorio a UN link especifico (manual o cron interno)
+async function handleReminder(body, res) {
+  try {
+    const linkId = body.link_id;
+    const force = body.force === true;
+    const tenantId = body.tenant_id || "habitaris";
+    if (!linkId) return res.status(400).json({ ok: false, error: "link_id required" });
+
+    const sb = getSupabaseClient();
+    const linkR = await fetch(sb.url + "/rest/v1/form_links?link_id=eq." + encodeURIComponent(linkId) + "&select=*", { headers: sb.headers });
+    const arr = await linkR.json();
+    if (!Array.isArray(arr) || arr.length === 0) return res.status(404).json({ ok: false, error: "link not found" });
+    const link = arr[0];
+
+    if (!link.client_email) return res.status(400).json({ ok: false, error: "link has no client_email" });
+    if (!link.has_partial_data) return res.status(400).json({ ok: false, error: "link has no partial data" });
+    if (link.submitted_at) return res.status(400).json({ ok: false, error: "link already submitted" });
+    if (!force && link.reminder_sent_at) return res.status(400).json({ ok: false, error: "reminder already sent at " + link.reminder_sent_at });
+
+    const sender = await getSenderConfig(tenantId, "reminder");
+    const fromHeader = sender.name + " <" + sender.email + ">";
+    const html = reminderTemplate(link, sender);
+    const subject = "📝 Tienes tu briefing a medias · Habitaris";
+
+    const sendResult = await sendViaResend({ from: fromHeader, to: link.client_email, subject, html });
+    if (!sendResult.ok) return res.status(500).json({ ok: false, error: "resend failed", detail: sendResult.data });
+
+    await fetch(sb.url + "/rest/v1/form_links?link_id=eq." + encodeURIComponent(linkId), {
+      method: "PATCH", headers: sb.headers,
+      body: JSON.stringify({ reminder_sent_at: new Date().toISOString() })
+    });
+
+    return res.status(200).json({ ok: true, sent_to: link.client_email, from: fromHeader, resend_id: sendResult.data.id || null });
+  } catch (err) {
+    console.error("handleReminder error:", err);
+    return res.status(500).json({ ok: false, error: String(err && err.message || err) });
+  }
+}
+
+// Handler: cron diario que revisa links candidatos y envia recordatorios
+// Llamado por Vercel Cron via GET /api/send-email?action=cron_reminders
+// Filtros: current_uses>=max_uses AND has_partial_data=true AND submitted_at IS NULL AND reminder_sent_at IS NULL
+async function handleCronReminders(body, res) {
+  try {
+    const tenantId = body.tenant_id || "habitaris";
+    const sb = getSupabaseClient();
+
+    // Buscar candidatos: usaron todos los usos, tienen datos parciales, no enviaron, no recibieron recordatorio
+    const r = await fetch(sb.url + "/rest/v1/form_links?has_partial_data=eq.true&submitted_at=is.null&reminder_sent_at=is.null&select=*", { headers: sb.headers });
+    const links = await r.json();
+    if (!Array.isArray(links)) return res.status(500).json({ ok: false, error: "failed to query links" });
+
+    // Filtrar por current_uses >= max_uses (filtro adicional, lo hacemos en JS porque PostgREST no permite comparar columnas)
+    const candidates = links.filter(l => (l.max_uses > 0) && ((l.current_uses || 0) >= l.max_uses) && l.client_email);
+
+    const sender = await getSenderConfig(tenantId, "reminder");
+    const fromHeader = sender.name + " <" + sender.email + ">";
+    const subject = "📝 Tienes tu briefing a medias · Habitaris";
+
+    const results = [];
+    for (const link of candidates) {
+      try {
+        const html = reminderTemplate(link, sender);
+        const sendResult = await sendViaResend({ from: fromHeader, to: link.client_email, subject, html });
+        if (sendResult.ok) {
+          await fetch(sb.url + "/rest/v1/form_links?link_id=eq." + encodeURIComponent(link.link_id), {
+            method: "PATCH", headers: sb.headers,
+            body: JSON.stringify({ reminder_sent_at: new Date().toISOString() })
+          });
+          results.push({ link_id: link.link_id, email: link.client_email, ok: true });
+        } else {
+          results.push({ link_id: link.link_id, email: link.client_email, ok: false, error: sendResult.data });
+        }
+      } catch (e) {
+        results.push({ link_id: link.link_id, ok: false, error: String(e && e.message || e) });
+      }
+    }
+
+    return res.status(200).json({ ok: true, candidates_count: candidates.length, sent_count: results.filter(x => x.ok).length, results });
+  } catch (err) {
+    console.error("handleCronReminders error:", err);
+    return res.status(500).json({ ok: false, error: String(err && err.message || err) });
   }
 }
