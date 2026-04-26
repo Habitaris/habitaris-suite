@@ -147,7 +147,7 @@ function getBrandParams() {
     empresa:        cfg.empresa?.nombre        || "Habitaris",
     razonSocial:    cfg.empresa?.razonSocial    || "",
     domicilio:      cfg.empresa?.domicilio       || "Bogotá D.C.",
-    emailPrincipal: cfg.correo?.emailPrincipal   || "comercial@habitaris.co",
+    emailPrincipal: cfg.correo?.emailPrincipal   || "noreply@habitaris.es",
     colorPrimario:  cfg.apariencia?.colorPrimario  || "#111111",
     colorSecundario:cfg.apariencia?.colorSecundario || "#3B3B3B",
     colorAcento:    cfg.apariencia?.colorAcento     || "#111111",
@@ -256,6 +256,28 @@ export function getPlantillas() {
       isCustom: !!c,
     };
   });
+}
+
+
+/**
+ * Envia un email de recordatorio "briefing a medias" a un cliente que no completo su formulario.
+ * El sender se lee de kv_store.habitaris_email_senders.mappings.reminder en el backend.
+ * @param {string} linkId - El link_id del form_link a recordar
+ * @param {object} options - { force: bool } - force=true salta el check de reminder_sent_at (testing)
+ */
+export async function enviarRecordatorio(linkId, options = {}) {
+  if (!linkId) throw new Error("linkId requerido");
+  const force = options.force === true;
+  const r = await fetch("/api/send-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type: "reminder", link_id: linkId, force })
+  });
+  const data = await r.json();
+  if (!r.ok) {
+    throw new Error(data.error || "Error al enviar recordatorio");
+  }
+  return data;
 }
 
 export const EMAIL_TIPOS = Object.keys(PLANTILLAS);
