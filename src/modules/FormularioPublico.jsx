@@ -167,6 +167,8 @@ function Field({ campo, value, onChange, accent, allVals }) {
 export default function FormularioPublico() {
   const [def, setDef] = useState(null);
   const [linkId, setLinkId] = useState(null);
+  const [sessionId, setSessionId] = useState(null);
+  const [lastActivity, setLastActivity] = useState(Date.now());
   const [vals, setVals] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
@@ -192,6 +194,77 @@ export default function FormularioPublico() {
   }, []);
 
   /* ALL hooks BEFORE any conditional return */
+
+  // Ref para evitar dobles consumos (beforeunload + inactividad pueden disparar a la vez)
+  const useConsumedRef = useRef(false);
+
+  // Helper: consume un uso del link (cierre, inactividad, submit)
+  const consumeLinkUse = async (lid, sid, reason) => {
+    if (!lid) return;
+    try {
+      if (sid) {
+        const newStatus = reason === "submit" ? "completed" : "abandoned";
+        sb.from("form_link_sessions").update({ status: newStatus, consumed_use: true }).eq("session_id", sid).then(()=>{}, ()=>{});
+      }
+      // Solo incrementar si NO es submit (submit ya bloquea con active:false)
+      if (reason !== "submit") {
+        const { data: linkData } = await sb.from("form_links").select("current_uses,max_uses").eq("link_id", lid).single();
+        if (linkData) {
+          const newUses = (linkData.current_uses || 0) + 1;
+          await sb.from("form_links").update({ current_uses: newUses }).eq("link_id", lid);
+        }
+      }
+    } catch(e) { /* best effort */ }
+  };
+  // === Heartbeat cada 10s mientras el cliente tiene la pestana abierta ===
+  useEffect(() => {
+    if (!sessionId || !linkId || submitted || blocked) return;
+    const interval = setInterval(() => {
+      try { sb.from("form_link_sessions").update({ last_heartbeat: new Date().toISOString() }).eq("session_id", sessionId).then(()=>{}, ()=>{}); } catch(e) {}
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [sessionId, linkId, submitted, blocked]);
+
+  // === Detector de actividad del usuario ===
+  useEffect(() => {
+    if (!sessionId || submitted || blocked) return;
+    const onActivity = () => setLastActivity(Date.now());
+    const events = ["mousedown", "keydown", "touchstart", "scroll"];
+    events.forEach(ev => window.addEventListener(ev, onActivity, { passive: true }));
+    return () => events.forEach(ev => window.removeEventListener(ev, onActivity));
+  }, [sessionId, submitted, blocked]);
+
+  // === Timer de inactividad: 10 min sin movimiento consume uso ===
+  useEffect(() => {
+    if (!sessionId || !linkId || submitted || blocked) return;
+    const checkInactivity = setInterval(() => {
+      const elapsed = Date.now() - lastActivity;
+      if (elapsed > 10 * 60 * 1000 && !useConsumedRef.current) {
+        useConsumedRef.current = true;
+        consumeLinkUse(linkId, sessionId, "inactivity");
+        setBlocked("inactive_timeout");
+        setDef(null);
+      }
+    }, 30000);
+    return () => clearInterval(checkInactivity);
+  }, [sessionId, linkId, submitted, blocked, lastActivity]);
+
+  // === beforeunload: marca abandoned y consume uso al cerrar pestana ===
+  useEffect(() => {
+    if (!sessionId || !linkId || submitted) return;
+    const handler = () => {
+      if (useConsumedRef.current) return;
+      useConsumedRef.current = true;
+      consumeLinkUse(linkId, sessionId, "abandon");
+    };
+    window.addEventListener("beforeunload", handler);
+    window.addEventListener("pagehide", handler);
+    return () => {
+      window.removeEventListener("beforeunload", handler);
+      window.removeEventListener("pagehide", handler);
+    };
+  }, [sessionId, linkId, submitted]);
+
   useEffect(() => {
     const pathMatch = window.location.pathname.match(/^\/formulario\/([A-Za-z0-9]+)\/?$/);
     const params = new URLSearchParams(window.location.search);
@@ -209,6 +282,32 @@ export default function FormularioPublico() {
             if (data.max_uses > 0 && (data.current_uses||0) >= data.max_uses) { setBlocked("maxuses"); setDef(null); return; }
             // increment moved to submit only
             // Build form object
+            // Verificar si hay sesión activa de otro dispositivo (heartbeat <30s)
+            try {
+              const cutoff = new Date(Date.now() - 30000).toISOString();
+              const { data: activeSessions } = await sb
+                .from("form_link_sessions")
+                .select("session_id,last_heartbeat")
+                .eq("link_id", linkId)
+                .eq("status", "active")
+                .gte("last_heartbeat", cutoff);
+              if (activeSessions && activeSessions.length > 0) {
+                setBlocked("device_busy");
+                setDef(null);
+                return;
+              }
+              const newSid = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : ((Date.now()).toString(16) + Math.random().toString(16).slice(2));
+              const ua = (typeof navigator !== "undefined" ? navigator.userAgent : "").slice(0, 250);
+              await sb.from("form_link_sessions").insert({
+                session_id: newSid,
+                link_id: linkId,
+                last_heartbeat: new Date().toISOString(),
+                status: "active",
+                user_agent: ua
+              });
+              setSessionId(newSid);
+            } catch(e) { /* tolerar fallo */ }
+
             // Precargar respuestas parciales si el cliente vuelve
             if (data.partial_responses && Object.keys(data.partial_responses || {}).length > 0) {
               setVals(data.partial_responses);
@@ -298,6 +397,8 @@ export default function FormularioPublico() {
     const _tel = String((_cfg && _cfg.empresa && _cfg.empresa.telefono) || "").replace(/[^0-9]/g, "");
     const _msgs = {
       expired:  { icon: "⏰", title: "Enlace caducado",    desc: "Este enlace ha caducado. Puedes solicitar un nuevo acceso.", btn: "Solicitar nuevo enlace" },
+      device_busy: { icon: "🔒", title: "Enlace en uso", desc: "Este enlace ya está siendo utilizado en otro dispositivo. Si eres tú en otro navegador, cierra esa ventana e intenta de nuevo en unos segundos.", btn: "Contactar con nosotros" },
+      inactive_timeout: { icon: "⏰", title: "Sesión cerrada por inactividad", desc: "Has estado inactivo más de 10 minutos. Por seguridad, hemos cerrado esta sesión. Solicita un nuevo enlace para continuar.", btn: "Solicitar nuevo enlace" },
       maxuses:  { icon: "🔁", title: "Enlace agotado",     desc: "Este enlace ya se usó el número máximo de veces permitidas.", btn: "Solicitar nuevo acceso" },
       blocked:  { icon: "🚫", title: "Enlace desactivado", desc: "Este enlace fue desactivado. Si crees que es un error, contáctanos.", btn: "Contactar con nosotros" },
       inactive: { icon: "🚫", title: "Enlace desactivado", desc: "Este enlace fue desactivado. Si crees que es un error, contáctanos.", btn: "Contactar con nosotros" },
@@ -551,6 +652,11 @@ export default function FormularioPublico() {
             partial_responses: {},
             has_partial_data: false
           }).catch(()=>{});
+        }
+        // Marcar sesión como completed y evitar que beforeunload consuma uso adicional
+        useConsumedRef.current = true;
+        if (sessionId) {
+          try { sb.from("form_link_sessions").update({ status: "completed" }).eq("session_id", sessionId).then(()=>{}, ()=>{}); } catch(e) {}
         }
         // Record time spent (reliable — beforeunload often fails for async)
         const duration = Math.round((Date.now() - openTimeRef.current) / 1000);
