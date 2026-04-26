@@ -2039,7 +2039,23 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
                     }
                   </td>
                   <td style={{...tds,whiteSpace:"nowrap"}}>
-                    {getStatus(e)==="caducado" && (
+                    {/* Boton Enviar recordatorio: hasPartialData && !submittedAt && !reminderSentAt */}
+                {e.hasPartialData && !e.submittedAt && !e.reminderSentAt && e.cliente?.email && (
+                  <button onClick={async ()=>{
+                    if (!confirm("Enviar recordatorio a " + e.cliente.email + "?")) return;
+                    try {
+                      const mod = await import("../utils/emailService");
+                      const result = await mod.enviarRecordatorio(e.linkId||e.id);
+                      if (window.toast) window.toast("✅ Recordatorio enviado a " + result.sent_to);
+                      else alert("Recordatorio enviado a " + result.sent_to);
+                      if (typeof loadEnvios === "function") loadEnvios();
+                    } catch(err) {
+                      if (window.toast) window.toast("❌ Error: " + (err.message||err), "error");
+                      else alert("Error: " + (err.message||err));
+                    }
+                  }} title="Enviar recordatorio por email al cliente" style={{padding:"3px 10px",fontSize:8,fontWeight:700,background:"#0066cc",color:"#fff",border:"none",borderRadius:3,cursor:"pointer",marginRight:4}}>📧 Recordar</button>
+                )}
+                {getStatus(e)==="caducado" && (
                       <button onClick={()=>setRehabModal({linkId:e.linkId||e.id, cliente:e.cliente, formNombre:e.formNombre, expiry:e.expiry, maxUsos:e.maxUsos, currentUsos:e.currentUsos})}
                         style={{padding:"3px 10px",fontSize:8,fontWeight:700,background:T.blue,color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",marginRight:4}}>
                         🔄 Rehabilitar
@@ -2250,6 +2266,7 @@ export default function Formularios() {
             hasPartialData: l.has_partial_data || false,
             formCampos: (l.form_def && l.form_def.campos) || [],
             submittedAt: l.submitted_at || null,
+            reminderSentAt: l.reminder_sent_at || null,
             maxUsos: l.max_uses||0,
             expiry: l.expires_at||"",
             blocked: !l.active,
