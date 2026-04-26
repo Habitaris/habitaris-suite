@@ -1,5 +1,6 @@
 import { notificarRespuesta } from "../utils/emailService";
 import React, { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { store } from "../core/store.js";
 import { procesarRespuesta as routeProcesar } from "./form/FormProcessor.js";
 
@@ -2170,7 +2171,7 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
     )}
 
       {/* Modal Ver Respuestas Parciales */}
-      {verAvanceModal && (
+      {verAvanceModal && createPortal(
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16,fontFamily:"DM Sans, sans-serif"}} onClick={()=>setVerAvanceModal(null)}>
           <div onClick={ev=>ev.stopPropagation()} style={{background:"#fff",borderRadius:8,padding:24,maxWidth:600,width:"100%",maxHeight:"80vh",overflow:"auto"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
@@ -2207,7 +2208,7 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
     </div>
   );
 }
