@@ -1934,7 +1934,7 @@ function TabEstadisticas({ forms }) {
 /* ═══════════════════════════════════════════════════════════════
    ENVIADOS TAB — with checkboxes + password delete
    ═══════════════════════════════════════════════════════════════ */
-function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas, setVerAvanceModal }) {
+function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
   const [filtro, setFiltro] = useState("pendiente");
   const [sortDesc, setSortDesc] = useState(true);
   const getStatus = (e) => { if (e.blocked) return "bloqueado"; if (e.expiry && new Date(e.expiry) < new Date()) return "caducado"; if (e.maxUsos > 0 && (e.currentUsos||0) >= e.maxUsos) return "bloqueado"; return respuestas.some(r => (r.link_id||r.linkId)===e.linkId || (!r.link_id && !r.linkId && r.clienteEmail && r.clienteEmail===e.cliente?.email)) ? "respondido" : "pendiente"; };
@@ -1993,7 +1993,7 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas, setV
         </div>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
         <div style={{display:"flex",gap:0}}>
-          {[["pendiente","⏳ Pendientes"],["respondido","✅ Respondidos"],["caducado","⏰ Caducados"],["bloqueado","🚫 Bloqueados"],["rehabilitado","🔄 Rehabilitados"],["todos","Todos"]].map(([id,lbl],i,arr)=>(
+          {[["pendiente","⏳ Pendientes"],["respondido","✅ Respondidos"],["caducado","⏰ Caducados"],["bloqueado","🚫 Bloqueados"],["rehabilitado","↻ Rehabilitados"],["todos","Todos"]].map(([id,lbl],i,arr)=>(
             <button key={id} onClick={()=>{setFiltro(id);setSelectedIds(new Set());}}
               style={{padding:"5px 12px",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",
                 border:`1px solid ${filtro===id?"#111":"#E0E0E0"}`,borderLeft:i>0?"none":undefined,
@@ -2030,17 +2030,17 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas, setV
                     <div>{e.cliente?.nombre||"—"}</div>
                     {e.hasPartialData && !e.submittedAt && (
                       <div style={{fontSize:9,fontWeight:500,color:"#0066cc",marginTop:2}} title="Tiene datos parciales sin enviar">📝 Avance: paso {(e.lastStep||0)+1} · {Object.keys(e.partialResponses||{}).length} campos guardados</div>
-                      {e.hasPartialData && (
-                        <button onClick={()=>setVerAvanceModal({linkId:e.linkId||e.id, cliente:e.cliente, formNombre:e.formNombre, partialResponses:e.partialResponses, formCampos:e.formCampos, lastStep:e.lastStep})}
-                          style={{marginTop:3,padding:"2px 8px",fontSize:9,background:"#0066cc",color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontWeight:600}}>
-                          👁️ Ver respuestas
-                        </button>
-                      )}
-                      {e.rehabCount > 0 && (
-                        <div style={{fontSize:8,fontWeight:600,color:"#7c3aed",marginTop:3,background:"#f3e8ff",padding:"2px 6px",borderRadius:3,display:"inline-block"}} title={e.rehabilitatedAt ? "Rehabilitado el " + new Date(e.rehabilitatedAt).toLocaleDateString() : "Rehabilitado"}>
-                          🔄 Rehabilitado {e.rehabCount === 1 ? "una vez" : (e.rehabCount + " veces")}
-                        </div>
-                      )}
+                    )}
+                    {e.hasPartialData && !e.submittedAt && (
+                      <button onClick={()=>setVerAvanceModal({linkId:e.linkId||e.id, cliente:e.cliente, formNombre:e.formNombre, partialResponses:e.partialResponses, formCampos:e.formCampos, lastStep:e.lastStep})}
+                        style={{marginTop:3,padding:"2px 8px",fontSize:9,background:"#0066cc",color:"#fff",border:"none",borderRadius:3,cursor:"pointer",fontWeight:600}}>
+                        👁️ Ver respuestas
+                      </button>
+                    )}
+                    {(e.rehabCount||0) > 0 && (
+                      <div style={{fontSize:8,fontWeight:600,color:"#7c3aed",marginTop:3,background:"#f3e8ff",padding:"2px 6px",borderRadius:3,display:"inline-block"}} title={e.rehabilitatedAt ? ("Rehabilitado el " + new Date(e.rehabilitatedAt).toLocaleDateString()) : "Rehabilitado"}>
+                        🔄 Rehabilitado {e.rehabCount === 1 ? "una vez" : (e.rehabCount + " veces")}
+                      </div>
                     )}
                   </td>
                   <td style={{...tds,fontSize:9,color:T.blue}}>{e.cliente?.email||"—"}</td>
@@ -2168,38 +2168,41 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas, setV
         </div>
       </div>
     )}
+    </div>
+  );
+}
 
       {/* Modal Ver Respuestas Parciales */}
       {verAvanceModal && (
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16,fontFamily:"DM Sans, sans-serif"}} onClick={()=>setVerAvanceModal(null)}>
-          <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:8,padding:24,maxWidth:600,width:"100%",maxHeight:"80vh",overflow:"auto"}}>
+          <div onClick={ev=>ev.stopPropagation()} style={{background:"#fff",borderRadius:8,padding:24,maxWidth:600,width:"100%",maxHeight:"80vh",overflow:"auto"}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-              <h3 style={{margin:0,fontSize:18,fontWeight:700}}>👁️ Respuestas parciales</h3>
-              <button onClick={()=>setVerAvanceModal(null)} style={{background:"none",border:"none",fontSize:24,cursor:"pointer",color:"#999"}}>×</button>
+              <h3 style={{margin:0,fontSize:18,fontWeight:700}}>Respuestas parciales</h3>
+              <button onClick={()=>setVerAvanceModal(null)} style={{background:"none",border:"none",fontSize:24,cursor:"pointer",color:"#999"}}>x</button>
             </div>
             <div style={{marginBottom:16,padding:12,background:"#f5f5f5",borderRadius:6}}>
-              <div style={{fontSize:13,fontWeight:600}}>{verAvanceModal.cliente?.nombre || "Cliente"}</div>
+              <div style={{fontSize:13,fontWeight:600}}>{(verAvanceModal.cliente && verAvanceModal.cliente.nombre) || "Cliente"}</div>
               <div style={{fontSize:11,color:"#666"}}>{verAvanceModal.formNombre}</div>
-              <div style={{fontSize:11,color:"#666",marginTop:4}}>📝 Avance: paso {(verAvanceModal.lastStep||0)+1} · {Object.keys(verAvanceModal.partialResponses||{}).length} campos</div>
+              <div style={{fontSize:11,color:"#666",marginTop:4}}>Avance: paso {(verAvanceModal.lastStep||0)+1} - {Object.keys(verAvanceModal.partialResponses||{}).length} campos</div>
             </div>
             <div style={{display:"flex",flexDirection:"column",gap:10}}>
               {Object.entries(verAvanceModal.partialResponses || {}).map(([fieldId, value]) => {
                 const campo = (verAvanceModal.formCampos || []).find(c => c.id === fieldId);
-                const label = campo?.label || campo?.titulo || fieldId;
-                const tipo = campo?.tipo || "text";
+                const label = (campo && (campo.label || campo.titulo)) || fieldId;
+                const tipo = (campo && campo.tipo) || "text";
                 let displayValue = value;
                 if (Array.isArray(value)) displayValue = value.join(", ");
                 else if (typeof value === "object" && value !== null) displayValue = JSON.stringify(value);
                 return (
                   <div key={fieldId} style={{padding:10,background:"#fafafa",borderRadius:6,border:"1px solid #e5e5e5"}}>
                     <div style={{fontSize:11,color:"#666",fontWeight:600,marginBottom:4}}>{label}</div>
-                    <div style={{fontSize:13,color:"#111"}}>{String(displayValue) || "—"}</div>
-                    <div style={{fontSize:9,color:"#aaa",marginTop:4,fontFamily:"monospace"}}>id: {fieldId} · tipo: {tipo}</div>
+                    <div style={{fontSize:13,color:"#111"}}>{String(displayValue) || "-"}</div>
+                    <div style={{fontSize:9,color:"#aaa",marginTop:4,fontFamily:"monospace"}}>id: {fieldId} | tipo: {tipo}</div>
                   </div>
                 );
               })}
               {Object.keys(verAvanceModal.partialResponses || {}).length === 0 && (
-                <div style={{textAlign:"center",color:"#999",padding:20}}>Sin respuestas guardadas todavía</div>
+                <div style={{textAlign:"center",color:"#999",padding:20}}>Sin respuestas guardadas todavia</div>
               )}
             </div>
             <div style={{marginTop:16,textAlign:"right"}}>
@@ -2208,9 +2211,6 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas, setV
           </div>
         </div>
       )}
-    </div>
-  );
-}
 
 export default function Formularios() {
   const [data, setData] = useState(() => {
@@ -2326,6 +2326,7 @@ export default function Formularios() {
             reminderSentAt: l.reminder_sent_at || null,
             rehabilitatedAt: l.rehabilitated_at || null,
             rehabCount: l.rehab_count || 0,
+            reminderSentAt: l.reminder_sent_at || null,
             maxUsos: l.max_uses||0,
             expiry: l.expires_at||"",
             blocked: !l.active,
@@ -2533,7 +2534,7 @@ export default function Formularios() {
         {tab === "mis_forms"   && <ListaForms forms={forms} setForms={setForms} onEdit={goConstructor} onNew={goNew}/>}
         {tab === "constructor" && <Constructor forms={forms} setForms={setForms} editId={editId} setEditId={setEditId} onSaved={onSaved} envios={envios} addEnvio={addEnvio}/>}
         {tab === "enviados"    && (
-          <EnviadosTab envios={envios} onBlock={blockEnvio} onDelete={deleteEnvio} onUpdateLink={rehabilitarEnvio} respuestas={respuestas}setVerAvanceModal={setVerAvanceModal} />
+          <EnviadosTab envios={envios} onBlock={blockEnvio} onDelete={deleteEnvio} onUpdateLink={rehabilitarEnvio} respuestas={respuestas}/>
         )}
         {tab === "respuestas"   && <TabRespuestas forms={forms} respuestas={respuestas} onReload={loadResponses} loading={respLoading} onDelete={deleteResponse} onClearAll={clearAllResponses}/>}
         {tab === "estadisticas" && <TabEstadisticas forms={forms}/>}
