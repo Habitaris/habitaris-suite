@@ -2080,7 +2080,7 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
         </div>
       )}
     {rehabModal && (
-      <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16,fontFamily:""DM Sans", sans-serif"}} onClick={()=>setRehabModal(null)}>
+      <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:16,fontFamily:"DM Sans, sans-serif"}} onClick={()=>setRehabModal(null)}>
         <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:12,padding:20,maxWidth:420,width:"100%",boxShadow:"0 20px 60px rgba(0,0,0,0.2)",maxHeight:"90vh",overflow:"auto"}}>
           <div style={{fontSize:16,fontWeight:700,color:"#111",marginBottom:4}}>🔄 Rehabilitar enlace</div>
           <div style={{fontSize:11,color:"#888",marginBottom:14}}>Ampliar vigencia sin cambiar el URL</div>
