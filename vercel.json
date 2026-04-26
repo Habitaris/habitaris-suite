@@ -108,5 +108,11 @@
         }
       ]
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/send-email?type=cron_reminders",
+      "schedule": "0 9 * * *"
+    }
   ]
 }
