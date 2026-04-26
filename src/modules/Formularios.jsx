@@ -2168,9 +2168,6 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
         </div>
       </div>
     )}
-    </div>
-  );
-}
 
       {/* Modal Ver Respuestas Parciales */}
       {verAvanceModal && (
@@ -2211,6 +2208,9 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
 
 export default function Formularios() {
   const [data, setData] = useState(() => {
