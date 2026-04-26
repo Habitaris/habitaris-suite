@@ -1938,7 +1938,7 @@ function TabEstadisticas({ forms }) {
 function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
   const [filtro, setFiltro] = useState("pendiente");
   const [sortDesc, setSortDesc] = useState(true);
-  const getStatus = (e) => { if (e.blocked) return "bloqueado"; if (e.expiry && new Date(e.expiry) < new Date()) return "caducado"; if (e.maxUsos > 0 && (e.currentUsos||0) >= e.maxUsos) return "bloqueado"; return respuestas.some(r => (r.link_id||r.linkId)===e.linkId || (!r.link_id && !r.linkId && r.clienteEmail && r.clienteEmail===e.cliente?.email)) ? "respondido" : "pendiente"; };
+  const getStatus = (e) => { if (e.blocked) return "bloqueado"; if (e.expiry && new Date(e.expiry) < new Date()) return "caducado"; if (e.maxUsos > 0 && (e.currentUsos||0) >= e.maxUsos) return "bloqueado"; return respuestas.some(r => ((r.link_id||r.linkId)===e.linkId || (!r.link_id && !r.linkId && r.clienteEmail && r.clienteEmail===e.cliente?.email)) && (!e.rehabilitatedAt || (r.fecha && new Date(r.fecha) > new Date(e.rehabilitatedAt)))) ? "respondido" : "pendiente"; };
   const counts = { todos:envios.length, pendiente:0, respondido:0, bloqueado:0, caducado:0 };
   counts.rehabilitado = envios.filter(e => (e.rehabCount||0) > 0).length;
   envios.forEach(e => { counts[getStatus(e)]++; });
