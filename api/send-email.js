@@ -3,10 +3,14 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
-  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  // Cron de Vercel hace GET con query string. Permitimos GET solo para type=cron_reminders.
+  const isCronGet = req.method === "GET" && (req.query && req.query.type === "cron_reminders");
+  if (req.method !== "POST" && !isCronGet) return res.status(405).json({ error: "Method not allowed" });
 
   try {
     const body = req.body || {};
+    // Permitir leer type desde query string (para cron Vercel GET)
+    if (!body.type && req.query && req.query.type) body.type = req.query.type;
     // ============================================================
     // Router por body.type: tipos especiales que NO necesitan recipientEmail directo
     // ============================================================
