@@ -231,7 +231,8 @@ export default async function handler(req, res) {
 
 function getSupabaseClient() {
   const url = process.env.SUPABASE_URL || "https://xlzkasdskatnikuavefh.supabase.co";
-  const key = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY;
+  // Fallback hardcodeado a la anon key (publica, ya esta en el frontend). Se puede sobrescribir con env vars.
+  const key = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhsemthc2Rza2F0bmlrdWF2ZWZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTE3NzQsImV4cCI6MjA4NzQ2Nzc3NH0.SR9tIpvL0YnV9CNrRq4T-xetifuNQOJZE0OnQpwtYLM";
   if (!key) throw new Error("missing supabase key");
   const headers = { apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json" };
   return { url, headers };
