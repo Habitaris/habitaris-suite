@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       var otpHtml = '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5F4F1;font-family:Arial,sans-serif">'
         + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:40px 20px"><tr><td align="center">'
         + '<table width="480" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">'
-        + '<tr><td style="background:#111;padding:24px;text-align:center"><img src="https://suite.habitaris.es/logo-habitaris-blanco.jpg" alt="Habitaris" width="140"/></td></tr>'
+        + '<tr><td style="background:#111;padding:24px;text-align:center"><img src="https://suite.habitaris.es/logo-habitaris-negro.png" alt="Habitaris" width="140"/></td></tr>'
         + '<tr><td style="padding:32px 40px;text-align:center">'
         + '<div style="font-size:18px;font-weight:bold;color:#111;margin-bottom:8px">Código de verificación</div>'
         + '<div style="font-size:13px;color:#666;margin-bottom:24px">Hola ' + nombre + ', usa este código para verificar tu identidad:</div>'
@@ -68,7 +68,7 @@ export default async function handler(req, res) {
       var b = body.brand || {};
       var emp = b.empresa || empresa;
       var cp = b.colorPrimario || "#111111";
-      var logo = b.logo || "https://suite.habitaris.es/logo-habitaris-blanco.jpg";
+      var logo = b.logo || "https://suite.habitaris.es/logo-habitaris-negro.png";
       var slogan = b.slogan || "";
       var rawMsg = (body.message || "").replace(/\\n/g, "\n");
       var msgHtml = rawMsg.split("\n").map(function(line) {
@@ -153,7 +153,7 @@ export default async function handler(req, res) {
     <p style="margin:0 0 24px 0;font-size:14px;line-height:1.5;">Puedes verlo en la suite:</p>
     <a href="${suiteUrl}" style="display:inline-block;padding:10px 20px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:14px;">Abrir suite Habitaris</a>
     <hr style="margin:24px 0 16px 0;border:none;border-top:1px solid #e5e5e5;">
-    <p style="margin:0;font-size:11px;color:#999;line-height:1.6;">Habitaris S.A.S - NIT 901.922.136-8 - Bogot&aacute; D.C., Colombia<br>+57 350 566 1545 - habitaris.es</p>
+    <p style="margin:0;font-size:11px;color:#999;line-height:1.6;">Habitaris S.A.S - NIT 901.922.136-8 - Bogot&aacute; D.C., Colombia - +57 350 566 1545<br>+57 350 566 1545 - habitaris.es</p>
   </div>
 </body></html>`;
 
@@ -182,7 +182,7 @@ export default async function handler(req, res) {
       + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:40px 20px"><tr><td align="center">'
       + '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08)">'
       + '<tr><td style="background:#111111;padding:36px 40px;text-align:center">'
-      + '<img src="https://suite.habitaris.es/logo-habitaris-blanco.jpg" alt="Habitaris" width="180" style="display:inline-block;max-width:180px"/></td></tr>'
+      + '<img src="https://suite.habitaris.es/logo-habitaris-negro.png" alt="Habitaris" width="180" style="display:inline-block;max-width:180px"/></td></tr>'
       + '<tr><td style="background:#3B3B3B;height:2px"></td></tr>'
       + '<tr><td style="padding:44px 40px 20px">'
       + '<div style="font-size:22px;color:#111;font-weight:bold;margin-bottom:12px">Hola ' + nombre + ' 👋</div>'
@@ -304,7 +304,7 @@ function reminderTemplate(link, sender) {
         </td></tr>
         <tr><td style="padding:16px 40px 24px 40px;border-top:1px solid #eee;">
           <div style="font-size:11px;color:#aaa;line-height:1.5;">Este es un correo automático. Si recibiste este mensaje por error o ya enviaste tu briefing, ignóralo.</div>
-          <div style="font-size:10px;color:#bbb;margin-top:8px;">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia</div>
+          <div style="font-size:10px;color:#bbb;margin-top:8px;">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia · +57 350 566 1545</div>
         </td></tr>
       </table>
     </td></tr>
@@ -449,7 +449,7 @@ function preExpiryReminderTemplate(link, hoursBeforeExpiry) {
       </a>
     </div>
     <div style="padding:16px 24px;border-top:1px solid #f0ecff;font-size:11px;color:#888;">
-      Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia
+      Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia · +57 350 566 1545
     </div>
   </div>
 </div>`;
