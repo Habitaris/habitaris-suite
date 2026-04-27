@@ -284,7 +284,7 @@ function reminderTemplate(link, sender) {
     <tr><td align="center">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
         <tr><td style="padding:32px 40px 16px 40px;">
-          <div style="font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;">Habitaris</div>
+          <img src="https://suite.habitaris.es/logo-habitaris-negro.png" alt="Habitaris" style="height:32px;display:block;margin-bottom:16px;" />
           <h1 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#111;">` + greeting + `</h1>
           <p style="margin:0;font-size:15px;color:#444;line-height:1.6;">Vimos que comenzaste a llenar tu <strong>` + formName + `</strong> pero no llegaste a enviarlo.</p>
         </td></tr>
