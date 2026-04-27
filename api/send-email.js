@@ -129,46 +129,65 @@ export default async function handler(req, res) {
     }
 
     // ── 2) Form recibido notification ──
-    if (body.type === "form_recibido" && body.extra) {
-      var e = body.extra;
-      var cp2 = e.colorPrimario || "#111111";
-      var logo2 = e.logo || "";
-      var rs = e.razonSocial || empresa;
-      var dom = e.domicilio || "";
+    if (body.type === "form_recibido") {
+      const e = body.extra || {};
+      const formName = body.formName || e.form_name || "Formulario";
+      const cn = body.clienteNombre || e.client_name || "Cliente";
+      const ce = body.clienteEmail || e.client_email || "";
+      const ct = body.clienteTel || e.client_tel || "";
+      const score = e.score ? String(e.score) : null;
+      const empresa = e.empresa || e.razonSocial || "Habitaris";
+      const razonSocial = e.razonSocial || "Habitaris S.A.S";
+      const respuestas = Array.isArray(e.respuestasResumen) ? e.respuestasResumen : [];
+      const contenido = body.contenido || "";
+      const crmUrl = e.crmUrl || "https://suite.habitaris.es/";
 
-      var logoH = logo2
-        ? '<img src="' + logo2 + '" alt="' + empresa + '" style="height:28px;object-fit:contain;margin-bottom:4px;display:block;"/>'
-        : '<h1 style="margin:0;color:#fff;font-size:16px;letter-spacing:2px;">' + empresa.toUpperCase() + '</h1>';
+      // Construir lista de respuestas en HTML
+      const respuestasHtml = respuestas.length > 0
+        ? respuestas.map(r => `<tr><td style="padding:6px 12px;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #eee;vertical-align:top;width:40%">${r.campo||""}</td><td style="padding:6px 12px;color:#111;font-size:13px;border-bottom:1px solid #eee">${r.valor||"—"}</td></tr>`).join("")
+        : (contenido ? `<tr><td colspan="2" style="padding:12px;color:#444;font-size:13px;line-height:1.6">${contenido}</td></tr>` : `<tr><td colspan="2" style="padding:12px;color:#999;font-size:12px;text-align:center">— Sin respuestas detalladas —</td></tr>`);
 
-      var formHtml = '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#ffffff;font-family:Arial,sans-serif;">'
-        + '<div style="max-width:600px;margin:0 auto;padding:20px;">'
-        + '<div style="background:' + cp2 + ';padding:16px 24px;border-radius:8px 8px 0 0;">'
-        + logoH + '</div>'
-        + '<div style="background:#fff;padding:24px;border:1px solid #E4E1DB;">'
-        + '<h2 style="margin:0 0 4px;font-size:18px;color:#111;">' + (e.form_name || "Formulario") + '</h2>'
-        + '<p style="margin:0 0 16px;font-size:12px;color:#888;">Nueva respuesta recibida</p>'
-        + '<div style="background:#E6EFF9;border-radius:8px;padding:14px;margin-bottom:16px;">'
-        + '<p style="margin:0;font-size:11px;font-weight:bold;color:#1E4F8C;">DATOS DEL CLIENTE</p>'
-        + '<p style="margin:6px 0 0;font-size:13px;color:#111;"><strong>' + (e.client_name || "") + '</strong></p>'
-        + '<p style="margin:2px 0;font-size:12px;color:#555;">' + (e.client_email || "") + '</p></div>'
-        + (e.contenido || "")
-        + '</div>'
-        + '<div style="background:#F0EEE9;padding:16px 24px;border:1px solid #E4E1DB;border-top:none;border-radius:0 0 8px 8px;text-align:center;">'
-        + '<p style="margin:0;font-size:10px;color:#888;">' + rs + ' · ' + dom + '</p></div></div></body></html>';
+      // Score badge color
+      const scoreBg = score && parseFloat(score) >= 8 ? "#16a34a" : (score && parseFloat(score) >= 6 ? "#eab308" : "#dc2626");
+      const scoreEmoji = score && parseFloat(score) >= 8 ? "🟢" : (score && parseFloat(score) >= 6 ? "🟡" : "🔴");
 
-      var r3 = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          from: empresa + " <noreply@habitaris.es>",
-          to: [recipientEmail],
-          subject: body.subject || "Nueva respuesta: " + (e.form_name || "Formulario"),
-          html: formHtml,
-        }),
-      });
-      var d3 = await r3.json();
-      if (r3.ok) return res.status(200).json({ ok: true, id: d3.id });
-      return res.status(r3.status).json({ ok: false, error: d3.message || "Send failed" });
+      const subject = `📥 Nueva respuesta · ${formName} · ${cn}`;
+
+      const html = `
+<div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#f3f0ff;padding:24px 12px;color:#111;-webkit-text-size-adjust:100%">
+  <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
+    <div style="background:#111;padding:16px 24px;color:#fff">
+      <div style="font-size:11px;letter-spacing:2px;font-weight:600;opacity:0.7">${empresa.toUpperCase()}</div>
+      <div style="font-size:18px;font-weight:700;margin-top:4px">📥 Nueva respuesta recibida</div>
+    </div>
+    <div style="padding:24px">
+      <div style="font-size:13px;color:#666;margin-bottom:4px">Formulario</div>
+      <div style="font-size:20px;font-weight:700;color:#111;margin-bottom:20px">${formName}</div>
+      ${score ? `<div style="display:inline-block;background:${scoreBg};color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:20px">${scoreEmoji} Score: ${score}/10</div>` : ""}
+      <div style="background:#fafafa;border:1px solid #eee;border-radius:8px;padding:16px;margin-bottom:20px">
+        <div style="font-size:11px;color:#0066cc;font-weight:700;letter-spacing:1px;margin-bottom:10px">DATOS DEL CLIENTE</div>
+        <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:4px">${cn}</div>
+        ${ce ? `<div style="font-size:13px;color:#444;margin-bottom:2px">📧 <a href="mailto:${ce}" style="color:#0066cc;text-decoration:none">${ce}</a></div>` : ""}
+        ${ct ? `<div style="font-size:13px;color:#444">📱 ${ct}</div>` : ""}
+      </div>
+      ${respuestasHtml ? `<div style="font-size:13px;color:#666;font-weight:600;margin-bottom:8px">RESPUESTAS</div><table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #eee;border-radius:8px;overflow:hidden;margin-bottom:24px">${respuestasHtml}</table>` : ""}
+      <div style="text-align:center;margin:24px 0">
+        <a href="${crmUrl}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600">Ver en el CRM →</a>
+      </div>
+    </div>
+    <div style="background:#f7f7f7;padding:16px 24px;border-top:1px solid #eee">
+      <div style="font-size:11px;color:#999;text-align:center">Este correo se ha enviado automáticamente al recibir una nueva respuesta de formulario.</div>
+      <div style="font-size:11px;color:#999;text-align:center;margin-top:6px">${razonSocial} · ${empresa.toLowerCase()}.es</div>
+    </div>
+  </div>
+</div>
+`;
+      try {
+        const r = await sendViaResend({ to: recipientEmail, subject, html, mappingKey: "response_notification" });
+        return res.status(200).json({ ok: true, id: r.id });
+      } catch (err) {
+        return res.status(500).json({ ok: false, error: String(err.message || err) });
+      }
     }
 
     // ── 3) Default: form link email ──
