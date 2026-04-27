@@ -2139,8 +2139,7 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
                   await onUpdateLink(rehabModal.linkId,{expires_at:new Date(Date.now()+h*3600000).toISOString(),max_uses:mu,current_uses:0,active:true,rehabilitated_at:new Date().toISOString(),rehab_count:(rehabModal.rehabCount||0)+1});
                   setRehabModal(null);
                   if (typeof loadEnvios === "function") await loadEnvios();
-                  if (window.toast) window.toast("✅ Link rehabilitado correctamente");
-                }} style={{padding:"10px 6px",fontSize:12,fontWeight:700,border:"none",background:"#111",color:"#fff",borderRadius:6,cursor:"pointer",fontFamily:"inherit"}}>{h}h</button>
+                  }} style={{padding:"10px 6px",fontSize:12,fontWeight:700,border:"none",background:"#111",color:"#fff",borderRadius:6,cursor:"pointer",fontFamily:"inherit"}}>{h}h</button>
               ))}
             </div>
             <button type="button" onClick={async()=>{
@@ -2148,8 +2147,7 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
               await onUpdateLink(rehabModal.linkId,{expires_at:null,max_uses:mu,current_uses:0,active:true,rehabilitated_at:new Date().toISOString(),rehab_count:(rehabModal.rehabCount||0)+1});
               setRehabModal(null);
               if (typeof loadEnvios === "function") await loadEnvios();
-              if (window.toast) window.toast("✅ Link rehabilitado correctamente");
-            }} style={{width:"100%",padding:"8px",fontSize:11,fontWeight:600,border:"1px solid #11111133",background:"#fff",color:"#111",borderRadius:6,cursor:"pointer",fontFamily:"inherit",marginBottom:6}}>♾️ Sin caducidad</button>
+              }} style={{width:"100%",padding:"8px",fontSize:11,fontWeight:600,border:"1px solid #11111133",background:"#fff",color:"#111",borderRadius:6,cursor:"pointer",fontFamily:"inherit",marginBottom:6}}>♾️ Sin caducidad</button>
             <div style={{display:"flex",gap:6,alignItems:"center"}}>
               <label style={{fontSize:9,color:"#888",whiteSpace:"nowrap"}}>O fecha exacta:</label>
               <input id="rehab-custom-date" type="date" style={{flex:1,padding:"4px 6px",fontSize:11,border:"1px solid #11111133",borderRadius:4,fontFamily:"inherit"}}/>
