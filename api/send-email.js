@@ -129,65 +129,52 @@ export default async function handler(req, res) {
     }
 
     // ── 2) Form recibido notification ──
+    // -- 2 form recibido notification - simple template --
     if (body.type === "form_recibido") {
       const e = body.extra || {};
       const formName = body.formName || e.form_name || "Formulario";
-      const cn = body.clienteNombre || e.client_name || "Cliente";
-      const ce = body.clienteEmail || e.client_email || "";
-      const ct = body.clienteTel || e.client_tel || "";
-      const score = e.score ? String(e.score) : null;
-      const empresa = e.empresa || e.razonSocial || "Habitaris";
-      const razonSocial = e.razonSocial || "Habitaris S.A.S";
-      const respuestas = Array.isArray(e.respuestasResumen) ? e.respuestasResumen : [];
-      const contenido = body.contenido || "";
-      const crmUrl = e.crmUrl || "https://suite.habitaris.es/";
+      const cn = body.clienteNombre || e.client_name || "Un cliente";
+      const recipient = body.to || body.client_email;
+      if (!recipient) return res.status(400).json({ ok: false, error: "email required" });
 
-      // Construir lista de respuestas en HTML
-      const respuestasHtml = respuestas.length > 0
-        ? respuestas.map(r => `<tr><td style="padding:6px 12px;color:#666;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid #eee;vertical-align:top;width:40%">${r.campo||""}</td><td style="padding:6px 12px;color:#111;font-size:13px;border-bottom:1px solid #eee">${r.valor||"—"}</td></tr>`).join("")
-        : (contenido ? `<tr><td colspan="2" style="padding:12px;color:#444;font-size:13px;line-height:1.6">${contenido}</td></tr>` : `<tr><td colspan="2" style="padding:12px;color:#999;font-size:12px;text-align:center">— Sin respuestas detalladas —</td></tr>`);
+      const RESEND_KEY = process.env.RESEND_API_KEY;
+      if (!RESEND_KEY) return res.status(500).json({ ok: false, error: "RESEND_API_KEY missing" });
 
-      // Score badge color
-      const scoreBg = score && parseFloat(score) >= 8 ? "#16a34a" : (score && parseFloat(score) >= 6 ? "#eab308" : "#dc2626");
-      const scoreEmoji = score && parseFloat(score) >= 8 ? "🟢" : (score && parseFloat(score) >= 6 ? "🟡" : "🔴");
-
-      const subject = `📥 Nueva respuesta · ${formName} · ${cn}`;
-
+      const suiteUrl = "https://suite.habitaris.es";
+      const sender = "Habitaris <noreply@habitaris.es>";
+      const subject = `Nueva respuesta: ${formName} · Habitaris`;
       const html = `
-<div style="font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:#f3f0ff;padding:24px 12px;color:#111;-webkit-text-size-adjust:100%">
-  <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
-    <div style="background:#111;padding:16px 24px;color:#fff">
-      <div style="font-size:11px;letter-spacing:2px;font-weight:600;opacity:0.7">${empresa.toUpperCase()}</div>
-      <div style="font-size:18px;font-weight:700;margin-top:4px">📥 Nueva respuesta recibida</div>
+<div style="background:#f5f3ff;padding:24px 16px;font-family:DM Sans,Helvetica,Arial,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;">
+    <div style="padding:16px 24px;border-bottom:1px solid #f0ecff;">
+      <div style="font-size:11px;letter-spacing:2.5px;color:#6b6b6b;font-weight:700;">HABITARIS</div>
     </div>
-    <div style="padding:24px">
-      <div style="font-size:13px;color:#666;margin-bottom:4px">Formulario</div>
-      <div style="font-size:20px;font-weight:700;color:#111;margin-bottom:20px">${formName}</div>
-      ${score ? `<div style="display:inline-block;background:${scoreBg};color:#fff;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:20px">${scoreEmoji} Score: ${score}/10</div>` : ""}
-      <div style="background:#fafafa;border:1px solid #eee;border-radius:8px;padding:16px;margin-bottom:20px">
-        <div style="font-size:11px;color:#0066cc;font-weight:700;letter-spacing:1px;margin-bottom:10px">DATOS DEL CLIENTE</div>
-        <div style="font-size:15px;font-weight:700;color:#111;margin-bottom:4px">${cn}</div>
-        ${ce ? `<div style="font-size:13px;color:#444;margin-bottom:2px">📧 <a href="mailto:${ce}" style="color:#0066cc;text-decoration:none">${ce}</a></div>` : ""}
-        ${ct ? `<div style="font-size:13px;color:#444">📱 ${ct}</div>` : ""}
-      </div>
-      ${respuestasHtml ? `<div style="font-size:13px;color:#666;font-weight:600;margin-bottom:8px">RESPUESTAS</div><table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #eee;border-radius:8px;overflow:hidden;margin-bottom:24px">${respuestasHtml}</table>` : ""}
-      <div style="text-align:center;margin:24px 0">
-        <a href="${crmUrl}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600">Ver en el CRM →</a>
-      </div>
+    <div style="padding:24px;">
+      <h2 style="margin:0 0 12px 0;font-size:18px;font-weight:700;color:#111;">Formulario cumplimentado</h2>
+      <p style="margin:0 0 16px 0;font-size:14px;line-height:1.55;color:#333;">
+        El formulario <strong>${formName}</strong> de <strong>${cn}</strong> ha sido cumplimentado.
+      </p>
+      <p style="margin:0 0 20px 0;font-size:14px;line-height:1.55;color:#333;">
+        Puedes verlo iniciando sesión en la suite.
+      </p>
+      <a href="${suiteUrl}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:11px 20px;border-radius:6px;font-size:13px;font-weight:600;">
+        Ir a la suite →
+      </a>
     </div>
-    <div style="background:#f7f7f7;padding:16px 24px;border-top:1px solid #eee">
-      <div style="font-size:11px;color:#999;text-align:center">Este correo se ha enviado automáticamente al recibir una nueva respuesta de formulario.</div>
-      <div style="font-size:11px;color:#999;text-align:center;margin-top:6px">${razonSocial} · ${empresa.toLowerCase()}.es</div>
+    <div style="padding:16px 24px;border-top:1px solid #f0ecff;font-size:11px;color:#888;">
+      Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia
     </div>
   </div>
-</div>
-`;
-      try {
-        const r = await sendViaResend({ to: recipientEmail, subject, html, mappingKey: "response_notification" });
-        return res.status(200).json({ ok: true, id: r.id });
-      } catch (err) {
-        return res.status(500).json({ ok: false, error: String(err.message || err) });
-      }
+</div>`;
+
+      const r = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${RESEND_KEY}` },
+        body: JSON.stringify({ from: sender, to: recipient, subject, html })
+      });
+      const data = await r.json().catch(() => ({}));
+      if (!r.ok) return res.status(r.status).json({ ok: false, error: data.message || "send failed" });
+      return res.status(200).json({ ok: true, sent_to: recipient, from: sender, resend_id: data.id });
     }
 
     // ── 3) Default: form link email ──
@@ -374,43 +361,101 @@ async function handleReminder(body, res) {
 // Filtros: current_uses>=max_uses AND has_partial_data=true AND submitted_at IS NULL AND reminder_sent_at IS NULL
 async function handleCronReminders(body, res) {
   try {
-    const tenantId = body.tenant_id || "habitaris";
     const sb = getSupabaseClient();
 
-    // Buscar candidatos: usaron todos los usos, tienen datos parciales, no enviaron, no recibieron recordatorio
-    const r = await fetch(sb.url + "/rest/v1/form_links?has_partial_data=eq.true&submitted_at=is.null&reminder_sent_at=is.null&select=*", { headers: sb.headers });
-    const links = await r.json();
-    if (!Array.isArray(links)) return res.status(500).json({ ok: false, error: "failed to query links" });
+    // CONFIG: leer kv_store.habitaris_reminder_config (con fallback)
+    let hoursBeforeExpiry = 24;
+    let enabled = true;
+    try {
+      const cfgR = await fetch(sb.url + "/rest/v1/kv_store?key=eq.habitaris_reminder_config&select=value", { headers: sb.headers });
+      const cfgArr = await cfgR.json().catch(() => []);
+      if (cfgArr && cfgArr.length > 0 && cfgArr[0].value) {
+        const cfg = typeof cfgArr[0].value === "string" ? JSON.parse(cfgArr[0].value) : cfgArr[0].value;
+        if (typeof cfg.hours_before_expiry === "number") hoursBeforeExpiry = cfg.hours_before_expiry;
+        if (typeof cfg.enabled === "boolean") enabled = cfg.enabled;
+      }
+    } catch(_) { /* usar defaults */ }
 
-    // Filtrar por current_uses >= max_uses (filtro adicional, lo hacemos en JS porque PostgREST no permite comparar columnas)
-    const candidates = links.filter(l => (l.max_uses > 0) && ((l.current_uses || 0) >= l.max_uses) && l.client_email);
+    if (!enabled) return res.status(200).json({ ok: true, sent: 0, skipped: "disabled by config" });
 
-    const sender = await getSenderConfig(tenantId, "reminder");
-    const fromHeader = sender.name + " <" + sender.email + ">";
-    const subject = "📝 Tienes tu briefing a medias · Habitaris";
+    // Filtrar links que caducan en menos de N horas, no enviados, no recordados, activos
+    const now = new Date();
+    const limitDate = new Date(now.getTime() + hoursBeforeExpiry * 3600 * 1000);
+    const nowIso = now.toISOString();
+    const limitIso = limitDate.toISOString();
 
-    const results = [];
+    const url = sb.url + "/rest/v1/form_links?active=eq.true&submitted_at=is.null&reminder_sent_at=is.null&expires_at=gt." + nowIso + "&expires_at=lt." + limitIso + "&select=*";
+    const r = await fetch(url, { headers: sb.headers });
+    const candidates = await r.json().catch(() => []);
+
+    if (!Array.isArray(candidates) || candidates.length === 0) {
+      return res.status(200).json({ ok: true, sent: 0, message: "no candidates" });
+    }
+
+    const RESEND_KEY = process.env.RESEND_API_KEY;
+    if (!RESEND_KEY) return res.status(500).json({ ok: false, error: "RESEND_API_KEY missing" });
+
+    let sent = 0; let failed = 0; const results = [];
     for (const link of candidates) {
+      const recipient = link.client_email;
+      if (!recipient) { failed++; continue; }
+      const sender = "Habitaris <noreply@habitaris.es>";
+      const html = preExpiryReminderTemplate(link, hoursBeforeExpiry);
+      const subject = "Tu formulario caduca en " + hoursBeforeExpiry + " horas · Habitaris";
       try {
-        const html = reminderTemplate(link, sender);
-        const sendResult = await sendViaResend({ from: fromHeader, to: link.client_email, subject, html });
-        if (sendResult.ok) {
-          await fetch(sb.url + "/rest/v1/form_links?link_id=eq." + encodeURIComponent(link.link_id), {
-            method: "PATCH", headers: sb.headers,
+        const sendR = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + RESEND_KEY },
+          body: JSON.stringify({ from: sender, to: recipient, subject, html })
+        });
+        if (sendR.ok) {
+          // Marcar reminder_sent_at
+          await fetch(sb.url + "/rest/v1/form_links?link_id=eq." + link.link_id, {
+            method: "PATCH",
+            headers: { ...sb.headers, "Content-Type": "application/json", Prefer: "return=minimal" },
             body: JSON.stringify({ reminder_sent_at: new Date().toISOString() })
           });
-          results.push({ link_id: link.link_id, email: link.client_email, ok: true });
+          sent++; results.push({ link_id: link.link_id, recipient, ok: true });
         } else {
-          results.push({ link_id: link.link_id, email: link.client_email, ok: false, error: sendResult.data });
+          failed++; results.push({ link_id: link.link_id, recipient, ok: false });
         }
-      } catch (e) {
-        results.push({ link_id: link.link_id, ok: false, error: String(e && e.message || e) });
+      } catch(err) {
+        failed++; results.push({ link_id: link.link_id, recipient, ok: false, err: String(err) });
       }
     }
 
-    return res.status(200).json({ ok: true, candidates_count: candidates.length, sent_count: results.filter(x => x.ok).length, results });
-  } catch (err) {
-    console.error("handleCronReminders error:", err);
-    return res.status(500).json({ ok: false, error: String(err && err.message || err) });
+    return res.status(200).json({ ok: true, sent, failed, total: candidates.length, hours_before_expiry: hoursBeforeExpiry, results });
+  } catch(err) {
+    return res.status(500).json({ ok: false, error: String(err) });
   }
+}
+
+function preExpiryReminderTemplate(link, hoursBeforeExpiry) {
+  const nombre = (link.client_name || "").split(" ")[0] || "Hola";
+  const formName = link.form_name || "tu formulario";
+  const linkUrl = "https://suite.habitaris.es/formulario/" + link.link_id;
+  const expiryDate = link.expires_at ? new Date(link.expires_at).toLocaleString("es-ES", { dateStyle: "medium", timeStyle: "short" }) : "";
+  return `
+<div style="background:#f5f3ff;padding:24px 16px;font-family:DM Sans,Helvetica,Arial,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;">
+    <div style="padding:16px 24px;border-bottom:1px solid #f0ecff;">
+      <div style="font-size:11px;letter-spacing:2.5px;color:#6b6b6b;font-weight:700;">HABITARIS</div>
+    </div>
+    <div style="padding:24px;">
+      <h2 style="margin:0 0 12px 0;font-size:20px;font-weight:700;color:#111;">Hola ${nombre},</h2>
+      <p style="margin:0 0 16px 0;font-size:14px;line-height:1.55;color:#333;">
+        Te recordamos que tu <strong>${formName}</strong> caduca en <strong>${hoursBeforeExpiry} horas</strong>${expiryDate ? " (" + expiryDate + ")" : ""}.
+      </p>
+      <p style="margin:0 0 20px 0;font-size:14px;line-height:1.55;color:#333;">
+        Si no lo cumplimentas a tiempo, el enlace se bloqueará y tendrás que solicitar uno nuevo.
+      </p>
+      <a href="${linkUrl}" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:11px 20px;border-radius:6px;font-size:13px;font-weight:600;">
+        Continuar con mi formulario →
+      </a>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid #f0ecff;font-size:11px;color:#888;">
+      Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia
+    </div>
+  </div>
+</div>`;
 }
