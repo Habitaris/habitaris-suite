@@ -147,13 +147,13 @@ export default async function handler(req, res) {
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f3f0ff;font-family:DM Sans,Arial,sans-serif;color:#111;">
   <div style="max-width:560px;margin:32px auto;padding:24px;background:#fff;border-radius:8px;">
-    <div style="font-size:11px;letter-spacing:2px;color:#888;text-transform:uppercase;margin-bottom:16px;">HABITARIS</div>
+    <table cellpadding='0' cellspacing='0' border='0' style='border-collapse:collapse;margin-bottom:16px;'><tr><td valign='middle' style='padding-right:14px;'><div style='position:relative;width:34px;height:34px;'><div style='position:absolute;top:5px;left:5px;width:30px;height:30px;border:1.5px solid #111;background:transparent;'></div><div style='position:absolute;top:0;left:0;width:30px;height:30px;border:1.5px solid #111;background:#fff;text-align:center;line-height:28px;font-family:Georgia,serif;font-weight:700;font-size:20px;color:#111;'>H</div></div></td><td valign='middle' style='font-family:DM Sans,Arial,sans-serif;font-weight:300;font-size:15px;letter-spacing:0.38em;color:#111;text-transform:lowercase;padding-bottom:2px;'>abitaris</td></tr></table>
     <h2 style="margin:0 0 12px 0;font-size:18px;font-weight:700;">Formulario cumplimentado</h2>
     <p style="margin:0 0 16px 0;font-size:14px;line-height:1.5;">El formulario <strong>${formName}</strong> de <strong>${cn}</strong> ha sido cumplimentado.</p>
     <p style="margin:0 0 24px 0;font-size:14px;line-height:1.5;">Puedes verlo en la suite:</p>
     <a href="${suiteUrl}" style="display:inline-block;padding:10px 20px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:14px;">Abrir suite Habitaris</a>
     <hr style="margin:24px 0 16px 0;border:none;border-top:1px solid #e5e5e5;">
-    <p style="margin:0;font-size:11px;color:#999;">Habitaris S.A.S - NIT 901.922.136-8 - Bogota D.C., Colombia</p>
+    <p style="margin:0;font-size:11px;color:#999;line-height:1.6;">Habitaris S.A.S - NIT 901.922.136-8 - Bogot&aacute; D.C., Colombia<br>+57 350 566 1545 - habitaris.es</p>
   </div>
 </body></html>`;
 
@@ -434,7 +434,7 @@ function preExpiryReminderTemplate(link, hoursBeforeExpiry) {
 <div style="background:#f5f3ff;padding:24px 16px;font-family:DM Sans,Helvetica,Arial,sans-serif;">
   <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;">
     <div style="padding:16px 24px;border-bottom:1px solid #f0ecff;">
-      <div style="font-size:11px;letter-spacing:2.5px;color:#6b6b6b;font-weight:700;">HABITARIS</div>
+      <table cellpadding='0' cellspacing='0' border='0' style='border-collapse:collapse;margin-bottom:16px;'><tr><td valign='middle' style='padding-right:14px;'><div style='position:relative;width:34px;height:34px;'><div style='position:absolute;top:5px;left:5px;width:30px;height:30px;border:1.5px solid #111;background:transparent;'></div><div style='position:absolute;top:0;left:0;width:30px;height:30px;border:1.5px solid #111;background:#fff;text-align:center;line-height:28px;font-family:Georgia,serif;font-weight:700;font-size:20px;color:#111;'>H</div></div></td><td valign='middle' style='font-family:DM Sans,Arial,sans-serif;font-weight:300;font-size:15px;letter-spacing:0.38em;color:#111;text-transform:lowercase;padding-bottom:2px;'>abitaris</td></tr></table>
     </div>
     <div style="padding:24px;">
       <h2 style="margin:0 0 12px 0;font-size:20px;font-weight:700;color:#111;">Hola ${nombre},</h2>
