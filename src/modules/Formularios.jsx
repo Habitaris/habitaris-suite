@@ -2177,7 +2177,6 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
                   <div key={fieldId} style={{padding:10,background:"#fafafa",borderRadius:6,border:"1px solid #e5e5e5"}}>
                     <div style={{fontSize:11,color:"#666",fontWeight:600,marginBottom:4}}>{label}</div>
                     <div style={{fontSize:13,color:"#111"}}>{String(displayValue) || "-"}</div>
-                    <div style={{fontSize:9,color:"#aaa",marginTop:4,fontFamily:"monospace"}}>id: {fieldId} | tipo: {tipo}</div>
                   </div>
                 );
               })}
