@@ -635,7 +635,20 @@ render();
           expires_at: linkExpiry ? new Date(linkExpiry).toISOString() : null,
           active: true,
         }, { onConflict: "link_id" });
-        if (!error) setSharePublicUrl(`${appUrl}/form?id=${linkId}`);
+        if (!error) {
+          setSharePublicUrl(`${appUrl}/form?id=${linkId}`);
+          // Disparar email de invitación (fire-and-forget, solo si hay email)
+          if (client.email) {
+            fetch("/api/send-email", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ type: "invitation", link_id: linkId })
+            })
+              .then(r => r.json())
+              .then(d => window.toast?.(d && d.ok ? ("✉️ Invitación enviada a " + client.email) : "Link creado pero el email no se pudo enviar", d && d.ok ? "success" : "warning"))
+              .catch(() => window.toast?.("Link creado pero el email no se pudo enviar", "warning"));
+          }
+        }
         else { console.error("form_links upsert:", error); setSharePublicUrl(""); }
       } catch(e) { console.error("form_links save:", e); setSharePublicUrl(""); }
       // Link se guarda en Supabase via addEnvio

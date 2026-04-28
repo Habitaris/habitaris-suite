@@ -156,6 +156,17 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
       if(error)throw error;
       const publicUrl=appUrl?appUrl+"/form?id="+linkId:"";
       setShareResult({linkId,url:publicUrl,client});
+      // Disparar email de invitación (fire-and-forget, solo si hay email)
+      if (client.email) {
+        fetch("/api/send-email", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ type: "invitation", link_id: linkId })
+        })
+          .then(r => r.json())
+          .then(d => window.toast?.(d && d.ok ? ("✉️ Invitación enviada a " + client.email) : "Link creado pero el email no se pudo enviar", d && d.ok ? "success" : "warning"))
+          .catch(() => window.toast?.("Link creado pero el email no se pudo enviar", "warning"));
+      }
       SB.registerOpen(shareForm.id,shareForm.nombre,linkId,client.nombre,client.email).catch(()=>{});
       setTimeout(loadData,500);
     }catch(e){alert("Error generando formulario: "+e.message);}
