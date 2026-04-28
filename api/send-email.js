@@ -346,9 +346,12 @@ function reminderTemplate(link, sender) {
   const formName = link.form_name || "tu briefing";
   const lastStep = link.last_completed_step || 0;
   const fieldsCount = link.partial_fields_count || 0;
-  const opens = link.current_uses || 0;
   const formUrl = `https://suite.habitaris.es/formulario/${link.link_id}`;
   const greeting = clientName ? `Hola ${clientName},` : "Hola,";
+  const maxUses = link.max_uses;
+  const expiryRulesText = (maxUses && maxUses > 0)
+    ? `Caduca el ${expiresDate} y tienes un máximo de ${maxUses} ${maxUses === 1 ? 'apertura' : 'aperturas'}.`
+    : `Tienes hasta el ${expiresDate} para completarlo.`;
 
   // Calcular cuanto queda hasta caducar
   let timeLeft = "pronto";
@@ -364,10 +367,6 @@ function reminderTemplate(link, sender) {
   }
 
   const hasPartial = lastStep > 0 || fieldsCount > 0;
-  const opensText = opens === 1 ? "1 vez" : (opens + " veces");
-  const opensBlock = opens > 0
-    ? `<div style="background:#fff7ed;border-left:3px solid #f59e0b;padding:14px 16px;margin:20px 0;border-radius:4px;"><p style="margin:0;font-size:14px;color:#333;">Has abierto el enlace <strong>${opensText}</strong> sin completar el briefing.</p></div>`
-    : "";
   const partialBlock = hasPartial
     ? `<div style="background:#f3f0ff;border-left:3px solid #111;padding:14px 16px;margin:20px 0;border-radius:4px;"><p style="margin:0;font-size:14px;color:#333;">Tus respuestas siguen guardadas, solo tienes que continuar donde lo dejaste.</p></div>`
     : "";
@@ -383,7 +382,6 @@ function reminderTemplate(link, sender) {
           <h2 style="margin:0 0 16px 0;font-size:20px;font-weight:700;color:#111;">${greeting}</h2>
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Tu <strong>${formName}</strong> <strong>caduca ${timeLeft}</strong>.</p>
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Si no llegas a enviarlo a tiempo, el enlace se bloqueará y tendrás que solicitar uno nuevo.</p>
-          ${opensBlock}
           ${partialBlock}
           <div style="text-align:center;margin:28px 0;">
             <a href="${formUrl}" style="display:inline-block;padding:12px 28px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:15px;">Continuar el briefing</a>
@@ -562,7 +560,7 @@ function invitationTemplate(link) {
           <h2 style="margin:0 0 16px 0;font-size:20px;font-weight:700;color:#111;">${greeting}</h2>
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Aquí tienes tu <strong>${formName}</strong>.</p>
           <div style="background:#f3f0ff;border-left:3px solid #111;padding:14px 16px;margin:20px 0;border-radius:4px;">
-            <p style="margin:0;font-size:14px;color:#333;">📅 <strong>Tienes hasta el ${expiresDate} para completarlo.</strong></p>
+            <p style="margin:0;font-size:14px;color:#333;">📅 <strong>${expiryRulesText}</strong></p>
           </div>
           <div style="text-align:center;margin:28px 0;">
             <a href="${formUrl}" style="display:inline-block;padding:12px 28px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:15px;">Empezar el briefing</a>
