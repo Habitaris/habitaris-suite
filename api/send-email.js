@@ -130,6 +130,72 @@ export default async function handler(req, res) {
 
     // ── 2) Form recibido notification ──
     // -- 2 form recibido notification - simple template --
+    // ── Invitation: cuando se crea el link ──
+    if (body.type === "invitation") {
+      const linkId = body.link_id;
+      if (!linkId) return res.status(400).json({ ok: false, error: "link_id required" });
+      try {
+        const sb = getSupabaseClient();
+        const r = await fetch(`${sb.url}/rest/v1/form_links?link_id=eq.${linkId}&select=*`, { headers: sb.headers });
+        const links = await r.json();
+        if (!Array.isArray(links) || links.length === 0) return res.status(404).json({ ok: false, error: "link not found" });
+        const link = links[0];
+        const recipient = body.to || link.client_email;
+        if (!recipient) return res.status(400).json({ ok: false, error: "recipient required" });
+        const html = invitationTemplate(link);
+        const fromAddr = body.from || "Habitaris <noreply@habitaris.es>";
+        const subject = `Tu briefing de ${link.form_name || 'Habitaris'} — Habitaris`;
+        const sendR = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ from: fromAddr, to: recipient, subject, html })
+        });
+        const data = await sendR.json().catch(() => ({}));
+        if (!sendR.ok) return res.status(500).json({ ok: false, error: data.message || "send failed" });
+        return res.status(200).json({ ok: true, sent_to: recipient, resend_id: data.id || null });
+      } catch (err) {
+        return res.status(500).json({ ok: false, error: String(err && err.message || err) });
+      }
+    }
+    // ── Expired: cuando el link ya caducó ──
+    if (body.type === "expired") {
+      const linkId = body.link_id;
+      if (!linkId) return res.status(400).json({ ok: false, error: "link_id required" });
+      try {
+        const sb = getSupabaseClient();
+        // Leer link
+        const r = await fetch(`${sb.url}/rest/v1/form_links?link_id=eq.${linkId}&select=*`, { headers: sb.headers });
+        const links = await r.json();
+        if (!Array.isArray(links) || links.length === 0) return res.status(404).json({ ok: false, error: "link not found" });
+        const link = links[0];
+        const recipient = body.to || link.client_email;
+        if (!recipient) return res.status(400).json({ ok: false, error: "recipient required" });
+        // Leer telefono de kv_store
+        let waPhone = "+57 350 5661545";
+        try {
+          const kvR = await fetch(`${sb.url}/rest/v1/kv_store?key=eq.habitaris_phones&select=value`, { headers: sb.headers });
+          const kv = await kvR.json();
+          if (Array.isArray(kv) && kv[0]) {
+            const cfg = typeof kv[0].value === "string" ? JSON.parse(kv[0].value) : kv[0].value;
+            const def = cfg.whatsapp_default || "co";
+            if (cfg[def]) waPhone = cfg[def];
+          }
+        } catch (_) {}
+        const html = expiredTemplate(link, waPhone);
+        const fromAddr = body.from || "Habitaris <noreply@habitaris.es>";
+        const subject = `Tu enlace ha caducado — Habitaris`;
+        const sendR = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ from: fromAddr, to: recipient, subject, html })
+        });
+        const data = await sendR.json().catch(() => ({}));
+        if (!sendR.ok) return res.status(500).json({ ok: false, error: data.message || "send failed" });
+        return res.status(200).json({ ok: true, sent_to: recipient, resend_id: data.id || null, wa_phone: waPhone });
+      } catch (err) {
+        return res.status(500).json({ ok: false, error: String(err && err.message || err) });
+      }
+    }
     if (body.type === "form_recibido") {
       const e = body.extra || {};
       const formName = body.formName || e.form_name || "Formulario";
@@ -273,38 +339,49 @@ async function sendViaResend({ from, to, subject, html }) {
 // Plantilla HTML del recordatorio "briefing a medias"
 function reminderTemplate(link, sender) {
   const clientName = link.client_name || "";
-  const formName = link.form_name || "tu formulario";
+  const formName = link.form_name || "tu briefing";
   const lastStep = link.last_completed_step || 0;
-  const fieldCount = Object.keys(link.partial_responses || {}).length;
-  const greeting = clientName ? ("Hola " + clientName + ",") : "Hola,";
-  const subject = encodeURIComponent("Quiero terminar mi briefing - " + formName);
-  return `<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"/><title>Briefing a medias</title></head>
-<body style="margin:0;padding:0;background:#F5F0FF;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F5F0FF;padding:40px 20px;">
+  const fieldsCount = link.partial_fields_count || 0;
+  const formUrl = `https://suite.habitaris.es/formulario/${link.link_id}`;
+  const greeting = clientName ? `Hola ${clientName},` : "Hola,";
+
+  // Calcular cuanto queda hasta caducar
+  let timeLeft = "pronto";
+  if (link.expires_at) {
+    const now = new Date();
+    const exp = new Date(link.expires_at);
+    const diffMs = exp - now;
+    const diffH = Math.floor(diffMs / (1000 * 60 * 60));
+    if (diffH < 0) timeLeft = "hoy";
+    else if (diffH < 24) timeLeft = `en ${diffH} horas`;
+    else if (diffH < 48) timeLeft = "mañana";
+    else timeLeft = `en ${Math.floor(diffH/24)} días`;
+  }
+
+  const hasPartial = lastStep > 0 || fieldsCount > 0;
+  const partialBlock = hasPartial
+    ? `<div style="background:#f3f0ff;border-left:3px solid #111;padding:14px 16px;margin:20px 0;border-radius:4px;"><p style="margin:0;font-size:14px;color:#333;">Tus respuestas anteriores siguen ahí, solo tienes que continuar donde lo dejaste.</p></div>`
+    : "";
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f3f0ff;font-family:DM Sans,Arial,sans-serif;color:#111;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f0ff;padding:32px 16px;">
     <tr><td align="center">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
-        <tr><td style="padding:32px 40px 16px 40px;">
-          <img src="https://suite.habitaris.es/logo-habitaris-negro.png" alt="Habitaris" style="height:40px;display:block;margin-bottom:16px;" />
-          <h1 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#111;">` + greeting + `</h1>
-          <p style="margin:0;font-size:15px;color:#444;line-height:1.6;">Vimos que comenzaste a llenar tu <strong>` + formName + `</strong> pero no llegaste a enviarlo.</p>
-        </td></tr>
-        <tr><td style="padding:8px 40px 16px 40px;">
-          <div style="background:#F5F0FF;border-radius:8px;padding:16px 18px;font-size:13px;color:#666;">
-            <div style="margin-bottom:6px;">📝 <strong>Avance guardado:</strong> paso ` + (lastStep + 1) + ` · ` + fieldCount + ` campos</div>
-            <div>⏰ Tus respuestas están guardadas, solo tienes que continuar.</div>
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+        <tr><td style="background:#111;padding:24px;text-align:center"><img src="https://suite.habitaris.es/logo-habitaris-blanco.png" alt="Habitaris" height="32" style="display:block;margin:0 auto;"/></td></tr>
+        <tr><td style="padding:32px 40px;">
+          <h2 style="margin:0 0 16px 0;font-size:20px;font-weight:700;color:#111;">${greeting}</h2>
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Solo un recordatorio rápido: el enlace para completar tu briefing de <strong>${formName}</strong> <strong>caduca ${timeLeft}</strong>.</p>
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Si no llegas a enviarlo a tiempo, el enlace se bloqueará y tendrás que solicitar uno nuevo.</p>
+          ${partialBlock}
+          <div style="text-align:center;margin:28px 0;">
+            <a href="${formUrl}" style="display:inline-block;padding:12px 28px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:15px;">Continuar el briefing</a>
           </div>
+          <p style="margin:16px 0 0 0;font-size:14px;color:#333;">Un saludo,<br><strong>El equipo de Habitaris</strong></p>
         </td></tr>
-        <tr><td style="padding:8px 40px 24px 40px;">
-          <p style="margin:0 0 18px 0;font-size:15px;color:#444;line-height:1.6;">¿Quieres terminarlo? Avísanos respondiendo a este correo y reactivamos tu enlace para que continúes donde lo dejaste.</p>
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-            <tr><td style="background:#111;border-radius:8px;">
-              <a href="mailto:` + sender.email + `?subject=` + subject + `" style="display:inline-block;padding:12px 28px;font-size:14px;font-weight:600;color:#fff;text-decoration:none;">Responder y continuar</a>
-            </td></tr>
-          </table>
-        </td></tr>
-        <tr><td style="padding:16px 40px 24px 40px;border-top:1px solid #eee;">
-          <div style="font-size:11px;color:#aaa;line-height:1.5;">Este es un correo automático. Si recibiste este mensaje por error o ya enviaste tu briefing, ignóralo.</div>
-          <div style="font-size:10px;color:#bbb;margin-top:8px;">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia · +57 350 566 1545</div>
+        <tr><td style="background:#fafafa;padding:16px 40px;border-top:1px solid #eee;">
+          <p style="margin:0;font-size:11px;color:#999;line-height:1.5;">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia · +57 350 566 1545</p>
         </td></tr>
       </table>
     </td></tr>
@@ -453,4 +530,76 @@ function preExpiryReminderTemplate(link, hoursBeforeExpiry) {
     </div>
   </div>
 </div>`;
+}
+
+function invitationTemplate(link) {
+  const clientName = link.client_name || "";
+  const formName = link.form_name || "tu briefing";
+  const expiresDate = link.expires_at ? new Date(link.expires_at).toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" }) : "la fecha indicada";
+  const formUrl = `https://suite.habitaris.es/formulario/${link.link_id}`;
+  const greeting = clientName ? `Hola ${clientName},` : "Hola,";
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f3f0ff;font-family:DM Sans,Arial,sans-serif;color:#111;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f0ff;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+        <tr><td style="background:#111;padding:24px;text-align:center"><img src="https://suite.habitaris.es/logo-habitaris-blanco.png" alt="Habitaris" height="32" style="display:block;margin:0 auto;"/></td></tr>
+        <tr><td style="padding:32px 40px;">
+          <h2 style="margin:0 0 16px 0;font-size:20px;font-weight:700;color:#111;">${greeting}</h2>
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Te enviamos el briefing de <strong>${formName}</strong> para que podamos conocer mejor tu proyecto.</p>
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Es un cuestionario sencillo y tus respuestas se guardan automáticamente, así que puedes pausar y continuar cuando quieras desde el mismo enlace.</p>
+          <div style="background:#f3f0ff;border-left:3px solid #111;padding:14px 16px;margin:20px 0;border-radius:4px;">
+            <p style="margin:0;font-size:14px;color:#333;">📅 <strong>Tienes hasta el ${expiresDate} para completarlo.</strong></p>
+          </div>
+          <div style="text-align:center;margin:28px 0;">
+            <a href="${formUrl}" style="display:inline-block;padding:12px 28px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:15px;">Empezar el briefing</a>
+          </div>
+          <p style="margin:24px 0 0 0;font-size:14px;line-height:1.6;color:#666;">Si tienes cualquier duda, respóndenos a este correo y te ayudamos.</p>
+          <p style="margin:16px 0 0 0;font-size:14px;color:#333;">Un saludo,<br><strong>El equipo de Habitaris</strong></p>
+        </td></tr>
+        <tr><td style="background:#fafafa;padding:16px 40px;border-top:1px solid #eee;">
+          <p style="margin:0;font-size:11px;color:#999;line-height:1.5;">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia · +57 350 566 1545</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+}
+
+function expiredTemplate(link, whatsappPhone) {
+  const clientName = link.client_name || "";
+  const formName = link.form_name || "tu briefing";
+  const greeting = clientName ? `Hola ${clientName},` : "Hola,";
+  // Construir mensaje pre-rellenado de WhatsApp
+  const phoneClean = (whatsappPhone || "+57 350 5661545").replace(/[^0-9]/g, "");
+  const waText = encodeURIComponent(
+    `Hola, soy ${clientName || '[mi nombre]'}. Mi enlace del briefing ${formName} ha caducado y me gustaría reactivarlo. Gracias.`
+  );
+  const waUrl = `https://wa.me/${phoneClean}?text=${waText}`;
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f3f0ff;font-family:DM Sans,Arial,sans-serif;color:#111;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f0ff;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
+        <tr><td style="background:#111;padding:24px;text-align:center"><img src="https://suite.habitaris.es/logo-habitaris-blanco.png" alt="Habitaris" height="32" style="display:block;margin:0 auto;"/></td></tr>
+        <tr><td style="padding:32px 40px;">
+          <h2 style="margin:0 0 16px 0;font-size:20px;font-weight:700;color:#111;">${greeting}</h2>
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">El enlace para completar tu briefing de <strong>${formName}</strong> ha <strong>caducado</strong>.</p>
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Si todavía quieres enviarnos la información, podemos reactivarte el enlace. Solo escríbenos por WhatsApp y lo gestionamos:</p>
+          <div style="text-align:center;margin:28px 0;">
+            <a href="${waUrl}" style="display:inline-block;padding:12px 28px;background:#25D366;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:15px;">Reactivar mi enlace por WhatsApp</a>
+          </div>
+          <p style="margin:24px 0 0 0;font-size:13px;line-height:1.6;color:#666;">Al pulsar el botón se abrirá una conversación con nosotros para confirmar la reactivación.</p>
+          <p style="margin:16px 0 0 0;font-size:14px;color:#333;">Un saludo,<br><strong>El equipo de Habitaris</strong></p>
+        </td></tr>
+        <tr><td style="background:#fafafa;padding:16px 40px;border-top:1px solid #eee;">
+          <p style="margin:0;font-size:11px;color:#999;line-height:1.5;">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia · +57 350 566 1545</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
 }
