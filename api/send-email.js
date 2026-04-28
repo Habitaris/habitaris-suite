@@ -144,7 +144,9 @@ export default async function handler(req, res) {
         if (!recipient) return res.status(400).json({ ok: false, error: "recipient required" });
         const html = invitationTemplate(link);
         const fromAddr = body.from || "Habitaris <noreply@habitaris.es>";
-        const subject = `Tu briefing de ${link.form_name || 'Habitaris'} — Habitaris`;
+        const _short = (link.client_name || '').trim().split(/\s+/).filter(Boolean);
+        const _shortName = _short.length >= 2 ? (_short[0] + ' ' + _short[_short.length - 1]) : (_short[0] || '');
+        const subject = _shortName ? `${link.form_name || 'Habitaris'} — ${_shortName}` : (link.form_name || 'Habitaris');
         const sendR = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
@@ -183,7 +185,9 @@ export default async function handler(req, res) {
         } catch (_) {}
         const html = expiredTemplate(link, waPhone);
         const fromAddr = body.from || "Habitaris <noreply@habitaris.es>";
-        const subject = `Tu enlace ha caducado — Habitaris`;
+        const _short = (link.client_name || '').trim().split(/\s+/).filter(Boolean);
+        const _shortName = _short.length >= 2 ? (_short[0] + ' ' + _short[_short.length - 1]) : (_short[0] || '');
+        const subject = _shortName ? `Tu enlace ha caducado — Habitaris — ${_shortName}` : 'Tu enlace ha caducado — Habitaris';
         const sendR = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
@@ -365,7 +369,7 @@ function reminderTemplate(link, sender) {
     ? `<div style="background:#fff7ed;border-left:3px solid #f59e0b;padding:14px 16px;margin:20px 0;border-radius:4px;"><p style="margin:0;font-size:14px;color:#333;">Has abierto el enlace <strong>${opensText}</strong> sin completar el briefing.</p></div>`
     : "";
   const partialBlock = hasPartial
-    ? `<div style="background:#f3f0ff;border-left:3px solid #111;padding:14px 16px;margin:20px 0;border-radius:4px;"><p style="margin:0;font-size:14px;color:#333;">Tus respuestas anteriores siguen ahí, solo tienes que continuar donde lo dejaste.</p></div>`
+    ? `<div style="background:#f3f0ff;border-left:3px solid #111;padding:14px 16px;margin:20px 0;border-radius:4px;"><p style="margin:0;font-size:14px;color:#333;">Tus respuestas siguen guardadas, solo tienes que continuar donde lo dejaste.</p></div>`
     : "";
 
   return `<!DOCTYPE html>
@@ -377,7 +381,7 @@ function reminderTemplate(link, sender) {
         <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="https://suite.habitaris.es/logo-habitaris.jpg" alt="Habitaris" height="50" style="display:block;margin:0 auto;"/></td></tr>
         <tr><td style="padding:32px 40px;">
           <h2 style="margin:0 0 16px 0;font-size:20px;font-weight:700;color:#111;">${greeting}</h2>
-          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Solo un recordatorio rápido: el enlace para completar tu briefing de <strong>${formName}</strong> <strong>caduca ${timeLeft}</strong>.</p>
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Tu <strong>${formName}</strong> <strong>caduca ${timeLeft}</strong>.</p>
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Si no llegas a enviarlo a tiempo, el enlace se bloqueará y tendrás que solicitar uno nuevo.</p>
           ${opensBlock}
           ${partialBlock}
@@ -417,7 +421,10 @@ async function handleReminder(body, res) {
     const sender = await getSenderConfig(tenantId, "reminder");
     const fromHeader = sender.name + " <" + sender.email + ">";
     const html = reminderTemplate(link, sender);
-    const subject = "📝 Tienes tu briefing a medias · Habitaris";
+    const _short = (link.client_name || '').trim().split(/\s+/).filter(Boolean);
+    const _shortName = _short.length >= 2 ? (_short[0] + ' ' + _short[_short.length - 1]) : (_short[0] || '');
+    const _formName = link.form_name || 'Habitaris';
+    const subject = _shortName ? `Caduca pronto — ${_formName} — ${_shortName}` : `Caduca pronto — ${_formName}`;
 
     const sendResult = await sendViaResend({ from: fromHeader, to: link.client_email, subject, html });
     if (!sendResult.ok) return res.status(500).json({ ok: false, error: "resend failed", detail: sendResult.data });
@@ -553,7 +560,7 @@ function invitationTemplate(link) {
         <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="https://suite.habitaris.es/logo-habitaris.jpg" alt="Habitaris" height="50" style="display:block;margin:0 auto;"/></td></tr>
         <tr><td style="padding:32px 40px;">
           <h2 style="margin:0 0 16px 0;font-size:20px;font-weight:700;color:#111;">${greeting}</h2>
-          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Te enviamos el briefing de <strong>${formName}</strong> para que podamos conocer mejor tu proyecto.</p>
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Aquí tienes tu <strong>${formName}</strong>.</p>
           <div style="background:#f3f0ff;border-left:3px solid #111;padding:14px 16px;margin:20px 0;border-radius:4px;">
             <p style="margin:0;font-size:14px;color:#333;">📅 <strong>Tienes hasta el ${expiresDate} para completarlo.</strong></p>
           </div>
@@ -579,7 +586,7 @@ function expiredTemplate(link, whatsappPhone) {
   // Construir mensaje pre-rellenado de WhatsApp
   const phoneClean = (whatsappPhone || "+57 350 5661545").replace(/[^0-9]/g, "");
   const waText = encodeURIComponent(
-    `Hola, soy ${clientName || '[mi nombre]'}. Mi enlace del briefing ${formName} ha caducado y me gustaría reactivarlo. Gracias.`
+    `Hola, quiero reactivar mi briefing. Soy ${clientName || '[mi nombre]'}.`
   );
   const waUrl = `https://wa.me/${phoneClean}?text=${waText}`;
 
@@ -592,8 +599,8 @@ function expiredTemplate(link, whatsappPhone) {
         <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="https://suite.habitaris.es/logo-habitaris.jpg" alt="Habitaris" height="50" style="display:block;margin:0 auto;"/></td></tr>
         <tr><td style="padding:32px 40px;">
           <h2 style="margin:0 0 16px 0;font-size:20px;font-weight:700;color:#111;">${greeting}</h2>
-          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">El enlace para completar tu briefing de <strong>${formName}</strong> ha <strong>caducado</strong>.</p>
-          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Si todavía quieres enviarnos la información, podemos reactivarte el enlace. Solo escríbenos por WhatsApp y lo gestionamos:</p>
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Tu <strong>${formName}</strong> ha <strong>caducado</strong>.</p>
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Pulsa el siguiente botón si quieres reactivarlo:</p>
           <div style="text-align:center;margin:28px 0;">
             <a href="${waUrl}" style="display:inline-block;padding:12px 28px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:15px;">Reactivar enlace</a>
           </div>
