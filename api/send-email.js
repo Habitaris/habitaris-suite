@@ -342,6 +342,7 @@ function reminderTemplate(link, sender) {
   const formName = link.form_name || "tu briefing";
   const lastStep = link.last_completed_step || 0;
   const fieldsCount = link.partial_fields_count || 0;
+  const opens = link.current_uses || 0;
   const formUrl = `https://suite.habitaris.es/formulario/${link.link_id}`;
   const greeting = clientName ? `Hola ${clientName},` : "Hola,";
 
@@ -359,6 +360,10 @@ function reminderTemplate(link, sender) {
   }
 
   const hasPartial = lastStep > 0 || fieldsCount > 0;
+  const opensText = opens === 1 ? "1 vez" : (opens + " veces");
+  const opensBlock = opens > 0
+    ? `<div style="background:#fff7ed;border-left:3px solid #f59e0b;padding:14px 16px;margin:20px 0;border-radius:4px;"><p style="margin:0;font-size:14px;color:#333;">Has abierto el enlace <strong>${opensText}</strong> sin completar el briefing.</p></div>`
+    : "";
   const partialBlock = hasPartial
     ? `<div style="background:#f3f0ff;border-left:3px solid #111;padding:14px 16px;margin:20px 0;border-radius:4px;"><p style="margin:0;font-size:14px;color:#333;">Tus respuestas anteriores siguen ahí, solo tienes que continuar donde lo dejaste.</p></div>`
     : "";
@@ -374,6 +379,7 @@ function reminderTemplate(link, sender) {
           <h2 style="margin:0 0 16px 0;font-size:20px;font-weight:700;color:#111;">${greeting}</h2>
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Solo un recordatorio rápido: el enlace para completar tu briefing de <strong>${formName}</strong> <strong>caduca ${timeLeft}</strong>.</p>
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Si no llegas a enviarlo a tiempo, el enlace se bloqueará y tendrás que solicitar uno nuevo.</p>
+          ${opensBlock}
           ${partialBlock}
           <div style="text-align:center;margin:28px 0;">
             <a href="${formUrl}" style="display:inline-block;padding:12px 28px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:15px;">Continuar el briefing</a>
@@ -548,7 +554,6 @@ function invitationTemplate(link) {
         <tr><td style="padding:32px 40px;">
           <h2 style="margin:0 0 16px 0;font-size:20px;font-weight:700;color:#111;">${greeting}</h2>
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Te enviamos el briefing de <strong>${formName}</strong> para que podamos conocer mejor tu proyecto.</p>
-          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Es un cuestionario sencillo y tus respuestas se guardan automáticamente, así que puedes pausar y continuar cuando quieras desde el mismo enlace.</p>
           <div style="background:#f3f0ff;border-left:3px solid #111;padding:14px 16px;margin:20px 0;border-radius:4px;">
             <p style="margin:0;font-size:14px;color:#333;">📅 <strong>Tienes hasta el ${expiresDate} para completarlo.</strong></p>
           </div>
@@ -590,9 +595,8 @@ function expiredTemplate(link, whatsappPhone) {
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">El enlace para completar tu briefing de <strong>${formName}</strong> ha <strong>caducado</strong>.</p>
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Si todavía quieres enviarnos la información, podemos reactivarte el enlace. Solo escríbenos por WhatsApp y lo gestionamos:</p>
           <div style="text-align:center;margin:28px 0;">
-            <a href="${waUrl}" style="display:inline-block;padding:12px 28px;background:#25D366;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:15px;">Reactivar mi enlace por WhatsApp</a>
+            <a href="${waUrl}" style="display:inline-block;padding:12px 28px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:15px;">Reactivar enlace</a>
           </div>
-          <p style="margin:24px 0 0 0;font-size:13px;line-height:1.6;color:#666;">Al pulsar el botón se abrirá una conversación con nosotros para confirmar la reactivación.</p>
           <p style="margin:16px 0 0 0;font-size:14px;color:#333;">Un saludo,<br><strong>El equipo de Habitaris</strong></p>
         </td></tr>
         <tr><td style="background:#fafafa;padding:16px 40px;border-top:1px solid #eee;">
