@@ -348,10 +348,6 @@ function reminderTemplate(link, sender) {
   const fieldsCount = link.partial_fields_count || 0;
   const formUrl = `https://suite.habitaris.es/formulario/${link.link_id}`;
   const greeting = clientName ? `Hola ${clientName},` : "Hola,";
-  const maxUses = link.max_uses;
-  const expiryRulesText = (maxUses && maxUses > 0)
-    ? `Caduca el ${expiresDate} y tienes un máximo de ${maxUses} ${maxUses === 1 ? 'apertura' : 'aperturas'}.`
-    : `Tienes hasta el ${expiresDate} para completarlo.`;
 
   // Calcular cuanto queda hasta caducar
   let timeLeft = "pronto";
@@ -549,6 +545,10 @@ function invitationTemplate(link) {
   const expiresDate = link.expires_at ? new Date(link.expires_at).toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" }) : "la fecha indicada";
   const formUrl = `https://suite.habitaris.es/formulario/${link.link_id}`;
   const greeting = clientName ? `Hola ${clientName},` : "Hola,";
+  const maxUses = link.max_uses;
+  const expiryRulesText = (maxUses && maxUses > 0)
+    ? `Caduca el ${expiresDate} y tienes un máximo de ${maxUses} ${maxUses === 1 ? 'apertura' : 'aperturas'}.`
+    : `Tienes hasta el ${expiresDate} para completarlo.`;
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f3f0ff;font-family:DM Sans,Arial,sans-serif;color:#111;">
