@@ -140,6 +140,7 @@ export default async function handler(req, res) {
         const links = await r.json();
         if (!Array.isArray(links) || links.length === 0) return res.status(404).json({ ok: false, error: "link not found" });
         const link = links[0];
+        link.form_name = await getCurrentFormName(link, sb);
         const recipient = body.to || link.client_email;
         if (!recipient) return res.status(400).json({ ok: false, error: "recipient required" });
         const html = invitationTemplate(link);
@@ -170,6 +171,7 @@ export default async function handler(req, res) {
         const links = await r.json();
         if (!Array.isArray(links) || links.length === 0) return res.status(404).json({ ok: false, error: "link not found" });
         const link = links[0];
+        link.form_name = await getCurrentFormName(link, sb);
         const recipient = body.to || link.client_email;
         if (!recipient) return res.status(400).json({ ok: false, error: "recipient required" });
         // Leer telefono de kv_store
@@ -300,6 +302,34 @@ export default async function handler(req, res) {
 // HELPERS — Reminder + Cron + Sender config (multi-tenant)
 // ============================================================
 
+/**
+ * Devuelve el nombre actual del formulario, leyendo de kv_store en tiempo real.
+ * Si falla la lectura o no encuentra el form, hace fallback al snapshot link.form_name.
+ * Esto resuelve el problema de que cambiar el nombre del formulario en la suite
+ * no se reflejaba en los emails (el snapshot quedaba con el nombre antiguo).
+ */
+async function getCurrentFormName(link, sb) {
+  try {
+    const tenantId = link.tenant_id || "habitaris";
+    const formId = link.form_id;
+    if (!formId) return link.form_name || "tu briefing";
+    const url = `${sb.url}/rest/v1/kv_store?tenant_id=eq.${tenantId}&key=eq.habitaris_formularios&select=value`;
+    const r = await fetch(url, { headers: sb.headers });
+    if (!r.ok) return link.form_name || "tu briefing";
+    const rows = await r.json();
+    if (!Array.isArray(rows) || !rows[0]) return link.form_name || "tu briefing";
+    let data = rows[0].value;
+    if (typeof data === "string") {
+      try { data = JSON.parse(data); } catch (_) { return link.form_name || "tu briefing"; }
+    }
+    const forms = (data && data.forms) || [];
+    const form = forms.find(f => f && f.id === formId);
+    return (form && (form.nombre || form.name || form.title)) || link.form_name || "tu briefing";
+  } catch (e) {
+    return link.form_name || "tu briefing";
+  }
+}
+
 function getSupabaseClient() {
   const url = process.env.SUPABASE_URL || "https://xlzkasdskatnikuavefh.supabase.co";
   // Fallback hardcodeado a la anon key (publica, ya esta en el frontend). Se puede sobrescribir con env vars.
@@ -410,6 +440,7 @@ async function handleReminder(body, res) {
     const arr = await linkR.json();
     if (!Array.isArray(arr) || arr.length === 0) return res.status(404).json({ ok: false, error: "link not found" });
     const link = arr[0];
+    link.form_name = await getCurrentFormName(link, sb);
 
     if (!link.client_email) return res.status(400).json({ ok: false, error: "link has no client_email" });
     if (!link.has_partial_data) return res.status(400).json({ ok: false, error: "link has no partial data" });
