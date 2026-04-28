@@ -36,7 +36,7 @@ export default async function handler(req, res) {
       var otpHtml = '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5F4F1;font-family:Arial,sans-serif">'
         + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:40px 20px"><tr><td align="center">'
         + '<table width="480" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">'
-        + '<tr><td style="background:#111;padding:24px;text-align:center"><img src="https://suite.habitaris.es/logo-habitaris-negro.png" alt="Habitaris" width="140"/></td></tr>'
+        + '<tr><td style="background:#111;padding:24px;text-align:center"><img src="https://suite.habitaris.es/logo-habitaris-blanco.png" alt="Habitaris" width="140"/></td></tr>'
         + '<tr><td style="padding:32px 40px;text-align:center">'
         + '<div style="font-size:18px;font-weight:bold;color:#111;margin-bottom:8px">Código de verificación</div>'
         + '<div style="font-size:13px;color:#666;margin-bottom:24px">Hola ' + nombre + ', usa este código para verificar tu identidad:</div>'
@@ -45,7 +45,7 @@ export default async function handler(req, res) {
         + '<div style="font-size:11px;color:#999;margin-top:16px">Este código expira en 10 minutos.<br>Si no solicitaste este código, ignora este correo.</div>'
         + '</td></tr>'
         + '<tr><td style="background:#F5F4F1;padding:16px;text-align:center;border-top:1px solid #E5E3DE">'
-        + '<div style="font-size:10px;color:#aaa">Habitaris S.A.S · NIT 901.922.136-8</div></td></tr>'
+        + '<div style="font-size:10px;color:#aaa">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia · +57 350 566 1545</div></td></tr>'
         + '</table></td></tr></table></body></html>';
 
       var rOtp = await fetch("https://api.resend.com/emails", {
@@ -68,7 +68,7 @@ export default async function handler(req, res) {
       var b = body.brand || {};
       var emp = b.empresa || empresa;
       var cp = b.colorPrimario || "#111111";
-      var logo = b.logo || "https://suite.habitaris.es/logo-habitaris-negro.png";
+      var logo = b.logo || "https://suite.habitaris.es/logo-habitaris-blanco.png";
       var slogan = b.slogan || "";
       var rawMsg = (body.message || "").replace(/\\n/g, "\n");
       var msgHtml = rawMsg.split("\n").map(function(line) {
@@ -182,7 +182,7 @@ export default async function handler(req, res) {
       + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:40px 20px"><tr><td align="center">'
       + '<table width="580" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08)">'
       + '<tr><td style="background:#111111;padding:36px 40px;text-align:center">'
-      + '<img src="https://suite.habitaris.es/logo-habitaris-negro.png" alt="Habitaris" width="180" style="display:inline-block;max-width:180px"/></td></tr>'
+      + '<img src="https://suite.habitaris.es/logo-habitaris-blanco.png" alt="Habitaris" width="180" style="display:inline-block;max-width:180px"/></td></tr>'
       + '<tr><td style="background:#3B3B3B;height:2px"></td></tr>'
       + '<tr><td style="padding:44px 40px 20px">'
       + '<div style="font-size:22px;color:#111;font-weight:bold;margin-bottom:12px">Hola ' + nombre + ' 👋</div>'
@@ -284,7 +284,7 @@ function reminderTemplate(link, sender) {
     <tr><td align="center">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.06);">
         <tr><td style="padding:32px 40px 16px 40px;">
-          <img src="https://suite.habitaris.es/logo-habitaris-negro.png" alt="Habitaris" style="height:40px;display:block;margin-bottom:16px;" />
+          <img src="https://suite.habitaris.es/logo-habitaris-blanco.png" alt="Habitaris" style="height:40px;display:block;margin-bottom:16px;" />
           <h1 style="margin:0 0 8px 0;font-size:22px;font-weight:700;color:#111;">` + greeting + `</h1>
           <p style="margin:0;font-size:15px;color:#444;line-height:1.6;">Vimos que comenzaste a llenar tu <strong>` + formName + `</strong> pero no llegaste a enviarlo.</p>
         </td></tr>
