@@ -384,6 +384,9 @@ function reminderTemplate(link, sender) {
           </div>
           <p style="margin:16px 0 0 0;font-size:14px;color:#333;">Un saludo,<br><strong>El equipo de Habitaris</strong></p>
         </td></tr>
+        <tr><td style="padding:0 40px 16px 40px;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#999;font-style:italic;">Correo automático. Por favor, no responder a esta dirección.</p>
+        </td></tr>
         <tr><td style="background:#fafafa;padding:16px 40px;border-top:1px solid #eee;">
           <p style="margin:0;font-size:11px;color:#999;line-height:1.5;">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia · +57 350 566 1545</p>
         </td></tr>
@@ -565,8 +568,11 @@ function invitationTemplate(link) {
           <div style="text-align:center;margin:28px 0;">
             <a href="${formUrl}" style="display:inline-block;padding:12px 28px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:15px;">Empezar el briefing</a>
           </div>
-          <p style="margin:24px 0 0 0;font-size:14px;line-height:1.6;color:#666;">Si tienes cualquier duda, respóndenos a este correo y te ayudamos.</p>
+          <p style="margin:24px 0 0 0;font-size:14px;line-height:1.6;color:#666;">Si tienes cualquier duda, escríbenos a <a href="mailto:comercial@habitaris.es" style="color:#111;text-decoration:underline;">comercial@habitaris.es</a>.</p>
           <p style="margin:16px 0 0 0;font-size:14px;color:#333;">Un saludo,<br><strong>El equipo de Habitaris</strong></p>
+        </td></tr>
+        <tr><td style="padding:0 40px 16px 40px;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#999;font-style:italic;">Correo automático. Por favor, no responder a esta dirección.</p>
         </td></tr>
         <tr><td style="background:#fafafa;padding:16px 40px;border-top:1px solid #eee;">
           <p style="margin:0;font-size:11px;color:#999;line-height:1.5;">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia · +57 350 566 1545</p>
@@ -603,6 +609,9 @@ function expiredTemplate(link, whatsappPhone) {
             <a href="${waUrl}" style="display:inline-block;padding:12px 28px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:15px;">Reactivar enlace</a>
           </div>
           <p style="margin:16px 0 0 0;font-size:14px;color:#333;">Un saludo,<br><strong>El equipo de Habitaris</strong></p>
+        </td></tr>
+        <tr><td style="padding:0 40px 16px 40px;text-align:center;">
+          <p style="margin:0;font-size:11px;color:#999;font-style:italic;">Correo automático. Por favor, no responder a esta dirección.</p>
         </td></tr>
         <tr><td style="background:#fafafa;padding:16px 40px;border-top:1px solid #eee;">
           <p style="margin:0;font-size:11px;color:#999;line-height:1.5;">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia · +57 350 566 1545</p>
