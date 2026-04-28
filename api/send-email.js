@@ -369,7 +369,7 @@ function reminderTemplate(link, sender) {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f0ff;padding:32px 16px;">
     <tr><td align="center">
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
-        <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="https://suite.habitaris.es/logo-habitaris-negro.png" alt="Habitaris" height="32" style="display:block;margin:0 auto;"/></td></tr>
+        <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="https://suite.habitaris.es/logo-habitaris-negro.png" alt="Habitaris" height="50" style="display:block;margin:0 auto;"/></td></tr>
         <tr><td style="padding:32px 40px;">
           <h2 style="margin:0 0 16px 0;font-size:20px;font-weight:700;color:#111;">${greeting}</h2>
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Solo un recordatorio rápido: el enlace para completar tu briefing de <strong>${formName}</strong> <strong>caduca ${timeLeft}</strong>.</p>
@@ -544,7 +544,7 @@ function invitationTemplate(link) {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f0ff;padding:32px 16px;">
     <tr><td align="center">
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
-        <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="https://suite.habitaris.es/logo-habitaris-negro.png" alt="Habitaris" height="32" style="display:block;margin:0 auto;"/></td></tr>
+        <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="https://suite.habitaris.es/logo-habitaris-negro.png" alt="Habitaris" height="50" style="display:block;margin:0 auto;"/></td></tr>
         <tr><td style="padding:32px 40px;">
           <h2 style="margin:0 0 16px 0;font-size:20px;font-weight:700;color:#111;">${greeting}</h2>
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Te enviamos el briefing de <strong>${formName}</strong> para que podamos conocer mejor tu proyecto.</p>
@@ -584,7 +584,7 @@ function expiredTemplate(link, whatsappPhone) {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f0ff;padding:32px 16px;">
     <tr><td align="center">
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
-        <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="https://suite.habitaris.es/logo-habitaris-negro.png" alt="Habitaris" height="32" style="display:block;margin:0 auto;"/></td></tr>
+        <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="https://suite.habitaris.es/logo-habitaris-negro.png" alt="Habitaris" height="50" style="display:block;margin:0 auto;"/></td></tr>
         <tr><td style="padding:32px 40px;">
           <h2 style="margin:0 0 16px 0;font-size:20px;font-weight:700;color:#111;">${greeting}</h2>
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">El enlace para completar tu briefing de <strong>${formName}</strong> ha <strong>caducado</strong>.</p>
