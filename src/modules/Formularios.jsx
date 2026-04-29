@@ -368,7 +368,7 @@ const PLANTILLAS = [
 /* ═══════════════════════════════════════════════════════════════
    CONSTRUCTOR DE FORMULARIOS
    ═══════════════════════════════════════════════════════════════ */
-function Constructor({ forms, setForms, editId, setEditId, onSaved, envios, addEnvio }) {
+function Constructor({ forms, setForms, editId, setEditId, onSaved, envios, addEnvio, openShareOnMount, onShareOpened }) {
   const existing = editId ? forms.find(f=>f.id===editId) : null;
   const [nombre, setNombre] = useState(existing?.nombre || "");
   const [modulo, setModulo] = useState(existing?.modulo || "general");
@@ -385,6 +385,17 @@ function Constructor({ forms, setForms, editId, setEditId, onSaved, envios, addE
   const [linkExpiry, setLinkExpiry] = useState("");
   const [linkHorasDuracion, setLinkHorasDuracion] = useState(48);
   const [dragIdx, setDragIdx] = useState(null);
+
+  // Auto-abrir modal Compartir cuando se entra al editor desde el boton "Enviar" de la lista
+  useEffect(() => {
+    if (openShareOnMount && existing && existing.id === openShareOnMount) {
+      setShareClient({nombre:"",email:"",tel:"",codTel:""});
+      setShareGenerated(""); setShareFileName(""); setSharePublicUrl("");
+      setSharePais("Colombia"); setLinkMaxUsos(2); setLinkHorasDuracion(48); setLinkExpiry("");
+      setShowShare(true);
+      onShareOpened?.();
+    }
+  }, [openShareOnMount, existing?.id]); // eslint-disable-line
 
   const addCampo = (tipo) => {
     const b = BLOQUES.find(bl=>bl.tipo===tipo);
@@ -1068,9 +1079,11 @@ render();
 /* ═══════════════════════════════════════════════════════════════
    LISTA DE FORMULARIOS
    ═══════════════════════════════════════════════════════════════ */
-function ListaForms({ forms, setForms, onEdit, onNew }) {
+function ListaForms({ forms, setForms, onEdit, onNew, onShare }) {
   const [search, setSearch] = useState("");
+  const [filtroModulo, setFiltroModulo] = useState("todos");
   const filtered = forms.filter(f => {
+    if (filtroModulo !== "todos" && f.modulo !== filtroModulo) return false;
     const q = search.toLowerCase();
     return !q || f.nombre?.toLowerCase().includes(q) || f.modulo?.toLowerCase().includes(q);
   });
@@ -1079,9 +1092,13 @@ function ListaForms({ forms, setForms, onEdit, onNew }) {
 
   return (
     <div className="fade-up">
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
-        <h2 style={{margin:0,fontSize:18,fontWeight:700}}>Mis formularios — {forms.length}</h2>
-        <div style={{display:"flex",gap:6}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,gap:8,flexWrap:"wrap"}}>
+        <h2 style={{margin:0,fontSize:18,fontWeight:700}}>Mis formularios — {filtered.length}{filtroModulo!=="todos"||search?` / ${forms.length}`:""}</h2>
+        <div style={{display:"flex",gap:6,alignItems:"center",flexWrap:"wrap"}}>
+          <select value={filtroModulo} onChange={e=>setFiltroModulo(e.target.value)} style={{...inp,fontSize:11,padding:"6px 8px"}} title="Filtrar por modulo">
+            <option value="todos">📂 Todos los modulos</option>
+            {MODULOS_ASOC.map(m=><option key={m.id} value={m.id}>{m.lbl}</option>)}
+          </select>
           <div style={{position:"relative"}}>
             <Search size={12} style={{position:"absolute",left:8,top:8,color:T.inkLight}}/>
             <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar..." style={{...inp,paddingLeft:26,width:180}}/>
@@ -1108,7 +1125,8 @@ function ListaForms({ forms, setForms, onEdit, onNew }) {
                 <div style={{fontSize:8,color:T.inkLight,marginTop:6}}>Creado: {f.createdAt} · Editado: {f.updatedAt}</div>
               </div>
               <div style={{borderTop:`1px solid ${T.border}`,display:"flex",padding:"0"}}>
-                <button onClick={e=>{e.stopPropagation();onEdit(f.id)}} style={{flex:1,padding:"6px 0",border:"none",background:"transparent",cursor:"pointer",fontSize:9,fontWeight:600,color:T.blue,fontFamily:"'DM Sans',sans-serif"}}>✏️ Editar</button>
+                <button onClick={e=>{e.stopPropagation();onShare?.(f.id)}} style={{flex:1,padding:"6px 0",border:"none",background:"transparent",cursor:"pointer",fontSize:9,fontWeight:700,color:T.ink,fontFamily:"'DM Sans',sans-serif"}}>📤 Enviar</button>
+                <button onClick={e=>{e.stopPropagation();onEdit(f.id)}} style={{flex:1,padding:"6px 0",border:"none",borderLeft:`1px solid ${T.border}`,background:"transparent",cursor:"pointer",fontSize:9,fontWeight:600,color:T.blue,fontFamily:"'DM Sans',sans-serif"}}>✏️ Editar</button>
                 <button onClick={e=>{e.stopPropagation();dup(f)}} style={{flex:1,padding:"6px 0",border:"none",borderLeft:`1px solid ${T.border}`,background:"transparent",cursor:"pointer",fontSize:9,fontWeight:600,color:T.inkMid,fontFamily:"'DM Sans',sans-serif"}}>📋 Duplicar</button>
                 <button onClick={e=>{e.stopPropagation();del(f.id)}} style={{flex:1,padding:"6px 0",border:"none",borderLeft:`1px solid ${T.border}`,background:"transparent",cursor:"pointer",fontSize:9,fontWeight:600,color:T.red,fontFamily:"'DM Sans',sans-serif"}}>🗑 Eliminar</button>
               </div>
@@ -2423,6 +2441,8 @@ export default function Formularios() {
 
   const goConstructor = (id) => { setEditId(id||null); changeTab("constructor"); };
   const goNew = () => { setEditId(null); changeTab("constructor"); };
+  const [pendingShareId, setPendingShareId] = useState(null);
+  const goShare = (id) => { setPendingShareId(id); setEditId(id); changeTab("constructor"); };
   const onSaved = (form) => { setEditId(form.id); changeTab("mis_forms"); };
 
   return (
@@ -2503,8 +2523,8 @@ export default function Formularios() {
             </div>
           </div>
         )}
-        {tab === "mis_forms"   && <ListaForms forms={forms} setForms={setForms} onEdit={goConstructor} onNew={goNew}/>}
-        {tab === "constructor" && <Constructor forms={forms} setForms={setForms} editId={editId} setEditId={setEditId} onSaved={onSaved} envios={envios} addEnvio={addEnvio}/>}
+        {tab === "mis_forms"   && <ListaForms forms={forms} setForms={setForms} onEdit={goConstructor} onNew={goNew} onShare={goShare}/>}
+        {tab === "constructor" && <Constructor forms={forms} setForms={setForms} editId={editId} setEditId={setEditId} onSaved={onSaved} envios={envios} addEnvio={addEnvio} openShareOnMount={pendingShareId} onShareOpened={()=>setPendingShareId(null)}/>}
         {tab === "enviados"    && (
           <EnviadosTab envios={envios} onBlock={blockEnvio} onDelete={deleteEnvio} onUpdateLink={rehabilitarEnvio} respuestas={respuestas}/>
         )}
