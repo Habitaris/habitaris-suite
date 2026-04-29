@@ -141,7 +141,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
       const cfg=getConfig();const appUrl=(cfg.app?.url||"").replace(/\/$/,"");
       const codTel=shareClient.codTel||(PAISES.find(p=>p.nombre===sharePais)?.cod||"+57");
       const client={nombre:shareClient.nombre,email:shareClient.email,tel:(codTel.replace(/[^0-9+]/g,"")+" "+shareClient.tel).trim()};
-      const marca={logo:cfg.apariencia?.logo||"",colorPrimario:cfg.apariencia?.colorPrimario||"#111",colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B",colorAcento:cfg.apariencia?.colorAcento||"#111",tipografia:cfg.apariencia?.tipografia||"DM Sans",slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"",empresa:cfg.empresa?.nombre||"Habitaris",adminEmail:cfg.correo?.emailPrincipal||"comercial@habitaris.co",razonSocial:cfg.empresa?.razonSocial||"",domicilio:cfg.empresa?.domicilio||""};
+      const marca={logo:cfg.apariencia?.logo||"",colorPrimario:cfg.apariencia?.colorPrimario||"#111",colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B",colorAcento:cfg.apariencia?.colorAcento||"#111",tipografia:cfg.apariencia?.tipografia||"DM Sans",slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"",empresa:cfg.empresa?.nombre||"Habitaris",adminEmail:cfg.correo?.emailPrincipal||"",razonSocial:cfg.empresa?.razonSocial||"",domicilio:cfg.empresa?.domicilio||""};
       const result=await crearFormLink({
         form:{id:shareForm.id||"form",nombre:shareForm.nombre,campos:shareForm.campos,config:shareForm.config},
         cliente:client,
