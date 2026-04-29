@@ -271,8 +271,8 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
                 <Btn v="pri" on={()=>{
                   const paisDefault=PAISES[0].nombre;
                   setShareForm(f);setShareClient({nombre:"",email:"",tel:"",codTel:PAISES[0].cod});
-                  setSharePais(paisDefault);setShareLinkMaxUsos(0);setShareLinkExpiry("");
-                  setShareResult(null);setEmailSent(false);setSubTab("enviar");
+                  setSharePais(paisDefault);setShareLinkMaxUsos(2);setShareLinkHorasDuracion(48);setShareLinkExpiry("");
+                  setShareResult(null);setEmailSent(false);
                 }}><Send size={10}/> Enviar</Btn>
               </div>
             </Card>
@@ -280,63 +280,59 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
         </div>
       )}
 
-      {/* ═══ ENVIAR ═══ */}
-      {subTab==="enviar"&&shareForm&&(
-        <Card style={{padding:28}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
-            <h3 style={{fontSize:16,fontWeight:700,margin:0}}>📤 Enviar formulario a cliente</h3>
-            <Btn on={()=>{setSubTab("formularios");setShareResult(null);}}>← Volver</Btn>
-          </div>
-          <p style={{margin:"0 0 18px",fontSize:10,color:T.inkMid}}>{shareForm.nombre} · Se genera un enlace que el cliente abre en su navegador</p>
+      {/* ═══ MODAL ENVIAR (flotante) ═══ */}
+      {shareForm&&(
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:40,overflowY:"auto"}} onClick={()=>{setShareForm(null);setShareResult(null);}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:8,padding:28,width:460,maxHeight:"85vh",overflowY:"auto",boxShadow:"0 12px 40px rgba(0,0,0,0.2)",marginBottom:40}}>
+            <h3 style={{margin:0,fontSize:16,fontWeight:700,marginBottom:4}}>📤 Enviar formulario a cliente</h3>
+            <p style={{margin:"0 0 16px",fontSize:10,color:T.inkMid}}>{shareForm.nombre} · Se genera un enlace que el cliente abre en su navegador</p>
 
-          {!shareResult?(
-            <div>
-              {/* 👤 Datos del cliente */}
-              <div style={{background:T.accent,borderRadius:6,padding:"14px 16px",marginBottom:14}}>
-                <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",marginBottom:10}}>👤 Datos del cliente</div>
-                <div style={{display:"flex",gap:10,marginBottom:8}}>
-                  <div style={{flex:1}}><label style={lblS}>Nombre *</label><input value={shareClient.nombre} onChange={e=>setShareClient({...shareClient,nombre:e.target.value})} placeholder="Juan Pérez" style={{...inp,width:"100%"}}/></div>
-                  <div style={{flex:1}}><label style={lblS}>Email</label><input type="email" value={shareClient.email} onChange={e=>setShareClient({...shareClient,email:e.target.value})} placeholder="juan@empresa.com" style={{...inp,width:"100%"}}/></div>
-                </div>
-                <div>
-                  <label style={lblS}>WhatsApp</label>
-                  <div style={{display:"flex",gap:0}}>
-                    <select value={shareClient.codTel} onChange={e=>setShareClient({...shareClient,codTel:e.target.value})}
-                      style={{...inp,width:80,flexShrink:0,borderRadius:"4px 0 0 4px",borderRight:"none",fontWeight:700}}>
-                      {PAISES.map(p=><option key={p.cod+p.nombre} value={p.cod}>{p.cod}</option>)}
-                    </select>
-                    <input value={shareClient.tel} onChange={e=>setShareClient({...shareClient,tel:e.target.value})} placeholder="3001234567" style={{...inp,flex:1,borderRadius:"0 4px 4px 0"}}/>
+            {!shareResult?(
+              <div>
+                {/* 👤 Datos del cliente */}
+                <div style={{background:T.accent,borderRadius:6,padding:"12px 14px",marginBottom:14}}>
+                  <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",marginBottom:8}}>👤 Datos del cliente</div>
+                  <div style={{display:"flex",gap:8,marginBottom:6}}>
+                    <div style={{flex:1}}>
+                      <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Nombre *</label>
+                      <input value={shareClient.nombre} onChange={e=>setShareClient({...shareClient,nombre:e.target.value})} placeholder="Juan Pérez" style={{...inp,width:"100%",fontSize:11}}/>
+                    </div>
+                    <div style={{flex:1}}>
+                      <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Email</label>
+                      <input type="email" value={shareClient.email} onChange={e=>setShareClient({...shareClient,email:e.target.value})} placeholder="juan@empresa.com" style={{...inp,width:"100%",fontSize:11}}/>
+                    </div>
+                  </div>
+                  <div>
+                    <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>WhatsApp</label>
+                    <div style={{display:"flex",gap:0}}>
+                      <select value={shareClient.codTel} onChange={e=>setShareClient({...shareClient,codTel:e.target.value})}
+                        style={{...inp,width:80,flexShrink:0,borderRadius:"6px 0 0 6px",borderRight:"none",fontWeight:700,fontSize:11,color:"#3B3B3B",background:"#F5F4F1"}}>
+                        {PAISES.map(p=><option key={p.cod+p.nombre} value={p.cod}>{p.cod}</option>)}
+                      </select>
+                      <input value={shareClient.tel} onChange={e=>setShareClient({...shareClient,tel:e.target.value})} placeholder="3001234567" style={{...inp,flex:1,fontSize:11,borderRadius:"0 6px 6px 0"}}/>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* 🌍 País del proyecto */}
-              <div style={{background:"#F5F0FF",borderRadius:6,padding:"14px 16px",marginBottom:14,border:"1px solid #11111122"}}>
-                <div style={{fontSize:8,fontWeight:700,color:T.ink,textTransform:"uppercase",marginBottom:8}}>🌍 País del proyecto</div>
-                <select value={sharePais} onChange={e=>{setSharePais(e.target.value);const p=PAISES.find(x=>x.nombre===e.target.value);if(p)setShareClient(c=>({...c,codTel:p.cod}));}}
-                  style={{...inp,width:"100%",marginBottom:6}}>
-                  {PAISES.map(p=><option key={p.nombre} value={p.nombre}>{p.nombre}</option>)}
-                </select>
-                <div style={{fontSize:8,color:T.ink,lineHeight:1.4}}>📌 Define la divisa, departamentos/comunidades, tipo de documento y código telefónico del formulario</div>
-              </div>
+                {/* 🌍 País del proyecto */}
+                <div style={{background:"#F5F0FF",borderRadius:6,padding:"12px 14px",marginBottom:14,border:"1px solid #11111122"}}>
+                  <div style={{fontSize:8,fontWeight:700,color:"#111111",textTransform:"uppercase",marginBottom:8}}>🌍 País del proyecto</div>
+                  <select value={sharePais} onChange={e=>{setSharePais(e.target.value);const p=PAISES.find(x=>x.nombre===e.target.value);if(p)setShareClient(c=>({...c,codTel:p.cod}));}}
+                    style={{...inp,width:"100%",fontSize:11,marginBottom:8}}>
+                    {PAISES.map(p=><option key={p.nombre} value={p.nombre}>{p.nombre}</option>)}
+                  </select>
+                  <div style={{fontSize:8,color:"#111111",lineHeight:1.4}}>📌 Define la divisa, departamentos/comunidades, tipo de documento y código telefónico del formulario</div>
+                </div>
 
-              {/* 🔒 Control del enlace */}
-              <div style={{background:"#F5F0FF",borderRadius:6,padding:"14px 16px",marginBottom:18,border:"1px solid #11111122"}}>
-                <div style={{fontSize:8,fontWeight:700,color:T.ink,textTransform:"uppercase",marginBottom:8}}>🔒 Control del enlace</div>
+                {/* Control del enlace (estilo modal compacto, igual que Formularios admin) */}
                 <div style={{display:"grid",gap:10}}>
                   <div>
-                    <label style={lblS}>Cantidad de clicks permitidos</label>
-                    <select value={shareLinkMaxUsos} onChange={e=>setShareLinkMaxUsos(parseInt(e.target.value))} style={{...inp,width:"100%"}}>
-                      <option value={0}>♾️ Ilimitado</option>
-                      <option value={1}>1 vez</option>
-                      <option value={2}>2 veces</option>
-                      <option value={3}>3 veces</option>
-                      <option value={5}>5 veces</option>
-                      <option value={10}>10 veces</option>
-                    </select>
+                    <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase",display:"block",marginBottom:4}}>Cantidad de clicks permitidos</label>
+                    <input type="number" min={0} value={shareLinkMaxUsos} onChange={e=>setShareLinkMaxUsos(parseInt(e.target.value)||0)} style={{width:"100%",padding:"6px 8px",fontSize:11,border:"1px solid #11111122",borderRadius:4,fontFamily:"inherit"}}/>
+                    <div style={{fontSize:9,color:"#888",marginTop:3}}>0 = ilimitado</div>
                   </div>
                   <div>
-                    <label style={{...lblS,display:"block",marginBottom:4}}>Duración del enlace</label>
+                    <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase",display:"block",marginBottom:4}}>Duración del enlace</label>
                     <div style={{display:"grid",gridTemplateColumns:"repeat(3, 1fr)",gap:6,marginBottom:6}}>
                       {[24,48,72].map(h=>(
                         <button key={h} type="button" onClick={()=>{setShareLinkHorasDuracion(h);setShareLinkExpiry("");}} style={{padding:"8px 6px",fontSize:11,fontWeight:600,border:shareLinkHorasDuracion===h&&!shareLinkExpiry?"1.5px solid #111":"1px solid #11111133",background:shareLinkHorasDuracion===h&&!shareLinkExpiry?"#111":"#fff",color:shareLinkHorasDuracion===h&&!shareLinkExpiry?"#fff":"#111",borderRadius:4,cursor:"pointer",fontFamily:"inherit"}}>{h}h</button>
@@ -347,61 +343,59 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
                       <label style={{fontSize:9,color:"#888",whiteSpace:"nowrap"}}>O fecha exacta:</label>
                       <input type="date" value={shareLinkExpiry} min={today()} onChange={e=>setShareLinkExpiry(e.target.value)} style={{flex:1,padding:"4px 6px",fontSize:10,border:shareLinkExpiry?"1.5px solid #111":"1px solid #11111133",borderRadius:4,fontFamily:"inherit"}}/>
                     </div>
+                    <div style={{fontSize:9,color:"#888",marginTop:4}}>
+                      {shareLinkExpiry?("Caduca el "+new Date(shareLinkExpiry).toLocaleDateString("es-CO")):(shareLinkHorasDuracion>0?("Caduca "+shareLinkHorasDuracion+"h después de generar el enlace"):"Sin caducidad")}
+                    </div>
                   </div>
                 </div>
-                <div style={{fontSize:8,color:T.ink,marginTop:8,lineHeight:1.4}}>
-                  {shareLinkMaxUsos>0?`⚡ El cliente podra enviar maximo ${shareLinkMaxUsos} ${shareLinkMaxUsos===1?"vez":"veces"}`:"♾️ Sin limite de envios"}
-                  {" · "}
-                  {shareLinkExpiry?`⏰ Caduca el ${new Date(shareLinkExpiry+"T23:59:59").toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"})}`:(shareLinkHorasDuracion>0?`⏰ Caduca ${shareLinkHorasDuracion}h despues de generar el enlace`:"Sin caducidad")}
+
+                {/* Generate button */}
+                <button onClick={handleSend} disabled={!shareClient.nombre||sending} style={{width:"100%",padding:"10px 20px",fontSize:13,fontWeight:700,borderRadius:5,cursor:sending||!shareClient.nombre?"default":"pointer",border:"none",background:!shareClient.nombre?"#ccc":"#111",color:"#fff",fontFamily:"'DM Sans',sans-serif",opacity:sending?.6:1,marginTop:14,marginBottom:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+                  📄 {sending?"Generando...":"Generar formulario personalizado"}
+                </button>
+              </div>
+            ):(
+              <div>
+                {/* Success */}
+                <div style={{marginBottom:14,padding:"10px 12px",background:T.greenBg,borderRadius:6,border:"1px solid "+T.green+"33",fontSize:10,color:T.green,fontWeight:600}}>
+                  ✅ Formulario listo para {shareResult.client.nombre||shareResult.client.email}
+                  {shareResult.url&&<div style={{marginTop:4,fontSize:8,color:T.inkMid,fontWeight:400}}>🔗 Link público generado — comparte por email, WhatsApp o copia el enlace</div>}
+                </div>
+
+                {/* Share actions */}
+                <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
+                  {shareResult.url&&(
+                    <button onClick={()=>{navigator.clipboard.writeText(shareResult.url);window.toast?.("✅ Link copiado al portapapeles","success");}} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",border:"none",borderRadius:6,background:"#111",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left",color:"#fff"}}>
+                      <div style={{width:32,height:32,borderRadius:6,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><Copy size={14} color="#fff"/></div>
+                      <div style={{flex:1}}><div style={{fontSize:11,fontWeight:700}}>📋 Copiar link del formulario</div><div style={{fontSize:8,color:"rgba(255,255,255,0.5)",marginTop:2,wordBreak:"break-all"}}>{shareResult.url}</div></div>
+                    </button>
+                  )}
+
+                  <button onClick={shareWhatsApp} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:"2px solid #25D366",borderRadius:6,background:"#F0FFF0",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left"}}>
+                    <div style={{width:32,height:32,borderRadius:6,background:"#25D366",display:"flex",alignItems:"center",justifyContent:"center"}}><MessageCircle size={14} color="#fff"/></div>
+                    <div><div style={{fontSize:11,fontWeight:700,color:"#111"}}>Enviar por WhatsApp</div><div style={{fontSize:8,color:T.inkMid}}>{shareResult.client.tel?"Mensaje directo al "+shareResult.client.tel:"Se abre WhatsApp con el link incluido"}</div></div>
+                  </button>
+
+                  <button onClick={shareEmail} disabled={emailSending||!shareResult.client.email} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:"1px solid "+T.border,borderRadius:6,background:emailSent?T.greenBg:"#FAFAFA",cursor:emailSending?"wait":"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left",opacity:(emailSending||!shareResult.client.email)?.5:1}}>
+                    <div style={{width:32,height:32,borderRadius:6,background:emailSent?T.greenBg:"#F0F0F0",display:"flex",alignItems:"center",justifyContent:"center"}}><Mail size={14} color={emailSent?T.green:"#999"}/></div>
+                    <div><div style={{fontSize:11,fontWeight:600,color:emailSent?"#111":"#888"}}>{emailSending?"Enviando...":emailSent?"\u2705 Email enviado":"\ud83d\udce7 Enviar por email"}</div><div style={{fontSize:8,color:"#AAA"}}>{emailSent?"Enviado a "+shareResult.client.email:shareResult.client.email?"Funciona con Gmail \u00b7 Limitado con Outlook":"Sin email del cliente"}</div></div>
+                  </button>
+                </div>
+
+                <div style={{padding:"8px 10px",background:T.accent,borderRadius:4,fontSize:8,color:T.inkMid,lineHeight:1.5,marginBottom:14}}>
+                  💡 <strong>Flujo recomendado:</strong><br/>1️⃣ <strong>Copiar link</strong> → pega en cualquier canal de comunicación<br/>2️⃣ <strong>WhatsApp</strong> → envía mensaje directo con link incluido
+                </div>
+
+                <div style={{display:"flex",gap:8}}>
+                  <Btn on={()=>{setShareResult(null);setShareClient({nombre:"",email:"",tel:"",codTel:PAISES.find(p=>p.nombre===sharePais)?.cod||"+57"});setEmailSent(false);}} style={{flex:1,justifyContent:"center"}}>+ Otro cliente</Btn>
+                  <Btn v="pri" on={()=>{setShareForm(null);setShareResult(null);}} style={{flex:1,justifyContent:"center"}}>Cerrar</Btn>
                 </div>
               </div>
+            )}
 
-              {/* Generate button */}
-              <button onClick={handleSend} disabled={!shareClient.nombre||sending} style={{width:"100%",padding:"12px 20px",fontSize:13,fontWeight:700,borderRadius:5,cursor:sending||!shareClient.nombre?"default":"pointer",border:"none",background:!shareClient.nombre?"#ccc":"#111",color:"#fff",fontFamily:"'DM Sans',sans-serif",opacity:sending?.6:1,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-                📄 {sending?"Generando...":"Generar formulario personalizado"}
-              </button>
-            </div>
-          ):(
-            <div>
-              {/* Success */}
-              <div style={{marginBottom:14,padding:"10px 12px",background:T.greenBg,borderRadius:6,border:"1px solid "+T.green+"33",fontSize:10,color:T.green,fontWeight:600}}>
-                ✅ Formulario listo para {shareResult.client.nombre||shareResult.client.email}
-                {shareResult.url&&<div style={{marginTop:4,fontSize:8,color:T.inkMid,fontWeight:400}}>🔗 Link publico generado — comparte por email, WhatsApp o copia el enlace</div>}
-              </div>
-
-              {/* Share actions */}
-              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
-                {shareResult.url&&(
-                  <button onClick={()=>{navigator.clipboard.writeText(shareResult.url);window.toast?.("✅ Link copiado al portapapeles","success");}} style={{display:"flex",alignItems:"center",gap:10,padding:"14px 18px",border:"none",borderRadius:6,background:"#111",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left",color:"#fff"}}>
-                    <div style={{width:36,height:36,borderRadius:8,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><Copy size={16} color="#fff"/></div>
-                    <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700}}>📋 Copiar link del formulario</div><div style={{fontSize:9,color:"rgba(255,255,255,0.5)",marginTop:2}}>{shareResult.url}</div></div>
-                  </button>
-                )}
-
-                <button onClick={shareWhatsApp} style={{display:"flex",alignItems:"center",gap:10,padding:"12px 14px",border:"2px solid #25D366",borderRadius:6,background:"#F0FFF0",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left"}}>
-                  <div style={{width:32,height:32,borderRadius:6,background:"#25D366",display:"flex",alignItems:"center",justifyContent:"center"}}><MessageCircle size={14} color="#fff"/></div>
-                  <div><div style={{fontSize:12,fontWeight:700,color:"#111"}}>Enviar por WhatsApp</div><div style={{fontSize:9,color:T.inkMid}}>{shareResult.client.tel?"Mensaje directo al "+shareResult.client.tel:"Se abre WhatsApp con el link incluido"}</div></div>
-                </button>
-
-                <button onClick={shareEmail} disabled={emailSending||!shareResult.client.email} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:"1px solid "+T.border,borderRadius:6,background:emailSent?T.greenBg:"#FAFAFA",cursor:emailSending?"wait":"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left",opacity:(emailSending||!shareResult.client.email)?.5:1}}>
-                  <div style={{width:32,height:32,borderRadius:6,background:emailSent?T.greenBg:"#F0F0F0",display:"flex",alignItems:"center",justifyContent:"center"}}><Mail size={14} color={emailSent?T.green:"#999"}/></div>
-                  <div><div style={{fontSize:11,fontWeight:600,color:emailSent?"#111":"#888"}}>{emailSending?"Enviando...":emailSent?"\u2705 Email enviado":"\ud83d\udce7 Enviar por email"}</div><div style={{fontSize:8,color:"#AAA"}}>{emailSent?"Enviado a "+shareResult.client.email:shareResult.client.email?"Funciona con Gmail \u00b7 Limitado con Outlook":"Sin email del cliente"}</div></div>
-                </button>
-              </div>
-
-              {/* Flujo recomendado */}
-              <div style={{padding:"8px 10px",background:T.accent,borderRadius:4,fontSize:8,color:T.inkMid,lineHeight:1.5,marginBottom:14}}>
-                💡 <strong>Flujo recomendado:</strong><br/>1️⃣ <strong>Copiar link</strong> → pega en cualquier canal de comunicación<br/>2️⃣ <strong>WhatsApp</strong> → envía mensaje directo con link incluido
-
-
-
-              </div>
-
-              <Btn on={()=>{setShareResult(null);setShareClient({nombre:"",email:"",tel:"",codTel:PAISES.find(p=>p.nombre===sharePais)?.cod||"+57"});setEmailSent(false);}} style={{marginRight:8}}>+ Enviar a otro cliente</Btn>
-              <Btn on={()=>{setSubTab("formularios");setShareResult(null);}}>← Volver a formularios</Btn>
-            </div>
-          )}
-        </Card>
+            {!shareResult&&<Btn on={()=>{setShareForm(null);setShareResult(null);}} style={{width:"100%",marginTop:6,justifyContent:"center"}}>Cancelar</Btn>}
+          </div>
+        </div>
       )}
 
       {/* ═══ ENVIADOS ═══ */}
