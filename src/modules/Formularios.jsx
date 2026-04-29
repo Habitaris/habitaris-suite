@@ -1687,13 +1687,17 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
 function TabPlantillas({ forms, setForms, onEdit }) {
   const usePlantilla = (p) => {
     try {
-      // Check if a form from this template already exists (by sourceTemplate OR by name match)
-      const existing = forms.find(f => f.sourceTemplate === p.id || f.nombre === p.nombre);
-      if (existing) {
-        // Tag it with sourceTemplate if not already tagged
-        if (!existing.sourceTemplate) {
-          setForms(forms.map(f => f.id === existing.id ? {...f, sourceTemplate: p.id} : f));
+      // Matching robusto: SOLO por sourceTemplate. Si hay un form legacy
+      // con el mismo nombre pero sin tag, lo rescatamos (backfill).
+      let existing = forms.find(f => f.sourceTemplate === p.id);
+      if (!existing) {
+        const legacy = forms.find(f => !f.sourceTemplate && f.nombre === p.nombre);
+        if (legacy) {
+          setForms(forms.map(f => f.id === legacy.id ? {...f, sourceTemplate: p.id} : f));
+          existing = legacy;
         }
+      }
+      if (existing) {
         onEdit(existing.id);
         return;
       }
@@ -1721,7 +1725,7 @@ function TabPlantillas({ forms, setForms, onEdit }) {
       <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(280,1fr))",gap:12}}>
         {PLANTILLAS.map(p => {
           const mod = MODULOS_ASOC.find(m=>m.id===p.modulo);
-          const alreadyUsed = forms.find(f => f.sourceTemplate === p.id || f.nombre === p.nombre);
+          const alreadyUsed = forms.find(f => f.sourceTemplate === p.id || (!f.sourceTemplate && f.nombre === p.nombre));
           return (
             <Card key={p.id} style={{padding:0,overflow:"hidden"}}>
               <div style={{padding:"14px 16px"}}>
@@ -2251,46 +2255,54 @@ export default function Formularios() {
     })();
   }, []);
 
-  // Auto-seed: create forms from PLANTILLAS if not already present, or update if version changed
+  // Auto-seed: instala plantillas faltantes la PRIMERA vez. Idempotente:
+  // - Match SOLO por sourceTemplate (no por nombre, que es frágil).
+  // - Flag global hab:autoseed:done bloquea re-ejecuciones.
+  // - Backfill suave: si encuentra un form sin sourceTemplate cuyo nombre
+  //   coincide con una plantilla, le pone el tag (no duplica).
   useEffect(() => {
-    const current = data.forms || [];
-    let updated = [...current];
-    let changed = false;
-    PLANTILLAS.forEach(p => {
-      const existing = current.find(f => f.sourceTemplate === p.id || f.nombre === p.nombre);
-      if (!existing) {
-        // Create new form from template
-        const idMap = {};
-        p.campos.forEach(c => { idMap[c.id] = uid(); });
-        const newCampos = p.campos.map(c => {
-          const nc = {...c, id: idMap[c.id]};
-          if (nc.logica && nc.logica.fieldId && idMap[nc.logica.fieldId]) {
-            nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
+    try {
+      // Si ya se hizo el seed (flag activo), solo backfill defensivo.
+      const seedDone = store.getSync("hab:autoseed:done") === "1";
+      const current = data.forms || [];
+      let updated = [...current];
+      let changed = false;
+
+      // Backfill: rescata forms legacy sin sourceTemplate que coincidan por nombre.
+      PLANTILLAS.forEach(p => {
+        const idx = updated.findIndex(f => !f.sourceTemplate && f.nombre === p.nombre);
+        if (idx >= 0) {
+          updated[idx] = { ...updated[idx], sourceTemplate: p.id, templateVersion: updated[idx].templateVersion || p.version || 1 };
+          changed = true;
+        }
+      });
+
+      // Si el seed nunca corrió, instalar SOLO las plantillas que faltan
+      // (matching estricto por sourceTemplate, ya con backfill aplicado).
+      if (!seedDone) {
+        PLANTILLAS.forEach(p => {
+          const exists = updated.some(f => f.sourceTemplate === p.id);
+          if (!exists) {
+            const idMap = {};
+            p.campos.forEach(c => { idMap[c.id] = uid(); });
+            const newCampos = p.campos.map(c => {
+              const nc = { ...c, id: idMap[c.id] };
+              if (nc.logica && nc.logica.fieldId && idMap[nc.logica.fieldId]) nc.logica = { ...nc.logica, fieldId: idMap[nc.logica.fieldId] };
+              if (nc.paisRef && idMap[nc.paisRef]) nc.paisRef = idMap[nc.paisRef];
+              if (nc.dynamicOpciones && nc.dynamicOpciones.dependsOn && idMap[nc.dynamicOpciones.dependsOn]) nc.dynamicOpciones = { ...nc.dynamicOpciones, dependsOn: idMap[nc.dynamicOpciones.dependsOn] };
+              return nc;
+            });
+            updated.push({ id: uid(), nombre: p.nombre, modulo: p.modulo || "general", campos: newCampos, config: { ...(p.config || {}), titulo: p.config?.titulo || p.nombre, vista: p.config?.vista || "pasos" }, createdAt: today(), updatedAt: today(), activo: true, sourceTemplate: p.id, templateVersion: p.version || 1 });
+            changed = true;
           }
-          if (nc.paisRef && idMap[nc.paisRef]) nc.paisRef = idMap[nc.paisRef];
-        if (nc.dynamicOpciones && nc.dynamicOpciones.dependsOn && idMap[nc.dynamicOpciones.dependsOn]) nc.dynamicOpciones = {...nc.dynamicOpciones, dependsOn: idMap[nc.dynamicOpciones.dependsOn]};
-          return nc;
         });
-        updated.push({ id:uid(), nombre:p.nombre, modulo:p.modulo||"general", campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, createdAt:today(), updatedAt:today(), activo:true, sourceTemplate:p.id, templateVersion:p.version||1 });
-        changed = true;
-      } else if (p.version && (!existing.templateVersion || existing.templateVersion < p.version)) {
-        // Update existing form with new template version
-        const idMap = {};
-        p.campos.forEach(c => { idMap[c.id] = uid(); });
-        const newCampos = p.campos.map(c => {
-          const nc = {...c, id: idMap[c.id]};
-          if (nc.logica && nc.logica.fieldId && idMap[nc.logica.fieldId]) {
-            nc.logica = {...nc.logica, fieldId: idMap[nc.logica.fieldId]};
-          }
-          if (nc.paisRef && idMap[nc.paisRef]) nc.paisRef = idMap[nc.paisRef];
-        if (nc.dynamicOpciones && nc.dynamicOpciones.dependsOn && idMap[nc.dynamicOpciones.dependsOn]) nc.dynamicOpciones = {...nc.dynamicOpciones, dependsOn: idMap[nc.dynamicOpciones.dependsOn]};
-          return nc;
-        });
-        updated = updated.map(f => f.id === existing.id ? {...f, campos:newCampos, config:{...(p.config||{}), titulo:p.config?.titulo||p.nombre, vista:p.config?.vista||"pasos"}, updatedAt:today(), templateVersion:p.version, sourceTemplate:p.id} : f);
-        changed = true;
+        // Marcar seed como hecho INDEPENDIENTEMENTE de si añadió algo.
+        // Así nunca volvemos a entrar en este bloque en este tenant.
+        try { store.set("hab:autoseed:done", "1"); } catch {}
       }
-    });
-    if (changed) save("forms", updated);
+
+      if (changed) save("forms", updated);
+    } catch (e) { console.warn("auto-seed:", e); }
   }, []); // eslint-disable-line
   // === ENVIOS: cloud-first (Supabase form_links) ===
   const [envios, setEnvios] = useState([]);
