@@ -111,7 +111,7 @@
   ],
   "crons": [
     {
-      "path": "/api/send-email?type=cron_reminders",
+      "path": "/api/send-email?type=cron_daily",
       "schedule": "0 9 * * *"
     }
   ]

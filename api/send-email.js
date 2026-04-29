@@ -3,8 +3,9 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
-  // Cron de Vercel hace GET con query string. Permitimos GET solo para type=cron_reminders.
-  const isCronGet = req.method === "GET" && (req.query && req.query.type === "cron_reminders");
+  // Cron de Vercel hace GET con query string. Permitimos GET solo para crons unificados.
+  const cronTypes = ["cron_reminders", "cron_daily"];
+  const isCronGet = req.method === "GET" && (req.query && cronTypes.indexOf(req.query.type) !== -1);
   if (req.method !== "POST" && !isCronGet) return res.status(405).json({ error: "Method not allowed" });
 
   try {
@@ -19,6 +20,9 @@ export default async function handler(req, res) {
     }
     if (body.type === "cron_reminders") {
       return await handleCronReminders(body, res);
+    }
+    if (body.type === "cron_daily") {
+      return await handleCronDaily(body, res);
     }
 
     const recipientEmail = body.to || body.client_email;
@@ -541,6 +545,167 @@ async function handleCronReminders(body, res) {
     return res.status(200).json({ ok: true, sent, failed, total: candidates.length, hours_before_expiry: hoursBeforeExpiry, results });
   } catch(err) {
     return res.status(500).json({ ok: false, error: String(err) });
+  }
+}
+
+// ============================================================
+// CRON DAILY (unificado): ejecuta reminders + expired en una sola corrida.
+// Llamado por Vercel Cron via GET /api/send-email?type=cron_daily
+// ============================================================
+async function handleCronDaily(body, res) {
+  // Wrappers que evitan res.status(...).json(...) bloqueante en sub-handlers.
+  const reminders = await runCronReminders().catch(err => ({ ok: false, error: String(err) }));
+  const expired = await runCronExpired().catch(err => ({ ok: false, error: String(err) }));
+  return res.status(200).json({
+    ok: true,
+    reminders,
+    expired,
+    ran_at: new Date().toISOString()
+  });
+}
+
+// Ejecuta la lógica de reminders sin escribir res. Devuelve resumen.
+async function runCronReminders() {
+  try {
+    const sb = getSupabaseClient();
+    let hoursBeforeExpiry = 24;
+    let enabled = true;
+    try {
+      const cfgR = await fetch(sb.url + "/rest/v1/kv_store?key=eq.habitaris_reminder_config&select=value", { headers: sb.headers });
+      const cfgArr = await cfgR.json().catch(() => []);
+      if (cfgArr && cfgArr.length > 0 && cfgArr[0].value) {
+        const cfg = typeof cfgArr[0].value === "string" ? JSON.parse(cfgArr[0].value) : cfgArr[0].value;
+        if (typeof cfg.hours_before_expiry === "number") hoursBeforeExpiry = cfg.hours_before_expiry;
+        if (typeof cfg.enabled === "boolean") enabled = cfg.enabled;
+      }
+    } catch(_) {}
+    if (!enabled) return { ok: true, sent: 0, skipped: "disabled by config" };
+
+    const now = new Date();
+    const limitDate = new Date(now.getTime() + hoursBeforeExpiry * 3600 * 1000);
+    const url = sb.url + "/rest/v1/form_links?active=eq.true&submitted_at=is.null&reminder_sent_at=is.null&expires_at=gt." + now.toISOString() + "&expires_at=lt." + limitDate.toISOString() + "&select=*";
+    const r = await fetch(url, { headers: sb.headers });
+    const candidates = await r.json().catch(() => []);
+    if (!Array.isArray(candidates) || candidates.length === 0) return { ok: true, sent: 0, message: "no candidates" };
+
+    const RESEND_KEY = process.env.RESEND_API_KEY;
+    if (!RESEND_KEY) return { ok: false, error: "RESEND_API_KEY missing" };
+
+    let sent = 0, failed = 0; const results = [];
+    for (const link of candidates) {
+      const recipient = link.client_email;
+      if (!recipient) { failed++; continue; }
+      const sender = "Habitaris <noreply@habitaris.es>";
+      const html = preExpiryReminderTemplate(link, hoursBeforeExpiry);
+      const subject = "Tu formulario caduca en " + hoursBeforeExpiry + " horas · Habitaris";
+      try {
+        const sendR = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + RESEND_KEY },
+          body: JSON.stringify({ from: sender, to: recipient, subject, html })
+        });
+        if (sendR.ok) {
+          await fetch(sb.url + "/rest/v1/form_links?link_id=eq." + link.link_id, {
+            method: "PATCH",
+            headers: { ...sb.headers, "Content-Type": "application/json", Prefer: "return=minimal" },
+            body: JSON.stringify({ reminder_sent_at: new Date().toISOString() })
+          });
+          sent++; results.push({ link_id: link.link_id, recipient, ok: true });
+        } else {
+          failed++; results.push({ link_id: link.link_id, recipient, ok: false });
+        }
+      } catch(err) {
+        failed++; results.push({ link_id: link.link_id, recipient, ok: false, err: String(err) });
+      }
+    }
+    return { ok: true, sent, failed, total: candidates.length, hours_before_expiry: hoursBeforeExpiry, results };
+  } catch(err) {
+    return { ok: false, error: String(err) };
+  }
+}
+
+// Ejecuta la lógica de expired: links que caducaron por fecha O por agotar usos.
+// Marca expired_notified_at para no duplicar.
+async function runCronExpired() {
+  try {
+    const sb = getSupabaseClient();
+    const nowIso = new Date().toISOString();
+
+    // Candidatos: activos, no enviados, no notificados antes,
+    //   Y (expires_at < now()  O  current_uses >= max_uses con max_uses>0)
+    // Filtro principal: expired_notified_at IS NULL AND submitted_at IS NULL AND active=true
+    // El criterio combinado lo aplicamos en JS porque PostgREST no permite OR fácilmente con ambos lados.
+    const url = sb.url + "/rest/v1/form_links?active=eq.true&submitted_at=is.null&expired_notified_at=is.null&select=*";
+    const r = await fetch(url, { headers: sb.headers });
+    const all = await r.json().catch(() => []);
+    if (!Array.isArray(all) || all.length === 0) return { ok: true, sent: 0, message: "no candidates" };
+
+    const now = Date.now();
+    const candidates = all.filter(l => {
+      const byTime = l.expires_at && new Date(l.expires_at).getTime() < now;
+      const byUses = (l.max_uses || 0) > 0 && (l.current_uses || 0) >= l.max_uses;
+      return byTime || byUses;
+    });
+    if (candidates.length === 0) return { ok: true, sent: 0, message: "no expired" };
+
+    const RESEND_KEY = process.env.RESEND_API_KEY;
+    if (!RESEND_KEY) return { ok: false, error: "RESEND_API_KEY missing" };
+
+    // Telefono WhatsApp desde kv_store
+    let waPhone = "+57 350 5661545";
+    try {
+      const kvR = await fetch(sb.url + "/rest/v1/kv_store?key=eq.habitaris_phones&select=value", { headers: sb.headers });
+      const kv = await kvR.json();
+      if (Array.isArray(kv) && kv[0]) {
+        const cfg = typeof kv[0].value === "string" ? JSON.parse(kv[0].value) : kv[0].value;
+        const def = cfg.whatsapp_default || "co";
+        if (cfg[def]) waPhone = cfg[def];
+      }
+    } catch(_) {}
+
+    let sent = 0, failed = 0; const results = [];
+    for (const link of candidates) {
+      const recipient = link.client_email;
+      if (!recipient) {
+        // Sin email, marcamos notificado igual para no quedar atascado evaluando este registro
+        await fetch(sb.url + "/rest/v1/form_links?link_id=eq." + link.link_id, {
+          method: "PATCH",
+          headers: { ...sb.headers, "Content-Type": "application/json", Prefer: "return=minimal" },
+          body: JSON.stringify({ expired_notified_at: new Date().toISOString() })
+        });
+        failed++; results.push({ link_id: link.link_id, recipient: null, ok: false, reason: "no_email" });
+        continue;
+      }
+      // Resolver form_name actualizado
+      try { link.form_name = await getCurrentFormName(link, sb); } catch(_) {}
+      const sender = "Habitaris <noreply@habitaris.es>";
+      const html = expiredTemplate(link, waPhone);
+      const _short = (link.client_name || "").trim().split(/\s+/).filter(Boolean);
+      const _shortName = _short.length >= 2 ? (_short[0] + " " + _short[_short.length - 1]) : (_short[0] || "");
+      const subject = _shortName ? ("Tu enlace ha caducado — Habitaris — " + _shortName) : "Tu enlace ha caducado — Habitaris";
+      try {
+        const sendR = await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + RESEND_KEY },
+          body: JSON.stringify({ from: sender, to: recipient, subject, html })
+        });
+        if (sendR.ok) {
+          await fetch(sb.url + "/rest/v1/form_links?link_id=eq." + link.link_id, {
+            method: "PATCH",
+            headers: { ...sb.headers, "Content-Type": "application/json", Prefer: "return=minimal" },
+            body: JSON.stringify({ expired_notified_at: new Date().toISOString() })
+          });
+          sent++; results.push({ link_id: link.link_id, recipient, ok: true });
+        } else {
+          failed++; results.push({ link_id: link.link_id, recipient, ok: false });
+        }
+      } catch(err) {
+        failed++; results.push({ link_id: link.link_id, recipient, ok: false, err: String(err) });
+      }
+    }
+    return { ok: true, sent, failed, total: candidates.length, results };
+  } catch(err) {
+    return { ok: false, error: String(err) };
   }
 }
 
