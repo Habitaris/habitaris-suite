@@ -3,6 +3,7 @@ import { store } from "../../core/store.js";
 import { sb } from "../../core/supabase.js";
 import * as SB from "../supabase.js";
 import { procesarRespuesta as routeProcesar } from "./FormProcessor.js";
+import { crearFormLink } from "./linkService.js";
 import { getConfig } from "../Configuracion.jsx";
 import { Send, ChevronDown, ChevronUp, Copy, Mail, Search, RefreshCw, FileText, MessageCircle } from "lucide-react";
 
@@ -82,7 +83,8 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
   const [shareForm,setShareForm]=useState(null);
   const [shareClient,setShareClient]=useState({nombre:"",email:"",tel:"",codTel:"+57"});
   const [sharePais,setSharePais]=useState("Colombia");
-  const [shareLinkMaxUsos,setShareLinkMaxUsos]=useState(0);
+  const [shareLinkMaxUsos,setShareLinkMaxUsos]=useState(2);
+  const [shareLinkHorasDuracion,setShareLinkHorasDuracion]=useState(48);
   const [shareLinkExpiry,setShareLinkExpiry]=useState("");
   const [shareResult,setShareResult]=useState(null);
   const [sending,setSending]=useState(false);
@@ -135,41 +137,26 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
     if(!shareForm||!shareClient.nombre)return;
     setSending(true);
     try{
-      const cfg=getConfig();const appUrl=(cfg.app?.url||"").replace(/\/$/,"");const linkId=uid();
+      const cfg=getConfig();const appUrl=(cfg.app?.url||"").replace(/\/$/,"");
       const codTel=shareClient.codTel||(PAISES.find(p=>p.nombre===sharePais)?.cod||"+57");
       const client={nombre:shareClient.nombre,email:shareClient.email,tel:(codTel.replace(/[^0-9+]/g,"")+" "+shareClient.tel).trim()};
-      const{error}=await sb.from("form_links").upsert({
-        link_id:linkId,
-        form_id:shareForm.id||"form",
-        form_name:shareForm.nombre||"Formulario",
-        form_def:{id:shareForm.id,nombre:shareForm.nombre,campos:shareForm.campos,config:{...shareForm.config,paisProyecto:sharePais}},
-        client_name:client.nombre||null,
-        client_email:client.email||null,
-        client_tel:client.tel||null,
-        marca:{logo:cfg.apariencia?.logo||"",colorPrimario:cfg.apariencia?.colorPrimario||"#111",colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B",colorAcento:cfg.apariencia?.colorAcento||"#111",tipografia:cfg.apariencia?.tipografia||"DM Sans",slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"",empresa:cfg.empresa?.nombre||"Habitaris",razonSocial:cfg.empresa?.razonSocial||"",domicilio:cfg.empresa?.domicilio||""},
+      const marca={logo:cfg.apariencia?.logo||"",colorPrimario:cfg.apariencia?.colorPrimario||"#111",colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B",colorAcento:cfg.apariencia?.colorAcento||"#111",tipografia:cfg.apariencia?.tipografia||"DM Sans",slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"",empresa:cfg.empresa?.nombre||"Habitaris",adminEmail:cfg.correo?.emailPrincipal||"comercial@habitaris.co",razonSocial:cfg.empresa?.razonSocial||"",domicilio:cfg.empresa?.domicilio||""};
+      const result=await crearFormLink({
+        form:{id:shareForm.id||"form",nombre:shareForm.nombre,campos:shareForm.campos,config:shareForm.config},
+        cliente:client,
         modulo,
-        max_uses:shareLinkMaxUsos||0,
-        current_uses:0,
-        expires_at:shareLinkExpiry?new Date(shareLinkExpiry).toISOString():null,
-        active:true,
+        pais:sharePais,
+        maxUsos:shareLinkMaxUsos||0,
+        horasDuracion:shareLinkHorasDuracion||0,
+        fechaExacta:shareLinkExpiry||"",
+        marca,
+        appUrl,
       });
-      if(error)throw error;
-      const publicUrl=appUrl?appUrl+"/form?id="+linkId:"";
-      setShareResult({linkId,url:publicUrl,client});
-      // Disparar email de invitación (fire-and-forget, solo si hay email)
-      if (client.email) {
-        fetch("/api/send-email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ type: "invitation", link_id: linkId })
-        })
-          .then(r => r.json())
-          .then(d => window.toast?.(d && d.ok ? ("✉️ Invitación enviada a " + client.email) : "Link creado pero el email no se pudo enviar", d && d.ok ? "success" : "warning"))
-          .catch(() => window.toast?.("Link creado pero el email no se pudo enviar", "warning"));
-      }
-      SB.registerOpen(shareForm.id,shareForm.nombre,linkId,client.nombre,client.email).catch(()=>{});
+      if(!result.ok)throw(result.error||new Error("No se pudo crear el link"));
+      setShareResult({linkId:result.linkId,url:result.publicUrl,client});
+      SB.registerOpen(shareForm.id,shareForm.nombre,result.linkId,client.nombre,client.email).catch(()=>{});
       setTimeout(loadData,500);
-    }catch(e){window.toast?.("Error generando formulario: "+e.message,"error");}
+    }catch(e){window.toast?.("Error generando formulario: "+(e?.message||e),"error");}
     setSending(false);
   };
 
@@ -180,6 +167,8 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
     if(shareLinkExpiry){
       const d=new Date(shareLinkExpiry);
       parts.push("válido hasta el "+d.toLocaleDateString("es-CO",{day:"2-digit",month:"2-digit",year:"numeric"}));
+    } else if(shareLinkHorasDuracion>0){
+      parts.push("válido durante "+shareLinkHorasDuracion+" horas");
     }
     if(parts.length===0)return"\n\n✅ Este enlace no tiene límite de usos.";
     return"\n\n⏳ Este enlace tiene "+parts.join(" y es ")+".";
@@ -334,9 +323,9 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
               {/* 🔒 Control del enlace */}
               <div style={{background:"#F5F0FF",borderRadius:6,padding:"14px 16px",marginBottom:18,border:"1px solid #11111122"}}>
                 <div style={{fontSize:8,fontWeight:700,color:T.ink,textTransform:"uppercase",marginBottom:8}}>🔒 Control del enlace</div>
-                <div style={{display:"flex",gap:10}}>
-                  <div style={{flex:1}}>
-                    <label style={lblS}>Máximo de envíos</label>
+                <div style={{display:"grid",gap:10}}>
+                  <div>
+                    <label style={lblS}>Cantidad de clicks permitidos</label>
                     <select value={shareLinkMaxUsos} onChange={e=>setShareLinkMaxUsos(parseInt(e.target.value))} style={{...inp,width:"100%"}}>
                       <option value={0}>♾️ Ilimitado</option>
                       <option value={1}>1 vez</option>
@@ -346,14 +335,24 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
                       <option value={10}>10 veces</option>
                     </select>
                   </div>
-                  <div style={{flex:1}}>
-                    <label style={lblS}>Fecha de caducidad</label>
-                    <input type="date" value={shareLinkExpiry} onChange={e=>setShareLinkExpiry(e.target.value)} min={today()} style={{...inp,width:"100%"}}/>
+                  <div>
+                    <label style={{...lblS,display:"block",marginBottom:4}}>Duración del enlace</label>
+                    <div style={{display:"grid",gridTemplateColumns:"repeat(3, 1fr)",gap:6,marginBottom:6}}>
+                      {[24,48,72].map(h=>(
+                        <button key={h} type="button" onClick={()=>{setShareLinkHorasDuracion(h);setShareLinkExpiry("");}} style={{padding:"8px 6px",fontSize:11,fontWeight:600,border:shareLinkHorasDuracion===h&&!shareLinkExpiry?"1.5px solid #111":"1px solid #11111133",background:shareLinkHorasDuracion===h&&!shareLinkExpiry?"#111":"#fff",color:shareLinkHorasDuracion===h&&!shareLinkExpiry?"#fff":"#111",borderRadius:4,cursor:"pointer",fontFamily:"inherit"}}>{h}h</button>
+                      ))}
+                    </div>
+                    <button type="button" onClick={()=>{setShareLinkHorasDuracion(0);setShareLinkExpiry("");}} style={{width:"100%",padding:"6px",fontSize:10,fontWeight:600,border:shareLinkHorasDuracion===0&&!shareLinkExpiry?"1.5px solid #111":"1px solid #11111133",background:shareLinkHorasDuracion===0&&!shareLinkExpiry?"#111":"#fff",color:shareLinkHorasDuracion===0&&!shareLinkExpiry?"#fff":"#111",borderRadius:4,cursor:"pointer",fontFamily:"inherit",marginBottom:6}}>♾️ Sin caducidad</button>
+                    <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                      <label style={{fontSize:9,color:"#888",whiteSpace:"nowrap"}}>O fecha exacta:</label>
+                      <input type="date" value={shareLinkExpiry} min={today()} onChange={e=>setShareLinkExpiry(e.target.value)} style={{flex:1,padding:"4px 6px",fontSize:10,border:shareLinkExpiry?"1.5px solid #111":"1px solid #11111133",borderRadius:4,fontFamily:"inherit"}}/>
+                    </div>
                   </div>
                 </div>
-                <div style={{fontSize:8,color:T.ink,marginTop:6,lineHeight:1.4}}>
+                <div style={{fontSize:8,color:T.ink,marginTop:8,lineHeight:1.4}}>
                   {shareLinkMaxUsos>0?`⚡ El cliente podra enviar maximo ${shareLinkMaxUsos} ${shareLinkMaxUsos===1?"vez":"veces"}`:"♾️ Sin limite de envios"}
-                  {shareLinkExpiry?` · ⏰ Caduca el ${new Date(shareLinkExpiry+"T23:59:59").toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"})}`:" · Sin caducidad"}
+                  {" · "}
+                  {shareLinkExpiry?`⏰ Caduca el ${new Date(shareLinkExpiry+"T23:59:59").toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"})}`:(shareLinkHorasDuracion>0?`⏰ Caduca ${shareLinkHorasDuracion}h despues de generar el enlace`:"Sin caducidad")}
                 </div>
               </div>
 
