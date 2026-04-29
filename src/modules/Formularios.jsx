@@ -2321,7 +2321,6 @@ export default function Formularios() {
             reminderSentAt: l.reminder_sent_at || null,
             rehabilitatedAt: l.rehabilitated_at || null,
             rehabCount: l.rehab_count || 0,
-            reminderSentAt: l.reminder_sent_at || null,
             maxUsos: l.max_uses||0,
             expiry: l.expires_at||"",
             blocked: !l.active,

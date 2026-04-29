@@ -126,8 +126,8 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
   const handleProcesar=async(r)=>{
     try{
       const result=await routeProcesar(r,allForms,markProcesado);
-      if(result?.ok)alert(result.msg);else alert("Error procesando respuesta");
-    }catch(err){alert("Error: "+err.message);}
+      if(result?.ok)window.toast?.(result.msg,"success");else window.toast?.("Error procesando respuesta","error");
+    }catch(err){window.toast?.("Error: "+err.message,"error");}
   };
 
   /* ── Send form ── */
@@ -169,7 +169,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
       }
       SB.registerOpen(shareForm.id,shareForm.nombre,linkId,client.nombre,client.email).catch(()=>{});
       setTimeout(loadData,500);
-    }catch(e){alert("Error generando formulario: "+e.message);}
+    }catch(e){window.toast?.("Error generando formulario: "+e.message,"error");}
     setSending(false);
   };
 
@@ -199,7 +199,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
   };
 
   const shareEmail=async()=>{
-    if(!shareResult?.client?.email){alert("No hay email del cliente");return;}
+    if(!shareResult?.client?.email){window.toast?.("No hay email del cliente","warning");return;}
     const cfg=getConfig();
     setEmailSending(true);
     const linkInfoEmail=buildLinkInfo().replace(/\n/g,"").trim();
@@ -213,7 +213,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
     });
     setEmailSending(false);
     if(ok){setEmailSent(true);setTimeout(()=>setEmailSent(false),5000);}
-    else{alert("Error al enviar email. Verifica la configuración de correo.");}
+    else{window.toast?.("Error al enviar email. Verifica la configuración de correo.","error");}
   };
 
 
@@ -373,7 +373,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
               {/* Share actions */}
               <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
                 {shareResult.url&&(
-                  <button onClick={()=>{navigator.clipboard.writeText(shareResult.url);alert("\u2705 Link copiado al portapapeles");}} style={{display:"flex",alignItems:"center",gap:10,padding:"14px 18px",border:"none",borderRadius:6,background:"#111",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left",color:"#fff"}}>
+                  <button onClick={()=>{navigator.clipboard.writeText(shareResult.url);window.toast?.("✅ Link copiado al portapapeles","success");}} style={{display:"flex",alignItems:"center",gap:10,padding:"14px 18px",border:"none",borderRadius:6,background:"#111",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left",color:"#fff"}}>
                     <div style={{width:36,height:36,borderRadius:8,background:"rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center"}}><Copy size={16} color="#fff"/></div>
                     <div style={{flex:1}}><div style={{fontSize:13,fontWeight:700}}>📋 Copiar link del formulario</div><div style={{fontSize:9,color:"rgba(255,255,255,0.5)",marginTop:2}}>{shareResult.url}</div></div>
                   </button>
@@ -429,7 +429,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
                     <td style={{...tds,fontSize:9,color:T.blue}}>{e.cliente?.email||"—"}</td>
                     <td style={{...tds,fontSize:9}}>{e.cliente?.tel||"—"}</td>
                     <td style={tds}>{s==="bloqueado"?<Badge color={T.red}>🚫 Bloqueado</Badge>:s==="caducado"?<Badge color={T.red} bg={T.redBg}>⏰ Caducado</Badge>:s==="respondido"?<Badge color={T.green} bg={T.greenBg}>✅ Respondido</Badge>:<Badge color={T.amber} bg={T.amberBg}>⏳ Pendiente</Badge>}</td>
-                    <td style={tds}>{s==="pendiente"&&<Btn on={()=>{const u=getLinkUrl(e.linkId);if(u){navigator.clipboard.writeText(u);alert("Link copiado al portapapeles");}}} style={{fontSize:8}}><Copy size={9}/> Link</Btn>}</td>
+                    <td style={tds}>{s==="pendiente"&&<Btn on={()=>{const u=getLinkUrl(e.linkId);if(u){navigator.clipboard.writeText(u);window.toast?.("Link copiado al portapapeles","success");}}} style={{fontSize:8}}><Copy size={9}/> Link</Btn>}</td>
                   </tr>
                 );})}
               </tbody>
