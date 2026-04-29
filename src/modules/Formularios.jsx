@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { store } from "../core/store.js";
 import { procesarRespuesta as routeProcesar } from "./form/FormProcessor.js";
 import { crearFormLink } from "./form/linkService.js";
+import RespuestaModal from "./form/RespuestaModal.jsx";
 
 import * as SB from "./supabase.js";
 import { sb } from "../core/supabase.js";
@@ -1505,10 +1506,9 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
               const dt = r.created_at ? new Date(r.created_at) : null;
               const fechaStr = dt ? dt.toISOString().split("T")[0] : r.fecha || "—";
               const horaStr = dt ? dt.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}) : "";
-              const isExpanded = selResp?.id === r.id;
               return (
               <React.Fragment key={r.id}>
-              <tr style={{cursor:"pointer",background:selectedIds.has(r.id)?"#FDF5F5":isExpanded?"#F0EEFF":proc?"":"#FDFBFF",transition:"background .15s"}} onClick={()=>setSelResp(isExpanded?null:r)}>
+              <tr style={{cursor:"pointer",background:selectedIds.has(r.id)?"#FDF5F5":proc?"":"#FDFBFF",transition:"background .15s"}} onClick={()=>setSelResp(r)}>
                 <td style={{...tds,width:30}} onClick={e=>e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(r.id)} onChange={()=>toggleSel(r.id)} style={{cursor:"pointer"}}/></td>
                 <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>{fechaStr}</td>
                 <td style={{...tds,fontSize:9}}>{horaStr}</td>
@@ -1533,8 +1533,8 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
                   }
                 </td>
                 <td style={{...tds,whiteSpace:"nowrap"}}>
-                  <button onClick={e=>{e.stopPropagation();setSelResp(isExpanded?null:r)}} style={{background:"none",border:"none",cursor:"pointer",marginRight:4}} title="Ver detalle">
-                    {isExpanded ? <ChevronUp size={11} color={T.blue}/> : <ChevronDown size={11} color={T.blue}/>}
+                  <button onClick={e=>{e.stopPropagation();setSelResp(r)}} style={{background:"none",border:"none",cursor:"pointer",marginRight:4,padding:2}} title="Ver detalle">
+                    👁
                   </button>
                   <button onClick={e=>{e.stopPropagation();generarInforme(r)}} style={{background:"none",border:"none",cursor:"pointer",marginRight:4}} title="Generar informe"><FileText size={11} color={T.ink}/></button>
                   {!proc && (
@@ -1551,111 +1551,22 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
                     style={{background:"none",border:"none",cursor:"pointer",marginLeft:4,opacity:.5}} title="Eliminar respuesta"><Trash2 size={11} color={T.red}/></button>}
                 </td>
               </tr>
-              {isExpanded && (
-                <tr><td colSpan={9} style={{padding:0,borderBottom:`2px solid ${T.blue}33`}}>
-                  <div style={{padding:"14px 16px",background:"#F8F7FF"}}>
-                    {/* Actions bar */}
-                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                      <h3 style={{fontSize:12,fontWeight:700,margin:0}}>📋 Detalle — {r.clienteNombre||r.fecha}</h3>
-                      <div style={{display:"flex",gap:6}}>
-                        {!proc && <Btn v="pri" on={()=>procesarRespuesta(r)}>⚡ Procesar → CRM</Btn>}
-                        {proc && <span style={{fontSize:9,fontWeight:700,padding:"4px 12px",borderRadius:10,background:T.greenBg,color:T.green}}>✅ Procesado</span>}
-                        <Btn v="sec" on={()=>generarInforme(r)}><FileText size={10}/> Informe</Btn>
-                      </div>
-                    </div>
-                    {/* Scoring */}
-                    {(()=>{
-                      const form = forms.find(f=>f.id===r.formularioId) || forms.find(f=>f.nombre===r.formularioNombre);
-                      const sc = calculateScore(r, form);
-                      if (!sc) return null;
-                      const colors = {green:{bg:"#E8F4EE",border:"#111111",text:"#111111"},yellow:{bg:"#FAF0E0",border:"#8C6A00",text:"#8C6A00"},red:{bg:"#FAE8E8",border:"#B91C1C",text:"#B91C1C"}};
-                      const col = colors[sc.level];
-                      return (
-                        <div style={{marginBottom:12,border:`1px solid ${col.border}33`,borderRadius:6,overflow:"hidden"}}>
-                          <div style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:col.bg}}>
-                            <div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:col.text}}>{sc.score.toFixed(1)}<span style={{fontSize:10}}>/10</span></div>
-                            <div style={{flex:1}}><div style={{fontSize:11,fontWeight:700,color:col.text}}>{sc.levelLabel}</div><div style={{fontSize:8,color:col.text,opacity:.8}}>{sc.conclusion}</div></div>
-                            <div style={{display:"flex",gap:6}}>
-                              {[["🟢",sc.greens,T.green],["🟡",sc.yellows,T.amber],["🔴",sc.reds,T.red]].map(([ic,n,c])=><div key={ic} style={{textAlign:"center"}}><div style={{fontSize:12,fontWeight:800,color:c}}>{n}</div><div style={{fontSize:7}}>{ic}</div></div>)}
-                            </div>
-                          </div>
-                          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:4,padding:"8px 14px",background:"#fff"}}>
-                            {sc.details.map((d,i)=>{
-                              const fc=d.flag==="green"?T.green:d.flag==="red"?T.red:T.amber;
-                              const ic=d.flag==="green"?"🟢":d.flag==="red"?"🔴":"🟡";
-                              return <div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"4px 8px",background:T.bg,borderRadius:4,fontSize:9}}>
-                                <span>{ic}</span><span style={{fontWeight:600,flex:1}}>{d.label}</span><span style={{color:T.inkMid}}>{d.value}</span><span style={{fontWeight:700,color:fc,fontFamily:"'DM Mono',monospace"}}>{d.points}/{d.maxPoints}</span>
-                              </div>;
-                            })}
-                          </div>
-                        </div>
-                      );
-                    })()}
-                    {/* Client + fields organized */}
-                    {(()=>{
-                      const get = (key) => r[key] !== undefined ? (Array.isArray(r[key]) ? r[key].join(", ") : String(r[key])) : null;
-                      const pill = (label, val) => val ? <div style={{padding:"4px 8px",background:"#fff",borderRadius:4,border:`1px solid ${T.border}`}}>
-                        <div style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>{label}</div>
-                        <div style={{fontSize:10,fontWeight:600,marginTop:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{val}</div>
-                      </div> : null;
-                      const secHead = (icon, title) => <div style={{gridColumn:"1/-1",fontSize:9,fontWeight:700,color:T.inkMid,marginTop:6,paddingBottom:2,borderBottom:`1px solid ${T.border}`}}>{icon} {title}</div>;
-                      return (<div>
-                        {/* Client card */}
-                        {(r.clienteNombre||r.clienteEmail) && (
-                          <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",background:T.blueBg,borderRadius:6,border:`1px solid ${T.blue}22`,marginBottom:10}}>
-                            <div style={{width:32,height:32,borderRadius:"50%",background:T.blue,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700}}>{(r.clienteNombre||r.clienteEmail||"?")[0].toUpperCase()}</div>
-                            <div style={{flex:1}}>
-                              {r.clienteNombre && <div style={{fontSize:12,fontWeight:700,color:T.blue}}>{r.clienteNombre}</div>}
-                              <div style={{display:"flex",gap:12,fontSize:9,color:T.inkMid,marginTop:2}}>
-                                {r.clienteEmail && <span>✉️ {r.clienteEmail}</span>}
-                                {r.clienteTel && <span>📞 {r.clienteTel}</span>}
-                                {get("tipoDocumento") && <span>🪪 {get("tipoDocumento")} {get("numDocumento")||""}</span>}
-                              </div>
-                            </div>
-                            {get("propietario") && <div style={{padding:"3px 10px",borderRadius:12,fontSize:8,fontWeight:700,background:get("propietario")==="Soy el propietario"?T.greenBg:T.amberBg,color:get("propietario")==="Soy el propietario"?T.green:T.amber}}>{get("propietario")}</div>}
-                          </div>
-                        )}
-                        {/* Fields grid */}
-                        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:6}}>
-                          {secHead("📍","Ubicación")}
-                          {pill("País",get("pais"))}
-                          {pill("Departamento/Región",get("departamento"))}
-                          {pill("Ciudad",get("ciudad"))}
-                          {pill("Dirección",get("direccion"))}
-                          {pill("Inmueble",get("tipoVivienda"))}
-                          {pill("Área m²",get("area"))}
-
-                          {secHead("🎨","Proyecto y Diseño")}
-                          {pill("Servicios",get("servicios"))}
-                          {pill("Tipo proyecto",get("tipoProyecto"))}
-                          {pill("Estilo",get("estilo"))}
-                          {pill("Espacios",get("espacios"))}
-                          {pill("Expectativas",get("expectativas"))}
-                          {pill("Prioridades",get("prioridades"))}
-
-                          {secHead("💰","Presupuesto")}
-                          {pill("Presupuesto",get("presupuesto"))}
-                          {pill("Honorarios diseño",get("honorariosDiseño"))}
-                          {pill("Financiación",get("financiacion"))}
-                          {pill("Anticipo 30-50%",get("anticipo"))}
-                          {pill("Forma de pago",get("formaPago"))}
-                          {pill("Flexibilidad",get("flexibilidad"))}
-
-                          {secHead("📅","Plazos")}
-                          {pill("Plazo",get("plazo"))}
-                          {pill("Fecha inicio",get("fechaInicio"))}
-                        </div>
-                      </div>);
-                    })()}
-                  </div>
-                </td></tr>
-              )}
               </React.Fragment>
               );
             })}
           </tbody>
         </table>
       </Card>
+
+      {/* Modal de detalle de respuesta — visor flotante compartido */}
+      <RespuestaModal
+        open={!!selResp}
+        resp={selResp}
+        form={selResp ? (forms.find(f=>f.id===selResp.formularioId) || forms.find(f=>f.nombre===selResp.formularioNombre)) : null}
+        onClose={()=>setSelResp(null)}
+        onProcesar={selResp && !procesados.includes(selResp.id) ? ()=>{procesarRespuesta(selResp);setSelResp(null);} : null}
+        isProcesado={selResp ? procesados.includes(selResp.id) : null}
+      />
 
       {/* Password confirmation modal */}
       {showDelPass && (
