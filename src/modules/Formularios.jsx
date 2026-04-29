@@ -3,6 +3,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { store } from "../core/store.js";
 import { procesarRespuesta as routeProcesar } from "./form/FormProcessor.js";
+import { crearFormLink } from "./form/linkService.js";
 
 import * as SB from "./supabase.js";
 import { sb } from "../core/supabase.js";
@@ -609,49 +610,26 @@ render();
     const url = URL.createObjectURL(blob);
     setShareGenerated(url);
     setShareFileName(`formulario-${(nombre||"form").replace(/\s+/g,"-").toLowerCase()}-${(shareClient.nombre||"cliente").replace(/\s+/g,"-").toLowerCase()}.html`);
-    // Generate link ID for tracking
-    const linkId = uid() + Date.now().toString(36);
-    // Generate public URL (for email link)
+    // Generate link ID for tracking (fallback si no hay appUrl o si falla el upsert)
+    let linkId = uid() + Date.now().toString(36);
+    // Generate public URL via linkService (corazon central — vive en form/linkService.js)
     const cfg = getConfig();
     const appUrl = (cfg.app?.url || "").replace(/\/$/,"");
     if (appUrl) {
-      const linkConfig = { linkId, maxUsos: linkMaxUsos||0, fechaCaducidad: linkExpiry||"", horasDuracion: linkHorasDuracion||0 };
-      const def = { id:existing?.id||"form", nombre, campos, config:{...config,titulo:config.titulo||nombre,paisProyecto:sharePais}, cliente:client||null, linkConfig, modulo, marca:{ logo:(cfg.apariencia?.logo||"").startsWith("/")?(cfg.app?.url||"https://suite.habitaris.co")+cfg.apariencia.logo:(cfg.apariencia?.logo||""), colorPrimario:cfg.apariencia?.colorPrimario||"#111", colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B", colorAcento:cfg.apariencia?.colorAcento||"#111111", tipografia:cfg.apariencia?.tipografia||"DM Sans", slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"", empresa:cfg.empresa?.nombre||"Habitaris", adminEmail:cfg.correo?.emailPrincipal||"comercial@habitaris.co", razonSocial:cfg.empresa?.razonSocial||"", domicilio:cfg.empresa?.domicilio||"" } };
-      // Save to Supabase → short URL
-      try {
-        const client = def.cliente || {};
-        const { error } = await sb.from("form_links").upsert({
-          link_id: linkId,
-          form_id: def.id || "form",
-          form_name: def.nombre || "Formulario",
-          form_def: { id: def.id, nombre: def.nombre, campos: def.campos, config: def.config },
-          client_name: client.nombre || null,
-          client_email: client.email || null,
-          client_tel: client.tel || null,
-          marca: def.marca || {},
-          modulo: def.modulo || "crm",
-          max_uses: linkMaxUsos || 0,
-          current_uses: 0,
-          expires_at: linkExpiry ? new Date(linkExpiry).toISOString() : null,
-          active: true,
-        }, { onConflict: "link_id" });
-        if (!error) {
-          setSharePublicUrl(`${appUrl}/form?id=${linkId}`);
-          // Disparar email de invitación (fire-and-forget, solo si hay email)
-          if (client.email) {
-            fetch("/api/send-email", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ type: "invitation", link_id: linkId })
-            })
-              .then(r => r.json())
-              .then(d => window.toast?.(d && d.ok ? ("✉️ Invitación enviada a " + client.email) : "Link creado pero el email no se pudo enviar", d && d.ok ? "success" : "warning"))
-              .catch(() => window.toast?.("Link creado pero el email no se pudo enviar", "warning"));
-          }
-        }
-        else { console.error("form_links upsert:", error); setSharePublicUrl(""); }
-      } catch(e) { console.error("form_links save:", e); setSharePublicUrl(""); }
-      // Link se guarda en Supabase via addEnvio
+      const marca = { logo:(cfg.apariencia?.logo||"").startsWith("/")?(cfg.app?.url||"https://suite.habitaris.co")+cfg.apariencia.logo:(cfg.apariencia?.logo||""), colorPrimario:cfg.apariencia?.colorPrimario||"#111", colorSecundario:cfg.apariencia?.colorSecundario||"#3B3B3B", colorAcento:cfg.apariencia?.colorAcento||"#111111", tipografia:cfg.apariencia?.tipografia||"DM Sans", slogan:cfg.apariencia?.slogan||cfg.empresa?.eslogan||"", empresa:cfg.empresa?.nombre||"Habitaris", adminEmail:cfg.correo?.emailPrincipal||"comercial@habitaris.co", razonSocial:cfg.empresa?.razonSocial||"", domicilio:cfg.empresa?.domicilio||"" };
+      const result = await crearFormLink({
+        form: { id: existing?.id||"form", nombre, campos, config: {...config, titulo: config.titulo||nombre} },
+        cliente: client,
+        modulo: modulo || "crm",
+        pais: sharePais,
+        maxUsos: linkMaxUsos || 0,
+        horasDuracion: linkHorasDuracion || 0,
+        fechaExacta: linkExpiry || "",
+        marca,
+        appUrl,
+      });
+      if (result.ok) { linkId = result.linkId; setSharePublicUrl(result.publicUrl); }
+      else { setSharePublicUrl(""); }
     }
     // Refresh envios list (data already saved in upsert above)
     // Track envio (addEnvio handles Supabase insert + list refresh)
