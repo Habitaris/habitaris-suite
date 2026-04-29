@@ -676,73 +676,31 @@ export default function FormularioPublico() {
     /* FIX: No auto-open WhatsApp — just mark as submitted */
     setSubmitted(true);
 
-    // Send email notification to comercial@habitaris.co with full report
+    // ════════════════════════════════════════════════════════════════
+    // EMAIL PUNTUAL DE 'NUEVA RESPUESTA' — DESACTIVADO 29/04/2026
+    // ════════════════════════════════════════════════════════════════
+    // Razón: el destinatario era marca.adminEmail con fallback hardcoded
+    // a "comercial@habitaris.co" (buzón muerto desde la migración a .es).
+    // Aunque se cambiara a .es, la decisión de producto (David, 29/04) es
+    // sustituir todos los emails puntuales por DIGESTS programados desde
+    // el módulo Comunicaciones:
+    //   - 08:00: resumen de pendientes del día
+    //   - 15:00: revisión de tarde
+    // Cada usuario podrá activar/desactivar cada digest y configurar el
+    // email destino. Se construye en Fase 0.5 junto a tenant_config.
+    //
+    // Mientras tanto: la respuesta se sigue guardando en form_responses
+    // (la suite la muestra en tiempo real). Cero spam a buzones muertos.
+    // ════════════════════════════════════════════════════════════════
+    /* DESACTIVADO — restaurar al construir digests en Fase 0.5
     try {
-      const adminEmail = marca.adminEmail || "comercial@habitaris.co";
-      const clientName = cliente?.nombre || response.clienteNombre || response.nombre || "Sin nombre";
-      const clientEmail = cliente?.email || response.clienteEmail || response.email || "";
-      const clientTel = cliente?.tel || response.clienteTel || response.telefono || "";
-
-      let htmlContent = "";
-      const vals = response.valores || response.data || {};
-      const scoringCampos = (def.campos || []).filter(c => c.scoring?.enabled);
-      let totalPoints = 0, maxPoints = 0, greens = 0, yellows = 0, reds = 0;
-
-      (def.campos || []).forEach(c => {
-        if (c.tipo === "seccion") {
-          htmlContent += '<div style="padding:10px 14px;background:#F5F5F5;border-bottom:1px solid #E0E0E0;font-weight:bold;font-size:12px;color:#111;">' + c.label + (c.desc ? '<br/><span style="font-weight:normal;font-size:10px;color:#888;">' + c.desc + '</span>' : '') + '</div>';
-          return;
-        }
-        if (c.tipo === "info") return;
-        const val = vals[c.id];
-        if (val === undefined || val === "" || (Array.isArray(val) && val.length === 0)) return;
-        const display = Array.isArray(val) ? val.join(", ") : String(val);
-
-        let flagHtml = "";
-        if (c.scoring?.enabled) {
-          const w = c.scoring.weight || 1;
-          const rules = c.scoring.rules || {};
-          let flag = "neutral";
-          if (Array.isArray(val)) {
-            const flags = val.map(v => rules[v] || "neutral");
-            if (flags.includes("red")) flag = "red";
-            else if (flags.every(f => f === "green")) flag = "green";
-            else flag = "neutral";
-          } else { flag = rules[String(val)] || "neutral"; }
-          if (flag === "green") { totalPoints += w; greens++; }
-          else if (flag === "neutral") { totalPoints += w * 0.5; yellows++; }
-          else { reds++; }
-          maxPoints += w;
-          const emoji = flag === "green" ? "\u{1F7E2}" : flag === "red" ? "\u{1F534}" : "\u{1F7E1}";
-          flagHtml = '<td width="30" align="right" style="font-size:14px;">' + emoji + '</td>';
-        }
-
-        htmlContent += '<div style="padding:8px 14px;border-bottom:1px solid #f0f0f0;">' +
-          '<table width="100%" cellpadding="0" cellspacing="0"><tr>' +
-          '<td><p style="margin:0;font-size:10px;color:#888;font-weight:600;">' + c.label + '</p><p style="margin:3px 0 0;font-size:13px;color:#111;">' + display + '</p></td>' +
-          flagHtml +
-          '</tr></table></div>';
-      });
-
-      const score = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) / 10 : 0;
-      const level = score >= 7 ? "green" : score >= 4 ? "yellow" : "red";
-      const levelColor = level === "green" ? "#2D6A2E" : level === "yellow" ? "#8C6A00" : "#B91C1C";
-      const levelBg = level === "green" ? "#E8F4EE" : level === "yellow" ? "#FAF0E0" : "#FAE8E8";
-      const levelLabel = level === "green" ? "Excelente" : level === "yellow" ? "Regular" : "Bajo";
-
-      let scoringHtml = "";
-      if (scoringCampos.length > 0) {
-        scoringHtml = '<div style="margin:16px 0 0;padding:14px;background:' + levelBg + ';border-radius:8px;border:1px solid ' + levelColor + ';">' +
-          '<table width="100%" cellpadding="0" cellspacing="0"><tr>' +
-          '<td><span style="font-size:28px;font-weight:800;color:' + levelColor + ';">' + score.toFixed(1) + '</span>' +
-          '<span style="font-size:12px;color:' + levelColor + ';font-weight:700;"> /10 \u00B7 ' + levelLabel + '</span></td>' +
-          '</tr></table>' +
-          '<div style="font-size:11px;color:#555;margin-top:6px;">\u{1F7E2} ' + greens + ' \u00B7 \u{1F7E1} ' + yellows + ' \u00B7 \u{1F534} ' + reds + '</div>' +
-          '</div>';
+      const adminEmail = marca.adminEmail || "";
+      if (!adminEmail) { console.log("[FormPublico] Sin adminEmail configurado, no se notifica"); }
+      else {
+        // ... bloque original de generación HTML + envío vía /api/send-email
       }
-
-      try { const brandM={empresa:marca.empresa||"Habitaris",colorPrimario:marca.colorPrimario||"#111",colorSecundario:marca.colorSecundario||"#3B3B3B",colorAcento:marca.colorAcento||"#111111",logo:marca.logo||"",slogan:marca.slogan||"",razonSocial:marca.razonSocial||"",domicilio:marca.domicilio||""}; await fetch("/api/send-email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:adminEmail,subject:"✅ Nueva respuesta: "+(def.nombre||"Formulario"),message:"Se ha recibido una nueva respuesta al formulario «"+(def.nombre||"Formulario")+"».\nCliente: "+clientName+"\nEmail: "+clientEmail+"\nTel: "+clientTel,brand:brandM,extra:{contenido:htmlContent+scoringHtml,form_name:def.nombre,client_name:clientName,client_email:clientEmail,client_tel:clientTel}})}); console.log("[FormPublico] Email sent to "+adminEmail); } catch(emailErr){ console.warn("Email send failed:",emailErr); }
     } catch(e) { console.warn("Email notification error:", e); }
+    */
   };
 
   if (submitted) return (
