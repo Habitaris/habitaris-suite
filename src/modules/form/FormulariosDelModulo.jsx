@@ -4,6 +4,7 @@ import { sb } from "../../core/supabase.js";
 import * as SB from "../supabase.js";
 import { procesarRespuesta as routeProcesar } from "./FormProcessor.js";
 import { crearFormLink } from "./linkService.js";
+import RespuestaModal from "./RespuestaModal.jsx";
 import { getConfig } from "../Configuracion.jsx";
 import { Send, ChevronDown, ChevronUp, Copy, Mail, Search, RefreshCw, FileText, MessageCircle } from "lucide-react";
 
@@ -448,12 +449,11 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
               <tbody>
                 {respFiltered.length===0?<tr><td colSpan={7} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:11}}>Sin resultados</td></tr>
                 :respFiltered.map(r=>{
-                  const proc=isProcesado(r);const exp=expandedId===r.id;
+                  const proc=isProcesado(r);
                   const form=allForms.find(f=>f.id===r.formularioId)||allForms.find(f=>f.nombre===r.formularioNombre);
                   const sc=calculateScore(r,form);
                   return(
-                  <React.Fragment key={r._sbId||r.id}>
-                    <tr style={{background:proc?T.greenBg:"",cursor:"pointer"}} onClick={()=>setExpandedId(exp?null:r.id)}>
+                    <tr key={r._sbId||r.id} style={{background:proc?T.greenBg:"",cursor:"pointer"}} onClick={()=>setExpandedId(r.id)}>
                       <td style={{...tds,fontFamily:"'DM Mono',monospace",fontSize:9}}>{r.fecha} {r.hora}</td>
                       <td style={{...tds,fontWeight:600}}>{r.formularioNombre}</td>
                       <td style={{...tds,fontWeight:600}}>{r.clienteNombre||r["Nombre completo"]||"—"}</td>
@@ -462,63 +462,33 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
                       <td style={tds}>{proc?<Badge color={T.green} bg={T.greenBg}>✅ Procesado</Badge>:<Badge color={T.amber} bg={T.amberBg}>⏳ Pendiente</Badge>}</td>
                       <td style={tds}>
                         <div style={{display:"flex",gap:4,alignItems:"center"}}>
-                          {exp?<ChevronUp size={12} color={T.blue}/>:<ChevronDown size={12} color={T.blue}/>}
+                          <button onClick={e=>{e.stopPropagation();setExpandedId(r.id);}} style={{background:"none",border:"none",cursor:"pointer",fontSize:13,padding:2}} title="Ver detalle">👁</button>
                           {!proc&&<Btn v="pri" on={e=>{e.stopPropagation();handleProcesar(r);}} style={{fontSize:8}}>⚡ Procesar</Btn>}
                           {proc&&<Btn on={e=>{e.stopPropagation();markPendiente(r.id,r._sbId);}} style={{fontSize:8}}>↩ Revertir</Btn>}
                         </div>
                       </td>
                     </tr>
-                    {exp&&<tr><td colSpan={7} style={{padding:0,borderBottom:"2px solid "+T.blue+"33"}}>
-                      <div style={{padding:"16px 18px",background:"#FAFAFE"}}>
-                        {sc&&(()=>{
-                          const colors={green:{bg:"#E8F4EE",border:"#111",text:"#111"},yellow:{bg:"#FAF0E0",border:"#8C6A00",text:"#8C6A00"},red:{bg:"#FAE8E8",border:"#B91C1C",text:"#B91C1C"}};
-                          const col=colors[sc.level];
-                          return(
-                            <div style={{marginBottom:14,border:"1px solid "+col.border+"33",borderRadius:6,overflow:"hidden"}}>
-                              <div style={{display:"flex",alignItems:"center",gap:12,padding:"10px 14px",background:col.bg}}>
-                                <div style={{fontSize:22,fontWeight:800,fontFamily:"'DM Mono',monospace",color:col.text}}>{sc.score.toFixed(1)}<span style={{fontSize:10}}>/10</span></div>
-                                <div style={{flex:1}}><div style={{fontSize:11,fontWeight:700,color:col.text}}>{sc.levelLabel}</div><div style={{fontSize:8,color:col.text,opacity:.8}}>{sc.conclusion}</div></div>
-                                <div style={{display:"flex",gap:6}}>
-                                  {[["🟢",sc.greens,T.green],["🟡",sc.yellows,T.amber],["🔴",sc.reds,T.red]].map(([ic,n,c])=><div key={ic} style={{textAlign:"center"}}><div style={{fontSize:12,fontWeight:800,color:c}}>{n}</div><div style={{fontSize:7}}>{ic}</div></div>)}
-                                </div>
-                              </div>
-                              <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:4,padding:"8px 14px",background:"#fff"}}>
-                                {sc.details.map((d,i)=>{const fc=d.flag==="green"?T.green:d.flag==="red"?T.red:T.amber;const ic=d.flag==="green"?"🟢":d.flag==="red"?"🔴":"🟡";
-                                  return<div key={i} style={{display:"flex",alignItems:"center",gap:6,padding:"4px 8px",background:T.bg,borderRadius:4,fontSize:9}}>
-                                    <span>{ic}</span><span style={{fontWeight:600,flex:1}}>{d.label}</span><span style={{color:T.inkMid}}>{d.value}</span><span style={{fontWeight:700,color:fc,fontFamily:"'DM Mono',monospace"}}>{d.points}/{d.maxPoints}</span>
-                                  </div>;
-                                })}
-                              </div>
-                            </div>
-                          );
-                        })()}
-                        {(r.clienteNombre||r.clienteEmail)&&(
-                          <div style={{display:"flex",alignItems:"center",gap:10,padding:"8px 12px",background:T.blueBg,borderRadius:6,border:"1px solid "+T.blue+"22",marginBottom:12}}>
-                            <div style={{width:32,height:32,borderRadius:"50%",background:T.blue,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:700}}>{(r.clienteNombre||r.clienteEmail||"?")[0].toUpperCase()}</div>
-                            <div><div style={{fontSize:11,fontWeight:700}}>{r.clienteNombre||"—"}</div><div style={{fontSize:9,color:T.blue}}>{r.clienteEmail||""}{r.clienteTel?" · "+r.clienteTel:""}</div></div>
-                          </div>
-                        )}
-                        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-                          {Object.entries(r).filter(([k])=>!["_sbId","id","processed","link_id","formularioId","formularioNombre","fecha","hora","linkId","clienteNombre","clienteEmail","clienteTel"].includes(k)&&!k.startsWith("_")).map(([k,v])=>(
-                            <div key={k} style={{padding:"4px 8px",background:"#fff",borderRadius:4,border:"1px solid "+T.border}}>
-                              <div style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>{k}</div>
-                              <div style={{fontSize:10,fontWeight:600,marginTop:1}}>{Array.isArray(v)?v.join(", "):String(v||"—")}</div>
-                            </div>
-                          ))}
-                        </div>
-                        <div style={{marginTop:12,display:"flex",gap:6}}>
-                          {!proc&&<Btn v="pri" on={()=>handleProcesar(r)}>⚡ Procesar a {moduloLabel}</Btn>}
-                          {proc&&<Badge color={T.green} bg={T.greenBg}>✅ Ya procesado</Badge>}
-                        </div>
-                      </div>
-                    </td></tr>}
-                  </React.Fragment>
-                );})}
+                  );
+                })}
               </tbody>
             </table>
           </Card>
         </div>
       )}
+
+      {/* ═══ MODAL DE RESPUESTA (compartido) ═══ */}
+      {(()=>{const r=respuestas.find(x=>x.id===expandedId);if(!r)return null;
+        const form=allForms.find(f=>f.id===r.formularioId)||allForms.find(f=>f.nombre===r.formularioNombre);
+        const proc=isProcesado(r);
+        return <RespuestaModal
+          open={true}
+          resp={r}
+          form={form}
+          onClose={()=>setExpandedId(null)}
+          onProcesar={!proc?()=>{handleProcesar(r);setExpandedId(null);}:null}
+          isProcesado={proc}
+        />;
+      })()}
     </div>
   );
 }
