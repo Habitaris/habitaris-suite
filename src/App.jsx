@@ -29,6 +29,7 @@ import Comunicaciones from './modules/Comunicaciones.jsx'
 import Calendario, { CalendarioPublico } from './modules/Calendario.jsx'
 import PortalCliente from './modules/PortalCliente.jsx'
 import FormularioPublico from './modules/FormularioPublico.jsx'
+import Usuarios from './modules/Usuarios.jsx'
 import LoginScreen, { isLoggedIn, login as doLogin, logout, isAuthConfigured } from './modules/Login.jsx'
 import AprobarExterno from './modules/AprobarExterno.jsx'
 
@@ -65,6 +66,7 @@ const MODULES = [
   { id:"calendario",     label:"Calendario",          icon:"📅", desc:"Agenda de citas, reuniones internas, videollamadas Jitsi, embed WordPress",  color:"#111111", component:Calendario,    ready:true  },
   { id:"comunicaciones", label:"Comunicaciones",       icon:"📧", desc:"Plantillas de correo, historial de envíos, notificaciones automáticas", color:"#111111", component:Comunicaciones, ready:true  },
   { id:"config",       label:"Configuración",           icon:"⚙️", desc:"Empresa, correo, WhatsApp, legal, apariencia — ajustes globales",    color:"#555555", component:Configuracion,  ready:true  },
+  { id:"usuarios",     label:"Usuarios",                icon:"👤", desc:"Identidad, miembros del tenant y catálogo de documentos",            color:"#111111", component:Usuarios,       ready:true  },
 ]
 
 const F = { fontFamily:"'DM Sans',sans-serif" }
@@ -98,18 +100,85 @@ function LangSwitch({ lang, setLang }) {
 
 function TenantBadge() {
   const t = useTenant();
+  const [open, setOpen] = React.useState(false);
+  const wrapRef = React.useRef(null);
+
+  // Cerrar al hacer click fuera
+  React.useEffect(() => {
+    if (!open) return;
+    const onDoc = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, [open]);
+
   if (!t.isReady) return null;
-  const slug = (t.tenant && t.tenant.slug) || (t.tenant && t.tenant.id) || "";
-  const country = t.countryDefault || "CO";
-  if (!slug) return null;
+  const paises = (t.paisesAcceso && t.paisesAcceso.length) ? t.paisesAcceso : [];
+  if (paises.length === 0) return null;
+  const activo = t.paisActivo || paises[0];
+
+  // Si solo tiene acceso a 1 país, mostrar solo el código sin dropdown
+  if (paises.length === 1) {
+    return (
+      <span title={`País: ${activo}`}
+        style={{ fontSize:11, color:"rgba(255,255,255,0.7)", letterSpacing:0.6,
+          fontWeight:600, padding:"4px 8px", border:"1px solid rgba(255,255,255,0.14)",
+          borderRadius:4, background:"transparent", fontFamily:"'DM Sans',sans-serif" }}>
+        {activo}
+      </span>
+    );
+  }
+
+  // Multi-país: dropdown clicable
   return (
-    <span title={`Tenant: ${slug} · País por defecto: ${country}${t.role ? " · Rol: " + t.role : ""}`}
-      style={{ fontSize:10, color:"rgba(255,255,255,0.45)", letterSpacing:0.5,
-        fontFamily:"'DM Sans',sans-serif", textTransform:"uppercase", fontWeight:600,
-        padding:"3px 8px", border:"1px solid rgba(255,255,255,0.12)", borderRadius:4,
-        background:"rgba(255,255,255,0.04)" }}>
-      {slug} · {country}
-    </span>
+    <div ref={wrapRef} style={{ position:"relative" }}>
+      <button onClick={() => setOpen(o => !o)}
+        title={`País activo: ${activo}. Click para cambiar.`}
+        style={{ display:"inline-flex", alignItems:"center", gap:6, fontSize:11,
+          color:"rgba(255,255,255,0.7)", letterSpacing:0.6, fontWeight:600,
+          padding:"4px 8px", border:"1px solid rgba(255,255,255,0.14)", borderRadius:4,
+          background:"transparent", cursor:"pointer", fontFamily:"'DM Sans',sans-serif",
+          transition:"all .15s" }}
+        onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,0.06)"}
+        onMouseLeave={e => e.currentTarget.style.background="transparent"}>
+        <span>{activo}</span>
+        <span style={{ fontSize:9, opacity:0.6, transform: open ? "rotate(180deg)" : "rotate(0)", transition:"transform .2s" }}>▾</span>
+      </button>
+      {open && (
+        <div style={{ position:"absolute", top:"calc(100% + 6px)", right:0,
+          background:"#1a1a1a", border:"1px solid rgba(255,255,255,0.1)",
+          borderRadius:6, minWidth:180, padding:4, zIndex:1100,
+          fontFamily:"'DM Sans',sans-serif" }}>
+          <div style={{ padding:"8px 10px 4px", fontSize:9, color:"rgba(255,255,255,0.35)",
+            letterSpacing:1.2, textTransform:"uppercase" }}>País activo</div>
+          {paises.map(p => {
+            const sel = p === activo;
+            return (
+              <button key={p} onClick={() => { t.setPaisActivo(p); setOpen(false); }}
+                style={{ width:"100%", display:"flex", alignItems:"center",
+                  justifyContent:"space-between", padding:"8px 10px",
+                  background: sel ? "rgba(255,255,255,0.05)" : "transparent",
+                  border:"none", borderRadius:4, cursor:"pointer",
+                  fontFamily:"'DM Sans',sans-serif",
+                  color: sel ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.7)",
+                  fontSize:13, marginTop: sel ? 0 : 2 }}
+                onMouseEnter={e => { if (!sel) e.currentTarget.style.background="rgba(255,255,255,0.03)"; }}
+                onMouseLeave={e => { if (!sel) e.currentTarget.style.background="transparent"; }}>
+                <span style={{ display:"flex", alignItems:"center", gap:8 }}>
+                  <span style={{ display:"inline-flex", width:18, height:14,
+                    alignItems:"center", justifyContent:"center", fontSize:9, fontWeight:600,
+                    background:"rgba(255,255,255,0.1)", borderRadius:2,
+                    color:"rgba(255,255,255,0.7)" }}>{p}</span>
+                  <span>{p === "CO" ? "Colombia" : p === "ES" ? "España" : p === "MX" ? "México" : p === "AR" ? "Argentina" : p}</span>
+                </span>
+                <span style={{ color: sel ? "rgba(255,255,255,0.6)" : "transparent", fontSize:11 }}>✓</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 
