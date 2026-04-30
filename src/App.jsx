@@ -1,6 +1,7 @@
 import React, { useState, Suspense, useMemo } from 'react'
 import { store } from "./core/store.js";
 import { tenant } from "./core/tenant.js";
+import { useTenant } from "./core/TenantContext.jsx";
 import { ToastContainer } from "./core/Toast.jsx";
 
 import CRM  from './modules/CRM.jsx'
@@ -95,6 +96,23 @@ function LangSwitch({ lang, setLang }) {
   )
 }
 
+function TenantBadge() {
+  const t = useTenant();
+  if (!t.isReady) return null;
+  const slug = (t.tenant && t.tenant.slug) || (t.tenant && t.tenant.id) || "";
+  const country = t.countryDefault || "CO";
+  if (!slug) return null;
+  return (
+    <span title={`Tenant: ${slug} · País por defecto: ${country}${t.role ? " · Rol: " + t.role : ""}`}
+      style={{ fontSize:10, color:"rgba(255,255,255,0.45)", letterSpacing:0.5,
+        fontFamily:"'DM Sans',sans-serif", textTransform:"uppercase", fontWeight:600,
+        padding:"3px 8px", border:"1px solid rgba(255,255,255,0.12)", borderRadius:4,
+        background:"rgba(255,255,255,0.04)" }}>
+      {slug} · {country}
+    </span>
+  );
+}
+
 function Home({ onSelect, lang, setLang, onLogout }) {
   const ready  = MODULES.filter(m => m.ready)
   const coming = MODULES.filter(m => !m.ready)
@@ -116,6 +134,7 @@ function Home({ onSelect, lang, setLang, onLogout }) {
           {ap.slogan && <span style={{ fontFamily:`'${bf}',sans-serif`, fontSize:8, letterSpacing:1.5, color:"rgba(255,255,255,.35)", textTransform:"uppercase" }}>{ap.slogan}</span>}
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <TenantBadge />
           <LangSwitch lang={lang} setLang={setLang} />
           {onLogout && <button onClick={onLogout}
             style={{ ...F, padding:"4px 12px", borderRadius:4, border:"1px solid rgba(255,255,255,0.15)", cursor:"pointer",
@@ -194,6 +213,7 @@ function ModuleBar({ mod, onBack, lang, setLang, onLogout }) {
       <img src={ap.logoBlanco || "/logo-habitaris-blanco.jpg"} alt="Habitaris" style={{height:22, objectFit:"contain"}} />
       <span style={{ fontSize:13, color:"rgba(255,255,255,0.4)" }}>/ {mod.label}</span>
       <div style={{ flex:1 }}/>
+      <TenantBadge />
       <LangSwitch lang={lang} setLang={setLang} />
       {onLogout && <button onClick={onLogout}
         style={{ marginLeft:8, padding:"4px 10px", borderRadius:4, border:"1px solid rgba(255,255,255,0.15)", cursor:"pointer",
