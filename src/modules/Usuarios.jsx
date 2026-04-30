@@ -848,6 +848,311 @@ function ModalEditTipo({ tipo, onClose, onSave }) {
   );
 }
 
+// ──────────────────────────── TAB: EMPRESAS ────────────────────────────
+
+function TabEmpresas({ companies, loading, tenantId, paisesTenant, role, onReload }) {
+  const [editing, setEditing] = useState(null);   // null | "new" | company object
+  const [confirmDel, setConfirmDel] = useState(null);
+
+  const canManage = role === "owner" || role === "admin";
+
+  const porPais = useMemo(() => {
+    const m = new Map();
+    (companies || []).forEach(c => {
+      if (!m.has(c.pais)) m.set(c.pais, []);
+      m.get(c.pais).push(c);
+    });
+    for (const arr of m.values()) arr.sort((a, b) => (a.display_name || "").localeCompare(b.display_name || ""));
+    return Array.from(m.entries()).sort();
+  }, [companies]);
+
+  async function delEmpresa(c) {
+    const { error } = await sb.from("companies").delete().eq("id", c.id);
+    setConfirmDel(null);
+    if (error) {
+      if (window.toast) window.toast("No se puede borrar: hay registros asociados (empleados, clientes, etc.). Marca la empresa como inactiva o liquidada en lugar de borrar.");
+      return;
+    }
+    onReload();
+    if (window.toast) window.toast("Empresa eliminada");
+  }
+
+  if (loading) return <Loading />;
+
+  const propias = companies.filter(c => c.type === "company");
+  const utes = companies.filter(c => c.type === "jv");
+  const externas = companies.filter(c => c.type === "external");
+
+  return (
+    <div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 16, gap: 12 }}>
+        <div>
+          <h3 style={{ ...F, fontSize: 14, fontWeight: 600, color: C.ink, margin: 0, letterSpacing: -0.2 }}>
+            Empresas de la holding
+          </h3>
+          <p style={{ ...F, fontSize: 12, color: C.inkMid, margin: "3px 0 0" }}>
+            Cada empresa tiene su NIT/CIF propio, su contabilidad, sus empleados. {canManage ? "Crea nuevas empresas conforme se constituyan." : "Edición restringida a admin/owner."}
+          </p>
+        </div>
+        {canManage && <Btn tone="primary" size="sm" onClick={() => setEditing("new")}>+ Nueva empresa</Btn>}
+      </div>
+
+      {/* Empresas propias */}
+      {propias.length === 0 ? (
+        <Section title="Empresas propias"><Empty title="Sin empresas. Añade la primera para empezar." /></Section>
+      ) : (
+        porPais.map(([pais, items]) => {
+          const itemsPropias = items.filter(c => c.type === "company");
+          if (itemsPropias.length === 0) return null;
+          return (
+            <div key={"propias-" + pais} style={{ marginBottom: 18 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{
+                  display: "inline-flex", width: 28, height: 20, alignItems: "center", justifyContent: "center",
+                  fontSize: 10, fontWeight: 700, background: "#111", color: "#fff", borderRadius: 4, ...F, letterSpacing: 0.5
+                }}>{pais}</span>
+                <span style={{ ...F, fontSize: 12, color: C.inkMid, fontWeight: 500 }}>{paisName(pais)} · {itemsPropias.length} {itemsPropias.length === 1 ? "empresa" : "empresas"}</span>
+              </div>
+              <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
+                {itemsPropias.map((c, i) => (
+                  <Row key={c.id} last={i === itemsPropias.length - 1}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                      <Initials name={c.display_name || c.legal_name} size={36} />
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ ...F, fontSize: 13, color: C.ink, fontWeight: 600 }}>{c.legal_name}</div>
+                        <div style={{ ...F, fontSize: 11, color: C.inkLight, marginTop: 2, fontFamily: "ui-monospace, monospace" }}>
+                          {c.tax_id_type} {c.tax_id} · {c.divisa} · {c.slug}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <Pill tone={c.status === "active" ? "accent" : c.status === "liquidated" ? "soft" : "warning"}>
+                        {c.status === "active" ? "Activa" : c.status === "liquidated" ? "Liquidada" : "Inactiva"}
+                      </Pill>
+                      {canManage && <>
+                        <Btn size="sm" onClick={() => setEditing(c)}>Editar</Btn>
+                        <Btn size="sm" tone="danger" onClick={() => setConfirmDel(c)}>Borrar</Btn>
+                      </>}
+                    </div>
+                  </Row>
+                ))}
+              </div>
+            </div>
+          );
+        })
+      )}
+
+      {/* UTEs/Consorcios (Sprint E) */}
+      {utes.length > 0 && (
+        <div style={{ marginTop: 24, marginBottom: 18 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <span style={{ ...F, fontSize: 11, fontWeight: 600, color: C.inkMid, letterSpacing: 0.5, textTransform: "uppercase" }}>Consorcios / UTEs activas</span>
+          </div>
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
+            {utes.map((c, i) => (
+              <Row key={c.id} last={i === utes.length - 1}>
+                <div style={{ ...F, fontSize: 13, color: C.ink, fontWeight: 600 }}>{c.legal_name}</div>
+                <Pill tone="warning">UTE</Pill>
+              </Row>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Externas (socios de UTEs) */}
+      {externas.length > 0 && (
+        <div style={{ marginTop: 24, marginBottom: 18 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+            <span style={{ ...F, fontSize: 11, fontWeight: 600, color: C.inkMid, letterSpacing: 0.5, textTransform: "uppercase" }}>Empresas externas (socios de UTEs)</span>
+          </div>
+          <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 10, overflow: "hidden" }}>
+            {externas.map((c, i) => (
+              <Row key={c.id} last={i === externas.length - 1}>
+                <div>
+                  <div style={{ ...F, fontSize: 13, color: C.ink, fontWeight: 500 }}>{c.legal_name}</div>
+                  <div style={{ ...F, fontSize: 11, color: C.inkLight, marginTop: 2, fontFamily: "ui-monospace, monospace" }}>{c.tax_id_type} {c.tax_id}</div>
+                </div>
+                <Pill tone="soft">Externa</Pill>
+              </Row>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <p style={{ ...F, fontSize: 11, color: C.inkLight, marginTop: 24, lineHeight: 1.5 }}>
+        Las UTEs / Consorcios se crean desde el módulo CRM cuando una oferta se ejecuta vía consorcio (próxima funcionalidad — Sprint E).
+      </p>
+
+      {editing && <ModalEmpresa empresa={editing === "new" ? null : editing} tenantId={tenantId} paisesTenant={paisesTenant} onClose={() => setEditing(null)} onSave={onReload} />}
+      <Confirm
+        open={!!confirmDel}
+        title="Borrar empresa"
+        message={confirmDel ? `¿Borrar "${confirmDel.legal_name}"? Si tiene empleados, clientes o registros asociados, no se podrá borrar — en ese caso márcala como inactiva o liquidada.` : ""}
+        onCancel={() => setConfirmDel(null)}
+        onConfirm={() => confirmDel && delEmpresa(confirmDel)}
+        confirmLabel="Borrar"
+      />
+    </div>
+  );
+}
+
+function ModalEmpresa({ empresa, tenantId, paisesTenant, onClose, onSave }) {
+  const isNew = !empresa;
+  const [pais, setPais] = useState(empresa?.pais || (paisesTenant[0] || "CO"));
+  const [legalName, setLegalName] = useState(empresa?.legal_name || "");
+  const [displayName, setDisplayName] = useState(empresa?.display_name || "");
+  const [slug, setSlug] = useState(empresa?.slug || "");
+  const [taxIdType, setTaxIdType] = useState(empresa?.tax_id_type || (empresa?.pais === "ES" ? "CIF" : "NIT"));
+  const [taxId, setTaxId] = useState(empresa?.tax_id || "");
+  const [divisa, setDivisa] = useState(empresa?.divisa || (empresa?.pais === "ES" ? "EUR" : "COP"));
+  const [status, setStatus] = useState(empresa?.status || "active");
+  const [domicilio, setDomicilio] = useState(empresa?.config?.domicilio || "");
+  const [repLegal, setRepLegal] = useState(empresa?.config?.representante_legal || "");
+  const [emailEmp, setEmailEmp] = useState(empresa?.config?.email || "");
+  const [telefono, setTelefono] = useState(empresa?.config?.telefono || "");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+
+  // Auto-sugerir slug y tipo doc/divisa cuando cambia el país o el nombre
+  useEffect(() => {
+    if (!isNew) return;
+    if (pais === "ES") {
+      setTaxIdType("CIF"); setDivisa("EUR");
+    } else if (pais === "CO") {
+      setTaxIdType("NIT"); setDivisa("COP");
+    } else if (pais === "MX") {
+      setTaxIdType("RFC"); setDivisa("MXN");
+    } else if (pais === "AR") {
+      setTaxIdType("CUIT"); setDivisa("ARS");
+    }
+  }, [pais, isNew]);
+
+  useEffect(() => {
+    if (!isNew) return;
+    if (slug) return;  // si ya hay slug manual, no reescribir
+    const auto = (legalName || "").toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9 ]/g, "").trim()
+      .replace(/\s+/g, "-")
+      .substring(0, 40);
+    if (auto) setSlug(auto);
+    // si display_name vacío, usar primer trozo significativo del legal_name
+    if (!displayName && legalName) {
+      const dn = legalName.replace(/\s+(S\.?A\.?S\.?|S\.?L\.?|S\.?A\.?|LTDA\.?|INC\.?|CORP\.?|GMBH\.?|LLC\.?).*/i, "").trim();
+      setDisplayName(dn || legalName);
+    }
+  }, [legalName, isNew]);
+
+  async function submit() {
+    setErr("");
+    if (!legalName.trim() || !pais.trim() || !taxId.trim() || !slug.trim()) {
+      return setErr("Razón social, país, identificación fiscal y slug son obligatorios");
+    }
+    setSaving(true);
+    const payload = {
+      tenant_id: tenantId,
+      pais: pais.trim().toUpperCase(),
+      type: "company",
+      legal_name: legalName.trim(),
+      display_name: (displayName || legalName).trim(),
+      slug: slug.trim().toLowerCase(),
+      tax_id: taxId.trim(),
+      tax_id_type: taxIdType.trim().toUpperCase(),
+      divisa: divisa.trim().toUpperCase(),
+      status,
+      config: {
+        domicilio: domicilio.trim() || null,
+        representante_legal: repLegal.trim() || null,
+        email: emailEmp.trim() || null,
+        telefono: telefono.trim() || null,
+      },
+    };
+    const res = isNew
+      ? await sb.from("companies").insert(payload)
+      : await sb.from("companies").update(payload).eq("id", empresa.id);
+    setSaving(false);
+    if (res.error) {
+      if ((res.error.message || "").includes("duplicate") && (res.error.message || "").includes("slug")) {
+        setErr("Ya existe una empresa con ese slug en este tenant. Elige otro.");
+      } else {
+        setErr(res.error.message);
+      }
+      return;
+    }
+    onSave(); onClose();
+    if (window.toast) window.toast(isNew ? "Empresa creada" : "Empresa actualizada");
+  }
+
+  return (
+    <Modal open={true} onClose={onClose} title={isNew ? "Crear nueva empresa" : `Editar ${empresa.display_name}`} width={560}
+      footer={<><Btn onClick={onClose}>Cancelar</Btn><Btn tone="primary" onClick={submit} disabled={saving}>{saving ? "Guardando…" : "Guardar"}</Btn></>}>
+      <Field label="País" hint="País donde la empresa está constituida legalmente.">
+        <Select value={pais} onChange={e => setPais(e.target.value)}>
+          {paisesTenant.map(p => <option key={p} value={p}>{paisName(p)} ({p})</option>)}
+        </Select>
+      </Field>
+      <Field label="Razón social" hint="Nombre legal completo. Ej. Habitaris S.A.S., Estudio López S.L.">
+        <Input value={legalName} onChange={e => setLegalName(e.target.value)} placeholder="Habitaris S.A.S." autoFocus />
+      </Field>
+      <Field label="Nombre comercial" hint="Cómo se mostrará en la suite. Ej. Habitaris.">
+        <Input value={displayName} onChange={e => setDisplayName(e.target.value)} placeholder="Habitaris" />
+      </Field>
+      <Field label="Identificador URL (slug)" hint="Único dentro del tenant. Solo minúsculas, números y guiones. Ej. habitaris-sas">
+        <Input value={slug} onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))} placeholder="habitaris-sas" />
+      </Field>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr 1fr", gap: 10 }}>
+        <Field label="Tipo">
+          <Select value={taxIdType} onChange={e => setTaxIdType(e.target.value)}>
+            <option value="NIT">NIT</option>
+            <option value="CIF">CIF</option>
+            <option value="RFC">RFC</option>
+            <option value="NIE">NIE</option>
+            <option value="CUIT">CUIT</option>
+            <option value="OTRO">Otro</option>
+          </Select>
+        </Field>
+        <Field label="Identificación fiscal">
+          <Input value={taxId} onChange={e => setTaxId(e.target.value)} placeholder="901.922.136-8" />
+        </Field>
+        <Field label="Divisa">
+          <Select value={divisa} onChange={e => setDivisa(e.target.value)}>
+            <option value="COP">COP</option>
+            <option value="EUR">EUR</option>
+            <option value="USD">USD</option>
+            <option value="MXN">MXN</option>
+            <option value="ARS">ARS</option>
+          </Select>
+        </Field>
+      </div>
+      <Field label="Estado">
+        <Select value={status} onChange={e => setStatus(e.target.value)}>
+          <option value="active">Activa</option>
+          <option value="inactive">Inactiva</option>
+          <option value="liquidated">Liquidada</option>
+        </Select>
+      </Field>
+      <div style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${C.border}` }}>
+        <div style={{ ...F, fontSize: 11, fontWeight: 600, color: C.inkMid, letterSpacing: 0.4, textTransform: "uppercase", marginBottom: 10 }}>Datos adicionales (opcional)</div>
+        <Field label="Domicilio fiscal">
+          <Input value={domicilio} onChange={e => setDomicilio(e.target.value)} placeholder="Calle, ciudad, país" />
+        </Field>
+        <Field label="Representante legal">
+          <Input value={repLegal} onChange={e => setRepLegal(e.target.value)} placeholder="Nombre completo" />
+        </Field>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          <Field label="Email">
+            <Input type="email" value={emailEmp} onChange={e => setEmailEmp(e.target.value)} placeholder="contacto@empresa.com" />
+          </Field>
+          <Field label="Teléfono">
+            <Input value={telefono} onChange={e => setTelefono(e.target.value)} placeholder="+57 ..." />
+          </Field>
+        </div>
+      </div>
+      {err && <p style={{ ...F, fontSize: 12, color: C.danger, margin: "12px 0 0" }}>{err}</p>}
+    </Modal>
+  );
+}
+
 // ──────────────────────────── COMPONENTE PRINCIPAL ────────────────────────────
 
 export default function Usuarios() {
@@ -857,6 +1162,7 @@ export default function Usuarios() {
   const [auths, setAuths] = useState([]);
   const [miembros, setMiembros] = useState([]);
   const [docTypes, setDocTypes] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -873,16 +1179,18 @@ export default function Usuarios() {
     async function load() {
       setLoading(true);
       try {
-        const [r1, r2, r3, r4] = await Promise.all([
+        const [r1, r2, r3, r4, r5] = await Promise.all([
           userId ? sb.from("user_documents").select("*").eq("user_id", userId).order("is_primary", { ascending: false }) : { data: [] },
           userId ? sb.from("auth_methods").select("*").eq("user_id", userId).order("is_primary", { ascending: false }) : { data: [] },
           tenantId ? sb.from("memberships").select("id, role, status, pais_default, paises_acceso, user_id").eq("tenant_id", tenantId) : { data: [] },
           sb.from("document_types").select("*").order("pais").order("orden"),
+          tenantId ? sb.from("companies").select("*").eq("tenant_id", tenantId).order("pais").order("display_name") : { data: [] },
         ]);
         if (cancelled) return;
         setDocs(r1.data || []);
         setAuths(r2.data || []);
         setDocTypes(r4.data || []);
+        setCompanies(r5.data || []);
 
         const ms = r3.data || [];
         if (ms.length > 0) {
@@ -915,6 +1223,7 @@ export default function Usuarios() {
   const TABS = [
     { id: "perfil",   label: "Mi perfil" },
     { id: "miembros", label: "Miembros" },
+    { id: "empresas", label: "Empresas" },
     { id: "catalogo", label: "Catálogo" },
   ];
 
@@ -950,6 +1259,7 @@ export default function Usuarios() {
 
         {tab === "perfil"   && <TabMiPerfil   t={t} docs={docs} auths={auths} docTypes={docTypes} loading={loading} onReload={reload} />}
         {tab === "miembros" && <TabMiembros   miembros={miembros} loading={loading} tenantId={tenantId} paisesTenant={paisesTenant} role={role} onReload={reload} />}
+        {tab === "empresas" && <TabEmpresas   companies={companies} loading={loading} tenantId={tenantId} paisesTenant={paisesTenant} role={role} onReload={reload} />}
         {tab === "catalogo" && <TabCatalogo   docTypes={docTypes} loading={loading} role={role} onReload={reload} />}
       </div>
     </div>
