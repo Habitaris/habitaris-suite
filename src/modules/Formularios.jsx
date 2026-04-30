@@ -1054,10 +1054,6 @@ render();
                   <div style={{flex:1,minWidth:0}}><div style={{fontSize:11,fontWeight:700}}>📋 Copiar link del formulario</div><div style={{fontSize:8,color:"rgba(255,255,255,0.5)",marginTop:2,wordBreak:"break-all"}}>{sharePublicUrl}</div></div>
                 </button>
               )}
-              <button onClick={shareWhatsApp} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:"2px solid #25D366",borderRadius:6,background:"#F0FFF0",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left"}}>
-                <div style={{width:32,height:32,borderRadius:6,background:"#25D366",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><MessageCircle size={14} color="#fff"/></div>
-                <div><div style={{fontSize:11,fontWeight:700,color:"#111"}}>Enviar por WhatsApp</div><div style={{fontSize:8,color:T.inkMid}}>{shareClient.tel?`Mensaje directo al ${shareClient.codTel||""} ${shareClient.tel}`:"Se abre WhatsApp con el link incluido"}</div></div>
-              </button>
               <button onClick={shareEmail} disabled={emailSending||!shareClient.email} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:`1px solid ${emailSent?T.green:T.border}`,borderRadius:6,background:emailSent?T.greenBg:"#FAFAFA",cursor:emailSending?"wait":"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left",opacity:(emailSending||!shareClient.email)?.5:1}}>
                 <div style={{width:32,height:32,borderRadius:6,background:emailSent?T.greenBg:"#F0F0F0",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}><Mail size={14} color={emailSent?T.green:"#999"}/></div>
                 <div><div style={{fontSize:11,fontWeight:600,color:emailSent?"#111":"#888"}}>{emailSending?"Enviando...":emailSent?"✅ Email enviado":"📧 Enviar email con link"}</div><div style={{fontSize:8,color:"#AAA"}}>{emailSent?`Enviado a ${shareClient.email}`:shareClient.email?"El cliente recibe el link por email":"Sin email del cliente"}</div></div>

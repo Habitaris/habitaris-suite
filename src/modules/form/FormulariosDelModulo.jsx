@@ -372,19 +372,10 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
                     </button>
                   )}
 
-                  <button onClick={shareWhatsApp} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:"2px solid #25D366",borderRadius:6,background:"#F0FFF0",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left"}}>
-                    <div style={{width:32,height:32,borderRadius:6,background:"#25D366",display:"flex",alignItems:"center",justifyContent:"center"}}><MessageCircle size={14} color="#fff"/></div>
-                    <div><div style={{fontSize:11,fontWeight:700,color:"#111"}}>Enviar por WhatsApp</div><div style={{fontSize:8,color:T.inkMid}}>{shareResult.client.tel?"Mensaje directo al "+shareResult.client.tel:"Se abre WhatsApp con el link incluido"}</div></div>
-                  </button>
-
                   <button onClick={shareEmail} disabled={emailSending||!shareResult.client.email} style={{display:"flex",alignItems:"center",gap:10,padding:"10px 14px",border:"1px solid "+T.border,borderRadius:6,background:emailSent?T.greenBg:"#FAFAFA",cursor:emailSending?"wait":"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left",opacity:(emailSending||!shareResult.client.email)?.5:1}}>
                     <div style={{width:32,height:32,borderRadius:6,background:emailSent?T.greenBg:"#F0F0F0",display:"flex",alignItems:"center",justifyContent:"center"}}><Mail size={14} color={emailSent?T.green:"#999"}/></div>
                     <div><div style={{fontSize:11,fontWeight:600,color:emailSent?"#111":"#888"}}>{emailSending?"Enviando...":emailSent?"\u2705 Email enviado":"\ud83d\udce7 Enviar por email"}</div><div style={{fontSize:8,color:"#AAA"}}>{emailSent?"Enviado a "+shareResult.client.email:shareResult.client.email?"Funciona con Gmail \u00b7 Limitado con Outlook":"Sin email del cliente"}</div></div>
                   </button>
-                </div>
-
-                <div style={{padding:"8px 10px",background:T.accent,borderRadius:4,fontSize:8,color:T.inkMid,lineHeight:1.5,marginBottom:14}}>
-                  💡 <strong>Flujo recomendado:</strong><br/>1️⃣ <strong>Copiar link</strong> → pega en cualquier canal de comunicación<br/>2️⃣ <strong>WhatsApp</strong> → envía mensaje directo con link incluido
                 </div>
 
                 <div style={{display:"flex",gap:8}}>

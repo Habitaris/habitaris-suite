@@ -54,7 +54,9 @@ function generarLinkId() {
  * @param {string}  args.fechaExacta    - "YYYY-MM-DD" o "". Tiene prioridad sobre horas.
  * @param {object}  args.marca          - marca del tenant (logo, colores, etc.).
  * @param {string}  args.appUrl         - URL base para construir la URL pública.
- * @param {boolean} args.dispararEmail  - default true. Si false, no llama a /api/send-email.
+ * @param {boolean} args.dispararEmail  - default false. Si true, llama a /api/send-email automaticamente.
+ *                                         Decision producto (David, 29/04): generar el link NO dispara
+ *                                         nada automatico — el usuario decide con los botones del modal.
  *
  * @returns {Promise<{ok:boolean, linkId:string|null, publicUrl:string, error?:any}>}
  */
@@ -68,7 +70,7 @@ export async function crearFormLink({
   fechaExacta = "",
   marca = {},
   appUrl = "",
-  dispararEmail = true,
+  dispararEmail = false,
 } = {}) {
   if (!form || !form.id) {
     return { ok: false, linkId: null, publicUrl: "", error: new Error("form requerido") };
