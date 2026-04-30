@@ -92,6 +92,13 @@ export function TenantProvider({ children }) {
 
   useEffect(() => {
     let cancelled = false;
+    // Safeguard: si por cualquier razón load tarda demasiado, salimos del loading
+    // para que la app no se quede colgada en "Cargando contexto del tenant…"
+    const safetyTimeout = setTimeout(() => {
+      if (!cancelled) {
+        setState(s => s.loading ? { ...s, loading: false } : s);
+      }
+    }, 8000);
 
     async function load() {
       try {
@@ -213,7 +220,7 @@ export function TenantProvider({ children }) {
     }
 
     load();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; clearTimeout(safetyTimeout); };
   }, []);
 
   // Helper: ¿el user puede hacer X en módulo Y?
@@ -252,7 +259,7 @@ export function TenantProvider({ children }) {
 
   const value = {
     ...state,
-    isReady: !state.loading && !!state.tenant,
+    isReady: !state.loading,
     countries: (state.tenantConfig && state.tenantConfig.countries) || ["CO"],
     countryDefault: (state.tenantConfig && state.tenantConfig.country_default) || "CO",
     paisesAcceso,
