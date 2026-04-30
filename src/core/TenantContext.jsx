@@ -1,18 +1,22 @@
 /**
- * core/TenantContext.jsx — Contexto multi-tenant (Capa 1, modo passthrough)
+ * core/TenantContext.jsx — Contexto multi-tenant (Capa 1+2, modo passthrough)
  *
  * Lee de las nuevas tablas (tenants, memberships, tenant_config, users)
  * SIN tocar el sistema de login actual. Si falla cualquier query, devuelve
  * null silenciosamente y la app sigue funcionando como hoy.
  *
+ * Capa 2 añade: paisActivo + setPaisActivo (persiste en sessionStorage).
+ *
  * Uso:
  *   import { useTenant } from "./core/TenantContext.jsx";
- *   const { tenant, tenantConfig, user, role, isReady } = useTenant();
+ *   const { tenant, tenantConfig, user, role, paisActivo, setPaisActivo,
+ *           paisesAcceso, isReady } = useTenant();
  */
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { sb } from "./supabase.js";
 
 const TenantCtx = createContext(null);
+const PAIS_KEY = "hab:pais_activo";
 
 const SAFE_DEFAULT = {
   loading: false,
@@ -24,6 +28,9 @@ const SAFE_DEFAULT = {
   isReady: false,
   countries: ["CO"],
   countryDefault: "CO",
+  paisActivo: "CO",
+  setPaisActivo: () => {},
+  paisesAcceso: ["CO"],
   error: null,
 };
 
@@ -35,15 +42,21 @@ export function TenantProvider({ children }) {
     user: null,
     role: null,
     membership: null,
+    paisActivo: null,
     error: null,
   });
+
+  const setPaisActivo = useCallback((nuevoPais) => {
+    if (!nuevoPais) return;
+    try { sessionStorage.setItem(PAIS_KEY, nuevoPais); } catch (_) {}
+    setState(s => ({ ...s, paisActivo: nuevoPais }));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
 
     async function load() {
       try {
-        // Lee sesión escrita por src/modules/Login.jsx
         const raw = sessionStorage.getItem("hab:session");
         if (!raw) {
           if (!cancelled) setState(s => ({ ...s, loading: false }));
@@ -57,7 +70,6 @@ export function TenantProvider({ children }) {
           return;
         }
 
-        // Membership del user (puede no existir aún para users antiguos)
         let membership = null;
         try {
           const { data } = await sb
@@ -66,11 +78,10 @@ export function TenantProvider({ children }) {
             .eq("user_id", userId)
             .limit(1);
           membership = (data && data[0]) || null;
-        } catch (_) { /* tabla puede no existir aún en dev */ }
+        } catch (_) {}
 
         const tenantId = (membership && membership.tenant_id) || "habitaris";
 
-        // Tenant + config en paralelo
         let tenantData = null;
         let configData = null;
         try {
@@ -82,7 +93,6 @@ export function TenantProvider({ children }) {
           configData = r2.data;
         } catch (_) {}
 
-        // User completo (con username + display_name nuevos)
         let userData = null;
         try {
           const r3 = await sb
@@ -93,6 +103,12 @@ export function TenantProvider({ children }) {
           userData = r3.data;
         } catch (_) {}
 
+        // Determinar país activo: sessionStorage > membership.pais_default > tenant_config.country_default > "CO"
+        let paisActivo = null;
+        try { paisActivo = sessionStorage.getItem(PAIS_KEY); } catch (_) {}
+        if (!paisActivo) paisActivo = (membership && membership.pais_default) || null;
+        if (!paisActivo) paisActivo = (configData && configData.config && configData.config.country_default) || "CO";
+
         if (cancelled) return;
         setState({
           loading: false,
@@ -101,6 +117,7 @@ export function TenantProvider({ children }) {
           user: userData,
           role: (membership && membership.role) || (userData && userData.rol) || null,
           membership,
+          paisActivo,
           error: null,
         });
       } catch (e) {
@@ -114,11 +131,16 @@ export function TenantProvider({ children }) {
     return () => { cancelled = true; };
   }, []);
 
+  const paisesAcceso = (state.membership && state.membership.paises_acceso) ||
+                       ((state.tenantConfig && state.tenantConfig.countries) || ["CO"]);
+
   const value = {
     ...state,
     isReady: !state.loading && !!state.tenant,
     countries: (state.tenantConfig && state.tenantConfig.countries) || ["CO"],
     countryDefault: (state.tenantConfig && state.tenantConfig.country_default) || "CO",
+    paisesAcceso,
+    setPaisActivo,
   };
 
   return <TenantCtx.Provider value={value}>{children}</TenantCtx.Provider>;
