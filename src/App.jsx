@@ -32,6 +32,7 @@ import FormularioPublico from './modules/FormularioPublico.jsx'
 import Usuarios from './modules/Usuarios.jsx'
 import LoginScreen, { isLoggedIn, login as doLogin, logout, isAuthConfigured } from './modules/Login.jsx'
 import AprobarExterno from './modules/AprobarExterno.jsx'
+import RecuperarPassword from './modules/RecuperarPassword.jsx'
 
 export const C = {
   ink:"#111111", inkMid:"#555555", inkLight:"#999999",
@@ -323,6 +324,7 @@ function AppInner() {
   // Public routes — no login required
   const path = window.location.pathname
   if (path.startsWith("/aprobar-externo")) return <AprobarExterno />
+  if (path.startsWith("/recuperar")) return <RecuperarPassword />
   if (path.startsWith("/portal")) return <PortalCliente />
   if (path.startsWith("/form")) return <FormularioPublico />
   if (path.startsWith("/agendar")) return <CalendarioPublico />

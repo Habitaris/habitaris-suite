@@ -24,6 +24,12 @@ export default async function handler(req, res) {
     if (body.type === "cron_daily") {
       return await handleCronDaily(body, res);
     }
+    if (body.type === "password_reset_request") {
+      return await handlePasswordResetRequest(body, res);
+    }
+    if (body.type === "password_reset_confirm") {
+      return await handlePasswordResetConfirm(body, res);
+    }
 
     const recipientEmail = body.to || body.client_email;
     if (!recipientEmail) return res.status(400).json({ ok: false, error: "email required" });
@@ -818,4 +824,196 @@ function expiredTemplate(link, whatsappPhone) {
     </td></tr>
   </table>
 </body></html>`;
+}
+
+// ──────────────────────────── PASSWORD RESET ────────────────────────────
+
+async function sha256Hex(str) {
+  const crypto = await import("crypto");
+  return crypto.createHash("sha256").update(str).digest("hex");
+}
+
+function randomToken(bytes) {
+  const arr = new Uint8Array(bytes || 32);
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) {
+    crypto.getRandomValues(arr);
+  } else {
+    for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256);
+  }
+  return Array.from(arr).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Resuelve identifier (username/email/documento) a {user_id, email_destino} server-side.
+ * email_destino es el email principal donde mandar el reset link.
+ */
+async function resolveUserForReset(identifier) {
+  const sb = getSupabaseClient();
+  const v = (identifier || "").trim().toLowerCase();
+  if (!v) return null;
+
+  let userId = null;
+
+  // Caso 1: email
+  if (v.indexOf("@") !== -1) {
+    // Buscar en users.email
+    const r1 = await fetch(sb.url + "/rest/v1/users?select=id,email&email=eq." + encodeURIComponent(v) + "&limit=1", { headers: sb.headers });
+    const d1 = await r1.json();
+    if (Array.isArray(d1) && d1[0]) userId = d1[0].id;
+    // Fallback en auth_methods
+    if (!userId) {
+      const r2 = await fetch(sb.url + "/rest/v1/auth_methods?select=user_id&type=eq.email&identifier=eq." + encodeURIComponent(v) + "&limit=1", { headers: sb.headers });
+      const d2 = await r2.json();
+      if (Array.isArray(d2) && d2[0]) userId = d2[0].user_id;
+    }
+  } else if (/^\d{5,}$/.test(v)) {
+    // Caso 2: documento
+    const r = await fetch(sb.url + "/rest/v1/user_documents?select=user_id&numero=eq." + encodeURIComponent(v) + "&limit=1", { headers: sb.headers });
+    const d = await r.json();
+    if (Array.isArray(d) && d[0]) userId = d[0].user_id;
+  } else {
+    // Caso 3: username
+    const r = await fetch(sb.url + "/rest/v1/users?select=id&username=eq." + encodeURIComponent(v) + "&limit=1", { headers: sb.headers });
+    const d = await r.json();
+    if (Array.isArray(d) && d[0]) userId = d[0].id;
+  }
+
+  if (!userId) return null;
+
+  // Buscar email principal en auth_methods (primary first)
+  const rE = await fetch(sb.url + "/rest/v1/auth_methods?select=identifier&user_id=eq." + userId + "&type=eq.email&order=is_primary.desc&limit=1", { headers: sb.headers });
+  const dE = await rE.json();
+  let email = (Array.isArray(dE) && dE[0] && dE[0].identifier) || null;
+
+  // Fallback: users.email
+  if (!email) {
+    const rU = await fetch(sb.url + "/rest/v1/users?select=email,display_name,nombre&id=eq." + userId + "&limit=1", { headers: sb.headers });
+    const dU = await rU.json();
+    if (Array.isArray(dU) && dU[0]) email = dU[0].email;
+  }
+
+  if (!email) return null;
+
+  // Display name
+  const rN = await fetch(sb.url + "/rest/v1/users?select=display_name,nombre&id=eq." + userId + "&limit=1", { headers: sb.headers });
+  const dN = await rN.json();
+  const nombre = (Array.isArray(dN) && dN[0] && (dN[0].display_name || dN[0].nombre)) || "";
+
+  return { user_id: userId, email: email, nombre: nombre };
+}
+
+async function handlePasswordResetRequest(body, res) {
+  try {
+    const identifier = body.identifier;
+    if (!identifier) return res.status(400).json({ ok: false, error: "identifier required" });
+
+    const RESEND_KEY = process.env.RESEND_API_KEY;
+    if (!RESEND_KEY) return res.status(500).json({ ok: false, error: "RESEND_API_KEY not set" });
+
+    const found = await resolveUserForReset(identifier);
+
+    // Por seguridad: respondemos OK aunque el user no exista (no revelar)
+    if (!found) {
+      return res.status(200).json({ ok: true, sent: false });
+    }
+
+    const sb = getSupabaseClient();
+    const token = randomToken(32);
+    const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1h
+
+    // Guardar token en users.invite_token + invite_expires
+    const upd = await fetch(sb.url + "/rest/v1/users?id=eq." + found.user_id, {
+      method: "PATCH",
+      headers: Object.assign({}, sb.headers, { Prefer: "return=minimal" }),
+      body: JSON.stringify({ invite_token: token, invite_expires: expires }),
+    });
+    if (!upd.ok) {
+      const t = await upd.text().catch(() => "");
+      return res.status(500).json({ ok: false, error: "no se pudo guardar el token: " + t });
+    }
+
+    // Construir link de reset
+    const baseUrl = process.env.APP_BASE_URL || "https://suite.habitaris.es";
+    const resetLink = baseUrl + "/recuperar?token=" + token;
+
+    // Plantilla email
+    const nombre = found.nombre || "";
+    const greeting = nombre ? "Hola " + nombre.split(" ")[0] + "," : "Hola,";
+    const html = '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5F4F1;font-family:Arial,sans-serif">'
+      + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:40px 20px"><tr><td align="center">'
+      + '<table width="500" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">'
+      + '<tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="https://suite.habitaris.es/logo-habitaris.jpg" alt="Habitaris" width="140"/></td></tr>'
+      + '<tr><td style="padding:32px 40px">'
+      + '<div style="font-size:18px;font-weight:bold;color:#111;margin-bottom:12px">Restablecer contraseña</div>'
+      + '<div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:24px">' + greeting + '<br><br>Recibimos una solicitud para restablecer tu contraseña en la suite Habitaris. Pulsa el botón para crear una nueva:</div>'
+      + '<div style="text-align:center;margin:24px 0">'
+      + '<a href="' + resetLink + '" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:12px 28px;border-radius:6px;font-size:14px;font-weight:600">Establecer nueva contraseña</a>'
+      + '</div>'
+      + '<div style="font-size:12px;color:#999;margin-top:20px;line-height:1.6">Este enlace caduca en 1 hora. Si no solicitaste cambiar la contraseña, puedes ignorar este correo: tu contraseña actual seguirá funcionando.</div>'
+      + '<div style="font-size:11px;color:#bbb;margin-top:12px;word-break:break-all">Si el botón no funciona, copia este enlace: ' + resetLink + '</div>'
+      + '</td></tr>'
+      + '<tr><td style="background:#F5F4F1;padding:16px;text-align:center;border-top:1px solid #E5E3DE">'
+      + '<div style="font-size:10px;color:#aaa">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia</div></td></tr>'
+      + '</table></td></tr></table></body></html>';
+
+    const sendR = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: "Habitaris <noreply@habitaris.es>",
+        to: [found.email],
+        subject: "Restablecer contraseña — Habitaris Suite",
+        html: html,
+      }),
+    });
+    const sendData = await sendR.json().catch(() => ({}));
+    if (!sendR.ok) return res.status(500).json({ ok: false, error: sendData.message || "send failed" });
+    return res.status(200).json({ ok: true, sent: true, resend_id: sendData.id || null });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: String(e && e.message || e) });
+  }
+}
+
+async function handlePasswordResetConfirm(body, res) {
+  try {
+    const token = body.token;
+    const newPassword = body.new_password;
+    if (!token || !newPassword) return res.status(400).json({ ok: false, error: "token y new_password requeridos" });
+    if (newPassword.length < 6) return res.status(400).json({ ok: false, error: "La contraseña debe tener al menos 6 caracteres" });
+
+    const sb = getSupabaseClient();
+
+    // Buscar user con ese token y verificar expiración
+    const r = await fetch(sb.url + "/rest/v1/users?select=id,invite_expires,email,display_name,nombre,rol,username&invite_token=eq." + encodeURIComponent(token) + "&limit=1", { headers: sb.headers });
+    const d = await r.json();
+    if (!Array.isArray(d) || !d[0]) return res.status(400).json({ ok: false, error: "Token inválido o ya usado" });
+    const user = d[0];
+    if (user.invite_expires && new Date(user.invite_expires).getTime() < Date.now()) {
+      return res.status(400).json({ ok: false, error: "El enlace ha caducado. Solicita uno nuevo." });
+    }
+
+    const newHash = await sha256Hex(newPassword);
+    const upd = await fetch(sb.url + "/rest/v1/users?id=eq." + user.id, {
+      method: "PATCH",
+      headers: Object.assign({}, sb.headers, { Prefer: "return=minimal" }),
+      body: JSON.stringify({ password_hash: newHash, invite_token: null, invite_expires: null, estado: "activo" }),
+    });
+    if (!upd.ok) {
+      const t = await upd.text().catch(() => "");
+      return res.status(500).json({ ok: false, error: "No se pudo actualizar la contraseña: " + t });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        nombre: user.display_name || user.nombre,
+        rol: user.rol,
+        username: user.username,
+      },
+    });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: String(e && e.message || e) });
+  }
 }
