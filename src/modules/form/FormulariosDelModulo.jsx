@@ -190,19 +190,11 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
 
   const shareEmail=async()=>{
     if(!shareResult?.client?.email){window.toast?.("No hay email del cliente","warning");return;}
-    const cfg=getConfig();
+    if(!shareResult?.linkId){window.toast?.("Genera el link primero","warning");return;}
     setEmailSending(true);
-    const linkInfoEmail=buildLinkInfo().replace(/\n/g,"").trim();
-    const ok=await sendEmail({
-      client_name:shareResult.client.nombre||"Cliente",
-      client_email:shareResult.client.email,
-      form_name:shareForm?.nombre||"Formulario",
-      from_name:cfg.empresa?.nombre||"Habitaris",
-      form_link:shareResult.url||"En breve recibiras el formulario por WhatsApp.",
-      link_info:linkInfoEmail,
-    });
+    const ok=await sendEmail({type:"invitation",link_id:shareResult.linkId});
     setEmailSending(false);
-    if(ok){setEmailSent(true);setTimeout(()=>setEmailSent(false),5000);}
+    if(ok){setEmailSent(true);setTimeout(()=>setEmailSent(false),5000);window.toast?.("✅ Email enviado a "+shareResult.client.email,"success");}
     else{window.toast?.("Error al enviar email. Verifica la configuración de correo.","error");}
   };
 
@@ -315,15 +307,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
                   </div>
                 </div>
 
-                {/* 🌍 País del proyecto */}
-                <div style={{background:"#F5F0FF",borderRadius:6,padding:"12px 14px",marginBottom:14,border:"1px solid #11111122"}}>
-                  <div style={{fontSize:8,fontWeight:700,color:"#111111",textTransform:"uppercase",marginBottom:8}}>🌍 País del proyecto</div>
-                  <select value={sharePais} onChange={e=>{setSharePais(e.target.value);const p=PAISES.find(x=>x.nombre===e.target.value);if(p)setShareClient(c=>({...c,codTel:p.cod}));}}
-                    style={{...inp,width:"100%",fontSize:11,marginBottom:8}}>
-                    {PAISES.map(p=><option key={p.nombre} value={p.nombre}>{p.nombre}</option>)}
-                  </select>
-                  <div style={{fontSize:8,color:"#111111",lineHeight:1.4}}>📌 Define la divisa, departamentos/comunidades, tipo de documento y código telefónico del formulario</div>
-                </div>
+                {/* País se hereda del tenant — eliminado del modal (Fase 0.5: tenant_config) */}
 
                 {/* Control del enlace (estilo modal compacto, igual que Formularios admin) */}
                 <div style={{display:"grid",gap:10}}>

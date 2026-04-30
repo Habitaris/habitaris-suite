@@ -369,7 +369,7 @@ const PLANTILLAS = [
 /* ═══════════════════════════════════════════════════════════════
    CONSTRUCTOR DE FORMULARIOS
    ═══════════════════════════════════════════════════════════════ */
-function Constructor({ forms, setForms, editId, setEditId, onSaved, envios, addEnvio, openShareOnMount, onShareOpened }) {
+function Constructor({ forms, setForms, editId, setEditId, onSaved, envios, addEnvio, openShareOnMount, onShareOpened, onShareClosed }) {
   const existing = editId ? forms.find(f=>f.id===editId) : null;
   const [nombre, setNombre] = useState(existing?.nombre || "");
   const [modulo, setModulo] = useState(existing?.modulo || "general");
@@ -386,18 +386,28 @@ function Constructor({ forms, setForms, editId, setEditId, onSaved, envios, addE
   const [linkExpiry, setLinkExpiry] = useState("");
   const [linkHorasDuracion, setLinkHorasDuracion] = useState(48);
   const [dragIdx, setDragIdx] = useState(null);
+  const [shareOnly, setShareOnly] = useState(false);
 
-  // Auto-abrir modal Compartir cuando se entra al editor desde el boton "Enviar" de la lista
+  // Auto-abrir modal Compartir cuando se entra al editor desde el boton "Enviar" de la lista.
+  // shareOnly=true oculta la UI del editor y al cerrar el modal vuelve a "mis_forms" via onShareClosed.
   useEffect(() => {
     if (openShareOnMount && existing && existing.id === openShareOnMount) {
       setShareClient({nombre:"",email:"",tel:"",codTel:""});
-      setShareGenerated(""); setShareFileName(""); setSharePublicUrl("");
-      setSharePais("Colombia"); setLinkMaxUsos(2); setLinkHorasDuracion(48); setLinkExpiry("");
+      setShareGenerated(""); setShareFileName(""); setSharePublicUrl(""); setShareLinkId("");
+      setLinkMaxUsos(2); setLinkHorasDuracion(48); setLinkExpiry("");
+      setShareOnly(true);
       setShowShare(true);
       onShareOpened?.();
     }
   }, [openShareOnMount, existing?.id]); // eslint-disable-line
 
+  const closeShare = () => {
+    setShowShare(false);
+    if (shareOnly) {
+      setShareOnly(false);
+      onShareClosed?.();
+    }
+  };
   const addCampo = (tipo) => {
     const b = BLOQUES.find(bl=>bl.tipo===tipo);
     const c = { id:uid(), tipo, label:b?.lbl||tipo, placeholder:"", required:false, opciones:tipo==="rating"?[]:tipo==="yesno"?["Sí","No"]:[], logica:null, desc:"" };
@@ -612,6 +622,7 @@ render();
   };
 
   const [sharePublicUrl, setSharePublicUrl] = useState("");
+  const [shareLinkId, setShareLinkId] = useState("");
 
   const generateLink = async () => {
     if (!shareClient.email && !shareClient.nombre) return;
@@ -640,8 +651,8 @@ render();
         marca,
         appUrl,
       });
-      if (result.ok) { linkId = result.linkId; setSharePublicUrl(result.publicUrl); }
-      else { setSharePublicUrl(""); }
+      if (result.ok) { linkId = result.linkId; setSharePublicUrl(result.publicUrl); setShareLinkId(result.linkId); }
+      else { setSharePublicUrl(""); setShareLinkId(""); }
     }
     // Refresh envios list (data already saved in upsert above)
     // Track envio (addEnvio handles Supabase insert + list refresh)
@@ -680,19 +691,13 @@ render();
   };
   const shareEmail = async () => {
     if (!shareClient.email) { window.toast?.("Ingresa el email del cliente", "warning"); return; }
-    const cfg = getConfig();
+    if (!shareLinkId) { window.toast?.("Genera el link primero", "warning"); return; }
     setEmailSending(true);
     try {
       const res = await fetch("/api/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          client_name: shareClient.nombre || "Cliente",
-          client_email: shareClient.email,
-          form_name: nombre || "Formulario",
-          from_name: cfg.empresa?.nombre || "Habitaris",
-          form_link: sharePublicUrl || "",
-        }),
+        body: JSON.stringify({ type: "invitation", link_id: shareLinkId }),
       });
       const data = await res.json().catch(()=>({}));
       const ok = data.ok || res.ok;
@@ -709,12 +714,16 @@ render();
       window.toast?.("Error de red al enviar el email", "error");
     }
   };
-  const openShare = () => { setShareClient({nombre:"",email:"",tel:"",codTel:""}); setShareGenerated(""); setShareFileName(""); setSharePublicUrl(""); setSharePais("Colombia"); setLinkMaxUsos(0); setLinkExpiry(""); setShowShare(true); };
+  const openShare = () => { setShareClient({nombre:"",email:"",tel:"",codTel:""}); setShareGenerated(""); setShareFileName(""); setSharePublicUrl(""); setShareLinkId(""); setSharePais("Colombia"); setLinkMaxUsos(0); setLinkExpiry(""); setShowShare(true); };
 
   const sel = selIdx!==null ? campos[selIdx] : null;
 
   return (
     <div className="fade-up">
+      {/* Si shareOnly: solo se muestra el modal flotante (no la UI del editor).
+          Se entra aqui cuando el usuario pulsa "📤 Enviar" desde una tarjeta de "Mis formularios". */}
+      {!shareOnly && (
+      <>
       {/* Top bar */}
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14,flexWrap:"wrap",gap:8}}>
         <div style={{display:"flex",alignItems:"center",gap:10,flex:1}}>
@@ -972,10 +981,12 @@ render();
           )}
         </div>
       )}
+      </>
+      )}
 
       {/* Share modal — generates downloadable HTML form */}
       {showShare && (
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:40,overflowY:"auto"}} onClick={()=>setShowShare(false)}>
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:40,overflowY:"auto"}} onClick={closeShare}>
           <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:8,padding:28,width:460,maxHeight:"85vh",overflowY:"auto",boxShadow:"0 12px 40px rgba(0,0,0,0.2)",marginBottom:40}}>
             <h3 style={{margin:0,fontSize:16,fontWeight:700,marginBottom:4}}>📤 Enviar formulario a cliente</h3>
             <p style={{margin:"0 0 16px",fontSize:10,color:T.inkMid}}>{nombre || "Sin nombre"} · Se genera un enlace que el cliente abre en su navegador</p>
@@ -1009,17 +1020,7 @@ render();
               </div>
             </div>
 
-            {/* Link config: limits & expiry */}
-            <div style={{background:"#F5F0FF",borderRadius:6,padding:"12px 14px",marginBottom:14,border:"1px solid #11111122"}}>
-              <div style={{fontSize:8,fontWeight:700,color:"#111111",textTransform:"uppercase",marginBottom:8}}>🌍 País del proyecto</div>
-              <select value={sharePais} onChange={e=>{setSharePais(e.target.value);setShareGenerated("");}}
-                style={{...inp,width:"100%",fontSize:11,marginBottom:8}}>
-                {["Colombia","España","México","Chile","Perú","Ecuador","Argentina","Panamá","Estados Unidos","Otro"].map(p=><option key={p} value={p}>{p}</option>)}
-              </select>
-              <div style={{fontSize:8,color:"#111111",lineHeight:1.4}}>
-                📌 Define la divisa, departamentos/comunidades, tipo de documento y código telefónico del formulario
-              </div>
-            </div>
+            {/* País se hereda del tenant — eliminado del modal (Fase 0.5: tenant_config) */}
 
             <div style={{display:"grid",gap:10}}>
               <div>
@@ -1072,7 +1073,7 @@ render();
               </button>
             </div>
 
-            <Btn v={shareGenerated?"pri":"sec"} on={()=>setShowShare(false)} style={{width:"100%",marginTop:14,justifyContent:"center"}}>Cerrar</Btn>
+            <Btn v={shareGenerated?"pri":"sec"} on={closeShare} style={{width:"100%",marginTop:14,justifyContent:"center"}}>Cerrar</Btn>
           </div>
         </div>
       )}
@@ -2455,7 +2456,7 @@ export default function Formularios() {
           </div>
         )}
         {tab === "mis_forms"   && <ListaForms forms={forms} setForms={setForms} onEdit={goConstructor} onNew={goNew} onShare={goShare}/>}
-        {tab === "constructor" && <Constructor forms={forms} setForms={setForms} editId={editId} setEditId={setEditId} onSaved={onSaved} envios={envios} addEnvio={addEnvio} openShareOnMount={pendingShareId} onShareOpened={()=>setPendingShareId(null)}/>}
+        {tab === "constructor" && <Constructor forms={forms} setForms={setForms} editId={editId} setEditId={setEditId} onSaved={onSaved} envios={envios} addEnvio={addEnvio} openShareOnMount={pendingShareId} onShareOpened={()=>setPendingShareId(null)} onShareClosed={()=>{setEditId(null);changeTab("mis_forms");}}/>}
         {tab === "enviados"    && (
           <EnviadosTab envios={envios} onBlock={blockEnvio} onDelete={deleteEnvio} onUpdateLink={rehabilitarEnvio} respuestas={respuestas}/>
         )}
