@@ -679,22 +679,34 @@ render();
     window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`, "_blank");
   };
   const shareEmail = async () => {
-    if (!shareClient.email) { alert("Ingresa el email del cliente"); return; }
+    if (!shareClient.email) { window.toast?.("Ingresa el email del cliente", "warning"); return; }
     const cfg = getConfig();
     setEmailSending(true);
-    const ok = await sendEmailJS({
-      client_name: shareClient.nombre || "Cliente",
-      client_email: shareClient.email,
-      form_name: nombre || "Formulario",
-      from_name: cfg.empresa.nombre,
-      form_link: sharePublicUrl || "En breve recibirás el formulario por WhatsApp.",
-    });
-    setEmailSending(false);
-    if (ok) {
-      setEmailSent(true);
-      setTimeout(() => setEmailSent(false), 5000);
-    } else {
-      alert("Error al enviar. Revisa Configuración → Correo / EmailJS.");
+    try {
+      const res = await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_name: shareClient.nombre || "Cliente",
+          client_email: shareClient.email,
+          form_name: nombre || "Formulario",
+          from_name: cfg.empresa?.nombre || "Habitaris",
+          form_link: sharePublicUrl || "",
+        }),
+      });
+      const data = await res.json().catch(()=>({}));
+      const ok = data.ok || res.ok;
+      setEmailSending(false);
+      if (ok) {
+        setEmailSent(true);
+        setTimeout(() => setEmailSent(false), 5000);
+        window.toast?.("✅ Email enviado a " + shareClient.email, "success");
+      } else {
+        window.toast?.("Error al enviar email. Revisa Configuración → Correo.", "error");
+      }
+    } catch (e) {
+      setEmailSending(false);
+      window.toast?.("Error de red al enviar el email", "error");
     }
   };
   const openShare = () => { setShareClient({nombre:"",email:"",tel:"",codTel:""}); setShareGenerated(""); setShareFileName(""); setSharePublicUrl(""); setSharePais("Colombia"); setLinkMaxUsos(0); setLinkExpiry(""); setShowShare(true); };
@@ -1042,7 +1054,7 @@ render();
             ) : (
               <div style={{marginBottom:10,padding:"8px 10px",background:T.greenBg,borderRadius:4,border:`1px solid ${T.green}33`,fontSize:9,color:T.green,fontWeight:600}}>
                 ✅ Formulario listo para {shareClient.nombre||shareClient.email} — <strong>{shareFileName}</strong>
-                {sharePublicUrl && <div style={{marginTop:4,fontSize:8,color:T.inkMid,fontWeight:400}}>🔗 Link público generado — se enviará por email y WhatsApp automáticamente</div>}
+                {sharePublicUrl && <div style={{marginTop:4,fontSize:8,color:T.inkMid,fontWeight:400}}>🔗 Link público generado — copia el link o envía por email con los botones de abajo</div>}
               </div>
             )}
 
@@ -1156,14 +1168,16 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
   const delPass = store.getSync("hab:form:deletePass") || "";
   const needsAuth = delPass || bioRegistered;
   const confirmDelete = async (action) => {
+    // Confirmación explícita SIEMPRE (era directa si no había contraseña — ahora se pide siempre)
+    const msg = action.type === "single"
+      ? "¿Estás seguro de eliminar esta respuesta?\n\nEsta acción no se puede deshacer."
+      : action.type === "selected"
+      ? "¿Estás seguro de eliminar " + selectedIds.size + " respuesta(s) seleccionada(s)?\n\nEsta acción no se puede deshacer."
+      : "¿Estás seguro de eliminar TODAS las " + respuestas.length + " respuestas?\n\nEsta acción no se puede deshacer.";
+    if (!confirm(msg)) return;
     if (!needsAuth) { executeDelete(action); return; }
-    if (bioRegistered) {
-      const ok = false;
-      if (ok) { executeDelete(action); return; }
-      if (delPass) { setDelAction(action); setDelPassInput(""); setShowDelPass(true); return; }
-      return;
-    }
-    if (delPass) { setDelAction(action); setDelPassInput(""); setShowDelPass(true); }
+    if (delPass) { setDelAction(action); setDelPassInput(""); setShowDelPass(true); return; }
+    executeDelete(action);
   };
   const executeDelete = (action) => {
     if (action.type === "single" && onDelete) { onDelete(action.target); }
@@ -1873,14 +1887,17 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
   const bioReg = false;
   const needsAuth = delPass || bioReg;
   const confirmDelete = async (action) => {
+    // Confirmación explícita SIEMPRE (era directa si no había contraseña — ahora se pide siempre)
+    const msg = action.type === "single"
+      ? "¿Estás seguro de eliminar este link?\n\nEsta acción no se puede deshacer."
+      : action.type === "selected"
+      ? "¿Estás seguro de eliminar " + selectedIds.size + " link(s) seleccionado(s)?\n\nEsta acción no se puede deshacer."
+      : "¿Estás seguro de eliminar TODOS los " + envios.length + " links?\n\nEsta acción no se puede deshacer.";
+    if (!confirm(msg)) return;
+    // Auth opcional adicional si hay contraseña configurada
     if (!needsAuth) { executeDelete(action); return; }
-    if (bioReg) {
-      const ok = false;
-      if (ok) { executeDelete(action); return; }
-      if (delPass) { setDelAction(action); setDelPassInput(""); setShowDelPass(true); return; }
-      return;
-    }
-    if (delPass) { setDelAction(action); setDelPassInput(""); setShowDelPass(true); }
+    if (delPass) { setDelAction(action); setDelPassInput(""); setShowDelPass(true); return; }
+    executeDelete(action);
   };
   const executeDelete = async (action) => {
     if (action.type === "single") { await onDelete(action.target.linkId||action.target.id); }
