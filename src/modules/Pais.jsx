@@ -317,7 +317,7 @@ function EmpresaCard({ empresa, onEnter, onEdit, canManage }) {
 
 // ─── Componente principal ───────────────────────────────────────────────────
 
-export default function Pais({ pais, onSelectCompany, onBackToHolding }) {
+export default function Pais({ pais, onSelectCompany, onBackToGrupo }) {
   const t = useTenant();
   const [tab, setTab] = useState("empresas");
   const [companies, setCompanies] = useState([]);
@@ -331,7 +331,7 @@ export default function Pais({ pais, onSelectCompany, onBackToHolding }) {
   const tenantId = t.tenant && t.tenant.id;
   const userId = t.user && t.user.id;
   const role = t.role;
-  const tenantName = (t.tenant && (t.tenant.display_name || t.tenant.legal_name || t.tenant.id)) || "Holding";
+  const tenantName = (t.tenant && (t.tenant.display_name || t.tenant.legal_name || t.tenant.id)) || "Grupo";
   const canManage = role === "owner" || role === "admin";
 
   const reload = useCallback(() => setReloadKey(k => k + 1), []);
@@ -388,7 +388,7 @@ export default function Pais({ pais, onSelectCompany, onBackToHolding }) {
           <p style={{ fontSize: 13, color: C.inkMid, lineHeight: 1.6, margin: "0 0 16px" }}>
             Tu usuario no tiene acceso a empresas de este país. Contacta con un administrador.
           </p>
-          <Btn onClick={onBackToHolding}>← Volver al holding</Btn>
+          <Btn onClick={onBackToGrupo}>← Volver al grupo</Btn>
         </div>
       </div>
     );
@@ -400,7 +400,7 @@ export default function Pais({ pais, onSelectCompany, onBackToHolding }) {
 
         {/* Breadcrumb + Header */}
         <div style={{ marginBottom: 12, ...F, fontSize: 12, color: C.inkLight }}>
-          <span style={{ cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }} onClick={onBackToHolding}>{tenantName}</span>
+          <span style={{ cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 3 }} onClick={onBackToGrupo}>{tenantName}</span>
           <span style={{ margin: "0 8px" }}>›</span>
           <span style={{ color: C.ink, fontWeight: 600 }}>{paisName(pais)}</span>
         </div>
@@ -420,7 +420,7 @@ export default function Pais({ pais, onSelectCompany, onBackToHolding }) {
               </p>
             </div>
           </div>
-          <Btn onClick={onBackToHolding} size="sm">← Holding</Btn>
+          <Btn onClick={onBackToGrupo} size="sm">← Grupo</Btn>
         </div>
 
         {/* Cuadro consolidado país */}
