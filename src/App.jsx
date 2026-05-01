@@ -31,6 +31,7 @@ import PortalCliente from './modules/PortalCliente.jsx'
 import FormularioPublico from './modules/FormularioPublico.jsx'
 import Usuarios from './modules/Usuarios.jsx'
 import Grupo from './modules/Grupo.jsx'
+import AjustesGrupo from './modules/AjustesGrupo.jsx'
 import Pais from './modules/Pais.jsx'
 import LoginScreen, { isLoggedIn, login as doLogin, logout, isAuthConfigured } from './modules/Login.jsx'
 import AprobarExterno from './modules/AprobarExterno.jsx'
@@ -521,10 +522,21 @@ function AppInner() {
   }
 
   const openConfigGrupo = () => {
-    sessionStorage.setItem("hab:active_module", "config");
-    setActive("config");
-    goTo("/");
+    goTo("/grupo/ajustes");
   };
+
+  // /grupo/ajustes — Espacio de configuración del Grupo
+  if (path === "/grupo/ajustes" || path.startsWith("/grupo/ajustes/")) {
+    return (
+      <div style={{ minHeight:"100vh", background:"#F0EEE9", paddingTop:48 }}>
+        <GrupoBar
+          onOpenConfig={null /* ya estás en config */}
+          onLogout={isAuthConfigured() ? doLogout : null}
+        />
+        <AjustesGrupo onBack={() => goTo("/grupo")} />
+      </div>
+    );
+  }
 
   if (path === "/grupo" || path.startsWith("/grupo/")) {
     return (
