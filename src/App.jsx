@@ -30,6 +30,8 @@ import Calendario, { CalendarioPublico } from './modules/Calendario.jsx'
 import PortalCliente from './modules/PortalCliente.jsx'
 import FormularioPublico from './modules/FormularioPublico.jsx'
 import Usuarios from './modules/Usuarios.jsx'
+import Holding from './modules/Holding.jsx'
+import Pais from './modules/Pais.jsx'
 import LoginScreen, { isLoggedIn, login as doLogin, logout, isAuthConfigured } from './modules/Login.jsx'
 import AprobarExterno from './modules/AprobarExterno.jsx'
 import RecuperarPassword from './modules/RecuperarPassword.jsx'
@@ -205,6 +207,15 @@ function Home({ onSelect, lang, setLang, onLogout }) {
           {ap.slogan && <span style={{ fontFamily:`'${bf}',sans-serif`, fontSize:8, letterSpacing:1.5, color:"rgba(255,255,255,.35)", textTransform:"uppercase" }}>{ap.slogan}</span>}
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <a href="/holding" onClick={(e) => { e.preventDefault(); window.history.pushState({}, "", "/holding"); window.dispatchEvent(new PopStateEvent("popstate")); }}
+            title="Espacio holding (multi-país, multi-empresa)"
+            style={{ ...F, padding:"4px 12px", borderRadius:4, border:"1px solid rgba(255,255,255,0.15)", cursor:"pointer",
+              fontSize:10, fontWeight:600, background:"rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.55)", textDecoration:"none", transition:"all .15s",
+              display:"inline-flex", alignItems:"center", gap:5 }}
+            onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,0.18)"}
+            onMouseLeave={e => e.currentTarget.style.background="rgba(255,255,255,0.08)"}>
+            🌐 Holding
+          </a>
           <TenantBadge />
           <LangSwitch lang={lang} setLang={setLang} />
           {onLogout && <button onClick={onLogout}
@@ -314,7 +325,13 @@ function AppInner() {
   const [active, setActive] = useState(() => sessionStorage.getItem("hab:active_module") || null)
   const [lang, setLang]     = useState("es")
   const [authed, setAuthed]   = useState(isLoggedIn())
+  const [path, setPath] = useState(() => window.location.pathname)
   React.useEffect(() => { store.init((JSON.parse(sessionStorage.getItem("hab:session")||"{}")).tenant_id||"habitaris").then(() => setStoreReady(true)).catch(() => setStoreReady(true)); }, []);
+  React.useEffect(() => {
+    const handler = () => setPath(window.location.pathname);
+    window.addEventListener("popstate", handler);
+    return () => window.removeEventListener("popstate", handler);
+  }, []);
   if (!storeReady) return <div style={{display:"flex",alignItems:"center",justifyContent:"center",height:"100vh",fontFamily:"DM Sans,sans-serif",color:"#999"}}>Cargando...</div>;
   const mod = MODULES.find(m => m.id === active)
 
@@ -323,7 +340,6 @@ function AppInner() {
   const doLogout = () => { logout(); setAuthed(false); }
 
   // Public routes — no login required
-  const path = window.location.pathname
   if (path.startsWith("/aprobar-externo")) return <AprobarExterno />
   if (path.startsWith("/recuperar")) return <RecuperarPassword />
   if (path.startsWith("/portal")) return <PortalCliente />
@@ -334,6 +350,51 @@ function AppInner() {
   if (!authed) {
     return <LoginScreen onSuccess={() => setAuthed(true)} />
   }
+
+  // ─── Espacios holding y país (rutas explícitas) ────────────────────────
+  // /holding → espacio raíz del tenant (multi-país)
+  // /<pais>  → espacio país (ej. /co, /es) — códigos ISO de 2 letras minúsculas
+  // Estas rutas están disponibles si el user las visita explícitamente.
+  // Tras login, hay redirección automática según los datos del user (ver más abajo).
+
+  const goTo = (newPath) => {
+    if (window.history && window.history.pushState) {
+      window.history.pushState({}, "", newPath);
+      // Forzar re-render con un evento personalizado
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    } else {
+      window.location.href = newPath;
+    }
+  };
+
+  const enterCompany = (company) => {
+    // Por ahora la suite operativa NO está aislada por company (Sprint A4).
+    // Seleccionar empresa solo guarda contexto en sessionStorage para futura referencia,
+    // y navega al Home actual (que muestra los módulos de la suite).
+    if (company && company.id) {
+      sessionStorage.setItem("hab:company_active", JSON.stringify({ id: company.id, slug: company.slug, pais: company.pais, display_name: company.display_name }));
+    }
+    goTo("/");
+  };
+
+  if (path === "/holding" || path.startsWith("/holding/")) {
+    return <Holding
+      onSelectCountry={(p) => goTo(`/${p.toLowerCase()}`)}
+      onBackToSuite={() => goTo("/")}
+    />;
+  }
+
+  // /co, /es, /mx, /ar... — rutas de 2 letras (códigos país)
+  const paisMatch = path.match(/^\/([a-z]{2})\/?$/i);
+  if (paisMatch) {
+    const codigoPais = paisMatch[1].toUpperCase();
+    return <Pais
+      pais={codigoPais}
+      onBackToHolding={() => goTo("/holding")}
+      onSelectCompany={enterCompany}
+    />;
+  }
+  // ───────────────────────────────────────────────────────────────────────
 
   if (!active || !mod?.component) {
     return <Home onSelect={selectModule} lang={lang} setLang={setLang} onLogout={isAuthConfigured() ? doLogout : null} />
