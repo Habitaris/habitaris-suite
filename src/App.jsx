@@ -311,6 +311,44 @@ function ModuleBar({ mod, onBack, lang, setLang, onLogout }) {
   )
 }
 
+function GrupoBar({ onOpenConfig, onLogout }) {
+  const t = useTenant();
+  const brand = useMemo(() => getConfig(), []);
+  const ap = brand.apariencia || {};
+  const cp = ap.colorPrimario || "#111";
+  const bf = ap.tipografia || "DM Sans";
+  const userName = (t.user && (t.user.display_name || t.user.nombre || t.user.username)) || "Usuario";
+  return (
+    <div style={{ position:"fixed", top:0, left:0, right:0, height:48, background:cp,
+      zIndex:1000, display:"flex", alignItems:"center", padding:"0 18px", gap:14,
+      fontFamily:`'${bf}',sans-serif` }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=${bf.replace(/ /g,"+")}:wght@300;400;500;600;700;800&display=swap');`}</style>
+      <img src={ap.logoBlanco || "/logo-habitaris-blanco.jpg"} alt="Habitaris" style={{height:22, objectFit:"contain"}} />
+      <span style={{ fontSize:13, color:"rgba(255,255,255,0.4)" }}>/ Grupo</span>
+      <div style={{ flex:1 }}/>
+      <span style={{ fontSize:11, color:"rgba(255,255,255,0.55)", fontWeight:500 }}>{userName}</span>
+      <TenantBadge />
+      {onOpenConfig && <button onClick={onOpenConfig}
+        title="Configuración del grupo"
+        style={{ marginLeft:4, padding:"4px 10px", borderRadius:4, border:"1px solid rgba(255,255,255,0.15)", cursor:"pointer",
+          fontSize:10, fontWeight:600, background:"rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.55)",
+          fontFamily:`'${bf}',sans-serif`, transition:"all .15s" }}
+        onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,0.18)"}
+        onMouseLeave={e => e.currentTarget.style.background="rgba(255,255,255,0.08)"}>
+        ⚙ Configuración
+      </button>}
+      {onLogout && <button onClick={onLogout}
+        style={{ marginLeft:4, padding:"4px 10px", borderRadius:4, border:"1px solid rgba(255,255,255,0.15)", cursor:"pointer",
+          fontSize:10, fontWeight:600, background:"rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.55)",
+          fontFamily:`'${bf}',sans-serif`, transition:"all .15s" }}
+        onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,0.18)"}
+        onMouseLeave={e => e.currentTarget.style.background="rgba(255,255,255,0.08)"}>
+        🔒 Salir
+      </button>}
+    </div>
+  );
+}
+
 export default function App() {
   return (
     <>
@@ -482,12 +520,26 @@ function AppInner() {
     return null;
   }
 
+  const openConfigGrupo = () => {
+    sessionStorage.setItem("hab:active_module", "config");
+    setActive("config");
+    goTo("/");
+  };
+
   if (path === "/grupo" || path.startsWith("/grupo/")) {
-    return <Grupo
-      onSelectCountry={(p) => goTo(`/${p.toLowerCase()}`)}
-      onEnterCompanyDashboard={enterCompanyToDashboard}
-      onEnterCompanyModules={enterCompanyToModules}
-    />;
+    return (
+      <div style={{ minHeight:"100vh", background:"#F0EEE9", paddingTop:48 }}>
+        <GrupoBar
+          onOpenConfig={openConfigGrupo}
+          onLogout={isAuthConfigured() ? doLogout : null}
+        />
+        <Grupo
+          onSelectCountry={(p) => goTo(`/${p.toLowerCase()}`)}
+          onEnterCompanyDashboard={enterCompanyToDashboard}
+          onEnterCompanyModules={enterCompanyToModules}
+        />
+      </div>
+    );
   }
 
   // /co, /es, /mx, /ar... — rutas de 2 letras (códigos país)
