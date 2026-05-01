@@ -32,6 +32,14 @@ function paisName(p) {
          p === "US" ? "Estados Unidos" : p;
 }
 
+function formatMoney(n) {
+  if (!n || n === 0) return "—";
+  if (n >= 1e9) return (n / 1e9).toFixed(1).replace(".0", "") + " B";
+  if (n >= 1e6) return (n / 1e6).toFixed(1).replace(".0", "") + " M";
+  if (n >= 1e3) return (n / 1e3).toFixed(0) + " K";
+  return new Intl.NumberFormat("es-CO").format(n);
+}
+
 function paisFlag(p) {
   // Banderas como letras grandes en círculo (sin emojis para look profesional)
   return (
@@ -291,6 +299,14 @@ export default function Grupo({ onSelectCountry, onEnterCompanyDashboard, onEnte
   const [reloadKey, setReloadKey] = useState(0);
   const [showAbrirPais, setShowAbrirPais] = useState(false);
 
+  // KPIs reales del cuadro consolidado
+  const [kpis, setKpis] = useState({
+    aprobacionesPendientes: null,
+    facturacionYTD: null,
+    plantillaTotal: null,
+    utesActivas: null,
+  });
+
   const tenantId = t.tenant && t.tenant.id;
   const userId = t.user && t.user.id;
   const role = t.role;
@@ -319,6 +335,49 @@ export default function Grupo({ onSelectCountry, onEnterCompanyDashboard, onEnte
     return () => { cancelled = true; };
   }, [t.isReady, tenantId, reloadKey]);
 
+  // Carga de KPIs en paralelo. Cada KPI falla independientemente: si una API
+  // no responde, esa KPI queda en "—" pero el resto se muestra.
+  useEffect(() => {
+    if (!t.isReady) return;
+    let cancelled = false;
+    const yearStart = new Date(new Date().getFullYear(), 0, 1).toISOString();
+
+    // Plantilla total — empleados activos (estado completado)
+    fetch("/api/hiring?estado=completado")
+      .then(r => r.json())
+      .then(d => { if (!cancelled) setKpis(k => ({ ...k, plantillaTotal: (d && d.ok && Array.isArray(d.data)) ? d.data.length : 0 })); })
+      .catch(() => { if (!cancelled) setKpis(k => ({ ...k, plantillaTotal: 0 })); });
+
+    // Aprobaciones pendientes — novedades en estado pendiente
+    fetch("/api/novelties")
+      .then(r => r.json())
+      .then(d => {
+        if (cancelled) return;
+        const list = (d && d.ok && Array.isArray(d.data)) ? d.data : [];
+        const pendientes = list.filter(n => (n.estado || "").toLowerCase() === "pendiente").length;
+        setKpis(k => ({ ...k, aprobacionesPendientes: pendientes }));
+      })
+      .catch(() => { if (!cancelled) setKpis(k => ({ ...k, aprobacionesPendientes: 0 })); });
+
+    // Facturación YTD — sumar valor_total de ofertas aprobadas del año en curso
+    (async () => {
+      try {
+        const { data } = await sb
+          .from("crm_ofertas")
+          .select("valor_total, estado, created_at")
+          .gte("created_at", yearStart)
+          .in("estado", ["aprobada", "ganada", "cerrada"]);
+        if (cancelled) return;
+        const total = (data || []).reduce((acc, o) => acc + (Number(o.valor_total) || 0), 0);
+        setKpis(k => ({ ...k, facturacionYTD: total }));
+      } catch {
+        if (!cancelled) setKpis(k => ({ ...k, facturacionYTD: 0 }));
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [t.isReady, reloadKey]);
+
   const empresasPropias = useMemo(() => companies.filter(c => c.type === "company"), [companies]);
   const utes = useMemo(() => companies.filter(c => c.type === "jv"), [companies]);
   const paisesActivos = useMemo(() => {
@@ -341,7 +400,7 @@ export default function Grupo({ onSelectCountry, onEnterCompanyDashboard, onEnte
   const canManage = role === "owner" || role === "admin";
 
   return (
-    <div style={{ minHeight: "100vh", background: C.bg, ...F }}>
+    <div style={{ ...F }}>
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 32px 60px" }}>
 
         {/* Header — sin botones a la derecha. Crear país se hace desde Configuración del Grupo. */}
@@ -353,21 +412,39 @@ export default function Grupo({ onSelectCountry, onEnterCompanyDashboard, onEnte
           </p>
         </div>
 
-        {/* Cuadro consolidado (placeholder por ahora) */}
+        {/* Cuadro consolidado — KPIs en vivo */}
         <div style={{
           background: C.card, border: `1px solid ${C.border}`, borderRadius: 12,
           padding: 24, marginBottom: 36,
         }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 16, gap: 12 }}>
+          <div style={{ marginBottom: 16 }}>
             <h2 style={{ ...F, fontSize: 16, fontWeight: 600, color: C.ink, margin: 0 }}>Cuadro consolidado</h2>
-            <span style={{ ...F, fontSize: 11, color: C.inkLight, fontStyle: "italic" }}>Disponible próximamente</span>
+            <p style={{ ...F, fontSize: 11, color: C.inkLight, margin: "4px 0 0" }}>
+              {totalEmpresas === 1 ? "Datos agregados de tu empresa" : `Datos agregados de ${totalEmpresas} ${totalEmpresas === 1 ? "empresa" : "empresas"}${paisesActivos.length > 1 ? ` en ${paisesActivos.length} países` : ""}`}
+            </p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
             {[
-              { label: "Aprobaciones pendientes", value: "—", hint: "agregadas por país" },
-              { label: "Facturación del año", value: "—", hint: "todas las divisas" },
-              { label: "Plantilla total", value: totalEmpresas > 0 ? "—" : "—", hint: "todos los países" },
-              { label: "UTEs activas", value: totalUTEs.toString(), hint: "consorcios en curso" },
+              {
+                label: "Aprobaciones pendientes",
+                value: kpis.aprobacionesPendientes === null ? "…" : String(kpis.aprobacionesPendientes),
+                hint: kpis.aprobacionesPendientes === null ? "cargando" : (kpis.aprobacionesPendientes > 0 ? "requieren tu atención" : "todo al día"),
+              },
+              {
+                label: "Facturación del año",
+                value: kpis.facturacionYTD === null ? "…" : (kpis.facturacionYTD > 0 ? formatMoney(kpis.facturacionYTD) : "—"),
+                hint: paisesActivos.length > 1 ? "todas las divisas" : (companies[0]?.divisa || "divisa local"),
+              },
+              {
+                label: "Plantilla total",
+                value: kpis.plantillaTotal === null ? "…" : String(kpis.plantillaTotal),
+                hint: kpis.plantillaTotal === null ? "cargando" : (kpis.plantillaTotal === 1 ? "empleado activo" : "empleados activos"),
+              },
+              {
+                label: "UTEs activas",
+                value: totalUTEs.toString(),
+                hint: totalUTEs === 0 ? "ninguna en curso" : (totalUTEs === 1 ? "consorcio en curso" : "consorcios en curso"),
+              },
             ].map((kpi, i) => (
               <div key={i} style={{ padding: 14, background: C.bgSoft, borderRadius: 8 }}>
                 <div style={{ ...F, fontSize: 11, color: C.inkLight, letterSpacing: 0.4, textTransform: "uppercase", fontWeight: 600 }}>{kpi.label}</div>
@@ -431,23 +508,44 @@ export default function Grupo({ onSelectCountry, onEnterCompanyDashboard, onEnte
             </div>
           </div>
         ) : (
-          // multi_country — tarjetas de país, dentro de cada una sus empresas
+          // multi_country — empresas como protagonistas, agrupadas visualmente por país.
+          // Click en empresa → dashboard/módulos. El país solo es un agrupador visual.
           <div>
             <div style={{ marginBottom: 14 }}>
-              <h2 style={{ ...F, fontSize: 16, fontWeight: 600, color: C.ink, margin: "0 0 4px" }}>Países donde operas</h2>
+              <h2 style={{ ...F, fontSize: 16, fontWeight: 600, color: C.ink, margin: "0 0 4px" }}>Tus empresas</h2>
               <p style={{ ...F, fontSize: 12, color: C.inkMid, margin: 0 }}>
-                Entra a un país para gestionar sus empresas, miembros y datos operativos.
+                Operas en {paisesActivos.length} países. Entra a cualquier empresa para ver su dashboard o sus módulos.
               </p>
             </div>
-            <div style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-              gap: 18,
-            }}>
-              {paisesActivos.map(p => (
-                <PaisCard key={p} pais={p} companies={companies} onEnter={() => onSelectCountry && onSelectCountry(p)} />
-              ))}
-            </div>
+            {paisesActivos.map(p => {
+              const empresasDePais = empresasPropias.filter(e => e.pais === p);
+              if (empresasDePais.length === 0) return null;
+              return (
+                <div key={p} style={{ marginBottom: 28 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12, paddingBottom: 8, borderBottom: `1px solid ${C.border}` }}>
+                    {paisFlag(p)}
+                    <h3 style={{ ...F, fontSize: 14, fontWeight: 600, color: C.ink, margin: 0, letterSpacing: -0.2 }}>{paisName(p)}</h3>
+                    <span style={{ ...F, fontSize: 11, color: C.inkLight, fontWeight: 500 }}>
+                      · {empresasDePais.length} {empresasDePais.length === 1 ? "empresa" : "empresas"}
+                    </span>
+                  </div>
+                  <div style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+                    gap: 18,
+                  }}>
+                    {empresasDePais.map(emp => (
+                      <EmpresaCard
+                        key={emp.id}
+                        empresa={emp}
+                        onDashboard={onEnterCompanyDashboard}
+                        onModules={onEnterCompanyModules}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
