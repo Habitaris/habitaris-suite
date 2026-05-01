@@ -320,7 +320,58 @@ export default function App() {
   );
 }
 
+function TenantErrorScreen({ error, onRetry, onLogout }) {
+  const [retrying, setRetrying] = React.useState(false);
+  const handleRetry = () => {
+    setRetrying(true);
+    if (onRetry) onRetry();
+    // Damos un margen para que el state se actualice
+    setTimeout(() => setRetrying(false), 1500);
+  };
+  return (
+    <div style={{
+      minHeight: "100vh", background: "#F0EEE9", ...F,
+      display: "flex", alignItems: "center", justifyContent: "center", padding: 24,
+    }}>
+      <div style={{
+        maxWidth: 480, background: "#fff", border: "1px solid #E4E1DB",
+        borderRadius: 12, padding: 32, boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+        textAlign: "center",
+      }}>
+        <div style={{ fontSize: 32, marginBottom: 12 }}>⚠️</div>
+        <h2 style={{ ...F, fontSize: 18, fontWeight: 700, color: "#111", margin: "0 0 12px" }}>
+          No se pudo cargar el contexto del grupo
+        </h2>
+        <p style={{ ...F, fontSize: 13, color: "#555", lineHeight: 1.6, margin: "0 0 20px" }}>
+          {error || "La base de datos no respondió a tiempo."}
+        </p>
+        <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+          <button onClick={handleRetry} disabled={retrying}
+            style={{
+              ...F, fontSize: 13, fontWeight: 600, padding: "10px 18px",
+              borderRadius: 6, border: "1px solid #111", background: retrying ? "#555" : "#111",
+              color: "#fff", cursor: retrying ? "wait" : "pointer", transition: "all .15s",
+            }}>
+            {retrying ? "Reintentando…" : "Reintentar"}
+          </button>
+          {onLogout && (
+            <button onClick={onLogout}
+              style={{
+                ...F, fontSize: 13, fontWeight: 600, padding: "10px 18px",
+                borderRadius: 6, border: "1px solid #E4E1DB", background: "#fff",
+                color: "#555", cursor: "pointer", transition: "all .15s",
+              }}>
+              Cerrar sesión
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AppInner() {
+  const t = useTenant();
   const [storeReady, setStoreReady] = useState(false);
   const [active, setActive] = useState(() => sessionStorage.getItem("hab:active_module") || null)
   const [lang, setLang]     = useState("es")
@@ -349,6 +400,12 @@ function AppInner() {
   // Auth gate — only if auth is configured
   if (!authed) {
     return <LoginScreen onSuccess={() => setAuthed(true)} />
+  }
+
+  // Tenant gate — si TenantContext falló y no hay tenant cargado, mostrar pantalla de error
+  // antes de pintar cualquier módulo. Permite reintentar manualmente sin recargar la página.
+  if (t.error && !t.tenant && !t.loading) {
+    return <TenantErrorScreen error={t.error} onRetry={t.reload} onLogout={isAuthConfigured() ? doLogout : null} />;
   }
 
   // ─── Espacios grupo y país (rutas explícitas) ─────────────────────────
