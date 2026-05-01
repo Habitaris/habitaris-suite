@@ -30,7 +30,7 @@ import Calendario, { CalendarioPublico } from './modules/Calendario.jsx'
 import PortalCliente from './modules/PortalCliente.jsx'
 import FormularioPublico from './modules/FormularioPublico.jsx'
 import Usuarios from './modules/Usuarios.jsx'
-import Holding from './modules/Holding.jsx'
+import Grupo from './modules/Grupo.jsx'
 import Pais from './modules/Pais.jsx'
 import LoginScreen, { isLoggedIn, login as doLogin, logout, isAuthConfigured } from './modules/Login.jsx'
 import AprobarExterno from './modules/AprobarExterno.jsx'
@@ -207,14 +207,14 @@ function Home({ onSelect, lang, setLang, onLogout }) {
           {ap.slogan && <span style={{ fontFamily:`'${bf}',sans-serif`, fontSize:8, letterSpacing:1.5, color:"rgba(255,255,255,.35)", textTransform:"uppercase" }}>{ap.slogan}</span>}
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <a href="/holding" onClick={(e) => { e.preventDefault(); window.history.pushState({}, "", "/holding"); window.dispatchEvent(new PopStateEvent("popstate")); }}
-            title="Espacio holding (multi-país, multi-empresa)"
+          <a href="/grupo" onClick={(e) => { e.preventDefault(); window.history.pushState({}, "", "/grupo"); window.dispatchEvent(new PopStateEvent("popstate")); }}
+            title="Espacio grupo (multi-país, multi-empresa)"
             style={{ ...F, padding:"4px 12px", borderRadius:4, border:"1px solid rgba(255,255,255,0.15)", cursor:"pointer",
               fontSize:10, fontWeight:600, background:"rgba(255,255,255,0.08)", color:"rgba(255,255,255,0.55)", textDecoration:"none", transition:"all .15s",
               display:"inline-flex", alignItems:"center", gap:5 }}
             onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,0.18)"}
             onMouseLeave={e => e.currentTarget.style.background="rgba(255,255,255,0.08)"}>
-            🌐 Holding
+            🏛️ Grupo
           </a>
           <TenantBadge />
           <LangSwitch lang={lang} setLang={setLang} />
@@ -351,10 +351,10 @@ function AppInner() {
     return <LoginScreen onSuccess={() => setAuthed(true)} />
   }
 
-  // ─── Espacios holding y país (rutas explícitas) ────────────────────────
-  // /holding → espacio raíz del tenant (multi-país)
+  // ─── Espacios grupo y país (rutas explícitas) ─────────────────────────
+  // /grupo   → espacio raíz del tenant (multi-país, multi-empresa)
   // /<pais>  → espacio país (ej. /co, /es) — códigos ISO de 2 letras minúsculas
-  // Estas rutas están disponibles si el user las visita explícitamente.
+  // /holding → redirección a /grupo (compatibilidad enlaces antiguos)
   // Tras login, hay redirección automática según los datos del user (ver más abajo).
 
   const goTo = (newPath) => {
@@ -377,8 +377,17 @@ function AppInner() {
     goTo("/");
   };
 
+  // Compatibilidad: /holding* redirige a /grupo
   if (path === "/holding" || path.startsWith("/holding/")) {
-    return <Holding
+    if (typeof window !== "undefined") {
+      window.history.replaceState({}, "", "/grupo");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }
+    return null;
+  }
+
+  if (path === "/grupo" || path.startsWith("/grupo/")) {
+    return <Grupo
       onSelectCountry={(p) => goTo(`/${p.toLowerCase()}`)}
       onBackToSuite={() => goTo("/")}
     />;
@@ -390,7 +399,7 @@ function AppInner() {
     const codigoPais = paisMatch[1].toUpperCase();
     return <Pais
       pais={codigoPais}
-      onBackToHolding={() => goTo("/holding")}
+      onBackToGrupo={() => goTo("/grupo")}
       onSelectCompany={enterCompany}
     />;
   }

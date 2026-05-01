@@ -1,7 +1,7 @@
 /**
- * modules/Holding.jsx — Espacio raíz del tenant (nivel holding)
+ * modules/Grupo.jsx — Espacio raíz del tenant (nivel holding)
  *
- * Aquí se ven todos los países donde la holding opera, el dashboard consolidado,
+ * Aquí se ven todos los países donde el grupo opera, el dashboard consolidado,
  * y desde aquí se "abren" nuevos países (creando la primera empresa en ese país).
  *
  * Reglas:
@@ -127,7 +127,7 @@ function PaisCard({ pais, companies, onEnter }) {
 }
 
 function ModalAbrirPais({ paisesCatalogo, paisesActuales, tenantId, userId, onClose, onSave }) {
-  // Países disponibles para abrir = catálogo - países que ya tiene la holding
+  // Países disponibles para abrir = catálogo - países que ya tiene el grupo
   const disponibles = useMemo(() => {
     const set = new Set(paisesActuales);
     return paisesCatalogo.filter(p => !set.has(p.pais));
@@ -197,17 +197,17 @@ function ModalAbrirPais({ paisesCatalogo, paisesActuales, tenantId, userId, onCl
       <Modal open={true} onClose={onClose} title="Abrir nuevo país" width={420}
         footer={<Btn onClick={onClose}>Cerrar</Btn>}>
         <p style={{ ...F, fontSize: 13, color: C.inkMid, margin: 0, lineHeight: 1.6 }}>
-          Tu holding ya opera en todos los países disponibles del catálogo. Para añadir más países (México, Argentina, Perú, etc.), contacta con soporte para que se amplíe el catálogo del sistema.
+          Tu grupo ya opera en todos los países disponibles del catálogo. Para añadir más países (México, Argentina, Perú, etc.), contacta con soporte para que se amplíe el catálogo del sistema.
         </p>
       </Modal>
     );
   }
 
   return (
-    <Modal open={true} onClose={onClose} title="Abrir nuevo país en la holding" width={520}
+    <Modal open={true} onClose={onClose} title="Abrir nuevo país en el grupo" width={520}
       footer={<><Btn onClick={onClose}>Cancelar</Btn><Btn tone="primary" onClick={submit} disabled={saving}>{saving ? "Creando…" : "Abrir país y crear empresa"}</Btn></>}>
       <p style={{ ...F, fontSize: 13, color: C.inkMid, margin: "0 0 18px", lineHeight: 1.6 }}>
-        Para abrir un país nuevo en tu holding necesitas <strong>crear su primera empresa</strong>. Después podrás añadir más empresas en ese mismo país desde su espacio.
+        Para abrir un país nuevo en tu grupo necesitas <strong>crear su primera empresa</strong>. Después podrás añadir más empresas en ese mismo país desde su espacio.
       </p>
 
       <div style={{ marginBottom: 14 }}>
@@ -254,7 +254,7 @@ function ModalAbrirPais({ paisesCatalogo, paisesActuales, tenantId, userId, onCl
   );
 }
 
-export default function Holding({ onSelectCountry, onBackToSuite }) {
+export default function Grupo({ onSelectCountry, onBackToSuite }) {
   const t = useTenant();
   const [companies, setCompanies] = useState([]);
   const [paisesCatalogo, setPaisesCatalogo] = useState([]);
@@ -265,7 +265,7 @@ export default function Holding({ onSelectCountry, onBackToSuite }) {
   const tenantId = t.tenant && t.tenant.id;
   const userId = t.user && t.user.id;
   const role = t.role;
-  const tenantName = (t.tenant && (t.tenant.display_name || t.tenant.legal_name || t.tenant.id)) || "Holding";
+  const tenantName = (t.tenant && (t.tenant.display_name || t.tenant.legal_name || t.tenant.id)) || "Grupo";
 
   const reload = useCallback(() => setReloadKey(k => k + 1), []);
 
@@ -306,7 +306,7 @@ export default function Holding({ onSelectCountry, onBackToSuite }) {
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 36, gap: 16, flexWrap: "wrap" }}>
           <div>
-            <div style={{ ...F, fontSize: 11, color: C.inkLight, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 600, marginBottom: 6 }}>Espacio Holding</div>
+            <div style={{ ...F, fontSize: 11, color: C.inkLight, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 600, marginBottom: 6 }}>Espacio Grupo</div>
             <h1 style={{ ...F, fontSize: 32, fontWeight: 700, color: C.ink, margin: 0, letterSpacing: -0.6 }}>{tenantName}</h1>
             <p style={{ ...F, fontSize: 13, color: C.inkMid, margin: "6px 0 0" }}>
               {paisesActivos.length} {paisesActivos.length === 1 ? "país" : "países"} · {totalEmpresas} {totalEmpresas === 1 ? "empresa" : "empresas"}{totalUTEs > 0 && <> · {totalUTEs} {totalUTEs === 1 ? "UTE" : "UTEs"}</>}
@@ -362,7 +362,7 @@ export default function Holding({ onSelectCountry, onBackToSuite }) {
             background: C.card, border: `1px dashed ${C.border}`, borderRadius: 12,
             padding: 60, textAlign: "center"
           }}>
-            <div style={{ ...F, fontSize: 14, color: C.ink, fontWeight: 600 }}>Tu holding aún no tiene países abiertos</div>
+            <div style={{ ...F, fontSize: 14, color: C.ink, fontWeight: 600 }}>Tu grupo aún no tiene países abiertos</div>
             <div style={{ ...F, fontSize: 13, color: C.inkMid, margin: "8px 0 18px" }}>
               Abre el primer país creando una empresa.
             </div>
@@ -382,7 +382,7 @@ export default function Holding({ onSelectCountry, onBackToSuite }) {
 
         {/* Footer informativo */}
         <div style={{ marginTop: 48, padding: "20px 0", borderTop: `1px solid ${C.border}`, ...F, fontSize: 11, color: C.inkLight, textAlign: "center", letterSpacing: 0.4 }}>
-          {tenantName} · espacio holding · gestión multi-país y multi-empresa
+          {tenantName} · espacio grupo · gestión multi-país y multi-empresa
         </div>
       </div>
 
