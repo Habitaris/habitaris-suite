@@ -254,7 +254,36 @@ function ModalAbrirPais({ paisesCatalogo, paisesActuales, tenantId, userId, onCl
   );
 }
 
-export default function Grupo({ onSelectCountry, onBackToSuite }) {
+function EmpresaCard({ empresa, onDashboard, onModules }) {
+  return (
+    <div style={{
+      background: C.card, border: `1px solid ${C.border}`, borderRadius: 12,
+      padding: 24, display: "flex", flexDirection: "column", gap: 16,
+      transition: "all .15s",
+    }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ ...F, fontSize: 11, color: C.inkLight, letterSpacing: 0.4, textTransform: "uppercase", fontWeight: 600, marginBottom: 4 }}>
+            {paisName(empresa.pais)} · {empresa.divisa || "—"}
+          </div>
+          <div style={{ ...F, fontSize: 20, fontWeight: 700, color: C.ink, letterSpacing: -0.3, lineHeight: 1.2 }}>
+            {empresa.display_name || empresa.legal_name}
+          </div>
+          {empresa.legal_name && empresa.display_name !== empresa.legal_name && (
+            <div style={{ ...F, fontSize: 12, color: C.inkLight, marginTop: 4 }}>{empresa.legal_name}</div>
+          )}
+        </div>
+        {paisFlag(empresa.pais)}
+      </div>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <Btn tone="primary" onClick={() => onDashboard && onDashboard(empresa)}>Dashboard</Btn>
+        <Btn tone="ghost" onClick={() => onModules && onModules(empresa)}>Módulos</Btn>
+      </div>
+    </div>
+  );
+}
+
+export default function Grupo({ onSelectCountry, onEnterCompanyDashboard, onEnterCompanyModules }) {
   const t = useTenant();
   const [companies, setCompanies] = useState([]);
   const [paisesCatalogo, setPaisesCatalogo] = useState([]);
@@ -270,6 +299,8 @@ export default function Grupo({ onSelectCountry, onBackToSuite }) {
   const reload = useCallback(() => setReloadKey(k => k + 1), []);
 
   useEffect(() => {
+    // Si TenantContext ya cargó companies, usar esa fuente como verdad inicial
+    // y solo refrescar si reloadKey>0 o necesitamos paisesCatalogo
     if (!t.isReady || !tenantId) return;
     let cancelled = false;
     async function load() {
@@ -288,12 +319,22 @@ export default function Grupo({ onSelectCountry, onBackToSuite }) {
     return () => { cancelled = true; };
   }, [t.isReady, tenantId, reloadKey]);
 
+  const empresasPropias = useMemo(() => companies.filter(c => c.type === "company"), [companies]);
+  const utes = useMemo(() => companies.filter(c => c.type === "jv"), [companies]);
   const paisesActivos = useMemo(() => {
-    return Array.from(new Set(companies.map(c => c.pais).filter(Boolean))).sort();
-  }, [companies]);
+    return Array.from(new Set(empresasPropias.map(c => c.pais).filter(Boolean))).sort();
+  }, [empresasPropias]);
 
-  const totalEmpresas = companies.filter(c => c.type === "company").length;
-  const totalUTEs = companies.filter(c => c.type === "jv").length;
+  const totalEmpresas = empresasPropias.length;
+  const totalUTEs = utes.length;
+
+  // Topología: empty | single (1×1) | country_multi (1 país, varias empresas) | multi_country (varios países)
+  const topology = useMemo(() => {
+    if (paisesActivos.length === 0) return "empty";
+    if (totalEmpresas === 1) return "single";
+    if (paisesActivos.length === 1) return "country_multi";
+    return "multi_country";
+  }, [paisesActivos.length, totalEmpresas]);
 
   if (!t.isReady) return <div style={{ padding: 40, ...F, color: C.inkLight, textAlign: "center" }}>Cargando…</div>;
 
@@ -303,26 +344,16 @@ export default function Grupo({ onSelectCountry, onBackToSuite }) {
     <div style={{ minHeight: "100vh", background: C.bg, ...F }}>
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 32px 60px" }}>
 
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 36, gap: 16, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ ...F, fontSize: 11, color: C.inkLight, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 600, marginBottom: 6 }}>Espacio Grupo</div>
-            <h1 style={{ ...F, fontSize: 32, fontWeight: 700, color: C.ink, margin: 0, letterSpacing: -0.6 }}>{tenantName}</h1>
-            <p style={{ ...F, fontSize: 13, color: C.inkMid, margin: "6px 0 0" }}>
-              {paisesActivos.length} {paisesActivos.length === 1 ? "país" : "países"} · {totalEmpresas} {totalEmpresas === 1 ? "empresa" : "empresas"}{totalUTEs > 0 && <> · {totalUTEs} {totalUTEs === 1 ? "UTE" : "UTEs"}</>}
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: 8 }}>
-            {onBackToSuite && (
-              <Btn onClick={onBackToSuite} size="sm">← Suite operativa</Btn>
-            )}
-            {canManage && (
-              <Btn tone="primary" onClick={() => setShowAbrirPais(true)}>+ Abrir nuevo país</Btn>
-            )}
-          </div>
+        {/* Header — sin botones a la derecha. Crear país se hace desde Configuración del Grupo. */}
+        <div style={{ marginBottom: 36 }}>
+          <div style={{ ...F, fontSize: 11, color: C.inkLight, letterSpacing: 1.5, textTransform: "uppercase", fontWeight: 600, marginBottom: 6 }}>Espacio Grupo</div>
+          <h1 style={{ ...F, fontSize: 32, fontWeight: 700, color: C.ink, margin: 0, letterSpacing: -0.6 }}>{tenantName}</h1>
+          <p style={{ ...F, fontSize: 13, color: C.inkMid, margin: "6px 0 0" }}>
+            {paisesActivos.length} {paisesActivos.length === 1 ? "país" : "países"} · {totalEmpresas} {totalEmpresas === 1 ? "empresa" : "empresas"}{totalUTEs > 0 && <> · {totalUTEs} {totalUTEs === 1 ? "UTE" : "UTEs"}</>}
+          </p>
         </div>
 
-        {/* Dashboard consolidado (placeholder por ahora) */}
+        {/* Cuadro consolidado (placeholder por ahora) */}
         <div style={{
           background: C.card, border: `1px solid ${C.border}`, borderRadius: 12,
           padding: 24, marginBottom: 36,
@@ -334,8 +365,8 @@ export default function Grupo({ onSelectCountry, onBackToSuite }) {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 16 }}>
             {[
               { label: "Aprobaciones pendientes", value: "—", hint: "agregadas por país" },
-              { label: "Revenue YTD", value: "—", hint: "todas las divisas" },
-              { label: "Headcount total", value: companies.length > 0 ? "1" : "—", hint: "todos los países" },
+              { label: "Facturación del año", value: "—", hint: "todas las divisas" },
+              { label: "Plantilla total", value: totalEmpresas > 0 ? "—" : "—", hint: "todos los países" },
               { label: "UTEs activas", value: totalUTEs.toString(), hint: "consorcios en curso" },
             ].map((kpi, i) => (
               <div key={i} style={{ padding: 14, background: C.bgSoft, borderRadius: 8 }}>
@@ -347,36 +378,76 @@ export default function Grupo({ onSelectCountry, onBackToSuite }) {
           </div>
         </div>
 
-        {/* Países */}
-        <div style={{ marginBottom: 16 }}>
-          <h2 style={{ ...F, fontSize: 16, fontWeight: 600, color: C.ink, margin: "0 0 4px" }}>Países donde operas</h2>
-          <p style={{ ...F, fontSize: 12, color: C.inkMid, margin: 0 }}>
-            Entra a un país para gestionar sus empresas, miembros y datos operativos.
-          </p>
-        </div>
-
+        {/* Render adaptativo según topología */}
         {loading ? (
-          <div style={{ padding: 40, ...F, color: C.inkLight, textAlign: "center" }}>Cargando países…</div>
-        ) : paisesActivos.length === 0 ? (
+          <div style={{ padding: 40, ...F, color: C.inkLight, textAlign: "center" }}>Cargando…</div>
+        ) : topology === "empty" ? (
           <div style={{
             background: C.card, border: `1px dashed ${C.border}`, borderRadius: 12,
             padding: 60, textAlign: "center"
           }}>
-            <div style={{ ...F, fontSize: 14, color: C.ink, fontWeight: 600 }}>Tu grupo aún no tiene países abiertos</div>
+            <div style={{ ...F, fontSize: 14, color: C.ink, fontWeight: 600 }}>Tu grupo aún no tiene empresas</div>
             <div style={{ ...F, fontSize: 13, color: C.inkMid, margin: "8px 0 18px" }}>
-              Abre el primer país creando una empresa.
+              Las empresas se crean desde el módulo Configuración del Grupo → Estructura legal.
             </div>
-            {canManage && <Btn tone="primary" onClick={() => setShowAbrirPais(true)}>+ Abrir primer país</Btn>}
+          </div>
+        ) : topology === "single" ? (
+          // 1×1 — Card grande de la única empresa
+          <div>
+            <div style={{ marginBottom: 14 }}>
+              <h2 style={{ ...F, fontSize: 16, fontWeight: 600, color: C.ink, margin: "0 0 4px" }}>Tu empresa</h2>
+              <p style={{ ...F, fontSize: 12, color: C.inkMid, margin: 0 }}>
+                Entra al dashboard de la empresa o accede a sus módulos operativos.
+              </p>
+            </div>
+            <EmpresaCard
+              empresa={empresasPropias[0]}
+              onDashboard={onEnterCompanyDashboard}
+              onModules={onEnterCompanyModules}
+            />
+          </div>
+        ) : topology === "country_multi" ? (
+          // 1 país, N empresas — saltamos la capa país, vamos directo a empresas
+          <div>
+            <div style={{ marginBottom: 14 }}>
+              <h2 style={{ ...F, fontSize: 16, fontWeight: 600, color: C.ink, margin: "0 0 4px" }}>Tus empresas en {paisName(paisesActivos[0])}</h2>
+              <p style={{ ...F, fontSize: 12, color: C.inkMid, margin: 0 }}>
+                Entra a cualquiera para ver su dashboard o sus módulos.
+              </p>
+            </div>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+              gap: 18,
+            }}>
+              {empresasPropias.map(emp => (
+                <EmpresaCard
+                  key={emp.id}
+                  empresa={emp}
+                  onDashboard={onEnterCompanyDashboard}
+                  onModules={onEnterCompanyModules}
+                />
+              ))}
+            </div>
           </div>
         ) : (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
-            gap: 18,
-          }}>
-            {paisesActivos.map(p => (
-              <PaisCard key={p} pais={p} companies={companies} onEnter={() => onSelectCountry && onSelectCountry(p)} />
-            ))}
+          // multi_country — tarjetas de país, dentro de cada una sus empresas
+          <div>
+            <div style={{ marginBottom: 14 }}>
+              <h2 style={{ ...F, fontSize: 16, fontWeight: 600, color: C.ink, margin: "0 0 4px" }}>Países donde operas</h2>
+              <p style={{ ...F, fontSize: 12, color: C.inkMid, margin: 0 }}>
+                Entra a un país para gestionar sus empresas, miembros y datos operativos.
+              </p>
+            </div>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))",
+              gap: 18,
+            }}>
+              {paisesActivos.map(p => (
+                <PaisCard key={p} pais={p} companies={companies} onEnter={() => onSelectCountry && onSelectCountry(p)} />
+              ))}
+            </div>
           </div>
         )}
 
