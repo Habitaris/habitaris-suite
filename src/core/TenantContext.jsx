@@ -48,6 +48,7 @@ const SAFE_DEFAULT = {
   empresasAcceso: [],
   permTemplate: null,
   can: () => false,
+  reload: () => {},
   error: null,
 };
 
@@ -90,41 +91,61 @@ export function TenantProvider({ children }) {
     });
   }, []);
 
+  // Contador para forzar recarga manual (botón "Reintentar")
+  const [reloadKey, setReloadKey] = useState(0);
+  const reload = useCallback(() => {
+    setState(s => ({ ...s, loading: true, error: null }));
+    setReloadKey(k => k + 1);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
-    // Safeguard: si por cualquier razón load tarda demasiado, salimos del loading
-    // para que la app no se quede colgada en "Cargando contexto del tenant…"
+    let completed = false;
+
+    // Safeguard: si load tarda demasiado, no dejamos la app colgada en "Cargando…",
+    // pero marcamos error explícito para que la UI muestre pantalla con botón "Reintentar".
     const safetyTimeout = setTimeout(() => {
-      if (!cancelled) {
-        setState(s => s.loading ? { ...s, loading: false } : s);
-      }
+      if (cancelled || completed) return;
+      console.warn('[TenantContext] safety timeout (8s) — la carga no terminó a tiempo');
+      setState(s => s.loading ? {
+        ...s,
+        loading: false,
+        error: 'La base de datos está tardando en responder. Puede que esté arrancando — vuelve a intentarlo en unos segundos.',
+      } : s);
     }, 8000);
 
     async function load() {
       try {
         const raw = sessionStorage.getItem("hab:session");
         if (!raw) {
-          if (!cancelled) setState(s => ({ ...s, loading: false }));
+          if (!cancelled) {
+            completed = true;
+            setState(s => ({ ...s, loading: false, error: null }));
+          }
           return;
         }
         let sess;
         try { sess = JSON.parse(raw); } catch { sess = null; }
         const userId = sess && sess.user && sess.user.id;
         if (!userId) {
-          if (!cancelled) setState(s => ({ ...s, loading: false }));
+          if (!cancelled) {
+            completed = true;
+            setState(s => ({ ...s, loading: false, error: null }));
+          }
           return;
         }
 
         // 1. Membership del user (incluye empresas_acceso, template_id, permissions)
         let membership = null;
         try {
-          const { data } = await sb
+          const { data, error } = await sb
             .from("memberships")
             .select("*")
             .eq("user_id", userId)
             .limit(1);
+          if (error) console.error('[TenantContext] memberships error:', error);
           membership = (data && data[0]) || null;
-        } catch (_) {}
+        } catch (e) { console.error('[TenantContext] memberships exception:', e); }
 
         const tenantId = (membership && membership.tenant_id) || "habitaris";
 
@@ -132,24 +153,27 @@ export function TenantProvider({ children }) {
         let tenantData = null;
         let configData = null;
         try {
-          const r1 = await sb.from("tenants").select("*").eq("id", tenantId).maybeSingle();
-          tenantData = r1.data;
-        } catch (_) {}
+          const { data, error } = await sb.from("tenants").select("*").eq("id", tenantId).maybeSingle();
+          if (error) console.error('[TenantContext] tenants error:', error);
+          tenantData = data;
+        } catch (e) { console.error('[TenantContext] tenants exception:', e); }
         try {
-          const r2 = await sb.from("tenant_config").select("config").eq("tenant_id", tenantId).maybeSingle();
-          configData = r2.data;
-        } catch (_) {}
+          const { data, error } = await sb.from("tenant_config").select("config").eq("tenant_id", tenantId).maybeSingle();
+          if (error) console.error('[TenantContext] tenant_config error:', error);
+          configData = data;
+        } catch (e) { console.error('[TenantContext] tenant_config exception:', e); }
 
         // 3. User
         let userData = null;
         try {
-          const r3 = await sb
+          const { data, error } = await sb
             .from("users")
             .select("id, username, display_name, email, nombre, rol, preferred_locale")
             .eq("id", userId)
             .maybeSingle();
-          userData = r3.data;
-        } catch (_) {}
+          if (error) console.error('[TenantContext] users error:', error);
+          userData = data;
+        } catch (e) { console.error('[TenantContext] users exception:', e); }
 
         // 4. Companies del tenant filtradas por empresas_acceso del user
         let companies = [];
@@ -159,21 +183,23 @@ export function TenantProvider({ children }) {
           if (membership && Array.isArray(membership.empresas_acceso) && membership.empresas_acceso.length > 0) {
             q = q.in("id", membership.empresas_acceso);
           }
-          const { data } = await q;
+          const { data, error } = await q;
+          if (error) console.error('[TenantContext] companies error:', error);
           companies = data || [];
-        } catch (_) {}
+        } catch (e) { console.error('[TenantContext] companies exception:', e); }
 
         // 5. Permission template (si el membership tiene template_id)
         let permTemplate = null;
         if (membership && membership.template_id) {
           try {
-            const { data } = await sb
+            const { data, error } = await sb
               .from("permission_templates")
               .select("*")
               .eq("id", membership.template_id)
               .maybeSingle();
+            if (error) console.error('[TenantContext] permission_templates error:', error);
             permTemplate = data;
-          } catch (_) {}
+          } catch (e) { console.error('[TenantContext] permission_templates exception:', e); }
         }
 
         // Determinar país activo
@@ -198,7 +224,13 @@ export function TenantProvider({ children }) {
           companyActiva = companies.find(c => c.pais === paisActivo) || null;
         }
 
+        // Validar carga: si no hay tenant, es estado roto y exponemos error
+        const errMsg = !tenantData
+          ? 'No se pudo cargar la información del grupo. La base de datos puede estar arrancando — espera unos segundos y reintenta.'
+          : null;
+
         if (cancelled) return;
+        completed = true;
         setState({
           loading: false,
           tenant: tenantData,
@@ -210,18 +242,20 @@ export function TenantProvider({ children }) {
           companies,
           companyActiva,
           permTemplate,
-          error: null,
+          error: errMsg,
         });
       } catch (e) {
+        console.error('[TenantContext] error fatal en load():', e);
         if (!cancelled) {
-          setState(s => ({ ...s, loading: false, error: (e && e.message) || "Error" }));
+          completed = true;
+          setState(s => ({ ...s, loading: false, error: (e && e.message) || "Error cargando el contexto del grupo" }));
         }
       }
     }
 
     load();
     return () => { cancelled = true; clearTimeout(safetyTimeout); };
-  }, []);
+  }, [reloadKey]);
 
   // Helper: ¿el user puede hacer X en módulo Y?
   // Niveles: none < read < write < admin
@@ -279,6 +313,7 @@ export function TenantProvider({ children }) {
     empresasAcceso,
     setCompanyActiva,
     can,
+    reload,
   };
 
   return <TenantCtx.Provider value={value}>{children}</TenantCtx.Provider>;
