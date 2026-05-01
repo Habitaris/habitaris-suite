@@ -399,7 +399,14 @@ function AppInner() {
 
   // Auth gate — only if auth is configured
   if (!authed) {
-    return <LoginScreen onSuccess={() => setAuthed(true)} />
+    return <LoginScreen onSuccess={() => {
+      setAuthed(true);
+      // Tras login, landing canónico es /grupo
+      if (typeof window !== "undefined") {
+        window.history.replaceState({}, "", "/grupo");
+        setPath("/grupo");
+      }
+    }} />
   }
 
   // Tenant gate — si TenantContext falló y no hay tenant cargado, mostrar pantalla de error
@@ -425,12 +432,32 @@ function AppInner() {
   };
 
   const enterCompany = (company) => {
-    // Por ahora la suite operativa NO está aislada por company (Sprint A4).
-    // Seleccionar empresa solo guarda contexto en sessionStorage para futura referencia,
-    // y navega al Home actual (que muestra los módulos de la suite).
+    // Versión legacy (compatibilidad): guarda empresa y va al Home (grid).
     if (company && company.id) {
       sessionStorage.setItem("hab:company_active", JSON.stringify({ id: company.id, slug: company.slug, pais: company.pais, display_name: company.display_name }));
     }
+    sessionStorage.removeItem("hab:active_module");
+    setActive(null);
+    goTo("/");
+  };
+
+  const enterCompanyToDashboard = (company) => {
+    // Entra a la empresa abriendo directamente el módulo Dashboard.
+    if (company && company.id) {
+      sessionStorage.setItem("hab:company_active", JSON.stringify({ id: company.id, slug: company.slug, pais: company.pais, display_name: company.display_name }));
+    }
+    sessionStorage.setItem("hab:active_module", "dashboard");
+    setActive("dashboard");
+    goTo("/");
+  };
+
+  const enterCompanyToModules = (company) => {
+    // Entra a la empresa mostrando el grid de módulos (Home).
+    if (company && company.id) {
+      sessionStorage.setItem("hab:company_active", JSON.stringify({ id: company.id, slug: company.slug, pais: company.pais, display_name: company.display_name }));
+    }
+    sessionStorage.removeItem("hab:active_module");
+    setActive(null);
     goTo("/");
   };
 
@@ -443,10 +470,23 @@ function AppInner() {
     return null;
   }
 
+  // Landing canónico post-login: /grupo
+  // Si el path es exactamente "/" y no hay módulo activo guardado, redirigir a /grupo.
+  // (Si hay módulo activo guardado significa que el user estaba trabajando en él,
+  // se respeta el contexto.)
+  if (path === "/" && !active && !sessionStorage.getItem("hab:active_module")) {
+    if (typeof window !== "undefined") {
+      window.history.replaceState({}, "", "/grupo");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    }
+    return null;
+  }
+
   if (path === "/grupo" || path.startsWith("/grupo/")) {
     return <Grupo
       onSelectCountry={(p) => goTo(`/${p.toLowerCase()}`)}
-      onBackToSuite={() => goTo("/")}
+      onEnterCompanyDashboard={enterCompanyToDashboard}
+      onEnterCompanyModules={enterCompanyToModules}
     />;
   }
 
