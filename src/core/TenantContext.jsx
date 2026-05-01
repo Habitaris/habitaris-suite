@@ -246,22 +246,34 @@ export function TenantProvider({ children }) {
     return haveLevel >= need;
   }, [state.membership, state.role, state.permTemplate]);
 
-  const paisesAcceso = useMemo(() =>
-    (state.membership && state.membership.paises_acceso) ||
-    ((state.tenantConfig && state.tenantConfig.countries) || ["CO"]),
-    [state.membership, state.tenantConfig]
-  );
+  const paisesAcceso = useMemo(() => {
+    // Derivar de companies cargadas (filtradas por empresas_acceso del user)
+    // Esto es la verdad: tienes acceso a los países donde tienes empresas accesibles
+    const fromCompanies = Array.from(new Set((state.companies || []).map(c => c.pais).filter(Boolean)));
+    if (fromCompanies.length > 0) return fromCompanies.sort();
+    // Fallback durante la carga (antes de tener companies): usar membership o tenantConfig
+    return (state.membership && state.membership.paises_acceso) ||
+           ((state.tenantConfig && state.tenantConfig.countries) || ["CO"]);
+  }, [state.companies, state.membership, state.tenantConfig]);
 
   const empresasAcceso = useMemo(() =>
     (state.membership && state.membership.empresas_acceso) || [],
     [state.membership]
   );
 
+  // Países donde el tenant tiene empresas activas (verdad derivada de companies).
+  // Si la lectura de companies aún no terminó, fallback a tenantConfig.countries.
+  const countries = useMemo(() => {
+    const fromCompanies = Array.from(new Set((state.companies || []).map(c => c.pais).filter(Boolean)));
+    if (fromCompanies.length > 0) return fromCompanies.sort();
+    return (state.tenantConfig && state.tenantConfig.countries) || ["CO"];
+  }, [state.companies, state.tenantConfig]);
+
   const value = {
     ...state,
     isReady: !state.loading,
-    countries: (state.tenantConfig && state.tenantConfig.countries) || ["CO"],
-    countryDefault: (state.tenantConfig && state.tenantConfig.country_default) || "CO",
+    countries,
+    countryDefault: (state.tenantConfig && state.tenantConfig.country_default) || countries[0] || "CO",
     paisesAcceso,
     setPaisActivo,
     empresasAcceso,

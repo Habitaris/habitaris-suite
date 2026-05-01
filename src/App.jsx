@@ -117,7 +117,8 @@ function TenantBadge() {
   if (!t.isReady) return null;
   const paises = (t.paisesAcceso && t.paisesAcceso.length) ? t.paisesAcceso : [];
   if (paises.length === 0) return null;
-  const activo = t.paisActivo || paises[0];
+  // Verdad: si hay empresa activa, su país manda. Si no, el paisActivo del context.
+  const activo = (t.companyActiva && t.companyActiva.pais) || t.paisActivo || paises[0];
 
   // Si solo tiene acceso a 1 país, mostrar solo el código sin dropdown
   if (paises.length === 1) {
