@@ -850,7 +850,7 @@ function ModalEditTipo({ tipo, onClose, onSave }) {
 
 // ──────────────────────────── TAB: EMPRESAS ────────────────────────────
 
-function TabEmpresas({ companies, loading, tenantId, paisesTenant, role, onReload }) {
+function TabEmpresas({ companies, loading, tenantId, paisesTenant, paisesCatalogo, role, onReload }) {
   const [editing, setEditing] = useState(null);   // null | "new" | company object
   const [confirmDel, setConfirmDel] = useState(null);
 
@@ -983,7 +983,7 @@ function TabEmpresas({ companies, loading, tenantId, paisesTenant, role, onReloa
         Las UTEs / Consorcios se crean desde el módulo CRM cuando una oferta se ejecuta vía consorcio (próxima funcionalidad — Sprint E).
       </p>
 
-      {editing && <ModalEmpresa empresa={editing === "new" ? null : editing} tenantId={tenantId} paisesTenant={paisesTenant} onClose={() => setEditing(null)} onSave={onReload} />}
+      {editing && <ModalEmpresa empresa={editing === "new" ? null : editing} tenantId={tenantId} paisesTenant={paisesTenant} paisesCatalogo={paisesCatalogo} onClose={() => setEditing(null)} onSave={onReload} />}
       <Confirm
         open={!!confirmDel}
         title="Borrar empresa"
@@ -996,9 +996,23 @@ function TabEmpresas({ companies, loading, tenantId, paisesTenant, role, onReloa
   );
 }
 
-function ModalEmpresa({ empresa, tenantId, paisesTenant, onClose, onSave }) {
+function ModalEmpresa({ empresa, tenantId, paisesTenant, paisesCatalogo, onClose, onSave }) {
   const isNew = !empresa;
-  const [pais, setPais] = useState(empresa?.pais || (paisesTenant[0] || "CO"));
+  // Lista de países disponibles para crear empresa = catálogo del sistema (no solo los del tenant)
+  // Crear empresa en un país nuevo = abrir ese país en la holding automáticamente.
+  const paisesDisponibles = useMemo(() => {
+    if (Array.isArray(paisesCatalogo) && paisesCatalogo.length > 0) {
+      return paisesCatalogo.map(p => ({
+        codigo: p.pais,
+        nombre: p.nombre || paisName(p.pais),
+        divisa: p.divisa_default,
+      }));
+    }
+    // Fallback si el catálogo no cargó: usar paisesTenant como mínimo
+    return (paisesTenant || ["CO"]).map(c => ({ codigo: c, nombre: paisName(c), divisa: null }));
+  }, [paisesCatalogo, paisesTenant]);
+
+  const [pais, setPais] = useState(empresa?.pais || (paisesDisponibles[0]?.codigo || "CO"));
   const [legalName, setLegalName] = useState(empresa?.legal_name || "");
   const [displayName, setDisplayName] = useState(empresa?.display_name || "");
   const [slug, setSlug] = useState(empresa?.slug || "");
@@ -1013,19 +1027,18 @@ function ModalEmpresa({ empresa, tenantId, paisesTenant, onClose, onSave }) {
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
 
-  // Auto-sugerir slug y tipo doc/divisa cuando cambia el país o el nombre
+  // Auto-sugerir tipo doc/divisa cuando cambia el país (lee del catálogo si está)
   useEffect(() => {
     if (!isNew) return;
-    if (pais === "ES") {
-      setTaxIdType("CIF"); setDivisa("EUR");
-    } else if (pais === "CO") {
-      setTaxIdType("NIT"); setDivisa("COP");
-    } else if (pais === "MX") {
-      setTaxIdType("RFC"); setDivisa("MXN");
-    } else if (pais === "AR") {
-      setTaxIdType("CUIT"); setDivisa("ARS");
-    }
-  }, [pais, isNew]);
+    const info = paisesDisponibles.find(p => p.codigo === pais);
+    if (info && info.divisa) setDivisa(info.divisa);
+    if (pais === "ES")      setTaxIdType("CIF");
+    else if (pais === "CO") setTaxIdType("NIT");
+    else if (pais === "MX") setTaxIdType("RFC");
+    else if (pais === "AR") setTaxIdType("CUIT");
+    else if (pais === "PE") setTaxIdType("RUC");
+    else if (pais === "CL") setTaxIdType("RUT");
+  }, [pais, isNew, paisesDisponibles]);
 
   useEffect(() => {
     if (!isNew) return;
@@ -1086,9 +1099,9 @@ function ModalEmpresa({ empresa, tenantId, paisesTenant, onClose, onSave }) {
   return (
     <Modal open={true} onClose={onClose} title={isNew ? "Crear nueva empresa" : `Editar ${empresa.display_name}`} width={560}
       footer={<><Btn onClick={onClose}>Cancelar</Btn><Btn tone="primary" onClick={submit} disabled={saving}>{saving ? "Guardando…" : "Guardar"}</Btn></>}>
-      <Field label="País" hint="País donde la empresa está constituida legalmente.">
+      <Field label="País" hint="País donde la empresa está constituida legalmente. Si es nuevo en tu holding, se abrirá automáticamente.">
         <Select value={pais} onChange={e => setPais(e.target.value)}>
-          {paisesTenant.map(p => <option key={p} value={p}>{paisName(p)} ({p})</option>)}
+          {paisesDisponibles.map(p => <option key={p.codigo} value={p.codigo}>{p.nombre} ({p.codigo})</option>)}
         </Select>
       </Field>
       <Field label="Razón social" hint="Nombre legal completo. Ej. Habitaris S.A.S., Estudio López S.L.">
@@ -1163,13 +1176,19 @@ export default function Usuarios() {
   const [miembros, setMiembros] = useState([]);
   const [docTypes, setDocTypes] = useState([]);
   const [companies, setCompanies] = useState([]);
+  const [paisesCatalogo, setPaisesCatalogo] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
 
   const tenantId = t.tenant && t.tenant.id;
   const userId = t.user && t.user.id;
   const role = t.role;
-  const paisesTenant = (t.tenantConfig && t.tenantConfig.countries) || ["CO"];
+  // Países donde el tenant YA tiene empresas (derivado, para asignar accesos a usuarios)
+  const paisesTenant = useMemo(() => {
+    const fromCompanies = Array.from(new Set((t.companies || []).map(c => c.pais).filter(Boolean)));
+    if (fromCompanies.length > 0) return fromCompanies.sort();
+    return (t.tenantConfig && t.tenantConfig.countries) || ["CO"];
+  }, [t.companies, t.tenantConfig]);
 
   const reload = useCallback(() => setReloadKey(k => k + 1), []);
 
@@ -1179,18 +1198,20 @@ export default function Usuarios() {
     async function load() {
       setLoading(true);
       try {
-        const [r1, r2, r3, r4, r5] = await Promise.all([
+        const [r1, r2, r3, r4, r5, r6] = await Promise.all([
           userId ? sb.from("user_documents").select("*").eq("user_id", userId).order("is_primary", { ascending: false }) : { data: [] },
           userId ? sb.from("auth_methods").select("*").eq("user_id", userId).order("is_primary", { ascending: false }) : { data: [] },
           tenantId ? sb.from("memberships").select("id, role, status, pais_default, paises_acceso, user_id").eq("tenant_id", tenantId) : { data: [] },
           sb.from("document_types").select("*").order("pais").order("orden"),
           tenantId ? sb.from("companies").select("*").eq("tenant_id", tenantId).order("pais").order("display_name") : { data: [] },
+          sb.from("country_configs").select("*").order("nombre"),
         ]);
         if (cancelled) return;
         setDocs(r1.data || []);
         setAuths(r2.data || []);
         setDocTypes(r4.data || []);
         setCompanies(r5.data || []);
+        setPaisesCatalogo(r6.data || []);
 
         const ms = r3.data || [];
         if (ms.length > 0) {
@@ -1259,7 +1280,7 @@ export default function Usuarios() {
 
         {tab === "perfil"   && <TabMiPerfil   t={t} docs={docs} auths={auths} docTypes={docTypes} loading={loading} onReload={reload} />}
         {tab === "miembros" && <TabMiembros   miembros={miembros} loading={loading} tenantId={tenantId} paisesTenant={paisesTenant} role={role} onReload={reload} />}
-        {tab === "empresas" && <TabEmpresas   companies={companies} loading={loading} tenantId={tenantId} paisesTenant={paisesTenant} role={role} onReload={reload} />}
+        {tab === "empresas" && <TabEmpresas   companies={companies} loading={loading} tenantId={tenantId} paisesTenant={paisesTenant} paisesCatalogo={paisesCatalogo} role={role} onReload={reload} />}
         {tab === "catalogo" && <TabCatalogo   docTypes={docTypes} loading={loading} role={role} onReload={reload} />}
       </div>
     </div>
