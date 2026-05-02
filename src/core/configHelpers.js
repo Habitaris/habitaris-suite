@@ -634,3 +634,15 @@ export function getTenantDefaultsSync() {
     timezone: v.timezone || c.timezone_default || fb.timezone,
   };
 }
+
+export function getTenantLegalRepresentativeSync() {
+  const v = _readTenantSection("default_legal_representative");
+  const fb = FALLBACK_TENANT.default_legal_representative;
+  return {
+    name:           v.name            || fb.name,
+    cargo:          v.cargo           || fb.cargo,
+    email:          v.email           || fb.email,
+    documentType:   v.document_type   || fb.document_type,
+    documentNumber: v.document_number || fb.document_number,
+  };
+}

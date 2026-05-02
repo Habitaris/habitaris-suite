@@ -3,6 +3,7 @@ import { store } from "../core/store.js";
 import { getConfig } from "./Configuracion.jsx";
 import { getPlantillas, sendEmail, enviarTest, EMAIL_TIPOS } from "../utils/emailService";
 import { Mail, FileText, Bell, Clock, Search, Copy, Edit3, Plus, Trash2, Send, CheckCircle, XCircle, AlertCircle, Filter, ChevronDown, Eye, Save, RefreshCw, Settings } from "lucide-react";
+import { getTenantContactSync } from "../core/configHelpers.js";
 
 /* ── Theme ── */
 const T = {
@@ -409,7 +410,7 @@ function TabHistorial({ historial, onClear }) {
    ══════════════════════════════════════════════════════════════ */
 function TabNotificaciones({ rules, onSave }) {
   const cfg = getConfig();
-  const adminEmail = cfg.correo?.emailPrincipal || "comercial@habitaris.co";
+  const adminEmail = cfg.correo?.emailPrincipal || getTenantContactSync().primaryEmail;
 
   const defaultRules = [
     { id:"oferta_aprobada", evento:"Oferta aprobada por cliente", modulo:"crm", destinatario:adminEmail, activo:true },
@@ -514,7 +515,7 @@ function TabConfig() {
         <div style={{marginBottom:14}}>
           <label style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase"}}>Remitente</label>
           <div style={{padding:"8px 10px",background:T.surfaceAlt,borderRadius:4,fontSize:12,color:T.ink,border:`1px solid ${T.border}`}}>
-            {cfg.correo?.emailPrincipal || "comercial@habitaris.co"}
+            {cfg.correo?.emailPrincipal || getTenantContactSync().primaryEmail}
           </div>
           <div style={{fontSize:9,color:T.inkLight,marginTop:4}}>Se configura desde Configuración → Empresa</div>
         </div>
@@ -548,14 +549,14 @@ function TabConfig() {
             {/* Correo por módulo */}
             <div style={{background:"#fff",borderRadius:12,border:"1px solid #E4E1DB",padding:24,marginBottom:20}}>
               <h3 style={{margin:"0 0 16px",fontSize:16,fontWeight:700}}>📬 Remitente por módulo</h3>
-              <p style={{fontSize:12,color:"#888",margin:"0 0 16px"}}>Configura un correo remitente diferente para cada módulo. Si está vacío, se usa el general ({cfg?.correo?.emailPrincipal || "comercial@habitaris.co"}).</p>
+              <p style={{fontSize:12,color:"#888",margin:"0 0 16px"}}>Configura un correo remitente diferente para cada módulo. Si está vacío, se usa el general ({cfg?.correo?.emailPrincipal || getTenantContactSync().primaryEmail}).</p>
               <div style={{fontSize:11,color:"#8C6A00",background:"#FFF8E1",padding:"8px 12px",borderRadius:6,marginBottom:16}}>
                 ⚠️ Solo correos @habitaris.co (dominio verificado en Resend)
               </div>
               {[
-                {id:"formularios",label:"Formularios",icon:"📋",placeholder:"comercial@habitaris.co"},
-                {id:"crm",label:"CRM",icon:"👥",placeholder:"comercial@habitaris.co"},
-                {id:"ofertas",label:"Ofertas",icon:"📄",placeholder:"comercial@habitaris.co"},
+                {id:"formularios",label:"Formularios",icon:"📋",placeholder:"comercial@habitaris.es"},
+                {id:"crm",label:"CRM",icon:"👥",placeholder:"comercial@habitaris.es"},
+                {id:"ofertas",label:"Ofertas",icon:"📄",placeholder:"comercial@habitaris.es"},
                 {id:"rrhh",label:"RRHH",icon:"🧑‍💼",placeholder:"rrhh@habitaris.co"},
                 {id:"contabilidad",label:"Contabilidad",icon:"💰",placeholder:"contabilidad@habitaris.co"},
                 {id:"proyectos",label:"Proyectos",icon:"📐",placeholder:"proyectos@habitaris.co"},

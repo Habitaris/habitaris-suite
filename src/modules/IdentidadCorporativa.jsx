@@ -547,7 +547,7 @@ export default function IdentidadCorporativa() {
     nit: cfg.empresa?.nit || "901.922.136-8",
     direccion: cfg.empresa?.direccion || "Bogotá D.C., Colombia",
     telefono: cfg.empresa?.telefono || "+57 350 566 1545",
-    email: cfg.empresa?.email || "info@habitaris.co",
+    email: cfg.empresa?.email || getTenantContactSync().primaryEmail,
     web: cfg.empresa?.web || getTenantUrlsSync().publicWebsite.replace(/^https?:\/\//,""),
     logo: cfg.apariencia?.logo || "/logo-habitaris-negro.svg",
     logoBlanco: cfg.apariencia?.logoBlanco || "/logo-habitaris-blanco.jpg",
