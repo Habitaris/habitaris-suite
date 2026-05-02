@@ -2,6 +2,7 @@ import React, { useState, Suspense, useMemo } from 'react'
 import { store } from "./core/store.js";
 import { tenant } from "./core/tenant.js";
 import { useTenant } from "./core/TenantContext.jsx";
+import { useTenantBranding, useTenantIdentity } from "./core/configHelpers.js";
 import { ToastContainer } from "./core/Toast.jsx";
 
 import CRM  from './modules/CRM.jsx'
@@ -194,6 +195,11 @@ function Home({ onSelect, lang, setLang, onLogout }) {
   const ap = brand.apariencia || {}
   const cp = ap.colorPrimario || "#111"
   const bf = ap.tipografia || "DM Sans"
+  // Sprint C Capa 3: logo y nombre desde tenant_config (helpers con fallback al legacy/hardcoded).
+  const branding = useTenantBranding()
+  const identity = useTenantIdentity()
+  const logoSrc = branding.logoWhite || ap.logo || "/logo-habitaris-blanco.jpg"
+  const groupName = identity.displayName || brand.empresa?.nombre || "Habitaris"
   return (
     <div style={{ minHeight:"100vh", background:"#F0EEE9" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=${bf.replace(/ /g,"+")}:wght@300;400;500;600;700;800&display=swap');`}</style>
@@ -201,9 +207,9 @@ function Home({ onSelect, lang, setLang, onLogout }) {
         display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
           {ap.logo ? (
-            <img src={ap.logo} alt="Logo" style={{ height:28, objectFit:"contain" }}/>
+            <img src={ap.logo} alt={groupName} style={{ height:28, objectFit:"contain" }}/>
           ) : (
-            <img src="/logo-habitaris-blanco.jpg" alt="Habitaris" style={{height:28}} />
+            <img src={logoSrc} alt={groupName} style={{height:28}} />
           )}
           {ap.slogan && <span style={{ fontFamily:`'${bf}',sans-serif`, fontSize:8, letterSpacing:1.5, color:"rgba(255,255,255,.35)", textTransform:"uppercase" }}>{ap.slogan}</span>}
         </div>
@@ -232,7 +238,7 @@ function Home({ onSelect, lang, setLang, onLogout }) {
       <div style={{ maxWidth:920, margin:"0 auto", padding:"48px 28px 40px" }}>
         <p style={{ fontFamily:`'${bf}',sans-serif`, fontSize:10, color:"#888", letterSpacing:1.5, textTransform:"uppercase", marginBottom:6 }}>Suite de gestión</p>
         <h1 style={{ fontFamily:`'${bf}',sans-serif`, fontSize:30, fontWeight:700, color:"#111", marginBottom:4, letterSpacing:-0.5 }}>Selecciona un módulo</h1>
-        <p style={{ fontFamily:`'${bf}',sans-serif`, fontSize:13, color:"#888", marginBottom:40 }}>{brand.empresa?.nombre||"Habitaris"} · {lang==="es"?"Español":"English"}</p>
+        <p style={{ fontFamily:`'${bf}',sans-serif`, fontSize:13, color:"#888", marginBottom:40 }}>{groupName} · {lang==="es"?"Español":"English"}</p>
 
         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(240px,1fr))", gap:14, marginBottom:36 }}>
           {ready.map(m => (
@@ -277,6 +283,11 @@ function ModuleBar({ mod, onBack, lang, setLang, onLogout }) {
   const ap = brand.apariencia || {}
   const cp = ap.colorPrimario || "#111"
   const bf = ap.tipografia || "DM Sans"
+  // Sprint C Capa 3: logo desde tenant_config (helpers con fallback).
+  const branding = useTenantBranding()
+  const identity = useTenantIdentity()
+  const logoSrc = ap.logoBlanco || branding.logoWhite || "/logo-habitaris-blanco.jpg"
+  const groupName = identity.displayName || "Habitaris"
   return (
     <div style={{ position:"fixed", top:0, left:0, right:0, height:48, background:cp,
       zIndex:1000, display:"flex", alignItems:"center", padding:"0 18px", gap:14,
@@ -293,7 +304,7 @@ function ModuleBar({ mod, onBack, lang, setLang, onLogout }) {
       </button>
       <div style={{ width:1, height:18, background:"rgba(255,255,255,0.15)" }}/>
       <span style={{ fontSize:13, color:"rgba(255,255,255,0.35)" }}>{mod.icon}</span>
-      <img src={ap.logoBlanco || "/logo-habitaris-blanco.jpg"} alt="Habitaris" style={{height:22, objectFit:"contain"}} />
+      <img src={logoSrc} alt={groupName} style={{height:22, objectFit:"contain"}} />
       <span style={{ fontSize:13, color:"rgba(255,255,255,0.4)" }}>/ {mod.label}</span>
       <div style={{ flex:1 }}/>
       <TenantBadge />
@@ -319,12 +330,17 @@ function GrupoBar({ onOpenConfig, onLogout }) {
   const cp = ap.colorPrimario || "#111";
   const bf = ap.tipografia || "DM Sans";
   const userName = (t.user && (t.user.display_name || t.user.nombre || t.user.username)) || "Usuario";
+  // Sprint C Capa 3: logo desde tenant_config (helpers con fallback).
+  const branding = useTenantBranding();
+  const identity = useTenantIdentity();
+  const logoSrc = ap.logoBlanco || branding.logoWhite || "/logo-habitaris-blanco.jpg";
+  const groupName = identity.displayName || "Habitaris";
   return (
     <div style={{ position:"fixed", top:0, left:0, right:0, height:48, background:cp,
       zIndex:1000, display:"flex", alignItems:"center", padding:"0 18px", gap:14,
       fontFamily:`'${bf}',sans-serif` }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=${bf.replace(/ /g,"+")}:wght@300;400;500;600;700;800&display=swap');`}</style>
-      <img src={ap.logoBlanco || "/logo-habitaris-blanco.jpg"} alt="Habitaris" style={{height:22, objectFit:"contain"}} />
+      <img src={logoSrc} alt={groupName} style={{height:22, objectFit:"contain"}} />
       <span style={{ fontSize:13, color:"rgba(255,255,255,0.4)" }}>/ Grupo</span>
       <div style={{ flex:1 }}/>
       <span style={{ fontSize:11, color:"rgba(255,255,255,0.55)", fontWeight:500 }}>{userName}</span>
