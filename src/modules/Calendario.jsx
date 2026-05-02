@@ -1,5 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
 import { store } from "../core/store.js";
+import {
+  getTenantBrandingSync,
+  getTenantIdentitySync,
+  getTenantContactSync,
+  getTenantUrlsSync,
+} from "../core/configHelpers.js";
 
 /* ─── Theme ─── */
 const T = {
@@ -48,20 +54,27 @@ const DEF_CONFIG = {
 };
 
 function getBrand() {
-  try {
-    const cfg = JSON.parse(store.getSync("habitaris_config")) || {};
-    return {
-      nombre: cfg.empresa?.nombre || "Habitaris",
-      logoBlanco: ((cfg.apariencia?.logoBlanco||"/logo-habitaris-blanco.jpg").startsWith("/")?(cfg.app?.url||"https://suite.habitaris.co")+(cfg.apariencia?.logoBlanco||"/logo-habitaris-blanco.jpg"):(cfg.apariencia?.logoBlanco||"/logo-habitaris-blanco.jpg")),
-      logoNegro: ((cfg.apariencia?.logoNegro||"/logo-habitaris-negro.svg").startsWith("/")?(cfg.app?.url||"https://suite.habitaris.co")+(cfg.apariencia?.logoNegro||"/logo-habitaris-negro.svg"):(cfg.apariencia?.logoNegro||"/logo-habitaris-negro.svg")),
-      colorPrimario: cfg.apariencia?.colorPrimario || "#111111",
-      tipografia: cfg.apariencia?.tipografia || "DM Sans",
-      slogan: cfg.apariencia?.slogan || "Arquitectura · Interiorismo",
-      telefono: cfg.empresa?.telefono || "+57 350 566 1545",
-      email: cfg.empresa?.email || "info@habitaris.co",
-      web: cfg.empresa?.web || "www.habitaris.co",
-    };
-  } catch { return { nombre:"Habitaris", colorPrimario:"#111", tipografia:"DM Sans", slogan:"Arquitectura · Interiorismo", logoBlanco:"/logo-habitaris-blanco.jpg" }; }
+  // Sprint C Capa 3: lee del cache de tenant_config (BD prioritaria) con fallback al legacy localStorage.
+  const branding = getTenantBrandingSync();
+  const identity = getTenantIdentitySync();
+  const contact  = getTenantContactSync();
+  const urls     = getTenantUrlsSync();
+  let cfg = {};
+  try { cfg = JSON.parse(store.getSync("habitaris_config")) || {}; } catch (_) {}
+  const ap = cfg.apariencia || {};
+  // helper: si la URL del logo es relativa (empieza con /), absolutiza con app URL del tenant
+  const abs = (u) => (u && u.startsWith("/")) ? (urls.app + u) : u;
+  return {
+    nombre:        identity.displayName,
+    logoBlanco:    abs(branding.logoWhite || ap.logoBlanco || "/logo-habitaris-blanco.jpg"),
+    logoNegro:     abs(branding.logoBlack || ap.logoNegro  || "/logo-habitaris-negro.svg"),
+    colorPrimario: branding.colorPrimary  || ap.colorPrimario || "#111111",
+    tipografia:    branding.fontPrimary   || ap.tipografia   || "DM Sans",
+    slogan:        ap.slogan || identity.tagline,
+    telefono:      contact.primaryPhone,
+    email:         contact.primaryEmail,
+    web:           urls.publicWebsite,
+  };
 }
 
 function generarSlots(disp, fecha, citas, slotsPublicos) {

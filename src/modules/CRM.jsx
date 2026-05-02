@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import FormulariosDelModulo from "./form/FormulariosDelModulo.jsx";
 /* ─── CLOUD STORE (Supabase multi-tenant) ──────────────────── */
 import { store } from "../core/store.js";
+import { useTenantBranding } from "../core/configHelpers.js";
 
 
 
@@ -99,9 +100,11 @@ const C = {
 
 /* ─── LOGO SVG (fiel al manual: H en cuadrado doble) ────────── */
 const LogoMark = ({ size = 34, color = "#fff" }) => {
+  // Sprint C Capa 3: branding desde tenant_config (BD prioritario, legacy fallback).
+  const branding = useTenantBranding();
   const cfg = (() => { try { return JSON.parse(store.getSync("habitaris_config")) || {}; } catch { return {}; } })();
-  const logoBlanco = cfg.apariencia?.logo || "/logo-habitaris-blanco.jpg";
-  const logoNegro = cfg.apariencia?.logo || "/logo-h-negro.svg";
+  const logoBlanco = branding.logoWhite || cfg.apariencia?.logoBlanco || cfg.apariencia?.logo || "/logo-habitaris-blanco.jpg";
+  const logoNegro  = branding.logoBlack || cfg.apariencia?.logoNegro  || cfg.apariencia?.logo || "/logo-habitaris-negro.svg";
   return <img src={color==="#fff"||color==="white"?logoBlanco:logoNegro} alt="H" style={{height:size,width:"auto",filter:color!=="#fff"&&color!=="white"&&color!=="#000"&&color!=="#111"?`brightness(0) saturate(100%)`:undefined}} />;
 };
 
