@@ -2,12 +2,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import { store } from "../core/store.js";
 
 import { Home, Plus, Trash2, Check, X, Search, Clock, CheckCircle, AlertTriangle, MessageCircle, Star, Calendar, Camera, Phone, Mail, ChevronRight, Eye, BarChart2, FileText, Wrench } from "lucide-react";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;background:#F5F4F1}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}input,select,textarea,button{font-family:'DM Sans',sans-serif;outline:none}button{cursor:pointer}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fade-up{animation:fadeUp .22s ease both}`}</style>;
 const T = { bg:"#F5F4F1",surface:"#FFFFFF",surfaceAlt:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E0E0E0",accent:"#EDEBE7",green:"#111111",greenBg:"#E8F4EE",red:"#B91C1C",redBg:"#FAE8E8",amber:"#8C6A00",amberBg:"#FAF0E0",blue:"#3B3B3B",blueBg:"#F0F0F0",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
 const uid = () => Math.random().toString(36).slice(2, 9);
 const today = () => new Date().toISOString().split("T")[0];
-const fmtD = (d) => d ? new Date(d+"T12:00:00").toLocaleDateString("es-CO",{day:"2-digit",month:"short",year:"numeric"}) : "—";
+const fmtD = (d) => d ? new Date(d+"T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale,{day:"2-digit",month:"short",year:"numeric"}) : "—";
 const ago = (d) => { if(!d) return ""; const ms=Date.now()-new Date(d).getTime(); const h=Math.floor(ms/3600000); if(h<24) return `hace ${h}h`; return `hace ${Math.floor(h/24)}d`; };
 
 function useStore(key, init) {

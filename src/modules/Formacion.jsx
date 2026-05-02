@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { store } from "../core/store.js";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 
 /* ─────── palette ─────── */
@@ -383,7 +384,7 @@ function fmtDuracion(min) {
 }
 function fmtDate(d) {
   if(!d) return "—"
-  return new Date(d).toLocaleDateString("es-CO",{ day:"2-digit", month:"short", year:"numeric" })
+  return new Date(d).toLocaleDateString(getTenantDefaultsSync().locale,{ day:"2-digit", month:"short", year:"numeric" })
 }
 function addMonths(date, months) {
   const d = new Date(date)

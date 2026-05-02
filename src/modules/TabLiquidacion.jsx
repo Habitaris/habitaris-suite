@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { HAB_LOGO } from "./habLogo.js";
 import { downloadPDF } from "./pdfUtil.js";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 const SMLMV = 1_750_905, AUX_TR = 249_095;
-const fmt = n => n == null || isNaN(n) ? "$0" : "$" + Math.round(n).toLocaleString("es-CO");
+const fmt = n => n == null || isNaN(n) ? "$0" : "$" + Math.round(n).toLocaleString(getTenantDefaultsSync().locale);
 const T = {
   ink:"#1A1A19",inkMid:"#6B6B69",inkLight:"#9B9B99",
   border:"#E5E3DE",surface:"#FAFAF8",card:"#FFFFFF",
@@ -115,7 +116,7 @@ function Card({children, style, accent}) {
 }
 
 function genCertificacionHTML(emp, conSalario) {
-  const hoy = new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
+  const hoy = new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"});
   return `<style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Helvetica,Arial,sans-serif}
 .hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:20px;overflow:hidden}
@@ -131,7 +132,7 @@ h1{font-size:13pt;text-align:center;margin:20px 0 16px}
 <div class="body">
 <p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, identificada con NIT 901.922.136-8, certifica que:</p>
 <br/>
-<p><b>${emp.candidato_nombre||""}</b>, identificado(a) con ${emp.tipo_documento||"C.C."} No. <b>${emp.candidato_cc||""}</b>, ${emp.fecha_inicio?"labora":"laboró"} en esta empresa desde el <b>${emp.fecha_inicio ? new Date(emp.fecha_inicio+"T12:00:00").toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"}) : "—"}</b>, desempeñando el cargo de <b>${emp.cargo||""}</b> en el área <b>${emp.area||"Administrativa"}</b>.</p>
+<p><b>${emp.candidato_nombre||""}</b>, identificado(a) con ${emp.tipo_documento||"C.C."} No. <b>${emp.candidato_cc||""}</b>, ${emp.fecha_inicio?"labora":"laboró"} en esta empresa desde el <b>${emp.fecha_inicio ? new Date(emp.fecha_inicio+"T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"}) : "—"}</b>, desempeñando el cargo de <b>${emp.cargo||""}</b> en el área <b>${emp.area||"Administrativa"}</b>.</p>
 <br/>
 ${conSalario ? `<p>El trabajador devenga un salario mensual de <b>${fmt(emp.salario_base)}</b> (${(emp.salario_base||0)<=2*SMLMV ? "más auxilio de transporte de "+fmt(emp.auxilio_transporte||AUX_TR) : "salario integral"}).</p><br/>` : ""}
 <p>La presente certificación se expide a solicitud del interesado, en Bogotá D.C., a los ${hoy}.</p>
@@ -144,7 +145,7 @@ ${conSalario ? `<p>El trabajador devenga un salario mensual de <b>${fmt(emp.sala
 }
 
 function genCartaTerminacion(emp, tipo, liq) {
-  const hoy = new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
+  const hoy = new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"});
   const tipoInfo = TIPOS_TERMINACION.find(t=>t.id===tipo);
   const motivo = tipo==="renuncia" ? "por renuncia voluntaria del trabajador" : tipo==="vencimiento" ? "por vencimiento del término fijo pactado" : tipo==="justa_causa" ? "por despido con justa causa" : "por decisión unilateral del empleador sin justa causa";
   return `<style>
@@ -167,10 +168,10 @@ td{padding:4px 8px;border-bottom:1px solid #ddd}.r{text-align:right;font-family:
 <p>Bogotá D.C., ${hoy}</p><br/>
 <p>Señor(a)<br/><b>${emp.candidato_nombre}</b><br/>${emp.tipo_documento||"C.C."} ${emp.candidato_cc}</p><br/>
 <p>Ref: Terminación de contrato de trabajo</p><br/>
-<p>Por medio de la presente, le comunicamos que su contrato de trabajo con <b>HABITARIS S.A.S</b> ha sido terminado <b>${motivo}</b>, con fecha efectiva <b>${liq.fechaFin.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b>.</p><br/>
+<p>Por medio de la presente, le comunicamos que su contrato de trabajo con <b>HABITARIS S.A.S</b> ha sido terminado <b>${motivo}</b>, con fecha efectiva <b>${liq.fechaFin.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</b>.</p><br/>
 <p>Datos del contrato:</p>
 <p>- Cargo: <b>${emp.cargo}</b></p>
-<p>- Fecha de ingreso: <b>${liq.fechaIni.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b></p>
+<p>- Fecha de ingreso: <b>${liq.fechaIni.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</b></p>
 <p>- Días trabajados: <b>${liq.diasTotales}</b></p>
 <p>- Salario base: <b>${fmt(liq.sal)}</b></p><br/>
 <p>A continuación se detalla la liquidación final de prestaciones sociales:</p>
@@ -185,7 +186,7 @@ ${liq.items.map(i=>"<tr><td>"+i.concepto+"</td><td class='r'>"+fmt(i.valor)+"</t
 }
 
 function genPazYSalvo(emp, liq) {
-  const hoy = new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
+  const hoy = new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"});
   return `<style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Helvetica,Arial,sans-serif}
 .hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:20px;overflow:hidden}
@@ -200,7 +201,7 @@ h1{font-size:13pt;text-align:center;margin:20px 0 16px}
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>
 <h1>PAZ Y SALVO</h1>
 <div class="body">
-<p><b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que el(la) señor(a) <b>${emp.candidato_nombre}</b>, identificado(a) con ${emp.tipo_documento||"C.C."} No. <b>${emp.candidato_cc}</b>, quien laboró en el cargo de <b>${emp.cargo}</b> desde el ${liq.fechaIni.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})} hasta el ${liq.fechaFin.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}, se encuentra a <b>PAZ Y SALVO</b> con la empresa por los siguientes conceptos:</p>
+<p><b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que el(la) señor(a) <b>${emp.candidato_nombre}</b>, identificado(a) con ${emp.tipo_documento||"C.C."} No. <b>${emp.candidato_cc}</b>, quien laboró en el cargo de <b>${emp.cargo}</b> desde el ${liq.fechaIni.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})} hasta el ${liq.fechaFin.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}, se encuentra a <b>PAZ Y SALVO</b> con la empresa por los siguientes conceptos:</p>
 </div>
 <div class="checks">
 <p>☑ Salarios y prestaciones sociales</p>
@@ -340,8 +341,8 @@ export default function TabLiquidacion() {
                       <div style={{fontSize:11,color:T.inkLight}}>{emp.cargo} · CC {emp.candidato_cc} · {emp.tipo_contrato||"fijo"} {liq.durMeses?liq.durMeses+"m":""}</div>
                     </div>
                     <div style={{textAlign:"right"}}>
-                      <div style={{fontSize:11,color:T.inkLight}}>Ingreso: {liq.fechaIni.toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"})}</div>
-                      <div style={{fontSize:11,color:T.inkLight}}>Salida: {liq.fechaFin.toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"})}</div>
+                      <div style={{fontSize:11,color:T.inkLight}}>Ingreso: {liq.fechaIni.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short",year:"numeric"})}</div>
+                      <div style={{fontSize:11,color:T.inkLight}}>Salida: {liq.fechaFin.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short",year:"numeric"})}</div>
                       <div style={{fontSize:11,fontWeight:600}}>{liq.diasTotales} días trabajados ({(liq.aniosTrab).toFixed(1)} años)</div>
                     </div>
                   </div>

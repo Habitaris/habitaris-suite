@@ -12,6 +12,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { sb } from "../core/supabase.js";
 import { useTenant } from "../core/TenantContext.jsx";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 const C = {
   bg: "#F0EEE9",
@@ -37,7 +38,7 @@ function formatMoney(n) {
   if (n >= 1e9) return (n / 1e9).toFixed(1).replace(".0", "") + " B";
   if (n >= 1e6) return (n / 1e6).toFixed(1).replace(".0", "") + " M";
   if (n >= 1e3) return (n / 1e3).toFixed(0) + " K";
-  return new Intl.NumberFormat("es-CO").format(n);
+  return new Intl.NumberFormat(getTenantDefaultsSync().locale).format(n);
 }
 
 function paisFlag(p) {

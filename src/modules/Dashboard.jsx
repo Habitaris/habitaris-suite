@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { store } from "../core/store.js";
 
 import { AlertTriangle, TrendingUp, TrendingDown, DollarSign, Calendar, Truck, FileText, Users, Package, Wrench, CreditCard, Briefcase } from "lucide-react";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 /* ═══════════════════════════════════════════════════════════════
    DASHBOARD GENERAL — Habitaris Suite
@@ -11,7 +12,7 @@ import { AlertTriangle, TrendingUp, TrendingDown, DollarSign, Calendar, Truck, F
 
 const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap');*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}body{font-family:'DM Sans',sans-serif;background:#F5F4F1}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#C8C5BE;border-radius:2px}input,select,textarea,button{font-family:'DM Sans',sans-serif;outline:none}button{cursor:pointer}@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}.fade-up{animation:fadeUp .22s ease both}`}</style>;
 const T = { bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E0E0E0",accent:"#EDEBE7",green:"#111111",greenBg:"#E8F4EE",red:"#B91C1C",redBg:"#FAE8E8",amber:"#8C6A00",amberBg:"#FAF0E0",blue:"#3B3B3B",blueBg:"#F0F0F0",purple:"#5B3A8C",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
-const fmt = (n) => new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(n||0);
+const fmt = (n) => new Intl.NumberFormat(getTenantDefaultsSync().locale,{maximumFractionDigits:0}).format(n||0);
 const today = () => new Date().toISOString().split("T")[0];
 const Card = ({children,style,...p}) => <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:8,padding:16,boxShadow:T.shadow,...style}} {...p}>{children}</div>;
 const Badge = ({children,color}) => <span style={{fontSize:8,fontWeight:700,padding:"2px 8px",borderRadius:10,background:color+"22",color}}>{children}</span>;
@@ -385,7 +386,7 @@ export default function Dashboard() {
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18}}>
           <div>
             <div style={{fontSize:22,fontWeight:800,letterSpacing:1}}>📊 Dashboard</div>
-            <div style={{fontSize:10,color:T.inkMid}}>Vista consolidada de la empresa · {new Date().toLocaleDateString("es-CO",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
+            <div style={{fontSize:10,color:T.inkMid}}>Vista consolidada de la empresa · {new Date().toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div>
           </div>
         </div>
 

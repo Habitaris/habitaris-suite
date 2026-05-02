@@ -12,6 +12,7 @@
 // ──────────────────────────────────────────────────────────────
 
 import React, { useMemo, useState, useEffect } from "react";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 // Festivos Colombia — cálculo dinámico con Easter
 function easter(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;return new Date(y,mo-1,da);}
@@ -33,7 +34,7 @@ function lblFecha(fecha, hoy){
   if (sameDay(fecha, hoy)) return "hoy";
   const mañana = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()+1);
   if (sameDay(fecha, mañana)) return "mañana";
-  return fecha.toLocaleDateString("es-CO",{weekday:"short",day:"numeric",month:"short"});
+  return fecha.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"});
 }
 function alertaPago(fechaObjetivo, hoy){
   const diffMs = fechaObjetivo - hoy;

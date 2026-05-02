@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 
 import FormulariosDelModulo from "./form/FormulariosDelModulo.jsx";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 /* ─── CLOUD STORE (Supabase multi-tenant) ──────────────────── */
 import { store } from "../core/store.js";
 import { useTenantBranding } from "../core/configHelpers.js";
@@ -465,7 +466,7 @@ function calc(o) {
 /* ─── UTILS ──────────────────────────────────────────────────── */
 const fmt = (n, d = 0) => {
   if (n === null || n === undefined || isNaN(n)) return "—";
-  return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: d, minimumFractionDigits: d }).format(n);
+  return new Intl.NumberFormat(getTenantDefaultsSync().locale, { style: "currency", currency: getTenantDefaultsSync().currency, maximumFractionDigits: d, minimumFractionDigits: d }).format(n);
 };
 const pct = n => `${(n * 100).toFixed(2)}%`;
 const uid  = () => Math.random().toString(36).substr(2, 9);
@@ -539,7 +540,7 @@ function briefingToClient(b) {
       b.edificio          ? `Proyecto: ${b.edificio}` : "",
       b.tipo_proyecto     ? `Tipo: ${b.tipo_proyecto}` : "",
       b.area_m2           ? `Área: ${b.area_m2} m²` : "",
-      b.presupuesto       ? `Presupuesto: $ ${Number(b.presupuesto).toLocaleString("es-CO")}` : "",
+      b.presupuesto       ? `Presupuesto: $ ${Number(b.presupuesto).toLocaleString(getTenantDefaultsSync().locale)}` : "",
       b.como_conociste    ? `Canal: ${b.como_conociste}` : "",
     ].filter(Boolean).join(" | "),
     emailFactura:   b.email_factura || b.email || "",
@@ -676,7 +677,7 @@ function BriefingDetalle({ b, onClose, onCreateOffer, onCreateClient }) {
   const fmtVal = (key, val) => {
     if (!val || val === "") return "—";
     if (Array.isArray(val)) return val.join(", ");
-    if (key === "presupuesto") return `$ ${Number(val).toLocaleString("es-CO")} COP`;
+    if (key === "presupuesto") return `$ ${Number(val).toLocaleString(getTenantDefaultsSync().locale)} COP`;
     return String(val);
   };
   const filled = BRIEFING_CAMPOS.filter(c => b[c.key] && b[c.key] !== "");
@@ -1267,7 +1268,7 @@ function FormBuilder() {
                 <div>
                   <div style={{ fontWeight:600, fontSize:13 }}>{f.nombre}</div>
                   <div style={{ fontSize:10, color:C.inkLight, marginTop:2 }}>
-                    {f.campos?.length||0} campos · {f.updatedAt ? new Date(f.updatedAt).toLocaleDateString("es-CO") : ""}
+                    {f.campos?.length||0} campos · {f.updatedAt ? new Date(f.updatedAt).toLocaleDateString(getTenantDefaultsSync().locale) : ""}
                   </div>
                 </div>
                 <div style={{ display:"flex", gap:6 }}>
@@ -1651,7 +1652,7 @@ function Formularios({ sv, onCreateOfferFromBriefing, onCreateClientFromBriefing
                       b.ciudad      && { ic:"📍", v:b.ciudad },
                       b.tipo_proyecto&&{ ic:"🏗️", v:b.tipo_proyecto },
                       b.area_m2     && { ic:"📐", v:`${b.area_m2} m²` },
-                      b.presupuesto && { ic:"💰", v:`$ ${Number(b.presupuesto).toLocaleString("es-CO")} COP` },
+                      b.presupuesto && { ic:"💰", v:`$ ${Number(b.presupuesto).toLocaleString(getTenantDefaultsSync().locale)} COP` },
                     ].filter(Boolean).map((item,i) => (
                       <span key={i} style={{ fontSize:11, color:C.inkLight }}>{item.ic} {item.v}</span>
                     ))}
@@ -1938,7 +1939,7 @@ body{font-family:'DM Sans',sans-serif;color:#1a1a1a}
 
   ${form.notas?'<div class="sec"><div class="sec-t">Notas</div><div class="nbox">'+form.notas+'</div></div>':""}
 
-  <div class="ft"><span>Habitaris Suite · CRM</span><span>${new Date().toLocaleDateString("es-CO")}</span><span>Confidencial</span></div>
+  <div class="ft"><span>Habitaris Suite · CRM</span><span>${new Date().toLocaleDateString(getTenantDefaultsSync().locale)}</span><span>Confidencial</span></div>
 </div></body></html>`;
               const w = window.open("","_blank","width=800,height=1000");
               w.document.write(html); w.document.close();
@@ -2466,7 +2467,7 @@ function Lista({ offers, sv, sei, onDel, onDup }) {
                     <td style={{ padding: "11px 14px", fontSize: 13, fontWeight: 700, color: C.ink }}>{fmt(r.PVP_IVA)}</td>
                     <td style={{ padding: "11px 14px", fontSize: 12, color: r.PVP > 0 ? C.success : C.inkLight }}>{r.PVP > 0 ? pct(o.margen) : "—"}</td>
                     <td style={{ padding: "11px 14px" }}><Badge e={o.estado} /></td>
-                    <td style={{ padding: "11px 14px", fontSize: 10, color: C.inkLight, whiteSpace: "nowrap" }}>{o.updatedAt ? new Date(o.updatedAt).toLocaleDateString("es-CO") : "—"}</td>
+                    <td style={{ padding: "11px 14px", fontSize: 10, color: C.inkLight, whiteSpace: "nowrap" }}>{o.updatedAt ? new Date(o.updatedAt).toLocaleDateString(getTenantDefaultsSync().locale) : "—"}</td>
                     <td style={{ padding: "11px 14px" }}>
                       <div style={{ display: "flex", gap: 3 }}>
                         <Btn sm v="ghost" icon={Edit2} on={() => { sei(o.id); sv("offer-edit"); }} />
@@ -3426,7 +3427,7 @@ function APULineaModal({ linea, oferta, onSave, onClose }) {
                 : <span style={{ fontFamily:"'DM Mono',monospace", color:"#3B3B3B" }}>
                     {fmtN2(res.costoH||0,0)} {moneda}/h
                     <span style={{ color:"#888", fontFamily:"'DM Sans',sans-serif" }}>
-                      &nbsp;(salario {(oferta.apuSalarioAnual||0).toLocaleString("es-CO")} +
+                      &nbsp;(salario {(oferta.apuSalarioAnual||0).toLocaleString(getTenantDefaultsSync().locale)} +
                       {((oferta.apuPrestaciones||0)*100).toFixed(0)}% SS ÷
                       {fmtN2((oferta.apuHDia||8)*(oferta.apuDiasSem||5)*(oferta.apuSemanas||52)*(oferta.apuPctProductivas||0.6),0)}h prod.)
                     </span>
@@ -4277,7 +4278,7 @@ function TBorrador({ d, set, r }) {
           @media print{body{padding:12px}}
           </style></head><body>`;
           html += `<h1>APUs de Venta · ${d.proyecto || d.codigoOferta || "Oferta"}</h1>`;
-          html += `<div class="meta">${d.codigoOferta||""} · ${d.cliente||""} · ${moneda} · ${new Date().toLocaleDateString("es-CO")}</div>`;
+          html += `<div class="meta">${d.codigoOferta||""} · ${d.cliente||""} · ${moneda} · ${new Date().toLocaleDateString(getTenantDefaultsSync().locale)}</div>`;
           html += `<div class="param">Margen: ${(d.margen*100).toFixed(1)}% · GC: ${((r.g||0)*100).toFixed(2)}% · GF: ${((r.f||0)*100).toFixed(2)}% · IVA: ${((d.tarifaIVA||0.19)*100).toFixed(0)}%${isObra?" (sobre utilidad)":""}</div>`;
 
           filteredGroups.forEach(capId => {
@@ -5163,7 +5164,7 @@ function TGen({ d, set, offers }) {
                   onMouseLeave={e=>e.currentTarget.style.background="#fff"}>
                   <div style={{ fontWeight:600, fontSize:13 }}>{b.nombre || "Sin nombre"}</div>
                   <div style={{ fontSize:11, color:"#888", marginTop:2 }}>
-                    {b.email||"–"} · {new Date(b.creadoEn||Date.now()).toLocaleDateString("es-CO")}
+                    {b.email||"–"} · {new Date(b.creadoEn||Date.now()).toLocaleDateString(getTenantDefaultsSync().locale)}
                   </div>
                 </div>
               ))}
@@ -5993,8 +5994,8 @@ function TPla({ d, set, r }) {
   /* ── Print preview ── */
   const printCronograma = () => {
     const w = window.open("","_blank");
-    const fI = d.fechaInicio ? new Date(d.fechaInicio).toLocaleDateString("es-CO",{year:"numeric",month:"long",day:"numeric"}) : "—";
-    const fE = d.fechaEntrega ? new Date(d.fechaEntrega).toLocaleDateString("es-CO",{year:"numeric",month:"long",day:"numeric"}) : "—";
+    const fI = d.fechaInicio ? new Date(d.fechaInicio).toLocaleDateString(getTenantDefaultsSync().locale,{year:"numeric",month:"long",day:"numeric"}) : "—";
+    const fE = d.fechaEntrega ? new Date(d.fechaEntrega).toLocaleDateString(getTenantDefaultsSync().locale,{year:"numeric",month:"long",day:"numeric"}) : "—";
     const durDias = acts.length > 0 ? totalDays : "—";
     let html = `<html><head><title>Cronograma - ${d.codigoOferta||""}</title>
     <style>@import url('https://fonts.googleapis.com/css2?family=DM Sans:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap');
@@ -6051,8 +6052,8 @@ function TPla({ d, set, r }) {
       const indent = niv * 16;
       const summary = isCap ? getSummary(i) : null;
       const dur = isCap && summary ? summary.dur : (a.duracion||0);
-      const fin = (() => { const s=new Date(a.inicio||today()); s.setDate(s.getDate()+dur-1); return s.toLocaleDateString("es-CO"); })();
-      const inicio = new Date(isCap && summary?.start ? summary.start : a.inicio||today()).toLocaleDateString("es-CO");
+      const fin = (() => { const s=new Date(a.inicio||today()); s.setDate(s.getDate()+dur-1); return s.toLocaleDateString(getTenantDefaultsSync().locale); })();
+      const inicio = new Date(isCap && summary?.start ? summary.start : a.inicio||today()).toLocaleDateString(getTenantDefaultsSync().locale);
       const avance = isCap && summary ? summary.avance : (a.avance||0);
       const cd = isCap && summary ? summary.cd : (a.precioCD||0);
       const venta = isCap && summary ? summary.venta : (a.totalVenta||0);
@@ -6074,7 +6075,7 @@ function TPla({ d, set, r }) {
 
     // Footer
     html += `<div class="footer"><span>HABITARIS · ${d.codigoOferta||""} · Cronograma valorado</span>`;
-    html += `<span>Generado: ${new Date().toLocaleDateString("es-CO")} · Página 1</span></div>`;
+    html += `<span>Generado: ${new Date().toLocaleDateString(getTenantDefaultsSync().locale)} · Página 1</span></div>`;
     html += `</body></html>`;
     w.document.write(html);
     w.document.close();
@@ -6230,7 +6231,7 @@ function TPla({ d, set, r }) {
     };
   };
 
-  const fmtFecha = (f) => f && f !== "9999" ? new Date(f).toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"}) : "—";
+  const fmtFecha = (f) => f && f !== "9999" ? new Date(f).toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short",year:"numeric"}) : "—";
 
   const exportRecursosPrint = (rec) => {
     const w = window.open("","_blank");
@@ -6279,7 +6280,7 @@ function TPla({ d, set, r }) {
     });
     html += `</table>`;
 
-    html += `<div class="footer"><span>HABITARIS · ${d.codigoOferta||""} · Plan de recursos</span><span>${new Date().toLocaleDateString("es-CO")}</span></div>`;
+    html += `<div class="footer"><span>HABITARIS · ${d.codigoOferta||""} · Plan de recursos</span><span>${new Date().toLocaleDateString(getTenantDefaultsSync().locale)}</span></div>`;
     html += `</body></html>`;
     w.document.write(html); w.document.close();
     setTimeout(() => w.print(), 400);
@@ -6826,7 +6827,7 @@ const GG_CATEGORIAS = [
 function TGG({ d, set, r }) {
   const pais = d.pais || "CO";
   const moneda = pais === "CO" ? "COP" : "EUR";
-  const fmt = (n) => new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(n||0);
+  const fmt = (n) => new Intl.NumberFormat(getTenantDefaultsSync().locale,{maximumFractionDigits:0}).format(n||0);
   // Duration: manual or from cronograma
   const ggMeses = d.ggMeses || 6;
   const mesesCrono = (() => {
@@ -6970,7 +6971,7 @@ function TGG({ d, set, r }) {
     html += `<table style="margin-top:12px"><tr class="totrow"><td colspan="4" class="bold">TOTAL GASTOS GENERALES</td>`;
     html += `<td class="mono r bold green" style="font-size:11px">${fmt(totalGG)} ${moneda}</td></tr>`;
     html += `<tr><td colspan="4">Incidencia sobre costo directo</td><td class="mono r bold" style="font-size:11px">${(pctGG*100).toFixed(2)}%</td></tr></table>`;
-    html += `<div class="footer"><span>HABITARIS · ${d.codigoOferta||""} · Gastos generales</span><span>${new Date().toLocaleDateString("es-CO")}</span></div>`;
+    html += `<div class="footer"><span>HABITARIS · ${d.codigoOferta||""} · Gastos generales</span><span>${new Date().toLocaleDateString(getTenantDefaultsSync().locale)}</span></div>`;
     html += `</body></html>`;
     w.document.write(html); w.document.close();
     setTimeout(() => w.print(), 400);
@@ -7326,7 +7327,7 @@ function TGG({ d, set, r }) {
 function TFlu({ d, set, r }) {
   const pais = d.pais || "CO";
   const moneda = pais === "CO" ? "COP" : "EUR";
-  const fmt = (n) => new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(n||0);
+  const fmt = (n) => new Intl.NumberFormat(getTenantDefaultsSync().locale,{maximumFractionDigits:0}).format(n||0);
 
   // ── Modo de cobro: hitos | avance | avance_anticipo ──
   const modoCobro = d.modoCobro || "avance_anticipo";
@@ -7548,7 +7549,7 @@ function TFlu({ d, set, r }) {
     html += `<td class="mono bold ${lastAcum>=0?"green":"red"}">${fmt(lastAcum)}</td></tr>`;
 
     html += `</tbody></table>`;
-    html += `<div class="footer"><span>HABITARIS · ${d.codigoOferta||""} · Flujo de caja</span><span>${new Date().toLocaleDateString("es-CO")}</span></div>`;
+    html += `<div class="footer"><span>HABITARIS · ${d.codigoOferta||""} · Flujo de caja</span><span>${new Date().toLocaleDateString(getTenantDefaultsSync().locale)}</span></div>`;
     html += `</body></html>`;
     w.document.write(html); w.document.close();
     setTimeout(() => w.print(), 400);
@@ -7758,7 +7759,7 @@ function TFlu({ d, set, r }) {
               borderRight:"1px solid #E0E0E0", background:"#F5F4F1", position:"sticky", left:0, zIndex:1, minWidth:160 };
             const td = (v, color) => ({ padding:"4px 6px", fontSize:10, fontFamily:"'DM Mono',monospace",
               textAlign:"right", color: v===0||v===undefined ? "#CCC" : (color||"#333"), whiteSpace:"nowrap" });
-            const fmtS = (n) => n===0?"—":new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(n);
+            const fmtS = (n) => n===0?"—":new Intl.NumberFormat(getTenantDefaultsSync().locale,{maximumFractionDigits:0}).format(n);
             const secHdr = (label, bg) => (
               <tr key={label} style={{ background:bg||"#E8E6E1" }}>
                 <td style={{ ...tdL, background:bg||"#E8E6E1", fontWeight:700, fontSize:9, textTransform:"uppercase", letterSpacing:0.5 }}>{label}</td>
@@ -8110,7 +8111,7 @@ function TEqu({ d, set }) {
       html += `</div></div></div>`;
     });
 
-    html += `<div class="footer"><span>HABITARIS · ${d.codigoOferta||""} · Equipos de trabajo</span><span>${new Date().toLocaleDateString("es-CO")}</span></div>`;
+    html += `<div class="footer"><span>HABITARIS · ${d.codigoOferta||""} · Equipos de trabajo</span><span>${new Date().toLocaleDateString(getTenantDefaultsSync().locale)}</span></div>`;
     html += `</body></html>`;
     w.document.write(html); w.document.close();
     setTimeout(() => w.print(), 400);
@@ -8760,7 +8761,7 @@ function TMat({ d, set, r }) {
       });
       html += `</table>`;
     });
-    html += `<div class="footer"><span>HABITARIS · Comparativo · ${d.codigoOferta||""}</span><span>${new Date().toLocaleDateString("es-CO")}</span></div>`;
+    html += `<div class="footer"><span>HABITARIS · Comparativo · ${d.codigoOferta||""}</span><span>${new Date().toLocaleDateString(getTenantDefaultsSync().locale)}</span></div>`;
     html += `</body></html>`;
     w.document.write(html); w.document.close();
     setTimeout(() => w.print(), 400);
@@ -9340,7 +9341,7 @@ function TOrg({ d, set }) {
     html += `<div class="org-container">`;
     roots.forEach(r2 => { html += renderNode(r2); });
     html += `</div>`;
-    html += `<div class="footer"><span>HABITARIS · ${d.codigoOferta||""} · Organigrama</span><span>${new Date().toLocaleDateString("es-CO")}</span></div>`;
+    html += `<div class="footer"><span>HABITARIS · ${d.codigoOferta||""} · Organigrama</span><span>${new Date().toLocaleDateString(getTenantDefaultsSync().locale)}</span></div>`;
     html += `</body></html>`;
     w.document.write(html); w.document.close();
     setTimeout(() => w.print(), 400);
@@ -10544,7 +10545,7 @@ function TEnt({ d, set, r }) {
                   };
                   return (
                     <div key={h.id||i} style={{ display:"flex", gap:8, padding:"5px 0", borderBottom:`1px solid #F5F5F5`, fontSize:10 }}>
-                      <div style={{ minWidth:100, color:C.inkLight }}>{new Date(h.fecha).toLocaleString("es-CO",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</div>
+                      <div style={{ minWidth:100, color:C.inkLight }}>{new Date(h.fecha).toLocaleString(getTenantDefaultsSync().locale,{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</div>
                       <div style={{ flex:1 }}>
                         <span style={{ fontWeight:600 }}>{h.por?.nombre?.split(" ")[0] || "—"}</span>
                         <span style={{ color:C.inkMid }}> · {ACCION_LBL[h.accion] || h.accion}</span>
@@ -10571,7 +10572,7 @@ function TEnt({ d, set, r }) {
                 <div key={p.token||i} style={{ display:"flex", gap:8, padding:"5px 0", borderBottom:`1px solid #F5F5F5`, fontSize:10, alignItems:"center" }}>
                   <span style={{ fontSize:14 }}>{p.estado==="aprobada"?"✅":p.estado==="rechazada"?"❌":p.estado==="devuelta"?"🔄":"📨"}</span>
                   <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:600 }}>Rev.{p.revision} · {new Date(p.fechaCreacion).toLocaleDateString("es-CO")}</div>
+                    <div style={{ fontWeight:600 }}>Rev.{p.revision} · {new Date(p.fechaCreacion).toLocaleDateString(getTenantDefaultsSync().locale)}</div>
                     <div style={{ color:C.inkLight }}>{p.clienteEmail || p.clienteNombre}</div>
                   </div>
                   <span style={{ fontSize:9, fontWeight:600, padding:"2px 6px", borderRadius:3,

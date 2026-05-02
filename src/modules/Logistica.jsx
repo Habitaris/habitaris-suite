@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { store } from "../core/store.js";
 
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 import {
   Package, Plus, Trash2, Edit3, Check, X, Search,
   Download, Upload, ChevronDown, ChevronUp, Save,
@@ -118,7 +119,7 @@ export default function Logistica() {
   const [showForm, setShowForm] = useState(false);
   const [vistaCompra, setVistaCompra] = useState(false);
 
-  const fmt = (n) => n ? new Intl.NumberFormat("es-CO",{ maximumFractionDigits:0 }).format(n) : "—";
+  const fmt = (n) => n ? new Intl.NumberFormat(getTenantDefaultsSync().locale,{ maximumFractionDigits:0 }).format(n) : "—";
 
   // Filtered items
   const filtered = useMemo(() => {

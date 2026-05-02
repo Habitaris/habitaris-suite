@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, Component } from "react";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 // Error Boundary — shows error instead of blank screen
 export class ErrorBoundary extends Component{
@@ -67,7 +68,7 @@ const TAX_TBL=[
 /* ══════════════════════════════════════════════════════════════════
    UTILITIES
    ══════════════════════════════════════════════════════════════════ */
-const $=n=>{if(n==null||isNaN(n))return"$0";return"$"+Math.round(n).toLocaleString("es-CO")};
+const $=n=>{if(n==null||isNaN(n))return"$0";return"$"+Math.round(n).toLocaleString(getTenantDefaultsSync().locale)};
 const pc=n=>{if(n==null||isNaN(n))return"0.00%";return n.toFixed(2)+"%"};
 const di=d=>(d.getDay()+6)%7;
 const dKey=d=>`${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
@@ -524,7 +525,7 @@ table{width:100%;font-size:11px;border-collapse:collapse}td{padding:2px 0}td:las
 `.no-print{display:none}@media screen{.no-print{display:block}}`;
 
     // Header
-    let h=`<div class="hdr"><div><h1>${isEmp?"RESUMEN EMPLEADOR":"PROPUESTA SALARIAL"}</h1><div style="font-size:10px;color:#666666">Colombia 2026 · Decretos 1469-1470/2025</div></div><div style="text-align:right;font-size:10px;color:#666666"><b style="font-size:11px;color:#111111">${new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b></div></div>`;
+    let h=`<div class="hdr"><div><h1>${isEmp?"RESUMEN EMPLEADOR":"PROPUESTA SALARIAL"}</h1><div style="font-size:10px;color:#666666">Colombia 2026 · Decretos 1469-1470/2025</div></div><div style="text-align:right;font-size:10px;color:#666666"><b style="font-size:11px;color:#111111">${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</b></div></div>`;
 
     // Contract info
     h+=`<div class="g3" style="margin-bottom:10px">${[{l:"Cargo",v:cargo||"\u2014"},{l:"Contrato",v:tipoCon==="fijo"?"T\u00e9rmino fijo \u2014 "+(contrato.label||durCon+"m"):tipoCon==="indefinido"?"Indefinido":"Obra o labor"},{l:"Frecuencia",v:freqPago==="quincenal"?"Quincenal ("+pctQ1+"/"+String(100-pctQ1)+")":"Mensual"}].map(x=>'<div class="box" style="padding:6px 10px"><div class="lbl">'+x.l+'</div><div style="font-size:13px;font-weight:700">'+x.v+'</div></div>').join("")}</div>`;
@@ -610,7 +611,7 @@ table{width:100%;font-size:11px;border-collapse:collapse}td{padding:2px 0}td:las
         // Payment calendar
         h+=`<h2>\ud83d\udcc5 Calendario de pagos previstos</h2><div class="box" style="font-size:10px">`;
         if(durMode==="fechas"&&contrato.fechaIni&&contrato.fechaFin){
-          const ini=contrato.fechaIni,fin=contrato.fechaFin,fmt=d=>d.toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"});
+          const ini=contrato.fechaIni,fin=contrato.fechaFin,fmt=d=>d.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short",year:"numeric"});
           for(let y=ini.getFullYear();y<=fin.getFullYear();y++){
             const jun30=new Date(y,5,30),dic20=new Date(y,11,20);
             if(jun30>=ini&&jun30<=fin){const si=new Date(y,0,1)<ini?ini:new Date(y,0,1);h+=`<div class="row"><span>\ud83d\udccc <b>${fmt(jun30)}</b> \u2014 Prima 1er sem.</span><b>${$(baseLiq*diffDays(si,jun30)/360)}</b></div>`}
@@ -965,8 +966,8 @@ window.onload=function(){
       {/* ══════ CONFIG ══════ */}
       <Card t="Parámetros Legales 2026" icon="⚙️" accent="#F5F4F1">
         <G3>
-          <In label="SMLMV" prefix="$" value={smlmv.toLocaleString("es-CO")} onChange={e=>setSmlmv(Number(e.target.value.replace(/\D/g,""))||0)} help={`Día: ${$(smlmv/30)}`}/>
-          <In label="Aux. Transporte" prefix="$" value={auxTr.toLocaleString("es-CO")} onChange={e=>setAuxTr(Number(e.target.value.replace(/\D/g,""))||0)} help={`Día: ${$(auxTr/30)}`}/>
+          <In label="SMLMV" prefix="$" value={smlmv.toLocaleString(getTenantDefaultsSync().locale)} onChange={e=>setSmlmv(Number(e.target.value.replace(/\D/g,""))||0)} help={`Día: ${$(smlmv/30)}`}/>
+          <In label="Aux. Transporte" prefix="$" value={auxTr.toLocaleString(getTenantDefaultsSync().locale)} onChange={e=>setAuxTr(Number(e.target.value.replace(/\D/g,""))||0)} help={`Día: ${$(auxTr/30)}`}/>
           <Sel label="ARL" value={arlIdx} onChange={e=>setArlIdx(+e.target.value)} options={[{v:-1,l:"— Seleccionar ARL —"},...ARL.map((a,i)=>({v:i,l:`${a.n} — ${pc(a.t)} — ${a.d}`}))]}/>
         </G3>
         <G2>
@@ -1051,7 +1052,7 @@ window.onload=function(){
           <div style={{display:"flex",gap:0,background:"#F5F4F1",borderRadius:8,border:"1px solid #E5E3DE",overflow:"hidden",marginBottom:10}} className="no-print">
             {[{v:"neto",l:"💵 NETO"},{v:"bruto",l:"📄 BRUTO"},{v:"integral",l:"💼 INTEGRAL"}].map(o=><button key={o.v} type="button" onClick={()=>handleModoSal(o.v)} style={{flex:1,padding:"9px 6px",border:"none",borderRadius:0,cursor:"pointer",fontSize:11,fontWeight:700,fontFamily:"inherit",background:modoSal===o.v?"#111111":"transparent",color:modoSal===o.v?"#fff":"#666666",appearance:"none",outline:"none",borderRight:"1px solid #E5E3DE"}}>{o.l}</button>)}
           </div>
-          <In label={modoSal==="neto"?"Neto deseado":modoSal==="integral"?"Salario integral":"Salario bruto"} prefix="$" value={valorSal.toLocaleString("es-CO")} onChange={e=>setValorSal(Number(e.target.value.replace(/\D/g,""))||0)} help={modoSal==="integral"?`Mínimo: ${$(smlmv*INTEGRAL_F)} (13 SMLMV)`:modoSal==="neto"?`${dmProm}d · Día: ${$(neg.netoDia)} · Hora: ${$(neg.netoHora)}`:`${dmProm} días`}/>
+          <In label={modoSal==="neto"?"Neto deseado":modoSal==="integral"?"Salario integral":"Salario bruto"} prefix="$" value={valorSal.toLocaleString(getTenantDefaultsSync().locale)} onChange={e=>setValorSal(Number(e.target.value.replace(/\D/g,""))||0)} help={modoSal==="integral"?`Mínimo: ${$(smlmv*INTEGRAL_F)} (13 SMLMV)`:modoSal==="neto"?`${dmProm}d · Día: ${$(neg.netoDia)} · Hora: ${$(neg.netoHora)}`:`${dmProm} días`}/>
           {modoSal==="integral"&&valorSal<smlmv*INTEGRAL_F&&<Al c="r">⚠️ Mínimo integral: {$(smlmv*INTEGRAL_F)}</Al>}
           {modoSal!=="integral"&&<>
             <Tg label="Bono no salarial (Art. 128)" on={usarBono} set={setUsarBono}/>
@@ -1074,7 +1075,7 @@ window.onload=function(){
             {c.desc&&!c.custom&&<div style={{fontSize:9,color:"#999999",marginBottom:4}}>{c.desc}</div>}
             <G2>
               {c.custom&&<In label="Nombre" value={c.nombre} onChange={e=>updC(c.id,"nombre",e.target.value)}/>}
-              <In label="Valor mensual" prefix="$" value={c.valor.toLocaleString("es-CO")} onChange={e=>updC(c.id,"valor",Number(e.target.value.replace(/\D/g,""))||0)}/>
+              <In label="Valor mensual" prefix="$" value={c.valor.toLocaleString(getTenantDefaultsSync().locale)} onChange={e=>updC(c.id,"valor",Number(e.target.value.replace(/\D/g,""))||0)}/>
               {!c.custom&&<div/>}
             </G2>
             {c.custom&&<div style={{display:"flex",gap:4}}>
@@ -1093,11 +1094,11 @@ window.onload=function(){
         {neg.devTotal>uvt*95*0.75&&<Card t="Retención en la Fuente" icon="🏛️" accent={calcRet?"#fef2f2":"#FAFAF8"}>
           <Tg label={calcRet?"✅ Calcular retención (Proc. 1 — Art. 383 E.T.)":"Calcular retención en la fuente"} on={calcRet} set={setCalcRet} help="Procedimiento 1: tabla Art. 383 sobre ingreso mensual"/>
           {calcRet&&<>
-            <G3><In label="UVT 2026" prefix="$" value={uvt.toLocaleString("es-CO")} onChange={e=>setUvt(Number(e.target.value.replace(/\D/g,""))||0)} help="Resolución DIAN"/>
+            <G3><In label="UVT 2026" prefix="$" value={uvt.toLocaleString(getTenantDefaultsSync().locale)} onChange={e=>setUvt(Number(e.target.value.replace(/\D/g,""))||0)} help="Resolución DIAN"/>
             <div/><Tg label="Dependientes (10%, máx 32 UVT)" on={tieneDep} set={setTieneDep}/></G3>
-            <G3><In label="Interés vivienda/mes" prefix="$" value={intVivienda.toLocaleString("es-CO")} onChange={e=>setIntVivienda(Number(e.target.value.replace(/\D/g,""))||0)} help={`Máx: ${$(100*uvt)}`}/>
-            <In label="Medicina prepagada/mes" prefix="$" value={medPrep.toLocaleString("es-CO")} onChange={e=>setMedPrep(Number(e.target.value.replace(/\D/g,""))||0)} help={`Máx: ${$(16*uvt)}`}/>
-            <In label="AFC/Vol. pensión/mes" prefix="$" value={afc.toLocaleString("es-CO")} onChange={e=>setAfc(Number(e.target.value.replace(/\D/g,""))||0)} help="Máx 30% subtotal"/></G3>
+            <G3><In label="Interés vivienda/mes" prefix="$" value={intVivienda.toLocaleString(getTenantDefaultsSync().locale)} onChange={e=>setIntVivienda(Number(e.target.value.replace(/\D/g,""))||0)} help={`Máx: ${$(100*uvt)}`}/>
+            <In label="Medicina prepagada/mes" prefix="$" value={medPrep.toLocaleString(getTenantDefaultsSync().locale)} onChange={e=>setMedPrep(Number(e.target.value.replace(/\D/g,""))||0)} help={`Máx: ${$(16*uvt)}`}/>
+            <In label="AFC/Vol. pensión/mes" prefix="$" value={afc.toLocaleString(getTenantDefaultsSync().locale)} onChange={e=>setAfc(Number(e.target.value.replace(/\D/g,""))||0)} help="Máx 30% subtotal"/></G3>
             {ret&&<>
               <Dv/>
               <Rw l="Ingreso laboral (mensualizado)" v={ret.sub1+ret.incr}/>
@@ -1401,7 +1402,7 @@ window.onload=function(){
               <div style={{fontSize:10,color:"#555555",lineHeight:1.6}}>
                 {(()=>{try{
                   const items=[];
-                  const fmt=d=>{if(!d||isNaN(d.getTime()))return"—";return d.toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"})};
+                  const fmt=d=>{if(!d||isNaN(d.getTime()))return"—";return d.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short",year:"numeric"})};
                   const CalRow=({fecha,concepto,valor,tipo})=><div style={{display:"flex",justifyContent:"space-between",padding:"4px 6px",borderBottom:"1px solid #F5F4F1",background:tipo==="liq"?"#fef2f2":tipo==="prov"?"#E8F4EE":"transparent",borderRadius:3,marginBottom:1}}>
                     <span><span style={{fontSize:8,marginRight:4}}>{tipo==="liq"?"🔴":"📌"}</span><strong>{fecha}</strong> — {concepto}</span>
                     <span style={{fontFamily:"'DM Mono',monospace",fontWeight:700,color:tipo==="liq"?"#dc2626":"#111111"}}>{$(valor)}</span>

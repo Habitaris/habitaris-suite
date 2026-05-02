@@ -4,6 +4,7 @@ import { getTenantUrlsSync, getTenantIdentitySync } from "../core/configHelpers.
 import { downloadPDF } from "./pdfUtil.js";
 import { buildNominaHtml } from "./nominaHtml.js";
 import { BannerPagos } from "./BannerPagos.jsx";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 const SMLMV = 1_750_905, AUX_TR = 249_095, UVT = 49_799;
 const ARL_OPTS = [
@@ -42,7 +43,7 @@ function lblFecha(fecha, hoy){
   if (sameDay(fecha, hoy)) return "hoy";
   const mañana = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()+1);
   if (sameDay(fecha, mañana)) return "mañana";
-  return fecha.toLocaleDateString("es-CO",{weekday:"short",day:"numeric",month:"short"});
+  return fecha.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"});
 }
 
 // Estado de alerta de una fecha objetivo. Devuelve {nivel, dias, msg} o null.
@@ -69,7 +70,7 @@ const NOV_TIPOS = [
   {id:"ausencia",label:"Ausencia",color:"#FEE2E2",icon:"❌"},
 ];
 const uid = () => Math.random().toString(36).slice(2, 10);
-const fmt = n => n == null || isNaN(n) ? "$0" : "$" + Math.round(n).toLocaleString("es-CO");
+const fmt = n => n == null || isNaN(n) ? "$0" : "$" + Math.round(n).toLocaleString(getTenantDefaultsSync().locale);
 const fPct = n => (n * 100).toFixed(2) + "%";
 
 async function fetchEmps(){try{
@@ -247,8 +248,8 @@ function AsistenciaPanel({selN, MESES, mes, anio}) {
                 const salida = dayRegs.find(r=>r.tipo==="salida");
                 const horas = (entrada&&salida) ? ((new Date(salida.timestamp)-new Date(entrada.timestamp))/3600000).toFixed(1) : null;
                 const dt = new Date(d+"T12:00:00");
-                const dayName = dt.toLocaleDateString("es-CO",{weekday:"short"});
-                const dayNum = dt.toLocaleDateString("es-CO",{day:"numeric",month:"short"});
+                const dayName = dt.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short"});
+                const dayNum = dt.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short"});
                 const isSun = dt.getDay()===0;
                 return (
                   <tr key={d} style={{borderBottom:`1px solid ${T.border}`,background:i%2===0?T.card:"#FAFAF8",opacity:isSun?0.5:1}}>
@@ -256,10 +257,10 @@ function AsistenciaPanel({selN, MESES, mes, anio}) {
                       <div style={{fontWeight:600,fontSize:12,textTransform:"capitalize"}}>{dayName} {dayNum}</div>
                     </td>
                     <td style={{padding:"6px 10px",fontFamily:"'DM Mono',monospace",fontSize:12,color:entrada?T.green:T.inkLight}}>
-                      {entrada?new Date(entrada.timestamp).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"}):"–"}
+                      {entrada?new Date(entrada.timestamp).toLocaleTimeString(getTenantDefaultsSync().locale,{hour:"2-digit",minute:"2-digit"}):"–"}
                     </td>
                     <td style={{padding:"6px 10px",fontFamily:"'DM Mono',monospace",fontSize:12,color:salida?T.red:T.inkLight}}>
-                      {salida?new Date(salida.timestamp).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit"}):"–"}
+                      {salida?new Date(salida.timestamp).toLocaleTimeString(getTenantDefaultsSync().locale,{hour:"2-digit",minute:"2-digit"}):"–"}
                     </td>
                     <td style={{padding:"6px 10px",fontFamily:"'DM Mono',monospace",fontWeight:600,fontSize:12}}>
                       {horas ? horas+"h" : "–"}
@@ -389,7 +390,7 @@ function NovedadesPanel({selN, anio, MESES, novHist, setNovHist, novYear, setNov
             <tbody>
               {filtered.map((n,i)=>(
                 <tr key={i} style={{borderBottom:`1px solid ${T.border}`}}>
-                  <td style={{padding:"5px 8px",fontWeight:600}}>{new Date(n.created_at).toLocaleDateString("es-CO",{day:"numeric",month:"short"})}</td>
+                  <td style={{padding:"5px 8px",fontWeight:600}}>{new Date(n.created_at).toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short"})}</td>
                   <td style={{padding:"5px 8px"}}>{tipoIcon[n.tipo]||"📋"} {n.tipo}</td>
                   <td style={{padding:"5px 8px",fontFamily:"'DM Mono',monospace",fontSize:10}}>{n.fecha_inicio||""}{n.fecha_fin?" → "+n.fecha_fin:""}</td>
                   <td style={{padding:"5px 8px",color:T.inkMid,maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{n.motivo||"—"}</td>
@@ -519,7 +520,7 @@ ${bodyHtml}
     const w=window.open('','_blank');w.document.write(html);w.document.close();
   };
 
-  const hoy=new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
+  const hoy=new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"});
   const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
   const motivo=tipo==="renuncia"?"por renuncia voluntaria":tipo==="vencimiento"?"por vencimiento del término fijo":tipo==="justa_causa"?"por despido con justa causa":"por decisión unilateral sin justa causa";
 
@@ -582,15 +583,15 @@ ${bodyHtml}
                 const fn = d.id.startsWith("cert") ? `CERT-LAB-${ape}` : d.id==="carta" ? `CARTA-TERM-${ape}` : d.id==="paz" ? `PAZ-SALVO-${ape}` : `RETIRO-CES-${ape}`;
                 let body = "";
                 if(d.id==="carta"){
-                  body=`<h1>CARTA DE TERMINACIÓN Y LIQUIDACIÓN</h1><div class="body"><p>Bogotá D.C., ${hoy}</p><br/><p>Señor(a) <b>${selN.nombre}</b><br/>C.C. ${(selN.cc||"").replace(/\D/g,"")}</p><br/><p>Comunicamos la terminación de su contrato <b>${motivo}</b>, efectiva el <b>${liq.ff.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b>.</p><br/><p>Cargo: <b>${selN.cargo}</b> · Ingreso: <b>${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b> · ${liq.diasTot} días trabajados.</p></div><table><thead><tr><th>Concepto</th><th class="r">Valor</th><th>Base legal</th></tr></thead><tbody>${liq.items.map(i=>"<tr><td>"+i.c+"</td><td class='r'>"+fmt(i.v)+"</td><td style='font-size:8pt;color:#666'>"+i.n+"</td></tr>").join("")}<tr class="tot"><td>TOTAL A PAGAR</td><td class="r">${fmt(liq.total)}</td><td></td></tr></tbody></table><div class="sig"><div>Empleador<br/><b>Habitaris S.A.S</b></div><div>Trabajador<br/><b>${selN.nombre}</b></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
+                  body=`<h1>CARTA DE TERMINACIÓN Y LIQUIDACIÓN</h1><div class="body"><p>Bogotá D.C., ${hoy}</p><br/><p>Señor(a) <b>${selN.nombre}</b><br/>C.C. ${(selN.cc||"").replace(/\D/g,"")}</p><br/><p>Comunicamos la terminación de su contrato <b>${motivo}</b>, efectiva el <b>${liq.ff.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</b>.</p><br/><p>Cargo: <b>${selN.cargo}</b> · Ingreso: <b>${liq.fi.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</b> · ${liq.diasTot} días trabajados.</p></div><table><thead><tr><th>Concepto</th><th class="r">Valor</th><th>Base legal</th></tr></thead><tbody>${liq.items.map(i=>"<tr><td>"+i.c+"</td><td class='r'>"+fmt(i.v)+"</td><td style='font-size:8pt;color:#666'>"+i.n+"</td></tr>").join("")}<tr class="tot"><td>TOTAL A PAGAR</td><td class="r">${fmt(liq.total)}</td><td></td></tr></tbody></table><div class="sig"><div>Empleador<br/><b>Habitaris S.A.S</b></div><div>Trabajador<br/><b>${selN.nombre}</b></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
                 } else if(d.id==="paz"){
-                  body=`<h1>PAZ Y SALVO</h1><div class="body"><p><b>HABITARIS S.A.S</b> certifica que <b>${selN.nombre}</b>, C.C. ${(selN.cc||"").replace(/\D/g,"")}, quien laboró como <b>${selN.cargo}</b> desde el ${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})} hasta el ${liq.ff.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}, se encuentra a <b>PAZ Y SALVO</b>:</p></div><div class="checks"><p>☑ Salarios y prestaciones sociales</p><p>☑ Liquidación final</p><p>☑ Vacaciones</p><p>☑ Dotación y herramientas</p><p>☑ Documentos y archivos</p><p>☑ Llaves y accesos</p></div><div class="body"><p>Bogotá D.C., ${hoy}</p></div><div class="sig"><div>Empleador<br/><b>Habitaris S.A.S</b></div><div>Trabajador<br/><b>${selN.nombre}</b></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
+                  body=`<h1>PAZ Y SALVO</h1><div class="body"><p><b>HABITARIS S.A.S</b> certifica que <b>${selN.nombre}</b>, C.C. ${(selN.cc||"").replace(/\D/g,"")}, quien laboró como <b>${selN.cargo}</b> desde el ${liq.fi.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})} hasta el ${liq.ff.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}, se encuentra a <b>PAZ Y SALVO</b>:</p></div><div class="checks"><p>☑ Salarios y prestaciones sociales</p><p>☑ Liquidación final</p><p>☑ Vacaciones</p><p>☑ Dotación y herramientas</p><p>☑ Documentos y archivos</p><p>☑ Llaves y accesos</p></div><div class="body"><p>Bogotá D.C., ${hoy}</p></div><div class="sig"><div>Empleador<br/><b>Habitaris S.A.S</b></div><div>Trabajador<br/><b>${selN.nombre}</b></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
                 } else if(d.id==="cesantias"){
-                  body=`<h1>CARTA DE RETIRO DE CESANTÍAS</h1><div class="body"><p>Bogotá D.C., ${hoy}</p><br/><p>Señores<br/><b>${selN.pen||"Fondo de Cesantías"}</b></p><br/><p>Ref: Retiro de cesantías por terminación de contrato</p><br/><p><b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que <b>${selN.nombre}</b>, C.C. <b>${(selN.cc||"").replace(/\D/g,"")}</b>, laboró desde el <b>${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b> hasta el <b>${liq.ff.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b> (${liq.diasTot} días).</p><br/><p>La relación laboral terminó <b>${motivo}</b>. El monto de cesantías proporcionales: <b>${fmt(liq.ces)}</b> (Art. 249 CST).</p><br/><p>Solicitamos autorizar el retiro de cesantías a favor del trabajador.</p></div><div class="sig"><div>Representante Legal<br/><b>Habitaris S.A.S</b></div><div>Trabajador<br/><b>${selN.nombre}</b></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
+                  body=`<h1>CARTA DE RETIRO DE CESANTÍAS</h1><div class="body"><p>Bogotá D.C., ${hoy}</p><br/><p>Señores<br/><b>${selN.pen||"Fondo de Cesantías"}</b></p><br/><p>Ref: Retiro de cesantías por terminación de contrato</p><br/><p><b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que <b>${selN.nombre}</b>, C.C. <b>${(selN.cc||"").replace(/\D/g,"")}</b>, laboró desde el <b>${liq.fi.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</b> hasta el <b>${liq.ff.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</b> (${liq.diasTot} días).</p><br/><p>La relación laboral terminó <b>${motivo}</b>. El monto de cesantías proporcionales: <b>${fmt(liq.ces)}</b> (Art. 249 CST).</p><br/><p>Solicitamos autorizar el retiro de cesantías a favor del trabajador.</p></div><div class="sig"><div>Representante Legal<br/><b>Habitaris S.A.S</b></div><div>Trabajador<br/><b>${selN.nombre}</b></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
                 } else if(d.id==="cert_con"){
-                  body=`<h1>CERTIFICACIÓN LABORAL</h1><div class="body"><p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que:</p><br/><p><b>${selN.nombre}</b>, C.C. No. <b>${(selN.cc||"").replace(/\D/g,"")}</b>, ${selN.fechaIngreso?"laboró":"labora"} en esta empresa desde el <b>${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b>, desempeñando el cargo de <b>${selN.cargo}</b>.</p><br/><p>El trabajador devenga un salario mensual de <b>${fmt(selN.sal)}</b>${liq.aux>0?" (más auxilio de transporte de "+fmt(liq.aux)+")":""}.</p><br/><p>Se expide a solicitud del interesado en Bogotá D.C., ${hoy}.</p></div><div class="sig"><div><br/><b>Representante Legal</b><br/>Habitaris S.A.S</div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
+                  body=`<h1>CERTIFICACIÓN LABORAL</h1><div class="body"><p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que:</p><br/><p><b>${selN.nombre}</b>, C.C. No. <b>${(selN.cc||"").replace(/\D/g,"")}</b>, ${selN.fechaIngreso?"laboró":"labora"} en esta empresa desde el <b>${liq.fi.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</b>, desempeñando el cargo de <b>${selN.cargo}</b>.</p><br/><p>El trabajador devenga un salario mensual de <b>${fmt(selN.sal)}</b>${liq.aux>0?" (más auxilio de transporte de "+fmt(liq.aux)+")":""}.</p><br/><p>Se expide a solicitud del interesado en Bogotá D.C., ${hoy}.</p></div><div class="sig"><div><br/><b>Representante Legal</b><br/>Habitaris S.A.S</div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
                 } else {
-                  body=`<h1>CERTIFICACIÓN LABORAL</h1><div class="body"><p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que:</p><br/><p><b>${selN.nombre}</b>, C.C. No. <b>${(selN.cc||"").replace(/\D/g,"")}</b>, ${selN.fechaIngreso?"laboró":"labora"} en esta empresa desde el <b>${liq.fi.toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})}</b>, desempeñando el cargo de <b>${selN.cargo}</b>.</p><br/><p>Se expide a solicitud del interesado en Bogotá D.C., ${hoy}.</p></div><div class="sig"><div><br/><b>Representante Legal</b><br/>Habitaris S.A.S</div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
+                  body=`<h1>CERTIFICACIÓN LABORAL</h1><div class="body"><p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que:</p><br/><p><b>${selN.nombre}</b>, C.C. No. <b>${(selN.cc||"").replace(/\D/g,"")}</b>, ${selN.fechaIngreso?"laboró":"labora"} en esta empresa desde el <b>${liq.fi.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</b>, desempeñando el cargo de <b>${selN.cargo}</b>.</p><br/><p>Se expide a solicitud del interesado en Bogotá D.C., ${hoy}.</p></div><div class="sig"><div><br/><b>Representante Legal</b><br/>Habitaris S.A.S</div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
                 }
                 openPreview(d.lbl, body, fn);
               }} style={{width:"100%",padding:"7px 10px",fontSize:11,fontWeight:600,border:`1px solid ${d.color}`,borderRadius:6,background:d.bg,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",color:d.color,marginBottom:4,textAlign:"left"}}>
@@ -706,8 +707,8 @@ export function TabNomina(){
           <Btn small onClick={()=>{(()=>{const u=getTenantUrlsSync();const id=getTenantIdentitySync();window.open("https://wa.me/?text="+encodeURIComponent(id.displayName+"\n\n👤 Portal del empleado:\n"+u.portalEmpleado+"\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");})();}}>💬 Link empleados</Btn>
           <Btn small onClick={()=>{
             const nDias=selN.novDias||{};
-            const novList=Object.entries(nDias).sort().map(([k,v])=>{const d=new Date(k+"T12:00:00");const info=NOV_TIPOS.find(n=>n.id===v);return{fecha:d.toLocaleDateString("es-CO",{weekday:"short",day:"numeric",month:"short"}),tipo:info?.label||v};});
-            const festList=festivosMes.map(h=>({fecha:h.date.toLocaleDateString("es-CO",{weekday:"short",day:"numeric",month:"short"}),name:h.name}));
+            const novList=Object.entries(nDias).sort().map(([k,v])=>{const d=new Date(k+"T12:00:00");const info=NOV_TIPOS.find(n=>n.id===v);return{fecha:d.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"}),tipo:info?.label||v};});
+            const festList=festivosMes.map(h=>({fecha:h.date.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"}),name:h.name}));
             const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);
             const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
             const fileName=`NOV-${mAbr}${a2}-${ape}-${selN.cc||""}`;
@@ -790,7 +791,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
 <div>Revisado por<br><span style="color:#999">Contador</span></div>
 <div>Aprobado por<br><span style="color:#999">Gerencia</span></div>
 </div>
-<div class="foot">Habitaris Suite · ${new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"})} · ${fileName}</div>
+<div class="foot">Habitaris Suite · ${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})} · ${fileName}</div>
 </div>
 <div class="np">
 <button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';document.querySelector('.np').style.display='none';var st=document.createElement('div');st.style.cssText='text-align:center;padding:10px;font-family:monospace;color:#999';st.textContent='Generando PDF...';document.body.appendChild(st);html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(canvas){var img=canvas.toDataURL('image/jpeg',0.98);var iW=canvas.width,iH=canvas.height,pW=210,pH=(iH*pW)/iW;var J=jspdf.jsPDF;var pdf=new J({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileName}.pdf');st.textContent='PDF descargado ✅';el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display='';}).catch(function(e){st.textContent='Error: '+e.message;document.querySelector('.np').style.display=''})})()">📥 Descargar PDF</button>
