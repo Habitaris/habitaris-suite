@@ -148,6 +148,83 @@ const inputStyle = {
   width: "100%", boxSizing: "border-box", outline: "none",
 };
 
+// ─── Upload de logo a bucket 'branding' de Supabase Storage ───────────────
+function LogoUploadField({ label, hint, value, onChange, slot }) {
+  // slot: "white" | "black" | "pdf" — determina el path en el bucket
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+
+  const onPickFile = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      // Path: tenant_id/slot-timestamp.ext  →  habitaris/white-1746...jpg
+      const ext = (file.name.split(".").pop() || "png").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const ts = Date.now();
+      const path = `habitaris/${slot || "logo"}-${ts}.${ext}`;
+      const { error: upErr } = await sb.storage
+        .from("branding")
+        .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data } = sb.storage.from("branding").getPublicUrl(path);
+      const publicUrl = data && data.publicUrl;
+      if (!publicUrl) throw new Error("No se pudo obtener URL pública");
+      onChange(publicUrl);
+    } catch (err) {
+      console.error("[LogoUpload] error:", err);
+      setUploadError(err.message || "Error subiendo");
+    } finally {
+      setUploading(false);
+      e.target.value = ""; // reset para permitir resubir el mismo archivo
+    }
+  };
+
+  const inputId = `logo-upload-${slot || "x"}`;
+
+  return (
+    <Field label={label} hint={hint}>
+      <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+        {/* Preview */}
+        <div style={{
+          width: 88, height: 56, border: `1px solid ${C.border}`, borderRadius: 6,
+          background: slot === "white" ? "#111" : "#fff",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          flexShrink: 0, overflow: "hidden",
+        }}>
+          {value ? (
+            <img src={value} alt="" style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
+              onError={e => { e.currentTarget.style.display = "none"; }}/>
+          ) : (
+            <span style={{ ...F, fontSize: 9, color: C.inkLight }}>sin logo</span>
+          )}
+        </div>
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}>
+          <input style={inputStyle} value={value || ""} onChange={e => onChange(e.target.value)} placeholder="URL o sube archivo →" />
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <input id={inputId} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif"
+              onChange={onPickFile} style={{ display: "none" }} />
+            <label htmlFor={inputId} style={{
+              ...F, fontSize: 11, fontWeight: 600, padding: "5px 10px",
+              border: `1px solid ${C.border}`, borderRadius: 5, background: "#fff",
+              cursor: uploading ? "wait" : "pointer", color: C.ink,
+            }}>{uploading ? "Subiendo…" : "📤 Subir archivo"}</label>
+            {value && (
+              <button onClick={() => onChange("")}
+                style={{ ...F, fontSize: 11, padding: "5px 10px", border: `1px solid ${C.border}`,
+                  borderRadius: 5, background: "#fff", cursor: "pointer", color: C.inkMid }}>
+                Quitar
+              </button>
+            )}
+            {uploadError && <span style={{ ...F, fontSize: 11, color: C.danger }}>⚠ {uploadError}</span>}
+          </div>
+        </div>
+      </div>
+    </Field>
+  );
+}
+
 function ColorField({ label, hint, value, onChange }) {
   return (
     <Field label={label} hint={hint}>
@@ -461,13 +538,21 @@ function TabBranding({ tenant, tenantConfig, onSaved }) {
 
       <h3 style={{ ...F, fontSize: 13, fontWeight: 700, color: C.ink, margin: "0 0 14px", textTransform: "uppercase", letterSpacing: 0.5 }}>Logos</h3>
 
-      <Field label="Logo blanco (sobre fondo oscuro)" hint="Para cabecera de la suite, footer de emails. URL absoluta o ruta relativa.">
-        <input style={inputStyle} value={form.logo_white_url} onChange={e => update("logo_white_url", e.target.value)} placeholder="/logo-habitaris-blanco.jpg" />
-      </Field>
+      <LogoUploadField
+        slot="white"
+        label="Logo blanco (sobre fondo oscuro)"
+        hint="Para cabecera de la suite y footer de emails. Sube un archivo o pega una URL."
+        value={form.logo_white_url}
+        onChange={v => update("logo_white_url", v)}
+      />
 
-      <Field label="Logo negro (sobre fondo claro)" hint="Para PDFs, certificados, cabeceras claras.">
-        <input style={inputStyle} value={form.logo_black_url} onChange={e => update("logo_black_url", e.target.value)} placeholder="/logo-habitaris-negro.svg" />
-      </Field>
+      <LogoUploadField
+        slot="black"
+        label="Logo negro (sobre fondo claro)"
+        hint="Para PDFs, certificados y cabeceras claras."
+        value={form.logo_black_url}
+        onChange={v => update("logo_black_url", v)}
+      />
 
       <h3 style={{ ...F, fontSize: 13, fontWeight: 700, color: C.ink, margin: "26px 0 14px", textTransform: "uppercase", letterSpacing: 0.5 }}>Colores</h3>
 
