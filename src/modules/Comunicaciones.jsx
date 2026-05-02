@@ -58,7 +58,6 @@ const MODULOS = [
 /* ── Tipo labels ── */
 const TIPO_LABELS = {
   form_enviado: { lbl:"Formulario enviado", mod:"formularios", icon:"📋", color:T.blue, bg:T.blueBg },
-  form_recibido: { lbl:"Respuesta recibida", mod:"formularios", icon:"✅", color:T.green, bg:T.greenBg },
   oferta_enviada: { lbl:"Oferta enviada", mod:"crm", icon:"📄", color:T.blue, bg:T.blueBg },
   oferta_aprobada: { lbl:"Oferta aprobada", mod:"crm", icon:"🎉", color:T.green, bg:T.greenBg },
   oferta_rechazada: { lbl:"Oferta rechazada", mod:"crm", icon:"❌", color:T.red, bg:T.redBg },
@@ -261,11 +260,6 @@ function TabPlantillas({ plantillas, onSave, customList }) {
                   <label style={{fontSize:9,fontWeight:700,color:T.inkMid,textTransform:"uppercase"}}>Mensaje</label>
                   <textarea value={editData.message} onChange={e=>setEditData({...editData,message:e.target.value})}
                     style={{...inp,minHeight:120,resize:"vertical"}}/>
-                                    {p.id === "form_recibido" && (
-                    <div style={{marginTop:8,padding:"8px 10px",background:"#FFF8E1",borderRadius:6,fontSize:10,color:"#8C6A00",lineHeight:1.5}}>
-                      <strong>Nota:</strong> Solo el subject y texto son editables. Datos del cliente, banderas y scoring se generan al enviar.
-                    </div>
-                  )}
 <div style={{display:"flex",gap:6,marginTop:8}}>
                     <Btn on={saveEdit}><Save size={10}/> Guardar</Btn>
                     <Btn v="sec" on={cancelEdit}>Cancelar</Btn>
@@ -286,12 +280,6 @@ function TabPlantillas({ plantillas, onSave, customList }) {
                   )}
 
                   
-
-                  {(TIPO_LABELS[p.id] || TIPO_LABELS[p.clonedFrom] || {}).lbl && p.id === "form_recibido" && (
-                    <div style={{marginTop:6,padding:"6px 8px",background:"#FFF8E1",borderRadius:4,fontSize:9,color:"#8C6A00"}}>
-                      📋 Incluye: datos del cliente, respuestas con banderas 🟢🟡🔴 y scoring automático
-                    </div>
-                  )}
 
                   <div style={{display:"flex",gap:6,marginTop:10,borderTop:`1px solid ${T.border}`,paddingTop:8}}>
                     <Btn v="sec" on={() => startEdit(p)} style={{fontSize:10,padding:"5px 10px"}}><Edit3 size={10}/> Editar</Btn>
@@ -424,7 +412,6 @@ function TabNotificaciones({ rules, onSave }) {
   const adminEmail = cfg.correo?.emailPrincipal || "comercial@habitaris.co";
 
   const defaultRules = [
-    { id:"form_recibido", evento:"Respuesta a formulario recibida", modulo:"formularios", destinatario:adminEmail, activo:true },
     { id:"oferta_aprobada", evento:"Oferta aprobada por cliente", modulo:"crm", destinatario:adminEmail, activo:true },
     { id:"oferta_rechazada", evento:"Oferta rechazada por cliente", modulo:"crm", destinatario:adminEmail, activo:true },
     { id:"oferta_revision", evento:"Oferta en revisión", modulo:"crm", destinatario:adminEmail, activo:true },

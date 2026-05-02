@@ -1,4 +1,3 @@
-import { notificarRespuesta } from "../utils/emailService";
 import React, { useState, useMemo, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { store } from "../core/store.js";
@@ -75,76 +74,6 @@ function calculateScore(resp, form) {
   return { score, level, levelLabel, conclusion, greens, reds, yellows, totalPoints, maxPoints, details };
 }
 
-/* ── EmailJS — reads from centralized config ── */
-const sendEmailJS = async (params) => {
-  try {
-      const cfg = getConfig();
-      const adminEmail = cfg.correo?.emailPrincipal || "comercial@habitaris.co";
-      const clientName = cliente?.nombre || response.clienteNombre || response.nombre || "Sin nombre";
-      const clientEmail = cliente?.email || response.clienteEmail || response.email || "";
-      const clientTel = cliente?.tel || response.clienteTel || response.telefono || "";
-
-      let htmlContent = "";
-      const vals = response.valores || response.data || {};
-      const scoringCampos = (def.campos || []).filter(c => c.scoring?.enabled);
-      let totalPoints = 0, maxPoints = 0, greens = 0, yellows = 0, reds = 0;
-
-      (def.campos || []).forEach(c => {
-        if (c.tipo === "seccion") {
-          htmlContent += '<div style="padding:10px 14px;background:#F5F5F5;border-bottom:1px solid #E0E0E0;font-weight:bold;font-size:12px;color:#111;">' + c.label + (c.desc ? '<br/><span style="font-weight:normal;font-size:10px;color:#888;">' + c.desc + '</span>' : '') + '</div>';
-          return;
-        }
-        if (c.tipo === "info") return;
-        const val = vals[c.id];
-        if (val === undefined || val === "" || (Array.isArray(val) && val.length === 0)) return;
-        const display = Array.isArray(val) ? val.join(", ") : String(val);
-
-        let flagHtml = "";
-        if (c.scoring?.enabled) {
-          const w = c.scoring.weight || 1;
-          const rules = c.scoring.rules || {};
-          let flag = "neutral";
-          if (Array.isArray(val)) {
-            const flags = val.map(v => rules[v] || "neutral");
-            if (flags.includes("red")) flag = "red";
-            else if (flags.every(f => f === "green")) flag = "green";
-            else flag = "neutral";
-          } else { flag = rules[String(val)] || "neutral"; }
-          if (flag === "green") { totalPoints += w; greens++; }
-          else if (flag === "neutral") { totalPoints += w * 0.5; yellows++; }
-          else { reds++; }
-          maxPoints += w;
-          const emoji = flag === "green" ? "\u{1F7E2}" : flag === "red" ? "\u{1F534}" : "\u{1F7E1}";
-          flagHtml = '<td width="30" align="right" style="font-size:14px;">' + emoji + '</td>';
-        }
-
-        htmlContent += '<div style="padding:8px 14px;border-bottom:1px solid #f0f0f0;">' +
-          '<table width="100%" cellpadding="0" cellspacing="0"><tr>' +
-          '<td><p style="margin:0;font-size:10px;color:#888;font-weight:600;">' + c.label + '</p><p style="margin:3px 0 0;font-size:13px;color:#111;">' + display + '</p></td>' +
-          flagHtml +
-          '</tr></table></div>';
-      });
-
-      const score = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) / 10 : 0;
-      const level = score >= 7 ? "green" : score >= 4 ? "yellow" : "red";
-      const levelColor = level === "green" ? "#2D6A2E" : level === "yellow" ? "#8C6A00" : "#B91C1C";
-      const levelBg = level === "green" ? "#E8F4EE" : level === "yellow" ? "#FAF0E0" : "#FAE8E8";
-      const levelLabel = level === "green" ? "Excelente" : level === "yellow" ? "Regular" : "Bajo";
-
-      let scoringHtml = "";
-      if (scoringCampos.length > 0) {
-        scoringHtml = '<div style="margin:16px 0 0;padding:14px;background:' + levelBg + ';border-radius:8px;border:1px solid ' + levelColor + ';">' +
-          '<table width="100%" cellpadding="0" cellspacing="0"><tr>' +
-          '<td><span style="font-size:28px;font-weight:800;color:' + levelColor + ';">' + score.toFixed(1) + '</span>' +
-          '<span style="font-size:12px;color:' + levelColor + ';font-weight:700;"> /10 \u00B7 ' + levelLabel + '</span></td>' +
-          '</tr></table>' +
-          '<div style="font-size:11px;color:#555;margin-top:6px;">\u{1F7E2} ' + greens + ' \u00B7 \u{1F7E1} ' + yellows + ' \u00B7 \u{1F534} ' + reds + '</div>' +
-          '</div>';
-      }
-
-      await notificarRespuesta(adminEmail, def.nombre || "Formulario", clientName, clientEmail, clientTel, htmlContent + scoringHtml);
-    } catch(e) { console.warn("Email notification error:", e); }
-};
 const Card = ({children,style,...p}) => <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:8,padding:16,boxShadow:T.shadow,...style}} {...p}>{children}</div>;
 const Btn = ({children,on,v,style,...p}) => <button onClick={on} style={{padding:"7px 16px",borderRadius:5,border:v==="sec"?`1px solid ${T.border}`:"none",background:v==="sec"?"#fff":v==="danger"?"#B91C1C":"#111",color:v==="sec"?T.inkMid:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"inline-flex",alignItems:"center",gap:5,...style}} {...p}>{children}</button>;
 const Badge = ({children,color}) => <span style={{fontSize:8,fontWeight:700,padding:"2px 8px",borderRadius:10,background:color+"22",color}}>{children}</span>;

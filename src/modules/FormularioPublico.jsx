@@ -1,4 +1,3 @@
-import { notificarRespuesta } from "../utils/emailService";
 import { useState, useEffect, useRef } from "react";
 import { sb } from "../core/supabase.js";
 import { store } from "../core/store.js";
