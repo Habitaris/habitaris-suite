@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { store } from "../core/store.js";
 
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 import {
   Calendar, Plus, Trash2, Edit3, Check, X, ChevronDown, ChevronRight,
   Save, Search, Download, BarChart2, Clock, AlertTriangle, CheckCircle,
@@ -35,7 +36,7 @@ const today = () => new Date().toISOString().split("T")[0];
 const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x.toISOString().split("T")[0]; };
 const diffDays = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
 const pct = (n) => Math.min(100, Math.max(0, Math.round(n)));
-const fmtD = (d) => d ? new Date(d + "T12:00:00").toLocaleDateString("es-CO", { day:"2-digit", month:"short" }) : "—";
+const fmtD = (d) => d ? new Date(d + "T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale, { day:"2-digit", month:"short" }) : "—";
 
 function useStore(key, init) {
   const lsKey = "habitaris_proy";

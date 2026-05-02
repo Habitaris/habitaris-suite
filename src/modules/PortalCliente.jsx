@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import OfferApproval from "./OfferApproval.jsx";
 import { getTenantUrlsSync, getTenantContactSync } from "../core/configHelpers.js";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 /* ─────── palette ─────── */
 const C = {
@@ -17,7 +18,7 @@ const SK = "hab:portal:"
 const load = k => { try { return JSON.parse(store.getSync(SK+k)) || null } catch { return null }}
 const save = (k, v) => store.set(SK+k, JSON.stringify(v))
 const genId = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7)
-const fmtDate = d => d ? new Date(d).toLocaleDateString("es-CO",{ day:"2-digit", month:"short", year:"numeric" }) : "—"
+const fmtDate = d => d ? new Date(d).toLocaleDateString(getTenantDefaultsSync().locale,{ day:"2-digit", month:"short", year:"numeric" }) : "—"
 function daysUntil(d) { return d ? Math.ceil((new Date(d)-new Date())/(1000*60*60*24)) : Infinity }
 function Badge({ children, color, bg, style }) {
   return <span style={{ ...F, display:"inline-block", padding:"2px 10px", borderRadius:10, fontSize:10, fontWeight:600, color, background:bg, ...style }}>{children}</span>

@@ -18,6 +18,7 @@
 
 import React, { useEffect, useState } from "react";
 import { HAB_LOGO } from "../habLogo.js";
+import { getTenantDefaultsSync } from "../../core/configHelpers.js";
 
 const C = {
   bg: "#FAFAFA",
@@ -188,7 +189,7 @@ h1{font-size:14pt;text-align:center;margin:14px 0 4px;clear:both}
   <div class="cliente"><strong>${cliente.nombre}</strong>${cliente.email !== "—" ? ` · ${cliente.email}` : ""}${cliente.tel !== "—" ? ` · ${cliente.tel}` : ""}</div>
   ${scoreHtml}
   ${bodyHtml}
-  <div class="foot">Documento generado por Habitaris Suite · ${new Date().toLocaleString("es-CO")}</div>
+  <div class="foot">Documento generado por Habitaris Suite · ${new Date().toLocaleString(getTenantDefaultsSync().locale)}</div>
 </div>
 <div class="np">
   <button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';document.querySelector('.np').style.display='none';html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(c){var img=c.toDataURL('image/jpeg',0.98);var pW=210,pH=(c.height*pW)/c.width;var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileName}.pdf');el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display=''})})()">📥 Descargar PDF</button>

@@ -8,6 +8,7 @@ import { BannerPagos } from "./BannerPagos.jsx";
 import { downloadPDF } from "./pdfUtil.js";
 import { HAB_LOGO } from "./habLogo.js";
 import { getTenantUrlsSync, getTenantContactSync, getTenantIdentitySync, getTenantLegalRepresentativeSync } from "../core/configHelpers.js";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 const DEF_EQUIPO = () => ({
   id: uid(), nombre: "", descripcion: "", tipo: "obra",
@@ -92,7 +93,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 const nowISO = () => new Date().toISOString();
 const fmtDate = (d) => {
   if (!d) return "—";
-  try { return new Date(d).toLocaleDateString("es-CO", { day:"2-digit", month:"short", year:"numeric" }); }
+  try { return new Date(d).toLocaleDateString(getTenantDefaultsSync().locale, { day:"2-digit", month:"short", year:"numeric" }); }
   catch { return d; }
 };
 
@@ -105,13 +106,13 @@ const TIPOS_CONTRATO_ES = [
 
 const fmt = (n, dec = 0) => {
   if (n == null || n === "") return "—";
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency", currency: "COP",
+  return new Intl.NumberFormat(getTenantDefaultsSync().locale, {
+    style: "currency", currency: getTenantDefaultsSync().currency,
     minimumFractionDigits: dec, maximumFractionDigits: dec,
   }).format(Number(n));
 };
 const fmtN = (n, dec = 0) =>
-  new Intl.NumberFormat("es-CO", { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(Number(n) || 0);
+  new Intl.NumberFormat(getTenantDefaultsSync().locale, { minimumFractionDigits: dec, maximumFractionDigits: dec }).format(Number(n) || 0);
 const pct = v => `${(Number(v) || 0).toFixed(1)}%`;
 
 /* ─────────────────────────────────────────────
@@ -1632,7 +1633,7 @@ function TabCentros() {
                 <div style={{fontSize:10,color:"#666",marginTop:4,display:"flex",gap:12}}>
                   {centro.cliente && <span>👤 <strong>{centro.cliente}</strong></span>}
                   {centro.responsable && <span>🧑‍💼 {centro.responsable}</span>}
-                  {centro.presupuesto>0 && <span>💰 ${Math.round(centro.presupuesto).toLocaleString("es-CO")}</span>}
+                  {centro.presupuesto>0 && <span>💰 ${Math.round(centro.presupuesto).toLocaleString(getTenantDefaultsSync().locale)}</span>}
                 </div>
               )}
               {(centro.fecha_inicio || centro.fecha_fin) && (
@@ -1703,12 +1704,12 @@ function TabCentros() {
                   </div>
                   <div style={{background:"#fff",border:"1px solid #E5E3DE",borderRadius:4,padding:"8px 10px"}}>
                     <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>Coste real</div>
-                    <div style={{fontSize:tieneCoste?14:12,fontWeight:800,fontFamily:"'DM Mono',monospace",color:tieneCoste?"#111":"#bbb"}}>{tieneCoste?"$"+Math.round(stats.costoTotal).toLocaleString("es-CO"):"—"}</div>
+                    <div style={{fontSize:tieneCoste?14:12,fontWeight:800,fontFamily:"'DM Mono',monospace",color:tieneCoste?"#111":"#bbb"}}>{tieneCoste?"$"+Math.round(stats.costoTotal).toLocaleString(getTenantDefaultsSync().locale):"—"}</div>
                   </div>
                   {esProy && (
                     <div style={{background:"#fff",border:"1px solid #E5E3DE",borderRadius:4,padding:"8px 10px"}}>
                       <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>Presupuesto</div>
-                      <div style={{fontSize:pres>0?14:12,fontWeight:800,fontFamily:"'DM Mono',monospace",color:pres>0?"#10B981":"#bbb"}}>{pres>0?"$"+Math.round(pres).toLocaleString("es-CO"):"—"}</div>
+                      <div style={{fontSize:pres>0?14:12,fontWeight:800,fontFamily:"'DM Mono',monospace",color:pres>0?"#10B981":"#bbb"}}>{pres>0?"$"+Math.round(pres).toLocaleString(getTenantDefaultsSync().locale):"—"}</div>
                     </div>
                   )}
                 </div>
@@ -1717,13 +1718,13 @@ function TabCentros() {
                   <div style={{marginBottom:10}}>
                     <div style={{display:"flex",justifyContent:"space-between",fontSize:10,marginBottom:4}}>
                       <span style={{fontWeight:600,color:"#666"}}>Consumo de presupuesto</span>
-                      <span style={{fontWeight:700,color:colorBarra,fontFamily:"'DM Mono',monospace"}}>{pctConsumido.toFixed(1)}% · Margen: ${Math.round(pres - stats.costoTotal).toLocaleString("es-CO")}</span>
+                      <span style={{fontWeight:700,color:colorBarra,fontFamily:"'DM Mono',monospace"}}>{pctConsumido.toFixed(1)}% · Margen: ${Math.round(pres - stats.costoTotal).toLocaleString(getTenantDefaultsSync().locale)}</span>
                     </div>
                     <div style={{width:"100%",height:8,background:"#E5E7EB",borderRadius:4,overflow:"hidden"}}>
                       <div style={{width:`${pctConsumido}%`,height:"100%",background:colorBarra,transition:"width 0.3s ease"}}/>
                     </div>
                     {pctConsumido >= 100 && (
-                      <div style={{fontSize:10,color:"#EF4444",marginTop:4,fontWeight:600}}>⚠️ Presupuesto superado · Sobrecoste ${Math.round(stats.costoTotal - pres).toLocaleString("es-CO")}</div>
+                      <div style={{fontSize:10,color:"#EF4444",marginTop:4,fontWeight:600}}>⚠️ Presupuesto superado · Sobrecoste ${Math.round(stats.costoTotal - pres).toLocaleString(getTenantDefaultsSync().locale)}</div>
                     )}
                   </div>
                 )}
@@ -1760,8 +1761,8 @@ function TabCentros() {
                               <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE"}}>{nombreCorto}</td>
                               <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontFamily:"'DM Mono',monospace"}}>{e.dias}</td>
                               <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:700}}>{e.horas.toFixed(1)}h</td>
-                              <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontFamily:"'DM Mono',monospace",color:e.tarifaHora?"#666":"#ccc",fontSize:10}}>{e.tarifaHora?"$"+Math.round(e.tarifaHora).toLocaleString("es-CO"):"—"}</td>
-                              <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:700,color:e.costo?"#111":"#ccc"}}>{e.costo?"$"+Math.round(e.costo).toLocaleString("es-CO"):"—"}</td>
+                              <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontFamily:"'DM Mono',monospace",color:e.tarifaHora?"#666":"#ccc",fontSize:10}}>{e.tarifaHora?"$"+Math.round(e.tarifaHora).toLocaleString(getTenantDefaultsSync().locale):"—"}</td>
+                              <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:700,color:e.costo?"#111":"#ccc"}}>{e.costo?"$"+Math.round(e.costo).toLocaleString(getTenantDefaultsSync().locale):"—"}</td>
                               <td style={{padding:"6px 8px",borderBottom:"1px solid #F5F3EE",textAlign:"right",fontSize:10,color:"#666"}}>{e.ultimaFecha}</td>
                             </tr>
                           );
@@ -1774,7 +1775,7 @@ function TabCentros() {
                             <td style={{padding:"6px 8px",textAlign:"right",fontFamily:"'DM Mono',monospace"}}>{stats.diasTotal}</td>
                             <td style={{padding:"6px 8px",textAlign:"right",fontFamily:"'DM Mono',monospace"}}>{stats.total.toFixed(1)}h</td>
                             <td></td>
-                            <td style={{padding:"6px 8px",textAlign:"right",fontFamily:"'DM Mono',monospace",color:"#111"}}>${Math.round(stats.costoTotal).toLocaleString("es-CO")}</td>
+                            <td style={{padding:"6px 8px",textAlign:"right",fontFamily:"'DM Mono',monospace",color:"#111"}}>${Math.round(stats.costoTotal).toLocaleString(getTenantDefaultsSync().locale)}</td>
                             <td></td>
                           </tr>
                         </tfoot>
@@ -3126,7 +3127,7 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
       </div>
       {selDay&&(()=>{
         const evs=evByDay[selDay]||[];
-        const dStr=new Date(selDay+"T12:00:00").toLocaleDateString("es-CO",{weekday:"long",day:"numeric",month:"long"});
+        const dStr=new Date(selDay+"T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"long",day:"numeric",month:"long"});
         return (
           <div style={S.card}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
@@ -3381,8 +3382,8 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
                   <div style={{textAlign:"right"}}>
                     <span style={{fontSize:8,fontWeight:700,padding:"2px 8px",borderRadius:10,background:vst.c+"22",color:vst.c}}>{vst.lbl}</span>
                     <div style={{fontSize:10,fontFamily:"'DM Mono',monospace",fontWeight:700,marginTop:4}}>
-                      Est: ${new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(est)}
-                      {re>0 && <span style={{color:"#5B3A8C",marginLeft:8}}>Real: ${new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(re)}</span>}
+                      Est: ${new Intl.NumberFormat(getTenantDefaultsSync().locale,{maximumFractionDigits:0}).format(est)}
+                      {re>0 && <span style={{color:"#5B3A8C",marginLeft:8}}>Real: ${new Intl.NumberFormat(getTenantDefaultsSync().locale,{maximumFractionDigits:0}).format(re)}</span>}
                     </div>
                   </div>
                 </div>
@@ -3423,7 +3424,7 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
                                   <input type="number" value={item.estimado||""} placeholder="0"
                                     onChange={e=>updViajeItem(v.id,it.id,"estimado",e.target.value)}
                                     style={{width:"100%",textAlign:"right",border:`1px solid ${T.border}`,borderRadius:3,padding:"3px 6px",fontSize:10,fontFamily:"'DM Mono',monospace",fontWeight:600,color:T.blue,background:"#fff"}}/>
-                                ) : <div style={{textAlign:"right",fontSize:10,fontFamily:"'DM Mono',monospace",fontWeight:600,color:T.blue,padding:"3px 6px"}}>${new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(parseFloat(item.estimado)||0)}</div>}
+                                ) : <div style={{textAlign:"right",fontSize:10,fontFamily:"'DM Mono',monospace",fontWeight:600,color:T.blue,padding:"3px 6px"}}>${new Intl.NumberFormat(getTenantDefaultsSync().locale,{maximumFractionDigits:0}).format(parseFloat(item.estimado)||0)}</div>}
                               </td>
                               {(v.estado==="entregado"||v.estado==="legalizado") && (
                                 <td style={{padding:"3px 4px"}}>
@@ -3431,7 +3432,7 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
                                     <input type="number" value={item.real||""} placeholder="0"
                                       onChange={e=>updViajeItem(v.id,it.id,"real",e.target.value)}
                                       style={{width:"100%",textAlign:"right",border:`1px solid ${T.border}`,borderRadius:3,padding:"3px 6px",fontSize:10,fontFamily:"'DM Mono',monospace",fontWeight:600,color:"#5B3A8C",background:"#fff"}}/>
-                                  ) : <div style={{textAlign:"right",fontSize:10,fontFamily:"'DM Mono',monospace",fontWeight:600,color:"#5B3A8C",padding:"3px 6px"}}>${new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(parseFloat(item.real)||0)}</div>}
+                                  ) : <div style={{textAlign:"right",fontSize:10,fontFamily:"'DM Mono',monospace",fontWeight:600,color:"#5B3A8C",padding:"3px 6px"}}>${new Intl.NumberFormat(getTenantDefaultsSync().locale,{maximumFractionDigits:0}).format(parseFloat(item.real)||0)}</div>}
                                 </td>
                               )}
                             </tr>
@@ -3440,11 +3441,11 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
                         <tr style={{borderTop:`2px solid ${T.ink}`,background:"#EDEBE7"}}>
                           <td colSpan={2} style={{padding:"4px 8px",fontSize:10,fontWeight:800}}>TOTAL</td>
                           <td style={{padding:"4px 8px",textAlign:"right",fontSize:11,fontFamily:"'DM Mono',monospace",fontWeight:800,color:T.blue}}>
-                            ${new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(est)}
+                            ${new Intl.NumberFormat(getTenantDefaultsSync().locale,{maximumFractionDigits:0}).format(est)}
                           </td>
                           {(v.estado==="entregado"||v.estado==="legalizado") && (
                             <td style={{padding:"4px 8px",textAlign:"right",fontSize:11,fontFamily:"'DM Mono',monospace",fontWeight:800,color:"#5B3A8C"}}>
-                              ${new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(viajeReal(v))}
+                              ${new Intl.NumberFormat(getTenantDefaultsSync().locale,{maximumFractionDigits:0}).format(viajeReal(v))}
                             </td>
                           )}
                         </tr>
@@ -3464,7 +3465,7 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
                     )}
                     {v.estado==="entregado" && (
                       <div style={{background:"#F0ECF6",border:"1px solid #5B3A8C33",borderRadius:4,padding:"8px 12px",fontSize:10,color:"#5B3A8C",fontWeight:600}}>
-                        💰 Anticipo entregado: ${new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(v.anticipoEntregado||0)}. Registra los gastos reales en la columna "Real" y añade gastos extra abajo.
+                        💰 Anticipo entregado: ${new Intl.NumberFormat(getTenantDefaultsSync().locale,{maximumFractionDigits:0}).format(v.anticipoEntregado||0)}. Registra los gastos reales en la columna "Real" y añade gastos extra abajo.
                         <button onClick={()=>setNewGastoV({fecha:today(),concepto:"",monto:0,soporte:""})}
                           style={{display:"block",marginTop:6,padding:"4px 12px",background:"#5B3A8C",color:"#fff",border:"none",borderRadius:3,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
                           + Añadir gasto extra
@@ -3489,7 +3490,7 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
                         {v.gastos.map(g=>(
                           <div key={g.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 8px",borderBottom:`1px solid ${T.border}`,fontSize:10}}>
                             <span>{g.fecha} · {g.concepto}</span>
-                            <span style={{fontFamily:"'DM Mono',monospace",fontWeight:700,color:T.red}}>−${new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(g.monto)}</span>
+                            <span style={{fontFamily:"'DM Mono',monospace",fontWeight:700,color:T.red}}>−${new Intl.NumberFormat(getTenantDefaultsSync().locale,{maximumFractionDigits:0}).format(g.monto)}</span>
                           </div>
                         ))}
                       </div>
@@ -3798,7 +3799,7 @@ function ExamenPanel({ p, onDone }) {
 /* ── EvaluacionesPanel: lanzar, ver resultados y aprobación dual RRHH+SST ── */
 /* ─── EXPEDIENTE COMPLETO DEL EMPLEADO ──────────────────────────────────────── */
 function AnexosPanel({p}){
-  const fecha = new Date().toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'});
+  const fecha = new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:'numeric',month:'long',year:'numeric'});
   const nombre = p.candidato_nombre || p.candidate_name || '________________________';
   const cc = p.candidato_cc || p.candidate_id || '________________________';
 
@@ -4258,7 +4259,7 @@ function TabPersonal() {
 
   useEffect(() => { loadEmpleados(); }, []);
 
-  const fmtMoney = (n) => n ? new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n) : "$0";
+  const fmtMoney = (n) => n ? new Intl.NumberFormat(getTenantDefaultsSync().locale,{style:"currency",currency:getTenantDefaultsSync().currency,maximumFractionDigits:0}).format(n) : "$0";
 
   const filtrados = empleados.filter(e => {
     if(!buscar) return true;
@@ -4338,7 +4339,7 @@ function TabPersonal() {
               <div style={{marginTop:10,padding:"8px 0 2px"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
                   <div style={{fontSize:10,color:C.inkMid}}>
-                    📅 {fechaIni.toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"})} → {fechaFin.toLocaleDateString("es-CO",{day:"numeric",month:"short",year:"numeric"})}
+                    📅 {fechaIni.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short",year:"numeric"})} → {fechaFin.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short",year:"numeric"})}
                     <span style={{marginLeft:8,fontWeight:600}}>{durMeses} meses</span>
                   </div>
                   <div style={{fontSize:10,fontWeight:700,color:vencido?"#dc2626":alertaVenc?"#D97706":"#1E6B42"}}>
@@ -4427,10 +4428,10 @@ function TabPersonal() {
                   {[true,false].map(conSal=>(
                     <button key={conSal?"con":"sin"} onClick={()=>{
                       const ape=(emp.candidato_nombre||"").split(" ").slice(-2).join("-").toUpperCase();
-                      const hoyStr=new Date().toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
+                      const hoyStr=new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"});
                       const fileName=`CERT-LAB-${ape}`;
                       const salText=conSal?`<p>El trabajador devenga un salario mensual de <b>${fmtMoney(emp.salario_base)}</b>${(emp.salario_base||0)<=2*1750905?" (más auxilio de transporte de "+fmtMoney(emp.auxilio_transporte||249095)+")":""}.</p><br/>`:"";
-                      const bodyHtml=`<h1>CERTIFICACIÓN LABORAL</h1><div class="body"><p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que:</p><br/><p><b>${emp.candidato_nombre||""}</b>, identificado(a) con ${emp.tipo_documento||"C.C."} No. <b>${emp.candidato_cc||""}</b>, labora en esta empresa desde el <b>${emp.fecha_inicio?new Date(emp.fecha_inicio+"T12:00:00").toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"}):"—"}</b>, desempeñando el cargo de <b>${emp.cargo||""}</b> en el área <b>${emp.area||"Administrativa"}</b>.</p><br/>${salText}<p>La presente certificación se expide a solicitud del interesado, en Bogotá D.C., a los ${hoyStr}.</p></div><div class="sig"><div><br/><b>Representante Legal</b><br/>Habitaris S.A.S</div></div><div class="foot">Habitaris Suite · ${hoyStr}</div>`;
+                      const bodyHtml=`<h1>CERTIFICACIÓN LABORAL</h1><div class="body"><p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que:</p><br/><p><b>${emp.candidato_nombre||""}</b>, identificado(a) con ${emp.tipo_documento||"C.C."} No. <b>${emp.candidato_cc||""}</b>, labora en esta empresa desde el <b>${emp.fecha_inicio?new Date(emp.fecha_inicio+"T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"}):"—"}</b>, desempeñando el cargo de <b>${emp.cargo||""}</b> en el área <b>${emp.area||"Administrativa"}</b>.</p><br/>${salText}<p>La presente certificación se expide a solicitud del interesado, en Bogotá D.C., a los ${hoyStr}.</p></div><div class="sig"><div><br/><b>Representante Legal</b><br/>Habitaris S.A.S</div></div><div class="foot">Habitaris Suite · ${hoyStr}</div>`;
                       const fullHtml=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
@@ -4531,8 +4532,8 @@ function TabContratacion({onNuevaPropuesta}) {
     cancelado:          {label:"Cancelado",               color:"#B91C1C",bg:"#FEE2E2",  icon:"❌"},
   };
 
-  const fmtMoney = (n) => n ? new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(n) : "$0";
-  const fmtDate = (d) => d ? new Date(d).toLocaleDateString("es-CO") : "-";
+  const fmtMoney = (n) => n ? new Intl.NumberFormat(getTenantDefaultsSync().locale,{style:"currency",currency:getTenantDefaultsSync().currency,maximumFractionDigits:0}).format(n) : "$0";
+  const fmtDate = (d) => d ? new Date(d).toLocaleDateString(getTenantDefaultsSync().locale) : "-";
 
 
   const lanzarContratacion = async () => {
@@ -4877,7 +4878,7 @@ function TabContratacion({onNuevaPropuesta}) {
                     )}
                     {/* ── Condiciones laborales ── */}
                     {(()=>{
-                      const $=n=>"$"+Math.round(n||0).toLocaleString("es-CO");
+                      const $=n=>"$"+Math.round(n||0).toLocaleString(getTenantDefaultsSync().locale);
                       const cond=p._condiciones;
                       const openCond=(tipo)=>{
                         // Use saved full HTML from calculator if available
@@ -4887,7 +4888,7 @@ function TabContratacion({onNuevaPropuesta}) {
                           return;
                         }
                         // Fallback: generate basic document from saved data
-                        const t=cond?.trabajador||{},e=cond?.empleador||{},nombre=p.candidato_nombre||"Candidato",cc=p.candidato_cc||"",fecha=new Date(cond?.generado||p.created_at||Date.now()).toLocaleDateString("es-CO",{day:"numeric",month:"long",year:"numeric"});
+                        const t=cond?.trabajador||{},e=cond?.empleador||{},nombre=p.candidato_nombre||"Candidato",cc=p.candidato_cc||"",fecha=new Date(cond?.generado||p.created_at||Date.now()).toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"});
                         const css=`body{font-family:Helvetica,Arial,sans-serif;max-width:740px;margin:0 auto;padding:30px 40px;font-size:10pt;color:#111;line-height:1.5}.hdr{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #1E6B42;padding-bottom:10px;margin-bottom:16px}.logo{font-weight:800;font-size:18px}h1{font-size:13pt;text-align:center;margin-bottom:16px}table{width:100%;border-collapse:collapse;margin-bottom:14px}th{background:#111;color:#fff;text-align:left;padding:5px 8px;font-size:8pt}td{padding:4px 8px;border-bottom:1px solid #eee;font-size:9.5pt}td.l{color:#666;width:45%}td.v{font-weight:700;text-align:right;font-family:monospace}.total{background:#f5f4f1;font-weight:800}.green{color:#1E6B42}.red{color:#dc2626}.blue{color:#2563eb}.np{text-align:center;margin:30px 0;padding:16px;background:#f5f5f5;border-radius:8px}.btn{background:#1E6B42;color:#fff;border:none;padding:10px 28px;font-size:12pt;cursor:pointer;border-radius:4px;margin-right:10px}@media print{.np{display:none}}`;
                         let html=`<!DOCTYPE html><html><head><meta charset="utf-8"><style>${css}</style></head><body>`;
                         html+=`<div class="hdr"><span class="logo">Habitaris</span><span style="font-size:8pt;color:#999">${p.codigo||""}</span></div>`;

@@ -4,6 +4,7 @@ import { getConfig } from "./Configuracion.jsx";
 import { getPlantillas, sendEmail, enviarTest, EMAIL_TIPOS } from "../utils/emailService";
 import { Mail, FileText, Bell, Clock, Search, Copy, Edit3, Plus, Trash2, Send, CheckCircle, XCircle, AlertCircle, Filter, ChevronDown, Eye, Save, RefreshCw, Settings } from "lucide-react";
 import { getTenantContactSync } from "../core/configHelpers.js";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 /* ── Theme ── */
 const T = {
@@ -74,7 +75,7 @@ const TIPO_LABELS = {
 /* ── Helpers ── */
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
 const today = () => new Date().toISOString().slice(0,10);
-const now = () => new Date().toLocaleString("es-CO",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false});
+const now = () => new Date().toLocaleString(getTenantDefaultsSync().locale,{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",hour12:false});
 
 /* ══════════════════════════════════════════════════════════════
    MAIN COMPONENT

@@ -11,6 +11,7 @@ import { sb } from "../core/supabase.js";
 import { Plus, Trash2, Check, X, Search, Edit3, Copy, Send, Eye, ChevronDown, ChevronUp, GripVertical, ToggleLeft, ToggleRight, Share2, Mail, MessageCircle, Link2, FileText, Star, TrendingUp, Layers, Settings, AlertTriangle } from "lucide-react";
 import { encodeFormDef } from "./FormularioPublico.jsx";
 import { getConfig, resolveTemplate } from "./Configuracion.jsx";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 /* ═══════════════════════════════════════════════════════════════
    FORMULARIOS — Habitaris Suite
@@ -592,7 +593,7 @@ render();
       formNombre: nombre || "(sin nombre)",
       cliente: client,
       fecha: today(),
-      hora: new Date().toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}),
+      hora: new Date().toLocaleTimeString(getTenantDefaultsSync().locale,{hour:"2-digit",minute:"2-digit",hour12:false}),
       linkId,
       maxUsos: linkMaxUsos||0,
       expiry: linkExpiry||"",
@@ -971,7 +972,7 @@ render();
                   <input type="date" value={linkExpiry} onChange={e=>setLinkExpiry(e.target.value)} style={{flex:1,padding:"4px 6px",fontSize:10,border:linkExpiry?"1.5px solid #111":"1px solid #11111133",borderRadius:4,fontFamily:"inherit"}}/>
                 </div>
                 <div style={{fontSize:9,color:"#888",marginTop:4}}>
-                  {linkExpiry ? ("Caduca el " + new Date(linkExpiry).toLocaleDateString("es-CO")) : (linkHorasDuracion>0 ? ("Caduca " + linkHorasDuracion + "h después de generar el enlace") : "Sin caducidad")}
+                  {linkExpiry ? ("Caduca el " + new Date(linkExpiry).toLocaleDateString(getTenantDefaultsSync().locale)) : (linkHorasDuracion>0 ? ("Caduca " + linkHorasDuracion + "h después de generar el enlace") : "Sin caducidad")}
                 </div>
               </div>
             </div>
@@ -1196,7 +1197,7 @@ function TabRespuestas({ forms, respuestas, onReload, loading, onDelete, onClear
       });
     }
 
-    const fechaHoy = new Date().toLocaleDateString("es-CO",{year:"numeric",month:"long",day:"numeric"});
+    const fechaHoy = new Date().toLocaleDateString(getTenantDefaultsSync().locale,{year:"numeric",month:"long",day:"numeric"});
 
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
@@ -1441,7 +1442,7 @@ body{font-family:'DM Sans',sans-serif;color:#111;background:#fff}
               const proc = isProcesado(r);
               const dt = r.created_at ? new Date(r.created_at) : null;
               const fechaStr = dt ? dt.toISOString().split("T")[0] : r.fecha || "—";
-              const horaStr = dt ? dt.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}) : "";
+              const horaStr = dt ? dt.toLocaleTimeString(getTenantDefaultsSync().locale,{hour:"2-digit",minute:"2-digit",hour12:false}) : "";
               return (
               <React.Fragment key={r.id}>
               <tr style={{cursor:"pointer",background:selectedIds.has(r.id)?"#FDF5F5":proc?"":"#FDFBFF",transition:"background .15s"}} onClick={()=>setSelResp(r)}>
@@ -1651,7 +1652,7 @@ function TabEstadisticas({ forms }) {
   const convRate = opens.length > 0 ? Math.round((submits.length / opens.length) * 100) : 0;
 
   const fmtTime = (s) => s < 60 ? `${s}s` : s < 3600 ? `${Math.floor(s/60)}m ${s%60}s` : `${Math.floor(s/3600)}h ${Math.floor((s%3600)/60)}m`;
-  const fmtDate = (d) => d ? new Date(d).toLocaleString("es-CO",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",hour12:false}) : "—";
+  const fmtDate = (d) => d ? new Date(d).toLocaleString(getTenantDefaultsSync().locale,{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",hour12:false}) : "—";
 
   // Group events by form+client combo
   const grouped = {};
@@ -1749,7 +1750,7 @@ function TabEstadisticas({ forms }) {
                   const conv = r.opens > 0 ? Math.round((r.submits / r.opens) * 100) : 0;
                   const avgTime = r.durationCount > 0 ? Math.round(r.duration / r.durationCount) : 0;
                   const fechaStr = r.lastDate ? r.lastDate.toISOString().split("T")[0] : "—";
-                  const horaStr = r.lastDate ? r.lastDate.toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}) : "";
+                  const horaStr = r.lastDate ? r.lastDate.toLocaleTimeString(getTenantDefaultsSync().locale,{hour:"2-digit",minute:"2-digit",hour12:false}) : "";
                   return (
                     <tr key={i} style={{background:i%2===0?"#fff":"#FFFFFF"}}>
                       <td style={tds}>
@@ -1969,7 +1970,7 @@ function EnviadosTab({ envios, onBlock, onDelete, onUpdateLink, respuestas }) {
           <div style={{background:"#f9fafb",borderRadius:6,padding:10,marginBottom:14,fontSize:11,lineHeight:1.5}}>
             <div><strong>Cliente:</strong> {rehabModal.cliente?.nombre || "—"}</div>
             <div><strong>Formulario:</strong> {rehabModal.formNombre || "—"}</div>
-            {rehabModal.expiry && <div><strong>Caducó:</strong> {new Date(rehabModal.expiry).toLocaleDateString("es-CO")}</div>}
+            {rehabModal.expiry && <div><strong>Caducó:</strong> {new Date(rehabModal.expiry).toLocaleDateString(getTenantDefaultsSync().locale)}</div>}
             {(rehabModal.maxUsos||0)>0 && <div><strong>Usos:</strong> {rehabModal.currentUsos||0} de {rehabModal.maxUsos}</div>}
           </div>
           <div style={{marginBottom:12}}>
@@ -2168,8 +2169,8 @@ export default function Formularios() {
             formId: l.form_id,
             formNombre: l.form_name || "\u2014",
             cliente: { nombre: l.client_name||"", email: l.client_email||"", tel: l.client_tel||"" },
-            fecha: l.created_at ? new Date(l.created_at).toLocaleDateString("es-CO") : "\u2014",
-            hora: l.created_at ? new Date(l.created_at).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}) : "\u2014",
+            fecha: l.created_at ? new Date(l.created_at).toLocaleDateString(getTenantDefaultsSync().locale) : "\u2014",
+            hora: l.created_at ? new Date(l.created_at).toLocaleTimeString(getTenantDefaultsSync().locale,{hour:"2-digit",minute:"2-digit",hour12:false}) : "\u2014",
             linkId: l.link_id,
             partialResponses: l.partial_responses || {},
             lastStep: l.last_completed_step || 0,

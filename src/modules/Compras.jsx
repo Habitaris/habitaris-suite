@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { store } from "../core/store.js";
 
 import { Plus, Trash2, Check, X, Search, Edit3, AlertTriangle, ChevronDown, Eye, Star, Package, FileText, Truck } from "lucide-react";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 /* ═══════════════════════════════════════════════════════════════
    COMPRAS — Habitaris Suite
@@ -12,7 +13,7 @@ const Fonts = () => <style>{`@import url('https://fonts.googleapis.com/css2?fami
 const T = { bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#555",inkLight:"#909090",inkXLight:"#C8C5BE",border:"#E0E0E0",accent:"#EDEBE7",green:"#111111",greenBg:"#E8F4EE",red:"#B91C1C",redBg:"#FAE8E8",amber:"#8C6A00",amberBg:"#FAF0E0",blue:"#3B3B3B",blueBg:"#F0F0F0",shadow:"0 1px 3px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05)" };
 const uid = () => Math.random().toString(36).slice(2,10);
 const today = () => new Date().toISOString().split("T")[0];
-const fmt = (n) => new Intl.NumberFormat("es-CO",{maximumFractionDigits:0}).format(n||0);
+const fmt = (n) => new Intl.NumberFormat(getTenantDefaultsSync().locale,{maximumFractionDigits:0}).format(n||0);
 const Card = ({children,style,...p}) => <div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:8,padding:16,boxShadow:T.shadow,...style}} {...p}>{children}</div>;
 const Btn = ({children,on,v,style,...p}) => <button onClick={on} style={{padding:"7px 16px",borderRadius:5,border:v==="sec"?`1px solid ${T.border}`:"none",background:v==="sec"?"#fff":v==="danger"?"#B91C1C":"#111",color:v==="sec"?T.inkMid:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"inline-flex",alignItems:"center",gap:5,...style}} {...p}>{children}</button>;
 const FI = ({lbl,val,on,ph,type,style,children,...p}) => <div style={{marginBottom:8,...style}}><label style={{display:"block",fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5,marginBottom:2}}>{lbl}</label>{children||<input type={type||"text"} value={val} onChange={on} placeholder={ph||""} style={{width:"100%",padding:"6px 8px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,background:"#fff"}} {...p}/>}</div>;

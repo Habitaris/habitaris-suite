@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { store } from "../core/store.js";
 import { getTenantLegalRepresentativeSync } from "../core/configHelpers.js";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 
 /* ─────── palette ─────── */
@@ -18,7 +19,7 @@ const SK = "hab:legal:"
 const load = k => { try { return JSON.parse(store.getSync(SK+k)) || null } catch { return null }}
 const save = (k, v) => { store.set(SK+k, JSON.stringify(v)); }
 const genId = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7)
-const fmtDate = d => d ? new Date(d).toLocaleDateString("es-CO",{ day:"2-digit", month:"short", year:"numeric" }) : "—"
+const fmtDate = d => d ? new Date(d).toLocaleDateString(getTenantDefaultsSync().locale,{ day:"2-digit", month:"short", year:"numeric" }) : "—"
 
 function Badge({ children, color, bg }) {
   return <span style={{ ...F, display:"inline-block", padding:"2px 10px", borderRadius:10, fontSize:10, fontWeight:600, color, background:bg }}>{children}</span>
@@ -346,7 +347,7 @@ export default function Legal() {
 
     // Auto-fill empresa
     const autoVars = { empresa_nombre:"Habitaris S.A.S", empresa_nit:"901.922.136-8",
-      rep_legal:"Laura Sánchez Díaz", ciudad:"Bogotá D.C.", fecha:new Date().toLocaleDateString("es-CO",{ day:"numeric", month:"long", year:"numeric" }) }
+      rep_legal:"Laura Sánchez Díaz", ciudad:"Bogotá D.C.", fecha:new Date().toLocaleDateString(getTenantDefaultsSync().locale,{ day:"numeric", month:"long", year:"numeric" }) }
 
     const preview = plantilla.contenido.replace(/\{\{(\w+)\}\}/g, (match, key) => {
       return variables[key] || autoVars[key] || `[${key}]`

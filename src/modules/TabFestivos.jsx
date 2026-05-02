@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from "react";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const DL = ["L","M","X","J","V","S","D"];
@@ -166,8 +167,8 @@ export default function TabFestivos() {
             {holidays.map((h,i)=>{
               const isPast = h.date < today;
               const isLab = h.date.getDay()!==0;
-              const dayName = h.date.toLocaleDateString("es-CO",{weekday:"long"});
-              const dateStr = h.date.toLocaleDateString("es-CO",{day:"numeric",month:"long"});
+              const dayName = h.date.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"long"});
+              const dateStr = h.date.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long"});
               return (
                 <tr key={i} style={{borderBottom:`1px solid ${T.border}`,opacity:isPast?0.5:1,background:sameDay(h.date,today)?T.greenBg:"transparent"}}>
                   <td style={{padding:"5px 16px",color:T.inkLight,fontFamily:"'DM Mono',monospace"}}>{i+1}</td>

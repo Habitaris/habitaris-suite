@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { store } from "../core/store.js";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 import {
   getTenantBrandingSync,
   getTenantIdentitySync,
@@ -103,7 +104,7 @@ function generarSlots(disp, fecha, citas, slotsPublicos) {
 
 function formatFecha(f) {
   if(!f) return "";
-  return new Date(f+"T12:00:00").toLocaleDateString("es-CO",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+  return new Date(f+"T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"long",day:"numeric",month:"long",year:"numeric"});
 }
 
 function generarICS(cita, brand) {
@@ -239,7 +240,7 @@ export function CalendarioPublico() {
                     </div>
                     <div style={{textAlign:"right",flexShrink:0}}>
                       <div style={{fontSize:12,fontWeight:700,color:T.ink}}>{s.duracion} min</div>
-                      {s.precio>0&&<div style={{fontSize:10,color:T.inkMid}}>{s.precio.toLocaleString("es-CO")} COP</div>}
+                      {s.precio>0&&<div style={{fontSize:10,color:T.inkMid}}>{s.precio.toLocaleString(getTenantDefaultsSync().locale)} COP</div>}
                       <div style={{fontSize:9,color:T.inkLight,marginTop:2}}>{s.tipo==="virtual"?"💻 Virtual":"📍 Presencial"}</div>
                     </div>
                   </div>
@@ -340,7 +341,7 @@ export function CalendarioPublico() {
                   <span style={{fontWeight:600,color:T.inkMid}}>Tipo:</span><span>{servicio?.tipo==="virtual"?"💻 Virtual":"📍 Presencial"}</span>
                   <span style={{fontWeight:600,color:T.inkMid}}>Fecha:</span><span>{formatFecha(selFecha)}</span>
                   <span style={{fontWeight:600,color:T.inkMid}}>Hora:</span><span>{selHora} ({servicio?.duracion} min)</span>
-                  {servicio?.precio>0&&<><span style={{fontWeight:600,color:T.inkMid}}>Precio:</span><span>{servicio.precio.toLocaleString("es-CO")} COP</span></>}
+                  {servicio?.precio>0&&<><span style={{fontWeight:600,color:T.inkMid}}>Precio:</span><span>{servicio.precio.toLocaleString(getTenantDefaultsSync().locale)} COP</span></>}
                   <span style={{fontWeight:600,color:T.inkMid}}>Nombre:</span><span>{form.nombre}</span>
                   <span style={{fontWeight:600,color:T.inkMid}}>Email:</span><span>{form.email}</span>
                   <span style={{fontWeight:600,color:T.inkMid}}>Teléfono:</span><span>{form.telefono}</span>

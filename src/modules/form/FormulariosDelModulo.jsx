@@ -7,6 +7,7 @@ import { crearFormLink } from "./linkService.js";
 import RespuestaModal from "./RespuestaModal.jsx";
 import { getConfig } from "../Configuracion.jsx";
 import { Send, ChevronDown, ChevronUp, Copy, Mail, Search, RefreshCw, FileText, MessageCircle } from "lucide-react";
+import { getTenantDefaultsSync } from "../../core/configHelpers.js";
 
 const T={ink:"#111",inkMid:"#555",inkLight:"#999",blue:"#2563EB",blueBg:"#EFF6FF",green:"#16a34a",greenBg:"#ECFDF5",red:"#DC2626",redBg:"#FEF2F2",amber:"#D97706",amberBg:"#FFFBEB",border:"#E8E8E8",bg:"#FAFAFA",surface:"#fff",accent:"#F5F4F1"};
 const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36);
@@ -113,9 +114,9 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
       const fids=forms.map(f=>f.id);
       if(fids.length>0){
         const{data:rd}=await sb.from("form_responses").select("*").in("form_id",fids).order("created_at",{ascending:false});
-        if(rd)setRespuestas(rd.map(r=>({...((r.data&&typeof r.data==="object")?r.data:{}),_sbId:r.id,id:r.data?.id||r.id,formularioId:r.form_id,formularioNombre:r.form_name||"",fecha:r.created_at?new Date(r.created_at).toLocaleDateString("es-CO",{year:"numeric",month:"2-digit",day:"2-digit"}):"",hora:r.created_at?new Date(r.created_at).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}):"",processed:r.processed||false,link_id:r.link_id||r.data?.linkId||null})));
+        if(rd)setRespuestas(rd.map(r=>({...((r.data&&typeof r.data==="object")?r.data:{}),_sbId:r.id,id:r.data?.id||r.id,formularioId:r.form_id,formularioNombre:r.form_name||"",fecha:r.created_at?new Date(r.created_at).toLocaleDateString(getTenantDefaultsSync().locale,{year:"numeric",month:"2-digit",day:"2-digit"}):"",hora:r.created_at?new Date(r.created_at).toLocaleTimeString(getTenantDefaultsSync().locale,{hour:"2-digit",minute:"2-digit",hour12:false}):"",processed:r.processed||false,link_id:r.link_id||r.data?.linkId||null})));
         const{data:ld}=await sb.from("form_links").select("*").in("form_id",fids).order("created_at",{ascending:false});
-        if(ld)setEnvios(ld.map(l=>({id:l.link_id,linkId:l.link_id,formId:l.form_id,formNombre:l.form_name||"",cliente:{nombre:l.client_name,email:l.client_email,tel:l.client_tel},fecha:l.created_at?new Date(l.created_at).toLocaleDateString("es-CO",{year:"numeric",month:"2-digit",day:"2-digit"}):"",hora:l.created_at?new Date(l.created_at).toLocaleTimeString("es-CO",{hour:"2-digit",minute:"2-digit",hour12:false}):"",maxUsos:l.max_uses,currentUsos:l.current_uses,blocked:!l.active,expiresAt:l.expires_at})));
+        if(ld)setEnvios(ld.map(l=>({id:l.link_id,linkId:l.link_id,formId:l.form_id,formNombre:l.form_name||"",cliente:{nombre:l.client_name,email:l.client_email,tel:l.client_tel},fecha:l.created_at?new Date(l.created_at).toLocaleDateString(getTenantDefaultsSync().locale,{year:"numeric",month:"2-digit",day:"2-digit"}):"",hora:l.created_at?new Date(l.created_at).toLocaleTimeString(getTenantDefaultsSync().locale,{hour:"2-digit",minute:"2-digit",hour12:false}):"",maxUsos:l.max_uses,currentUsos:l.current_uses,blocked:!l.active,expiresAt:l.expires_at})));
       }
     }catch(e){console.warn("FormulariosDelModulo load:",e);}
     setLoading(false);
@@ -167,7 +168,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
     if(shareLinkMaxUsos>0)parts.push(shareLinkMaxUsos+" uso"+(shareLinkMaxUsos>1?"s":"")+" disponible"+(shareLinkMaxUsos>1?"s":""));
     if(shareLinkExpiry){
       const d=new Date(shareLinkExpiry);
-      parts.push("válido hasta el "+d.toLocaleDateString("es-CO",{day:"2-digit",month:"2-digit",year:"numeric"}));
+      parts.push("válido hasta el "+d.toLocaleDateString(getTenantDefaultsSync().locale,{day:"2-digit",month:"2-digit",year:"numeric"}));
     } else if(shareLinkHorasDuracion>0){
       parts.push("válido durante "+shareLinkHorasDuracion+" horas");
     }
@@ -329,7 +330,7 @@ export default function FormulariosDelModulo({modulo,moduloLabel}){
                       <input type="date" value={shareLinkExpiry} min={today()} onChange={e=>setShareLinkExpiry(e.target.value)} style={{flex:1,padding:"4px 6px",fontSize:10,border:shareLinkExpiry?"1.5px solid #111":"1px solid #11111133",borderRadius:4,fontFamily:"inherit"}}/>
                     </div>
                     <div style={{fontSize:9,color:"#888",marginTop:4}}>
-                      {shareLinkExpiry?("Caduca el "+new Date(shareLinkExpiry).toLocaleDateString("es-CO")):(shareLinkHorasDuracion>0?("Caduca "+shareLinkHorasDuracion+"h después de generar el enlace"):"Sin caducidad")}
+                      {shareLinkExpiry?("Caduca el "+new Date(shareLinkExpiry).toLocaleDateString(getTenantDefaultsSync().locale)):(shareLinkHorasDuracion>0?("Caduca "+shareLinkHorasDuracion+"h después de generar el enlace"):"Sin caducidad")}
                     </div>
                   </div>
                 </div>
