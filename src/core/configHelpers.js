@@ -546,3 +546,91 @@ export const FALLBACKS = {
   TENANT: FALLBACK_TENANT,
   COUNTRY_CONFIGS: FALLBACK_COUNTRY_CONFIGS,
 };
+
+// ── Cache global del tenantConfig (para uso fuera de hooks: emails HTML,
+//    PDFs, plantillas que se generan desde funciones planas) ──────────────
+//
+// App.jsx (o el provider) llama a setTenantConfigCache() cada vez que el
+// TenantContext carga/recarga tenant_config. Las funciones planas que generan
+// HTML para correos o PDFs llaman a getTenantBranding/Identity/Contact/UrlsSync.
+// Si el cache no está poblado, devuelven los FALLBACK hardcoded.
+
+let _tenantConfigCache = null;
+
+export function setTenantConfigCache(tenantConfig) {
+  _tenantConfigCache = tenantConfig || null;
+}
+
+function _readTenantSection(sectionKey) {
+  return (_tenantConfigCache && _tenantConfigCache[sectionKey]) || {};
+}
+
+export function getTenantIdentitySync() {
+  const v = _readTenantSection("identity");
+  const fb = FALLBACK_TENANT.identity;
+  return {
+    displayName: v.display_name || fb.display_name,
+    legalName:   v.legal_name   || fb.legal_name,
+    tagline:     v.tagline      || fb.tagline,
+  };
+}
+
+export function getTenantUrlsSync() {
+  const v = _readTenantSection("urls");
+  const fb = FALLBACK_TENANT.urls;
+  const app = v.app || fb.app;
+  return {
+    app,
+    publicWebsite: v.public_website || fb.public_website,
+    portalEmpleado:    app + "/empleado",
+    portalCliente:     app + "/portal",
+    formularioPublico: app + "/formulario",
+    propuesta:         app + "/propuesta",
+    contratacion:      app + "/contratacion",
+    psicotecnico:      app + "/psicotecnico",
+    firmar:            app + "/firmar",
+    aprobar:           app + "/aprobar",
+    recuperar:         app + "/recuperar",
+  };
+}
+
+export function getTenantContactSync() {
+  const v = _readTenantSection("contact");
+  const fb = FALLBACK_TENANT.contact;
+  return {
+    primaryEmail: v.primary_email || fb.primary_email,
+    noreplyEmail: v.noreply_email || fb.noreply_email,
+    legalEmail:   v.legal_email   || fb.legal_email,
+    primaryPhone: v.primary_phone || fb.primary_phone,
+  };
+}
+
+export function getTenantBrandingSync() {
+  const v = _readTenantSection("branding");
+  const fb = FALLBACK_TENANT.branding;
+  return {
+    logoWhite:       v.logo_white_url      || fb.logo_white_url,
+    logoBlack:       v.logo_black_url      || fb.logo_black_url,
+    logoPdfBase64:   v.logo_pdf_base64     || fb.logo_pdf_base64,
+    colorPrimary:    v.color_primary       || fb.color_primary,
+    colorSecondary:  v.color_secondary     || fb.color_secondary,
+    colorAccent:     v.color_accent        || fb.color_accent,
+    colorSuccess:    v.color_success       || fb.color_success,
+    colorWarning:    v.color_warning       || fb.color_warning,
+    colorDanger:     v.color_danger        || fb.color_danger,
+    fontPrimary:     v.font_family_primary || fb.font_family_primary,
+    fontMono:        v.font_family_mono    || fb.font_family_mono,
+  };
+}
+
+export function getTenantDefaultsSync() {
+  const v = _readTenantSection("defaults");
+  const c = _tenantConfigCache || {};
+  const fb = FALLBACK_TENANT.defaults;
+  return {
+    country:  v.country  || c.country_default  || fb.country,
+    locale:   v.locale   || c.language_default || fb.locale,
+    currency: v.currency || c.currency_default || fb.currency,
+    timezone: v.timezone || c.timezone_default || fb.timezone,
+  };
+}

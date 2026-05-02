@@ -21,6 +21,7 @@
  */
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from "react";
 import { sb } from "./supabase.js";
+import { setTenantConfigCache } from "./configHelpers.js";
 
 const TenantCtx = createContext(null);
 const PAIS_KEY = "hab:pais_activo";
@@ -231,10 +232,13 @@ export function TenantProvider({ children }) {
 
         if (cancelled) return;
         completed = true;
+        const _tenantConfigData = (configData && configData.config) || null;
+        // Sprint C Capa 3: poblar cache global para uso en funciones planas (emails, PDFs).
+        try { setTenantConfigCache(_tenantConfigData); } catch (_) {}
         setState({
           loading: false,
           tenant: tenantData,
-          tenantConfig: (configData && configData.config) || null,
+          tenantConfig: _tenantConfigData,
           user: userData,
           role: (membership && membership.role) || (userData && userData.rol) || null,
           membership,

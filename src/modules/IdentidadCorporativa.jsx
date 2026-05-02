@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { getConfig } from "./Configuracion.jsx";
 import { store } from "../core/store.js";
+import {
+  getTenantBrandingSync,
+  getTenantIdentitySync,
+  getTenantContactSync,
+  getTenantUrlsSync,
+} from "../core/configHelpers.js";
 
 
 /* ─────── palette ─────── */
@@ -56,24 +62,29 @@ function generateQRSvg(text, size=120, darkColor="#111", lightColor="transparent
 
 /* ─────── Brand config helper ─────── */
 function getBrand() {
-  try {
-    const cfg = JSON.parse(store.getSync("habitaris_config")) || {}
-    return {
-      nombre: cfg.empresa?.nombre || "Habitaris",
-      nit: cfg.empresa?.nit || "901.922.136-8",
-      direccion: cfg.empresa?.direccion || "Bogotá D.C., Colombia",
-      telefono: cfg.empresa?.telefono || "+57 350 566 1545",
-      email: cfg.empresa?.email || "info@habitaris.co",
-      web: cfg.empresa?.web || "www.habitaris.co",
-      logo: cfg.apariencia?.logo || "/logo-habitaris-negro.svg",
-      logoBlanco: cfg.apariencia?.logoBlanco || "/logo-habitaris-blanco.jpg",
-      logoNegro: cfg.apariencia?.logoNegro || "/logo-habitaris-negro.svg",
-      colorPrimario: cfg.apariencia?.colorPrimario || "#111111",
-      colorAcento: cfg.apariencia?.colorAcento || "#111111",
-      tipografia: cfg.apariencia?.tipografia || "DM Sans",
-      slogan: cfg.apariencia?.slogan || "Arquitectura · Interiorismo",
-    }
-  } catch { return { nombre:"Habitaris", colorPrimario:"#111", colorAcento:"#111111", tipografia:"DM Sans", slogan:"Arquitectura · Interiorismo" } }
+  // Sprint C Capa 3: branding desde tenant_config (BD prioritaria) + legacy fallback.
+  const branding = getTenantBrandingSync();
+  const identity = getTenantIdentitySync();
+  const contact  = getTenantContactSync();
+  const urls     = getTenantUrlsSync();
+  let cfg = {};
+  try { cfg = JSON.parse(store.getSync("habitaris_config")) || {}; } catch (_) {}
+  const ap = cfg.apariencia || {};
+  return {
+    nombre:        identity.displayName,
+    nit:           cfg.empresa?.nit || "", // se migrará en paso 5 (datos legales)
+    direccion:     cfg.empresa?.direccion || "",
+    telefono:      contact.primaryPhone,
+    email:         contact.primaryEmail,
+    web:           urls.publicWebsite,
+    logo:          branding.logoBlack || ap.logo      || "/logo-habitaris-negro.svg",
+    logoBlanco:    branding.logoWhite || ap.logoBlanco || "/logo-habitaris-blanco.jpg",
+    logoNegro:     branding.logoBlack || ap.logoNegro  || "/logo-habitaris-negro.svg",
+    colorPrimario: branding.colorPrimary || ap.colorPrimario || "#111111",
+    colorAcento:   branding.colorAccent  || ap.colorAcento   || "#111111",
+    tipografia:    branding.fontPrimary  || ap.tipografia    || "DM Sans",
+    slogan:        ap.slogan || identity.tagline,
+  }
 }
 
 /* ─────── SAMPLE EMPLOYEES ─────── */
