@@ -20,7 +20,7 @@ const DEFAULT_CONFIG = {
     web: "habitaris.co",
   },
   correo: {
-    emailPrincipal: "comercial@habitaris.co",
+    emailPrincipal: "comercial@habitaris.es",
   },
   app: {
     url: "https://suite.habitaris.es",
@@ -140,7 +140,7 @@ const FIELDS = {
     { key:"web",          label:"Sitio web / dominio",    placeholder:"habitaris.co" },
   ],
   correo: [
-    { key:"emailPrincipal",    label:"Email principal (remitente)",  placeholder:"comercial@habitaris.co" },
+    { key:"emailPrincipal",    label:"Email principal (remitente)",  placeholder:"comercial@habitaris.es" },
   ],
   app: [
     { key:"url", label:"URL de la app", placeholder:"https://suite.habitaris.es" },

@@ -7,7 +7,7 @@ import TabLiquidacion from "./TabLiquidacion.jsx";
 import { BannerPagos } from "./BannerPagos.jsx";
 import { downloadPDF } from "./pdfUtil.js";
 import { HAB_LOGO } from "./habLogo.js";
-import { getTenantUrlsSync, getTenantContactSync, getTenantIdentitySync } from "../core/configHelpers.js";
+import { getTenantUrlsSync, getTenantContactSync, getTenantIdentitySync, getTenantLegalRepresentativeSync } from "../core/configHelpers.js";
 
 const DEF_EQUIPO = () => ({
   id: uid(), nombre: "", descripcion: "", tipo: "obra",
@@ -4462,7 +4462,7 @@ function TabContratacion({onNuevaPropuesta}) {
   const [selProceso, setSelProceso] = useState(null);
   const [lanzarId, setLanzarId] = useState(null);
   const [sendModal, setSendModal] = useState(null);
-  const [lanzarForm, setLanzarForm] = useState({abogado_nombre:"",abogado_email:"",contrato_plantilla:"tpl_contrato_laboral",descriptor_codigo:"",firmantes:[{nombre:"",email:"",rol:"Revisor legal",orden:1},{nombre:"",email:"",rol:"Trabajador",orden:2},{nombre:"Ana María Díaz Buitrago",email:"amdiaz@habitaris.co",rol:"Empleador — Rep. Legal",orden:3}]});
+  const [lanzarForm, setLanzarForm] = useState({abogado_nombre:"",abogado_email:"",contrato_plantilla:"tpl_contrato_laboral",descriptor_codigo:"",firmantes:[{nombre:"",email:"",rol:"Revisor legal",orden:1},{nombre:"",email:"",rol:"Trabajador",orden:2},(()=>{const r=getTenantLegalRepresentativeSync();return {nombre:r.name,email:r.email,rol:"Empleador — Rep. Legal",orden:3};})()]});
   const [form, setForm] = useState({
     cargo:"",area:"",nivel:"Operativo",salario_neto:0,salario_base:0,
     auxilio_transporte:0,bono_no_salarial:0,jornada_horas:48,

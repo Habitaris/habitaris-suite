@@ -49,7 +49,7 @@ const DEF_CONFIG = {
   disponibilidad: {...DEF_DISP},
   bufferMinutos:15, anticipacionMaxDias:60,
   mensajeBienvenida:"Agenda tu cita con nuestro equipo de Habitaris.",
-  formularioIntake:true, crearJitsi:true, notificarEmail:true, notificarWhatsApp:false, userEmail:"dparra@habitaris.co", userName:"David Parra",
+  formularioIntake:true, crearJitsi:true, notificarEmail:true, notificarWhatsApp:false, userEmail:"", userName:"",
   modulos: ["General","CRM","Proyectos","RRHH","Legal","Postventa"],
 };
 
@@ -480,7 +480,7 @@ export default function Calendario() {
     }
     saveCitas([...citas, ...allNew]);
     // Email notification
-    try { if(nueva.clienteEmail||nueva.emailExterno){ const toEmail=nueva.emailExterno||nueva.clienteEmail; const b=getBrand(); const ue=nueva.emailRemitente||config.userEmail||"comercial@habitaris.co"; const un=ue==="comercial@habitaris.co"?b.nombre||"Habitaris":ue.split("@")[0].replace(/\./g," ").replace(/\w/g,l=>l.toUpperCase()); fetch("/api/send-email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:toEmail,subject:"📅 Reunión programada: "+nueva.asunto+" — "+(b.nombre||"Habitaris"),message:"Hola,\n\nSe ha programado una reunión:\n\nAsunto: "+nueva.asunto+"\nFecha: "+nueva.fecha+"\nHora: "+nueva.hora+"\nDuración: "+nueva.duracionMin+" min"+(nueva.jitsiLink?"\n\nEnlace videollamada: "+nueva.jitsiLink:"")+"\n\nSaludos,\n"+(b.nombre||"Habitaris"),brand:{empresa:b.nombre,colorPrimario:b.colorPrimario,logo:b.logoBlanco,slogan:b.slogan},fromEmail:ue,fromName:un,link:nueva.jitsiLink||"",link_info:nueva.jitsiLink?"Unirse a videollamada":""})}); console.log("[Cal] Email sent to "+toEmail); } } catch(e){console.warn("Email err:",e);}
+    try { if(nueva.clienteEmail||nueva.emailExterno){ const toEmail=nueva.emailExterno||nueva.clienteEmail; const b=getBrand(); const __ueDef=getTenantContactSync().primaryEmail; const ue=nueva.emailRemitente||config.userEmail||__ueDef; const un=ue===__ueDef?b.nombre||"Habitaris":ue.split("@")[0].replace(/\./g," ").replace(/\w/g,l=>l.toUpperCase()); fetch("/api/send-email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({to:toEmail,subject:"📅 Reunión programada: "+nueva.asunto+" — "+b.nombre,message:"Hola,\n\nSe ha programado una reunión:\n\nAsunto: "+nueva.asunto+"\nFecha: "+nueva.fecha+"\nHora: "+nueva.hora+"\nDuración: "+nueva.duracionMin+" min"+(nueva.jitsiLink?"\n\nEnlace videollamada: "+nueva.jitsiLink:"")+"\n\nSaludos,\n"+b.nombre,brand:{empresa:b.nombre,colorPrimario:b.colorPrimario,logo:b.logoBlanco,slogan:b.slogan},fromEmail:ue,fromName:un,link:nueva.jitsiLink||"",link_info:nueva.jitsiLink?"Unirse a videollamada":""})}); console.log("[Cal] Email sent to "+toEmail); } } catch(e){console.warn("Email err:",e);}
     setNuevaReunion({asunto:"",modulo:"CRM",fecha:today(),hora:"10:00",duracionMin:60,tipo:"interna",participantes:"",clienteEmail:"",proyectoId:"",notas:"",conJitsi:true,conExterno:false,emailExterno:"",emailRemitente:"",recurrente:false,recurrencia:"semanal",recurrenciaHasta:""});
     setTab("agenda");
   };
@@ -798,10 +798,9 @@ export default function Calendario() {
             <div>
               <label style={{fontSize:10,fontWeight:600,color:T.inkMid,textTransform:"uppercase"}}>Notas</label>
               <div style={{...F,fontSize:10,fontWeight:600,color:T.inkMid,letterSpacing:1,marginBottom:4}}>ENVIAR DESDE</div>
-              <select value={r.emailRemitente||config.userEmail||"comercial@habitaris.co"} onChange={e=>upd("emailRemitente",e.target.value)} style={{...F,width:"100%",padding:"10px 12px",borderRadius:8,border:"1px solid "+T.border,fontSize:13,color:T.ink,marginBottom:16,background:T.surface}}>
-                <option value="comercial@habitaris.co">comercial@habitaris.co (General)</option>
-                <option value="dparra@habitaris.co">David Parra (dparra@habitaris.co)</option>
-                {(()=>{try{const emps=JSON.parse(localStorage.getItem("hab:rrhh:empleados")||"[]");return emps.filter(e=>e.email&&e.email.includes("@habitaris.co")&&e.email!=="dparra@habitaris.co").map(e=><option key={e.email} value={e.email}>{e.nombre||e.email} ({e.email})</option>);}catch{return null;}})()}
+              <select value={r.emailRemitente||config.userEmail||getTenantContactSync().primaryEmail} onChange={e=>upd("emailRemitente",e.target.value)} style={{...F,width:"100%",padding:"10px 12px",borderRadius:8,border:"1px solid "+T.border,fontSize:13,color:T.ink,marginBottom:16,background:T.surface}}>
+                <option value={getTenantContactSync().primaryEmail}>{getTenantContactSync().primaryEmail} (General)</option>
+                                {(()=>{try{const emps=JSON.parse(localStorage.getItem("hab:rrhh:empleados")||"[]");return emps.filter(e=>e.email&&e.email.includes("@habitaris.")).map(e=><option key={e.email} value={e.email}>{e.nombre||e.email} ({e.email})</option>);}catch{return null;}})()}
               </select>
               <div style={{...F,fontSize:10,fontWeight:600,color:T.inkMid,letterSpacing:1,marginBottom:4}}>NOTAS</div>
               <textarea value={r.notas} onChange={e=>upd("notas",e.target.value)} rows={2} style={{...inp2,resize:"vertical"}} />
@@ -1021,13 +1020,13 @@ export default function Calendario() {
               s.src="https://8x8.vc/external_api.js";
               s.onload=async()=>{
                 let jwt="";
-                try{const r=await fetch("/api/jaas-token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName,userName:config.userName||brand.nombre||"Habitaris",userEmail:config.userEmail||"comercial@habitaris.co",isModerator:true})});const d=await r.json();jwt=d.token||"";}catch(e){console.warn("JWT fetch failed:",e);}
+                try{const r=await fetch("/api/jaas-token",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({room:roomName,userName:config.userName||brand.nombre||"Habitaris",userEmail:config.userEmail||getTenantContactSync().primaryEmail,isModerator:true})});const d=await r.json();jwt=d.token||"";}catch(e){console.warn("JWT fetch failed:",e);}
                 const api=new window.JitsiMeetExternalAPI("8x8.vc",{
                   roomName:roomName,
                   jwt:jwt||undefined,
                   parentNode:el,
                   width:"100%",height:"100%",
-                  userInfo:{displayName:brand.nombre||"Habitaris",email:"comercial@habitaris.co"},
+                  userInfo:{displayName:brand.nombre||"Habitaris",email:getTenantContactSync().primaryEmail},
                   configOverwrite:{prejoinPageEnabled:false,startWithAudioMuted:false,startWithVideoMuted:false,disableDeepLinking:true,hideConferenceSubject:false,subject:(brand.nombre||"Habitaris")+" · Videollamada",recordingService:{enabled:true,sharingEnabled:true},transcription:{enabled:true,autoTranscribeOnRecord:true}},
                   interfaceConfigOverwrite:{SHOW_JITSI_WATERMARK:false,SHOW_WATERMARK_FOR_GUESTS:false,SHOW_BRAND_WATERMARK:false,SHOW_POWERED_BY:false,SHOW_PROMOTIONAL_CLOSE_PAGE:false,TOOLBAR_BUTTONS:["microphone","camera","desktop","chat","raisehand","tileview","fullscreen","hangup","recording","closedcaptions","select-background","settings"],DEFAULT_BACKGROUND:"#111111",DEFAULT_LOCAL_DISPLAY_NAME:brand.nombre||"Habitaris",DEFAULT_REMOTE_DISPLAY_NAME:"Participante",APP_NAME:brand.nombre||"Habitaris",PROVIDER_NAME:brand.nombre||"Habitaris",DEFAULT_LANGUAGE:"es"},
                 });
