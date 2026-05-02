@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
   // Cron de Vercel hace GET con query string. Permitimos GET solo para crons unificados.
-  const cronTypes = ["cron_reminders", "cron_daily"];
+  const cronTypes = ["cron_daily"];
   const isCronGet = req.method === "GET" && (req.query && cronTypes.indexOf(req.query.type) !== -1);
   if (req.method !== "POST" && !isCronGet) return res.status(405).json({ error: "Method not allowed" });
 
@@ -17,9 +17,6 @@ export default async function handler(req, res) {
     // ============================================================
     if (body.type === "reminder") {
       return await handleReminder(body, res);
-    }
-    if (body.type === "cron_reminders") {
-      return await handleCronReminders(body, res);
     }
     if (body.type === "cron_daily") {
       return await handleCronDaily(body, res);
@@ -480,80 +477,6 @@ async function handleReminder(body, res) {
   }
 }
 
-// Handler: cron diario que revisa links candidatos y envia recordatorios
-// Llamado por Vercel Cron via GET /api/send-email?action=cron_reminders
-// Filtros: current_uses>=max_uses AND has_partial_data=true AND submitted_at IS NULL AND reminder_sent_at IS NULL
-async function handleCronReminders(body, res) {
-  try {
-    const sb = getSupabaseClient();
-
-    // CONFIG: leer kv_store.habitaris_reminder_config (con fallback)
-    let hoursBeforeExpiry = 24;
-    let enabled = true;
-    try {
-      const cfgR = await fetch(sb.url + "/rest/v1/kv_store?key=eq.habitaris_reminder_config&select=value", { headers: sb.headers });
-      const cfgArr = await cfgR.json().catch(() => []);
-      if (cfgArr && cfgArr.length > 0 && cfgArr[0].value) {
-        const cfg = typeof cfgArr[0].value === "string" ? JSON.parse(cfgArr[0].value) : cfgArr[0].value;
-        if (typeof cfg.hours_before_expiry === "number") hoursBeforeExpiry = cfg.hours_before_expiry;
-        if (typeof cfg.enabled === "boolean") enabled = cfg.enabled;
-      }
-    } catch(_) { /* usar defaults */ }
-
-    if (!enabled) return res.status(200).json({ ok: true, sent: 0, skipped: "disabled by config" });
-
-    // Filtrar links que caducan en menos de N horas, no enviados, no recordados, activos
-    const now = new Date();
-    const limitDate = new Date(now.getTime() + hoursBeforeExpiry * 3600 * 1000);
-    const nowIso = now.toISOString();
-    const limitIso = limitDate.toISOString();
-
-    const url = sb.url + "/rest/v1/form_links?active=eq.true&submitted_at=is.null&reminder_sent_at=is.null&expires_at=gt." + nowIso + "&expires_at=lt." + limitIso + "&select=*";
-    const r = await fetch(url, { headers: sb.headers });
-    const candidates = await r.json().catch(() => []);
-
-    if (!Array.isArray(candidates) || candidates.length === 0) {
-      return res.status(200).json({ ok: true, sent: 0, message: "no candidates" });
-    }
-
-    const RESEND_KEY = process.env.RESEND_API_KEY;
-    if (!RESEND_KEY) return res.status(500).json({ ok: false, error: "RESEND_API_KEY missing" });
-
-    let sent = 0; let failed = 0; const results = [];
-    for (const link of candidates) {
-      const recipient = link.client_email;
-      if (!recipient) { failed++; continue; }
-      const sender = "Habitaris <noreply@habitaris.es>";
-      const html = preExpiryReminderTemplate(link, hoursBeforeExpiry);
-      const subject = "Tu formulario caduca en " + hoursBeforeExpiry + " horas · Habitaris";
-      try {
-        const sendR = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: "Bearer " + RESEND_KEY },
-          body: JSON.stringify({ from: sender, to: recipient, subject, html })
-        });
-        if (sendR.ok) {
-          // Marcar reminder_sent_at
-          await fetch(sb.url + "/rest/v1/form_links?link_id=eq." + link.link_id, {
-            method: "PATCH",
-            headers: { ...sb.headers, "Content-Type": "application/json", Prefer: "return=minimal" },
-            body: JSON.stringify({ reminder_sent_at: new Date().toISOString() })
-          });
-          sent++; results.push({ link_id: link.link_id, recipient, ok: true });
-        } else {
-          failed++; results.push({ link_id: link.link_id, recipient, ok: false });
-        }
-      } catch(err) {
-        failed++; results.push({ link_id: link.link_id, recipient, ok: false, err: String(err) });
-      }
-    }
-
-    return res.status(200).json({ ok: true, sent, failed, total: candidates.length, hours_before_expiry: hoursBeforeExpiry, results });
-  } catch(err) {
-    return res.status(500).json({ ok: false, error: String(err) });
-  }
-}
-
 // ============================================================
 // CRON DAILY (unificado): ejecuta reminders + expired en una sola corrida.
 // Llamado por Vercel Cron via GET /api/send-email?type=cron_daily
@@ -602,8 +525,11 @@ async function runCronReminders() {
       const recipient = link.client_email;
       if (!recipient) { failed++; continue; }
       const sender = "Habitaris <noreply@habitaris.es>";
+      // Leer en vivo el nombre actual del formulario (kv_store > snapshot del link)
+      try { link.form_name = await getCurrentFormName(link, sb); } catch(_) {}
       const html = preExpiryReminderTemplate(link, hoursBeforeExpiry);
-      const subject = "Tu formulario caduca en " + hoursBeforeExpiry + " horas · Habitaris";
+      const _formName = link.form_name || "tu formulario";
+      const subject = `Caduca pronto — ${_formName} · Habitaris`;
       try {
         const sendR = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -724,7 +650,9 @@ function preExpiryReminderTemplate(link, hoursBeforeExpiry) {
 <div style="background:#f5f3ff;padding:24px 16px;font-family:DM Sans,Helvetica,Arial,sans-serif;">
   <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;">
     <div style="padding:16px 24px;border-bottom:1px solid #f0ecff;">
-      <table cellpadding='0' cellspacing='0' border='0' style='border-collapse:collapse;margin-bottom:16px;'><tr><td valign='middle' style='padding-right:14px;'><div style='position:relative;width:34px;height:40px;'><div style='position:absolute;top:5px;left:5px;width:30px;height:30px;border:1.5px solid #111;background:transparent;'></div><div style='position:absolute;top:0;left:0;width:30px;height:30px;border:1.5px solid #111;background:#fff;text-align:center;line-height:28px;font-family:Georgia,serif;font-weight:700;font-size:20px;color:#111;'>H</div></div></td><td valign='middle' style='font-family:DM Sans,Arial,sans-serif;font-weight:300;font-size:15px;letter-spacing:0.38em;color:#111;text-transform:lowercase;padding-bottom:2px;'>abitaris</td></tr></table>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #f0ecff"><img src="https://suite.habitaris.es/logo-habitaris.jpg" alt="Habitaris" height="50" style="display:block;margin:0 auto;"/></td></tr>
+      </table>
     </div>
     <div style="padding:24px;">
       <h2 style="margin:0 0 12px 0;font-size:20px;font-weight:700;color:#111;">Hola ${nombre},</h2>
