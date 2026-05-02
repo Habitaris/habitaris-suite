@@ -99,14 +99,19 @@ const FALLBACK_TENANT = {
   },
 };
 
+// IMPORTANTE: la tabla country_configs en BD usa nombres ES (pais, nombre,
+// divisa_default, idioma_default) por compatibilidad con módulos existentes
+// (Usuarios.jsx, Grupo.jsx, Pais.jsx). Los fallbacks aquí siguen ese esquema.
+// Los helpers exponen alias en EN (code, name, currency, locale) para uso interno.
 const FALLBACK_COUNTRY_CONFIGS = {
   CO: {
-    code: "CO",
-    name: "Colombia",
+    pais: "CO",
+    nombre: "Colombia",
     flag_emoji: "🇨🇴",
     phone_code: "+57",
     default_locale: "es-CO",
-    default_currency: "COP",
+    divisa_default: "COP",
+    idioma_default: "es",
     default_timezone: "America/Bogota",
     config: {
       legal_constants: {
@@ -149,12 +154,13 @@ const FALLBACK_COUNTRY_CONFIGS = {
     },
   },
   ES: {
-    code: "ES",
-    name: "España",
+    pais: "ES",
+    nombre: "España",
     flag_emoji: "🇪🇸",
     phone_code: "+34",
     default_locale: "es-ES",
-    default_currency: "EUR",
+    divisa_default: "EUR",
+    idioma_default: "es",
     default_timezone: "Europe/Madrid",
     config: {
       legal_constants: {
@@ -334,7 +340,7 @@ async function _fetchCountryConfig(code) {
       const { data, error } = await sb
         .from("country_configs")
         .select("*")
-        .eq("code", code)
+        .eq("pais", code)
         .maybeSingle();
       if (error) {
         // Tabla puede no existir todavía (fase de migración)
@@ -366,9 +372,10 @@ async function _fetchCountryConfig(code) {
  *
  * @param {string} code  Código del país ("CO", "ES", etc.). Si no se pasa, usa el
  *                       default del tenant.
- * @returns {object|null}  Estado: { ready, data, error }. data tiene el shape de
- *                         country_configs (code, name, flag_emoji, phone_code,
- *                         default_locale, default_currency, default_timezone, config).
+ * @returns {object|null}  Estado: { ready, data, error }. data contiene el shape
+ *                         de country_configs (BD usa pais/nombre/divisa_default/
+ *                         idioma_default; el helper expone tambien alias EN
+ *                         code/name/currency/locale para uso interno).
  */
 export function useCountryConfig(code) {
   const defaults = useTenantDefaults();
@@ -377,21 +384,21 @@ export function useCountryConfig(code) {
 
   const [state, setState] = useState({
     ready: !!cached,
-    data: cached,
+    data: _withAliases(cached),
     error: null,
   });
 
   useEffect(() => {
     if (!targetCode) return;
     if (_countryCache[targetCode]) {
-      setState({ ready: true, data: _countryCache[targetCode], error: null });
+      setState({ ready: true, data: _withAliases(_countryCache[targetCode]), error: null });
       return;
     }
     let cancelled = false;
     _fetchCountryConfig(targetCode).then(d => {
-      if (!cancelled) setState({ ready: true, data: d, error: null });
+      if (!cancelled) setState({ ready: true, data: _withAliases(d), error: null });
     }).catch(e => {
-      if (!cancelled) setState({ ready: true, data: FALLBACK_COUNTRY_CONFIGS[targetCode] || null, error: e });
+      if (!cancelled) setState({ ready: true, data: _withAliases(FALLBACK_COUNTRY_CONFIGS[targetCode] || null), error: e });
     });
     return () => { cancelled = true; };
   }, [targetCode]);
@@ -404,8 +411,30 @@ export function useCountryConfig(code) {
  * Útil para plantillas de PDF que no son async.
  */
 export function getCountryConfigSync(code) {
-  if (_countryCache[code]) return _countryCache[code];
-  return FALLBACK_COUNTRY_CONFIGS[code] || null;
+  if (_countryCache[code]) return _withAliases(_countryCache[code]);
+  return _withAliases(FALLBACK_COUNTRY_CONFIGS[code] || null);
+}
+
+/**
+ * Adjunta alias EN a un objeto country_config con nombres ES.
+ * No muta, devuelve un nuevo objeto. Acepta null (devuelve null).
+ *   pais        → code
+ *   nombre      → name
+ *   divisa_default → currency
+ *   idioma_default → locale_short
+ *   default_locale → locale (puede coincidir con el campo BD si existe)
+ */
+function _withAliases(c) {
+  if (!c) return null;
+  return {
+    ...c,
+    code:         c.code || c.pais,
+    name:         c.name || c.nombre,
+    currency:     c.default_currency || c.divisa_default,
+    locale:       c.default_locale || (c.idioma_default && c.pais ? `${c.idioma_default}-${c.pais}` : c.idioma_default),
+    locale_short: c.idioma_default || (c.default_locale ? c.default_locale.split('-')[0] : null),
+    timezone:     c.default_timezone,
+  };
 }
 
 // ── Helpers de formato (locale-aware) ────────────────────────────────────
