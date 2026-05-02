@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import OfferApproval from "./OfferApproval.jsx";
+import { getTenantUrlsSync } from "../core/configHelpers.js";
 
 /* ─────── palette ─────── */
 const C = {
@@ -34,7 +35,7 @@ function getBrand() {
       tipografia: cfg.apariencia?.tipografia || "DM Sans",
       telefono: cfg.empresa?.telefono || "+57 350 566 1545",
       email: cfg.empresa?.email || "info@habitaris.co",
-      web: cfg.empresa?.web || "www.habitaris.co",
+      web: cfg.empresa?.web || getTenantUrlsSync().publicWebsite.replace(/^https?:\/\//,""),
     }
   } catch { return { nombre:"Habitaris", colorPrimario:"#111", colorAcento:"#111111", tipografia:"DM Sans" } }
 }

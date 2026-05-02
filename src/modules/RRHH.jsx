@@ -7,6 +7,7 @@ import TabLiquidacion from "./TabLiquidacion.jsx";
 import { BannerPagos } from "./BannerPagos.jsx";
 import { downloadPDF } from "./pdfUtil.js";
 import { HAB_LOGO } from "./habLogo.js";
+import { getTenantUrlsSync, getTenantContactSync, getTenantIdentitySync } from "../core/configHelpers.js";
 
 const DEF_EQUIPO = () => ({
   id: uid(), nombre: "", descripcion: "", tipo: "obra",
@@ -4439,7 +4440,7 @@ function TabPersonal() {
                       📋 Cert. laboral ({conSal?"con":"sin"} salario)
                     </button>
                   ))}
-                  <button onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n👤 Portal del empleado:\nhttps://suite.habitaris.co/empleado\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>💬 Link empleados</button>
+                  <button onClick={()=>{(()=>{const u=getTenantUrlsSync();const id=getTenantIdentitySync();window.open("https://wa.me/?text="+encodeURIComponent(id.displayName+"\n\n👤 Portal del empleado:\n"+u.portalEmpleado+"\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");})();}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>💬 Link empleados</button>
                 </div>
 
                 {/* Expediente completo */}
@@ -4774,8 +4775,8 @@ function TabContratacion({onNuevaPropuesta}) {
           {procesos.map(p => {
             const est = ESTADOS[p.estado] || {label:p.estado,color:"#888",bg:"#F5F5F5"};
             const isOpen = selProceso === p.id;
-            const linkProp = "https://suite.habitaris.co/propuesta?token=" + p.token_propuesta;
-            const linkDatos = "https://suite.habitaris.co/contratacion?token=" + p.token_datos;
+            const linkProp = getTenantUrlsSync().propuesta + "?token=" + p.token_propuesta;
+            const linkDatos = getTenantUrlsSync().contratacion + "?token=" + p.token_datos;
             return (
               <Card key={p.id} style={{padding:0,overflow:"hidden"}}>
                 <div style={{padding:"14px 18px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}} onClick={() => setSelProceso(isOpen?null:p.id)}>
@@ -4949,7 +4950,7 @@ function TabContratacion({onNuevaPropuesta}) {
                         <button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("Complete sus datos para la contratación en Habitaris:\n"+linkDatos),"_blank")} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>📱 Recordar por WhatsApp</button>
                       </>}
                       {(p.estado==="datos_recibidos") && <>
-                        <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"evaluaciones"})});var psiLink="https://suite.habitaris.co/psicotecnico?hiring_id="+p.id;setSendModal({link:psiLink,email:p.candidato_email,titulo:"Evaluaci\u00f3n psicot\u00e9cnica",nombre:p.candidato_nombre});loadProcesos;loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #5B3A8C",borderRadius:6,background:"#EDE8F4",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#5B3A8C"}}>🧠 Enviar a psicotécnico</button>
+                        <button onClick={async()=>{await fetch("/api/hiring",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:p.id,estado:"evaluaciones"})});var psiLink=getTenantUrlsSync().psicotecnico+"?hiring_id="+p.id;setSendModal({link:psiLink,email:p.candidato_email,titulo:"Evaluaci\u00f3n psicot\u00e9cnica",nombre:p.candidato_nombre});loadProcesos;loadProcesos();}} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #5B3A8C",borderRadius:6,background:"#EDE8F4",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#5B3A8C"}}>🧠 Enviar a psicotécnico</button>
                         <button onClick={()=>setLanzarId(p.id)} style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>⏩ Saltar a contratación</button>
                       </>}
                       {p.estado==="evaluaciones" && <EvaluacionesPanel p={p} onDone={loadProcesos}/>}
@@ -5122,12 +5123,12 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                           Un solo link para todos los empleados. Cada uno ingresa con su cédula y PIN personal. Incluye fichaje con foto+GPS, solicitud de vacaciones, certificación laboral y calendario festivos Colombia.
                         </div>
                         <div style={{background:"#F5F4F1",borderRadius:8,padding:"12px 16px",fontFamily:"'DM Mono',monospace",fontSize:14,color:T.ink,marginBottom:14,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                          <span>suite.habitaris.co/empleado</span>
-                          <button onClick={()=>{navigator.clipboard.writeText("https://suite.habitaris.co/empleado");alert("Link copiado");}} style={{padding:"4px 12px",fontSize:10,border:"1px solid "+T.border,borderRadius:4,background:"#fff",cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>📋 Copiar</button>
+                          <span>{getTenantUrlsSync().portalEmpleado.replace(/^https?:\/\//,"")}</span>
+                          <button onClick={()=>{navigator.clipboard.writeText(getTenantUrlsSync().portalEmpleado);alert("Link copiado");}} style={{padding:"4px 12px",fontSize:10,border:"1px solid "+T.border,borderRadius:4,background:"#fff",cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>📋 Copiar</button>
                         </div>
                         <div style={{display:"flex",gap:8}}>
                           <button onClick={()=>window.open("/empleado","_blank")} style={{flex:1,padding:"10px",fontSize:12,fontWeight:600,border:"none",borderRadius:6,background:"#1E6B42",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#fff"}}>Abrir portal →</button>
-                          <button onClick={()=>window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n👤 Portal del empleado:\nhttps://suite.habitaris.co/empleado\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank")} style={{padding:"10px 16px",fontSize:12,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>💬 WhatsApp</button>
+                          <button onClick={()=>(()=>{const u=getTenantUrlsSync();const id=getTenantIdentitySync();window.open("https://wa.me/?text="+encodeURIComponent(id.displayName+"\n\n👤 Portal del empleado:\n"+u.portalEmpleado+"\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");})()} style={{padding:"10px 16px",fontSize:12,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>💬 WhatsApp</button>
                         </div>
                       </Card>
 

@@ -9983,7 +9983,7 @@ function TEnt({ d, set, r }) {
 
     html += `<div style="margin-top:40px;padding:14px;background:#F5F4F1;border-radius:4px;font-size:9px;color:#666;text-align:center">`;
     html += `Habitaris S.A.S. · NIT 901.922.136-8 · Bogotá D.C., Colombia<br/>`;
-    html += `info@habitaris.co · +57 318 381 8736 · www.habitaris.co</div>`;
+    { const c = getTenantContactSync(); const u = getTenantUrlsSync(); html += `${c.primaryEmail} · ${c.primaryPhone} · ${u.publicWebsite.replace(/^https?:\/\//,"")}</div>`; }
     html += `</div>`;
 
     html += `</body></html>`;
