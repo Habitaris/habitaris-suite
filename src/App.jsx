@@ -193,12 +193,12 @@ function Home({ onSelect, lang, setLang, onLogout }) {
   const coming = MODULES.filter(m => !m.ready)
   const brand = useMemo(() => getConfig(), [])
   const ap = brand.apariencia || {}
-  const cp = ap.colorPrimario || "#111"
-  const bf = ap.tipografia || "DM Sans"
-  // Sprint C Capa 3: logo y nombre desde tenant_config (helpers con fallback al legacy/hardcoded).
+  // Sprint C Capa 3: branding desde tenant_config (BD) tiene precedencia sobre legacy localStorage.
   const branding = useTenantBranding()
   const identity = useTenantIdentity()
-  const logoSrc = branding.logoWhite || ap.logo || "/logo-habitaris-blanco.jpg"
+  const cp = branding.colorPrimary || ap.colorPrimario || "#111"
+  const bf = branding.fontPrimary || ap.tipografia || "DM Sans"
+  const logoSrc = branding.logoWhite || ap.logoBlanco || ap.logo || "/logo-habitaris-blanco.jpg"
   const groupName = identity.displayName || brand.empresa?.nombre || "Habitaris"
   return (
     <div style={{ minHeight:"100vh", background:"#F0EEE9" }}>
@@ -206,11 +206,7 @@ function Home({ onSelect, lang, setLang, onLogout }) {
       <div style={{ background:cp, padding:"0 28px", height:52,
         display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <div style={{ display:"flex", alignItems:"center", gap:12 }}>
-          {ap.logo ? (
-            <img src={ap.logo} alt={groupName} style={{ height:28, objectFit:"contain" }}/>
-          ) : (
-            <img src={logoSrc} alt={groupName} style={{height:28}} />
-          )}
+          <img src={logoSrc} alt={groupName} style={{height:28, objectFit:"contain"}} />
           {ap.slogan && <span style={{ fontFamily:`'${bf}',sans-serif`, fontSize:8, letterSpacing:1.5, color:"rgba(255,255,255,.35)", textTransform:"uppercase" }}>{ap.slogan}</span>}
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -281,12 +277,12 @@ function Home({ onSelect, lang, setLang, onLogout }) {
 function ModuleBar({ mod, onBack, lang, setLang, onLogout }) {
   const brand = useMemo(() => getConfig(), [])
   const ap = brand.apariencia || {}
-  const cp = ap.colorPrimario || "#111"
-  const bf = ap.tipografia || "DM Sans"
-  // Sprint C Capa 3: logo desde tenant_config (helpers con fallback).
+  // Sprint C Capa 3: branding BD prioritario.
   const branding = useTenantBranding()
   const identity = useTenantIdentity()
-  const logoSrc = ap.logoBlanco || branding.logoWhite || "/logo-habitaris-blanco.jpg"
+  const cp = branding.colorPrimary || ap.colorPrimario || "#111"
+  const bf = branding.fontPrimary || ap.tipografia || "DM Sans"
+  const logoSrc = branding.logoWhite || ap.logoBlanco || "/logo-habitaris-blanco.jpg"
   const groupName = identity.displayName || "Habitaris"
   return (
     <div style={{ position:"fixed", top:0, left:0, right:0, height:48, background:cp,
@@ -327,13 +323,13 @@ function GrupoBar({ onOpenConfig, onLogout }) {
   const t = useTenant();
   const brand = useMemo(() => getConfig(), []);
   const ap = brand.apariencia || {};
-  const cp = ap.colorPrimario || "#111";
-  const bf = ap.tipografia || "DM Sans";
   const userName = (t.user && (t.user.display_name || t.user.nombre || t.user.username)) || "Usuario";
-  // Sprint C Capa 3: logo desde tenant_config (helpers con fallback).
+  // Sprint C Capa 3: branding BD prioritario.
   const branding = useTenantBranding();
   const identity = useTenantIdentity();
-  const logoSrc = ap.logoBlanco || branding.logoWhite || "/logo-habitaris-blanco.jpg";
+  const cp = branding.colorPrimary || ap.colorPrimario || "#111";
+  const bf = branding.fontPrimary || ap.tipografia || "DM Sans";
+  const logoSrc = branding.logoWhite || ap.logoBlanco || "/logo-habitaris-blanco.jpg";
   const groupName = identity.displayName || "Habitaris";
   return (
     <div style={{ position:"fixed", top:0, left:0, right:0, height:48, background:cp,
