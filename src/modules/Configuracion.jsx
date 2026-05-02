@@ -23,7 +23,7 @@ const DEFAULT_CONFIG = {
     emailPrincipal: "comercial@habitaris.co",
   },
   app: {
-    url: "https://suite.habitaris.co",
+    url: "https://suite.habitaris.es",
   },
   whatsapp: {
     numero: "573505661545",
@@ -143,7 +143,7 @@ const FIELDS = {
     { key:"emailPrincipal",    label:"Email principal (remitente)",  placeholder:"comercial@habitaris.co" },
   ],
   app: [
-    { key:"url", label:"URL de la app", placeholder:"https://suite.habitaris.co" },
+    { key:"url", label:"URL de la app", placeholder:"https://suite.habitaris.es" },
   ],
   whatsapp: [
     { key:"numero",           label:"Número WhatsApp (con código país)", placeholder:"573505661545" },

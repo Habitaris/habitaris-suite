@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { HAB_LOGO } from "./habLogo.js";
+import { getTenantUrlsSync, getTenantIdentitySync } from "../core/configHelpers.js";
 import { downloadPDF } from "./pdfUtil.js";
 import { buildNominaHtml } from "./nominaHtml.js";
 import { BannerPagos } from "./BannerPagos.jsx";
@@ -185,8 +186,8 @@ function AsistenciaPanel({selN, MESES, mes, anio}) {
     return sum;
   }, 0);
 
-  const fichajeLink = "https://suite.habitaris.co/empleado";
-  const portalLink = "https://suite.habitaris.co/empleado";
+  const fichajeLink = getTenantUrlsSync().portalEmpleado;
+  const portalLink = getTenantUrlsSync().portalEmpleado;
 
   return (
     <div>
@@ -200,7 +201,7 @@ function AsistenciaPanel({selN, MESES, mes, anio}) {
           <select value={mesAtt} onChange={e=>setMesAtt(parseInt(e.target.value))} style={{padding:"5px 10px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>
             {MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}
           </select>
-          <Btn small onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n👤 Portal del empleado:\nhttps://suite.habitaris.co/empleado\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");}}>💬 Enviar link</Btn>
+          <Btn small onClick={()=>{(()=>{const u=getTenantUrlsSync();const id=getTenantIdentitySync();window.open("https://wa.me/?text="+encodeURIComponent(id.displayName+"\n\n👤 Portal del empleado:\n"+u.portalEmpleado+"\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");})();}}>💬 Enviar link</Btn>
         </div>
       </div>
 
@@ -702,7 +703,7 @@ export function TabNomina(){
           {isQ&&selN.estado==="q1_pagado"&&<Btn pri small onClick={()=>setPagoForm({tipo:"nomina",ref:"",soporte:null})}>💵 Pagar Q2 (liquidar)</Btn>}
           {!isQ&&selN.estado==="borrador"&&<Btn pri small onClick={()=>setPagoForm({tipo:"nomina",ref:"",soporte:null})}>💵 Pagar nómina</Btn>}
           {(selN.estado==="q1_pagado"||selN.estado==="liquidada"||selN.estado==="pagada")&&selN.refPago&&<span style={{fontSize:9,color:T.inkLight,padding:"4px 8px",background:T.accent,borderRadius:4}}>Ref: {selN.refPago}</span>}
-          <Btn small onClick={()=>{window.open("https://wa.me/?text="+encodeURIComponent("Habitaris\n\n👤 Portal del empleado:\nhttps://suite.habitaris.co/empleado\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");}}>💬 Link empleados</Btn>
+          <Btn small onClick={()=>{(()=>{const u=getTenantUrlsSync();const id=getTenantIdentitySync();window.open("https://wa.me/?text="+encodeURIComponent(id.displayName+"\n\n👤 Portal del empleado:\n"+u.portalEmpleado+"\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");})();}}>💬 Link empleados</Btn>
           <Btn small onClick={()=>{
             const nDias=selN.novDias||{};
             const novList=Object.entries(nDias).sort().map(([k,v])=>{const d=new Date(k+"T12:00:00");const info=NOV_TIPOS.find(n=>n.id===v);return{fecha:d.toLocaleDateString("es-CO",{weekday:"short",day:"numeric",month:"short"}),tipo:info?.label||v};});

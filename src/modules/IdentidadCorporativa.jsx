@@ -548,7 +548,7 @@ export default function IdentidadCorporativa() {
     direccion: cfg.empresa?.direccion || "Bogotá D.C., Colombia",
     telefono: cfg.empresa?.telefono || "+57 350 566 1545",
     email: cfg.empresa?.email || "info@habitaris.co",
-    web: cfg.empresa?.web || "www.habitaris.co",
+    web: cfg.empresa?.web || getTenantUrlsSync().publicWebsite.replace(/^https?:\/\//,""),
     logo: cfg.apariencia?.logo || "/logo-habitaris-negro.svg",
     logoBlanco: cfg.apariencia?.logoBlanco || "/logo-habitaris-blanco.jpg",
     logoNegro: cfg.apariencia?.logoNegro || "/logo-habitaris-negro.svg",
