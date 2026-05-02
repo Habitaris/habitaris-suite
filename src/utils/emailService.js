@@ -17,14 +17,6 @@ const PLANTILLAS = {
     requiere: ["nombre", "formName"],
   },
 
-  form_recibido: {
-    subject: "\u2705 Nueva respuesta: {{formName}}",
-    message: "Se ha recibido una nueva respuesta al formulario \u00AB{{formName}}\u00BB.",
-    intro: "Nueva respuesta recibida",
-    requiere: ["formName", "clienteNombre"],
-    nota: "Incluye autom\u00E1ticamente: datos del cliente, respuestas con banderas \u{1F7E2}\u{1F7E1}\u{1F534} y scoring",
-  },
-
   oferta_enviada: {
     subject: "📄 Propuesta {{refOferta}} — {{empresa}}",
     message: "Hola {{nombre}},\n\nAdjunto encontrarás nuestra propuesta comercial para el proyecto «{{proyecto}}».\n\nReferencia: {{refOferta}}\nValor: {{valor}}\n\nHaz clic en el botón para revisar y aprobar.",
@@ -94,7 +86,7 @@ function getEmailModulo(tipo) {
     const map = JSON.parse(raw);
     // Mapear tipo de plantilla a modulo
     const tipoToModulo = {
-      form_recibido: "formularios", form_confirmacion: "formularios",
+      form_confirmacion: "formularios",
       crm_bienvenida: "crm", crm_seguimiento: "crm",
       oferta_nueva: "ofertas", oferta_aprobada: "ofertas", oferta_rechazada: "ofertas",
       proyecto_inicio: "proyectos", proyecto_avance: "proyectos",
@@ -221,12 +213,6 @@ export async function sendEmail(tipo, params = {}) {
 export const enviarFormulario = (to, nombre, formName, link, link_info) =>
   sendEmail("form_enviado", { to, nombre, formName, link, link_info });
 
-export const notificarRespuesta = (to, formName, clienteNombre, clienteEmail, clienteTel, contenido) =>
-  sendEmail("form_recibido", { to, formName, clienteNombre, clienteEmail, clienteTel, contenido,
-    extra: { form_name: formName, client_name: clienteNombre, client_email: clienteEmail, client_tel: clienteTel, contenido,
-      fecha: new Date().toLocaleDateString("es-CO", { day:"2-digit", month:"short", year:"numeric", hour:"2-digit", minute:"2-digit", hour12:false }) }
-  });
-
 export const enviarOferta = (to, nombre, refOferta, proyecto, valor, link) =>
   sendEmail("oferta_enviada", { to, nombre, refOferta, proyecto, valor, link });
 
@@ -258,26 +244,5 @@ export function getPlantillas() {
   });
 }
 
-
-/**
- * Envia un email de recordatorio "briefing a medias" a un cliente que no completo su formulario.
- * El sender se lee de kv_store.habitaris_email_senders.mappings.reminder en el backend.
- * @param {string} linkId - El link_id del form_link a recordar
- * @param {object} options - { force: bool } - force=true salta el check de reminder_sent_at (testing)
- */
-export async function enviarRecordatorio(linkId, options = {}) {
-  if (!linkId) throw new Error("linkId requerido");
-  const force = options.force === true;
-  const r = await fetch("/api/send-email", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ type: "reminder", link_id: linkId, force })
-  });
-  const data = await r.json();
-  if (!r.ok) {
-    throw new Error(data.error || "Error al enviar recordatorio");
-  }
-  return data;
-}
 
 export const EMAIL_TIPOS = Object.keys(PLANTILLAS);
