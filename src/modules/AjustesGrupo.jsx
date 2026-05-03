@@ -649,65 +649,332 @@ function TabRepresentanteLegal({ tenant, tenantConfig, onSaved }) {
 }
 
 // ─── Tab 5: Estructura legal (lectura por ahora) ───────────────────────
-function TabLegal({ companies }) {
-  const paises = useMemo(() => Array.from(new Set(companies.map(c => c.pais).filter(Boolean))).sort(), [companies]);
+// ─── Tab 5: Estructura legal (CRUD países y empresas) ────────────────────
+function TabLegal({ companies: initialCompanies }) {
+  const t = useTenant();
+  const tenantId = (t.tenant && t.tenant.id) || "habitaris";
+  const [companies, setCompanies] = useState(initialCompanies || []);
+  const [countryConfigs, setCountryConfigs] = useState([]);
+  const [editing, setEditing] = useState(null);
+  const [addingCountry, setAddingCountry] = useState(false);
+
+  useEffect(() => {
+    sb.from("country_configs")
+      .select("pais, nombre, flag_emoji, divisa_default, idioma_default, default_locale, default_timezone, phone_code")
+      .order("pais")
+      .then(({ data }) => { if (data) setCountryConfigs(data); });
+  }, []);
+
+  const reload = async () => {
+    const { data } = await sb.from("companies")
+      .select("*")
+      .eq("tenant_id", tenantId)
+      .neq("status", "archived")
+      .order("pais")
+      .order("legal_name");
+    if (data) setCompanies(data);
+  };
+
+  const byCountry = useMemo(() => {
+    const m = {};
+    (companies || []).forEach(c => {
+      if (c.status === "archived") return;
+      if (!m[c.pais]) m[c.pais] = [];
+      m[c.pais].push(c);
+    });
+    return m;
+  }, [companies]);
+
+  const activePaises = Object.keys(byCountry);
+  const availableCountries = countryConfigs.filter(cc => !activePaises.includes(cc.pais));
+
   return (
-    <div>
-      <p style={{ ...F, fontSize: 12, color: C.inkMid, margin: "0 0 22px", lineHeight: 1.5 }}>
-        Países donde opera el grupo y empresas registradas en cada uno.
-        Para añadir un nuevo país o nueva empresa pulsa los botones correspondientes.
+    <>
+      <p style={{ ...F, fontSize: 13, color: C.inkMid, margin: "0 0 16px" }}>
+        Países donde opera el grupo y empresas registradas en cada uno. Edita los datos legales (NIT/CIF, domicilio, representante legal) que se usarán en certificaciones, contratos y plantillas.
       </p>
 
-      {paises.length === 0 ? (
-        <div style={{
-          background: C.card, border: `1px dashed ${C.border}`, borderRadius: 10,
-          padding: 40, textAlign: "center"
-        }}>
-          <div style={{ ...F, fontSize: 13, color: C.inkMid }}>El grupo aún no tiene empresas registradas.</div>
-        </div>
-      ) : paises.map(p => {
-        const empresasDePais = companies.filter(c => c.pais === p);
+      {activePaises.map(pais => {
+        const cc = countryConfigs.find(c => c.pais === pais) || { nombre: pais, flag_emoji: "🌍" };
+        const empresas = byCountry[pais];
         return (
-          <div key={p} style={{ marginBottom: 22 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, paddingBottom: 8, borderBottom: `1px solid ${C.border}` }}>
-              <h3 style={{ ...F, fontSize: 14, fontWeight: 600, color: C.ink, margin: 0 }}>{paisName(p)}</h3>
-              <span style={{ ...F, fontSize: 11, color: C.inkLight, fontWeight: 500 }}>· {empresasDePais.length} {empresasDePais.length === 1 ? "empresa" : "empresas"}</span>
+          <div key={pais} style={{ marginBottom: 24, border: `1px solid ${C.border}`, borderRadius: 8, background: "#fff" }}>
+            <div style={{ padding: "14px 18px", borderBottom: `1px solid ${C.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <h4 style={{ ...F, fontSize: 15, fontWeight: 700, color: C.ink, margin: 0 }}>
+                  {cc.flag_emoji || "🌍"} {cc.nombre || pais}
+                </h4>
+                <span style={{ ...F, fontSize: 11, color: C.inkLight }}>
+                  {empresas.length} empresa{empresas.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <button
+                onClick={() => setEditing({ company: null, isNew: true, paisCode: pais, paisConfig: cc })}
+                style={{ ...F, fontSize: 12, fontWeight: 600, padding: "6px 12px", border: `1px solid ${C.border}`, borderRadius: 6, background: "#fff", cursor: "pointer", color: C.ink }}>
+                + Añadir empresa
+              </button>
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {empresasDePais.map(emp => (
-                <div key={emp.id} style={{
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  padding: "10px 14px", background: C.bgSoft, borderRadius: 6,
-                  border: `1px solid ${C.border}`,
-                }}>
-                  <div>
-                    <div style={{ ...F, fontSize: 13, fontWeight: 600, color: C.ink }}>{emp.display_name || emp.legal_name}</div>
-                    {emp.legal_name && emp.display_name !== emp.legal_name && (
-                      <div style={{ ...F, fontSize: 11, color: C.inkLight, marginTop: 2 }}>{emp.legal_name}</div>
-                    )}
-                  </div>
-                  <span style={{ ...F, fontSize: 10, color: C.inkLight, fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.4 }}>
-                    {emp.type === "jv" ? "UTE" : "Empresa"} · {emp.divisa || "—"}
-                  </span>
-                </div>
-              ))}
+            <div style={{ padding: "8px 0" }}>
+              {empresas.map(emp => <CompanyRow key={emp.id} company={emp} onEdit={() => setEditing({ company: emp, isNew: false, paisCode: emp.pais, paisConfig: cc })} onArchive={async () => {
+                if (!window.confirm(`¿Archivar la empresa "${emp.legal_name || emp.display_name}"? No se elimina, queda como archivada.`)) return;
+                const { error } = await sb.from("companies").update({ status: "archived" }).eq("id", emp.id);
+                if (error) { window.toast("Error: " + error.message, "error"); return; }
+                window.toast("Empresa archivada", "success");
+                await reload();
+              }} />)}
             </div>
           </div>
         );
       })}
 
-      <div style={{ marginTop: 26, padding: 16, background: C.bgSoft, border: `1px dashed ${C.border}`, borderRadius: 8 }}>
-        <div style={{ ...F, fontSize: 12, color: C.inkMid, lineHeight: 1.5 }}>
-          <strong style={{ color: C.ink }}>Próximamente:</strong> botones para abrir un nuevo país,
-          añadir empresas, editar datos legales (NIT/CIF, domicilio, representante legal),
-          configurar fiscalidad local, calendario laboral y plan contable por país.
+      <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+        <button onClick={() => setAddingCountry(true)} style={{ ...F, fontSize: 13, fontWeight: 600, padding: "8px 14px", border: `1px solid ${C.ink}`, borderRadius: 6, background: C.ink, color: "#fff", cursor: "pointer" }}>
+          + Abrir nuevo país
+        </button>
+      </div>
+
+      {addingCountry && (
+        <ModalAddCountry
+          available={availableCountries}
+          onSelect={(cc) => { setAddingCountry(false); setEditing({ company: null, isNew: true, paisCode: cc.pais, paisConfig: cc }); }}
+          onClose={() => setAddingCountry(false)}
+        />
+      )}
+
+      {editing && (
+        <ModalEditCompany
+          existing={editing.company}
+          isNew={editing.isNew}
+          paisCode={editing.paisCode}
+          paisConfig={editing.paisConfig}
+          tenantId={tenantId}
+          onSaved={async () => { setEditing(null); await reload(); }}
+          onCancel={() => setEditing(null)}
+        />
+      )}
+    </>
+  );
+}
+
+// Tarjeta de una empresa con datos clave + acciones
+function CompanyRow({ company, onEdit, onArchive }) {
+  const dom = company.domicilio_legal || {};
+  const rep = company.legal_representative || {};
+  return (
+    <div style={{ padding: "12px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: `1px solid ${C.bg}` }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ ...F, fontSize: 14, fontWeight: 600, color: C.ink }}>{company.display_name || company.legal_name}</div>
+        <div style={{ ...F, fontSize: 11, color: C.inkLight, display: "flex", gap: 12, flexWrap: "wrap", marginTop: 2 }}>
+          <span>{company.legal_name}</span>
+          {company.tax_id && <span>· {company.tax_id_type || "NIT"} {company.tax_id}</span>}
+          {dom.ciudad && <span>· {dom.ciudad}</span>}
+          {rep.name && <span>· Rep: {rep.name}</span>}
+          <span>· {company.divisa || "—"}</span>
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: 6 }}>
+        <button onClick={onEdit} style={{ ...F, fontSize: 11, padding: "5px 10px", border: `1px solid ${C.border}`, borderRadius: 5, background: "#fff", cursor: "pointer", color: C.ink }}>Editar</button>
+        <button onClick={onArchive} style={{ ...F, fontSize: 11, padding: "5px 10px", border: `1px solid ${C.border}`, borderRadius: 5, background: "#fff", cursor: "pointer", color: C.danger }}>Archivar</button>
+      </div>
+    </div>
+  );
+}
+
+// Modal para seleccionar nuevo país a abrir
+function ModalAddCountry({ available, onSelect, onClose }) {
+  return (
+    <div style={modalOverlayStyle} onClick={onClose}>
+      <div style={modalContentStyle} onClick={e => e.stopPropagation()}>
+        <h3 style={{ ...F, fontSize: 16, fontWeight: 700, margin: "0 0 12px", color: C.ink }}>Abrir nuevo país</h3>
+        <p style={{ ...F, fontSize: 12, color: C.inkMid, margin: "0 0 16px" }}>
+          Selecciona el país. Se abrirá el formulario para registrar la primera empresa de ese país.
+        </p>
+        {available.length === 0 ? (
+          <p style={{ ...F, fontSize: 13, color: C.inkLight, fontStyle: "italic" }}>No hay más países disponibles en el catálogo.</p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {available.map(cc => (
+              <button key={cc.pais} onClick={() => onSelect(cc)}
+                style={{ ...F, fontSize: 13, padding: "10px 14px", border: `1px solid ${C.border}`, borderRadius: 6, background: "#fff", cursor: "pointer", color: C.ink, textAlign: "left", display: "flex", alignItems: "center", gap: 10 }}>
+                <span style={{ fontSize: 18 }}>{cc.flag_emoji || "🌍"}</span>
+                <span style={{ flex: 1 }}>{cc.nombre}</span>
+                <span style={{ ...F, fontSize: 11, color: C.inkLight }}>{cc.divisa_default} · {cc.default_locale || cc.idioma_default}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
+          <button onClick={onClose} style={cancelBtnStyle}>Cerrar</button>
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Tab placeholder ────────────────────────────────────────────────────
+// Modal para añadir/editar empresa (con todos los campos legales)
+function ModalEditCompany({ existing, isNew, paisCode, paisConfig, tenantId, onSaved, onCancel }) {
+  const [form, setForm] = useState(() => {
+    const e = existing || {};
+    const dom = e.domicilio_legal || {};
+    const rep = e.legal_representative || {};
+    return {
+      legal_name:    e.legal_name    || "",
+      display_name:  e.display_name  || "",
+      slug:          e.slug          || "",
+      tax_id:        e.tax_id        || "",
+      tax_id_type:   e.tax_id_type   || (paisCode === "ES" ? "CIF" : "NIT"),
+      phone:         e.phone         || "",
+      divisa:        e.divisa        || (paisConfig && paisConfig.divisa_default) || "COP",
+      type:          e.type          || "company",
+      dom_ciudad:        dom.ciudad        || "",
+      dom_departamento:  dom.departamento  || "",
+      dom_direccion:     dom.direccion     || "",
+      dom_codigo_postal: dom.codigo_postal || "",
+      rep_name:           rep.name            || "",
+      rep_cargo:          rep.cargo           || "Representante Legal",
+      rep_email:          rep.email           || "",
+      rep_document_type:  rep.document_type   || "CC",
+      rep_document_number: rep.document_number || "",
+    };
+  });
+  const [saving, setSaving] = useState(false);
+  const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const onSave = async () => {
+    if (!form.legal_name.trim()) { window.toast("La razón social es obligatoria", "error"); return; }
+    if (!form.display_name.trim()) { window.toast("El nombre comercial es obligatorio", "error"); return; }
+    setSaving(true);
+    const payload = {
+      tenant_id: tenantId,
+      pais: paisCode,
+      type: form.type,
+      legal_name: form.legal_name.trim(),
+      display_name: form.display_name.trim(),
+      slug: form.slug.trim() || form.display_name.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""),
+      tax_id: form.tax_id.trim(),
+      tax_id_type: form.tax_id_type,
+      phone: form.phone.trim(),
+      divisa: form.divisa,
+      status: "active",
+      domicilio_legal: {
+        ciudad: form.dom_ciudad.trim(),
+        departamento: form.dom_departamento.trim(),
+        direccion: form.dom_direccion.trim(),
+        codigo_postal: form.dom_codigo_postal.trim(),
+        pais: paisCode,
+      },
+      legal_representative: form.rep_name.trim() ? {
+        name: form.rep_name.trim(),
+        cargo: form.rep_cargo.trim(),
+        email: form.rep_email.trim(),
+        document_type: form.rep_document_type,
+        document_number: form.rep_document_number.trim(),
+      } : null,
+    };
+    let error;
+    if (isNew) {
+      ({ error } = await sb.from("companies").insert(payload));
+    } else {
+      ({ error } = await sb.from("companies").update(payload).eq("id", existing.id));
+    }
+    setSaving(false);
+    if (error) { window.toast("Error: " + error.message, "error"); return; }
+    window.toast(isNew ? "Empresa creada" : "Empresa actualizada", "success");
+    if (onSaved) await onSaved();
+  };
+
+  const isCO = paisCode === "CO";
+  const docTypes = isCO ? ["CC", "CE", "PA", "TI", "NIT"] : ["DNI", "NIE", "PA"];
+  const taxTypes = isCO ? ["NIT"] : ["CIF", "NIF"];
+
+  return (
+    <div style={modalOverlayStyle} onClick={onCancel}>
+      <div style={{ ...modalContentStyle, maxWidth: 720, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+        <h3 style={{ ...F, fontSize: 16, fontWeight: 700, margin: "0 0 4px", color: C.ink }}>
+          {isNew ? "Nueva empresa" : "Editar empresa"} · {(paisConfig && paisConfig.flag_emoji) || "🌍"} {(paisConfig && paisConfig.nombre) || paisCode}
+        </h3>
+        <p style={{ ...F, fontSize: 12, color: C.inkMid, margin: "0 0 16px" }}>
+          Estos datos se utilizan en certificaciones laborales, contratos, facturas y plantillas legales.
+        </p>
+
+        <h4 style={sectionH4}>Identidad</h4>
+        <Field label="Razón social" hint="Nombre legal completo (ej: Habitaris S.A.S.)">
+          <input style={inputStyle} value={form.legal_name} onChange={e => upd("legal_name", e.target.value)} placeholder="Habitaris S.A.S." />
+        </Field>
+        <Field label="Nombre comercial" hint="Cómo se referencia en la suite y documentos (ej: Habitaris)">
+          <input style={inputStyle} value={form.display_name} onChange={e => upd("display_name", e.target.value)} placeholder="Habitaris" />
+        </Field>
+        <Field label="Slug" hint="Identificador URL-safe. Si lo dejas vacío se genera del nombre comercial.">
+          <input style={inputStyle} value={form.slug} onChange={e => upd("slug", e.target.value)} placeholder="habitaris-sas" />
+        </Field>
+
+        <h4 style={sectionH4}>Datos legales</h4>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
+          <Field label="Tipo">
+            <select style={inputStyle} value={form.tax_id_type} onChange={e => upd("tax_id_type", e.target.value)}>
+              {taxTypes.map(tt => <option key={tt} value={tt}>{tt}</option>)}
+            </select>
+          </Field>
+          <Field label={form.tax_id_type}>
+            <input style={inputStyle} value={form.tax_id} onChange={e => upd("tax_id", e.target.value)} placeholder="901.922.136-8" />
+          </Field>
+        </div>
+        <Field label="Teléfono">
+          <input style={inputStyle} value={form.phone} onChange={e => upd("phone", e.target.value)} placeholder={(paisConfig && paisConfig.phone_code) ? paisConfig.phone_code + " 350 566 1545" : "+57 350 566 1545"} />
+        </Field>
+        <Field label="Divisa">
+          <select style={inputStyle} value={form.divisa} onChange={e => upd("divisa", e.target.value)}>
+            <option value="COP">COP — Peso colombiano</option>
+            <option value="EUR">EUR — Euro</option>
+            <option value="USD">USD — Dólar</option>
+            <option value="MXN">MXN — Peso mexicano</option>
+          </select>
+        </Field>
+
+        <h4 style={sectionH4}>Domicilio legal</h4>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <Field label="Ciudad"><input style={inputStyle} value={form.dom_ciudad} onChange={e => upd("dom_ciudad", e.target.value)} placeholder="Bogotá D.C." /></Field>
+          <Field label={isCO ? "Departamento" : "Provincia"}><input style={inputStyle} value={form.dom_departamento} onChange={e => upd("dom_departamento", e.target.value)} placeholder={isCO ? "Bogotá D.C." : "Madrid"} /></Field>
+        </div>
+        <Field label="Dirección"><input style={inputStyle} value={form.dom_direccion} onChange={e => upd("dom_direccion", e.target.value)} placeholder="Calle 106 # 45-39" /></Field>
+        <Field label="Código postal"><input style={inputStyle} value={form.dom_codigo_postal} onChange={e => upd("dom_codigo_postal", e.target.value)} placeholder="" /></Field>
+
+        <h4 style={sectionH4}>Representante legal</h4>
+        <p style={{ ...F, fontSize: 11, color: C.inkLight, margin: "-8px 0 8px" }}>
+          Persona que firma los contratos y documentos legales. Si lo dejas vacío, se hereda el representante por defecto del grupo (pestaña Rep. legal).
+        </p>
+        <Field label="Nombre completo"><input style={inputStyle} value={form.rep_name} onChange={e => upd("rep_name", e.target.value)} placeholder="Ana María Díaz Buitrago" /></Field>
+        <Field label="Cargo"><input style={inputStyle} value={form.rep_cargo} onChange={e => upd("rep_cargo", e.target.value)} placeholder="Representante Legal" /></Field>
+        <Field label="Email"><input style={inputStyle} value={form.rep_email} onChange={e => upd("rep_email", e.target.value)} placeholder="amdiaz@habitaris.es" /></Field>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
+          <Field label="Tipo doc.">
+            <select style={inputStyle} value={form.rep_document_type} onChange={e => upd("rep_document_type", e.target.value)}>
+              {docTypes.map(d => <option key={d} value={d}>{d}</option>)}
+            </select>
+          </Field>
+          <Field label="Número doc.">
+            <input style={inputStyle} value={form.rep_document_number} onChange={e => upd("rep_document_number", e.target.value)} placeholder="1.109.293.384" />
+          </Field>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 20, paddingTop: 16, borderTop: `1px solid ${C.border}` }}>
+          <button onClick={onCancel} style={cancelBtnStyle}>Cancelar</button>
+          <button onClick={onSave} disabled={saving} style={saveBtnStyle}>
+            {saving ? "Guardando…" : (isNew ? "Crear empresa" : "Guardar cambios")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Estilos compartidos para modales de Estructura Legal
+const modalOverlayStyle = { position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 };
+const modalContentStyle = { background: "#fff", borderRadius: 10, padding: 24, maxWidth: 480, width: "100%", boxShadow: "0 10px 40px rgba(0,0,0,0.2)" };
+const sectionH4 = { ...F, fontSize: 12, fontWeight: 700, color: C.ink, margin: "16px 0 8px", textTransform: "uppercase", letterSpacing: 0.5 };
+const cancelBtnStyle = { ...F, fontSize: 13, fontWeight: 600, padding: "8px 14px", border: `1px solid ${C.border}`, borderRadius: 6, background: "#fff", cursor: "pointer", color: C.inkMid };
+const saveBtnStyle = { ...F, fontSize: 13, fontWeight: 600, padding: "8px 14px", border: "none", borderRadius: 6, background: C.ink, color: "#fff", cursor: "pointer" };
+
 function TabPlaceholder({ title, desc, sprintRef }) {
   return (
     <div style={{
