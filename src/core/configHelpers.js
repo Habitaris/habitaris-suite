@@ -646,3 +646,48 @@ export function getTenantLegalRepresentativeSync() {
     documentNumber: v.document_number || fb.document_number,
   };
 }
+
+/**
+ * Catálogos legales por país (SMLMV, AUX_TRANSPORTE, UVT, horas mensuales).
+ *
+ * Lee del cache de country_configs (poblado por useCountryConfig al primer
+ * uso). Si el cache aún no está caliente para ese país, devuelve los
+ * valores del FALLBACK hardcoded — que son los oficiales 2026.
+ *
+ * Uso:
+ *   const { smlmv, aux_transporte, uvt, horas_mensuales_legal } = getLegalConstantsSync('CO');
+ *   const SMLMV = getLegalConstantSync('CO', 'smlmv');
+ *
+ * Limitación conocida: las constantes se evalúan al CARGAR el módulo. Si
+ * en BD se cambia el SMLMV, hay que recargar la página completa para que
+ * los cálculos en TabNomina/TabLiquidacion/CalcSalarial usen el nuevo
+ * valor. Para constantes legales (cambian 1 vez al año) es aceptable.
+ */
+export function getLegalConstantsSync(pais) {
+  const code = pais || "CO";
+  const cc = getCountryConfigSync(code);
+  const lc = (cc && cc.config && cc.config.legal_constants) || {};
+  const fb = (FALLBACK_COUNTRY_CONFIGS[code] && FALLBACK_COUNTRY_CONFIGS[code].config && FALLBACK_COUNTRY_CONFIGS[code].config.legal_constants) || {};
+  const pick = (k) => {
+    const v = lc[k];
+    if (v && typeof v === "object" && "value" in v) return v.value;
+    if (typeof v === "number") return v;
+    const fbv = fb[k];
+    if (fbv && typeof fbv === "object" && "value" in fbv) return fbv.value;
+    if (typeof fbv === "number") return fbv;
+    return null;
+  };
+  return {
+    smlmv:                  pick("smlmv"),
+    aux_transporte:         pick("aux_transporte"),
+    uvt:                    pick("uvt"),
+    smi:                    pick("smi"),
+    horas_mensuales_legal:  pick("horas_mensuales_legal"),
+  };
+}
+
+export function getLegalConstantSync(pais, key) {
+  const all = getLegalConstantsSync(pais);
+  return all[key];
+}
+
