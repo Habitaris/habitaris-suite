@@ -781,37 +781,137 @@ function CompanyRow({ company, onEdit, onArchive }) {
 }
 
 // Modal para seleccionar nuevo país a abrir
+// Modal para seleccionar nuevo país a abrir
 function ModalAddCountry({ available, onSelect, onClose }) {
+  const [mode, setMode] = useState("pick"); // "pick" | "custom"
+  const [form, setForm] = useState({
+    pais: "", nombre: "", flag_emoji: "", phone_code: "+",
+    divisa_default: "USD", idioma_default: "es",
+    default_locale: "", default_timezone: "",
+  });
+  const [saving, setSaving] = useState(false);
+  const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const onCreateCustom = async () => {
+    const code = (form.pais || "").trim().toUpperCase();
+    const nombre = (form.nombre || "").trim();
+    if (!/^[A-Z]{2,3}$/.test(code)) { window.toast("El código del país debe ser 2 o 3 letras (ej: MX, USA)", "error"); return; }
+    if (!nombre) { window.toast("El nombre del país es obligatorio", "error"); return; }
+    setSaving(true);
+    const payload = {
+      pais: code,
+      nombre,
+      flag_emoji: form.flag_emoji || "🌍",
+      phone_code: form.phone_code || "+",
+      divisa_default: (form.divisa_default || "USD").toUpperCase(),
+      idioma_default: form.idioma_default || "es",
+      default_locale: form.default_locale || (form.idioma_default + "-" + code),
+      default_timezone: form.default_timezone || "UTC",
+      config: {},
+    };
+    const { error, data } = await sb.from("country_configs").insert(payload).select().single();
+    setSaving(false);
+    if (error) {
+      if (error.code === "23505") { window.toast("Ese código de país ya existe", "error"); }
+      else { window.toast("Error: " + error.message, "error"); }
+      return;
+    }
+    window.toast("País creado: " + nombre, "success");
+    onSelect(data);
+  };
+
   return (
     <div style={modalOverlayStyle} onClick={onClose}>
-      <div style={modalContentStyle} onClick={e => e.stopPropagation()}>
-        <h3 style={{ ...F, fontSize: 16, fontWeight: 700, margin: "0 0 12px", color: C.ink }}>Abrir nuevo país</h3>
-        <p style={{ ...F, fontSize: 12, color: C.inkMid, margin: "0 0 16px" }}>
-          Selecciona el país. Se abrirá el formulario para registrar la primera empresa de ese país.
-        </p>
-        {available.length === 0 ? (
-          <p style={{ ...F, fontSize: 13, color: C.inkLight, fontStyle: "italic" }}>No hay más países disponibles en el catálogo.</p>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {available.map(cc => (
-              <button key={cc.pais} onClick={() => onSelect(cc)}
-                style={{ ...F, fontSize: 13, padding: "10px 14px", border: `1px solid ${C.border}`, borderRadius: 6, background: "#fff", cursor: "pointer", color: C.ink, textAlign: "left", display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 18 }}>{cc.flag_emoji || "🌍"}</span>
-                <span style={{ flex: 1 }}>{cc.nombre}</span>
-                <span style={{ ...F, fontSize: 11, color: C.inkLight }}>{cc.divisa_default} · {cc.default_locale || cc.idioma_default}</span>
+      <div style={{ ...modalContentStyle, maxHeight: "85vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
+        <h3 style={{ ...F, fontSize: 16, fontWeight: 700, margin: "0 0 12px", color: C.ink }}>
+          {mode === "pick" ? "Abrir nuevo país" : "Crear país personalizado"}
+        </h3>
+
+        {mode === "pick" && (
+          <>
+            <p style={{ ...F, fontSize: 12, color: C.inkMid, margin: "0 0 16px" }}>
+              Selecciona el país. Se abrirá el formulario para registrar la primera empresa de ese país. Si no encuentras el tuyo, créalo personalizado.
+            </p>
+            {available.length === 0 ? (
+              <p style={{ ...F, fontSize: 13, color: C.inkLight, fontStyle: "italic" }}>
+                Ya has abierto todos los países del catálogo. Puedes crear uno personalizado.
+              </p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 6, marginBottom: 12 }}>
+                {available.map(cc => (
+                  <button key={cc.pais} onClick={() => onSelect(cc)}
+                    style={{ ...F, fontSize: 13, padding: "10px 14px", border: `1px solid ${C.border}`, borderRadius: 6, background: "#fff", cursor: "pointer", color: C.ink, textAlign: "left", display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={{ fontSize: 18 }}>{cc.flag_emoji || "🌍"}</span>
+                    <span style={{ flex: 1 }}>{cc.nombre}</span>
+                    <span style={{ ...F, fontSize: 11, color: C.inkLight }}>{cc.divisa_default} · {cc.default_locale || cc.idioma_default}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginTop: 16, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+              <button onClick={() => setMode("custom")} style={{ ...F, fontSize: 12, fontWeight: 600, padding: "8px 14px", border: `1px solid ${C.border}`, borderRadius: 6, background: "#fff", cursor: "pointer", color: C.ink }}>
+                + Crear país personalizado
               </button>
-            ))}
-          </div>
+              <button onClick={onClose} style={cancelBtnStyle}>Cerrar</button>
+            </div>
+          </>
         )}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginTop: 16 }}>
-          <button onClick={onClose} style={cancelBtnStyle}>Cerrar</button>
-        </div>
+
+        {mode === "custom" && (
+          <>
+            <p style={{ ...F, fontSize: 12, color: C.inkMid, margin: "0 0 16px" }}>
+              Solo si tu país no está en el catálogo. Puedes completar después los catálogos legales y normativa desde la configuración del país.
+            </p>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 8 }}>
+              <Field label="Código (ISO-2)" hint="Ej: MX, US, DE">
+                <input style={inputStyle} value={form.pais} onChange={e => upd("pais", e.target.value.toUpperCase())} placeholder="MX" maxLength={3} />
+              </Field>
+              <Field label="Nombre del país">
+                <input style={inputStyle} value={form.nombre} onChange={e => upd("nombre", e.target.value)} placeholder="México" />
+              </Field>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <Field label="Bandera (emoji)" hint="Pega el emoji de bandera">
+                <input style={inputStyle} value={form.flag_emoji} onChange={e => upd("flag_emoji", e.target.value)} placeholder="🇲🇽" />
+              </Field>
+              <Field label="Prefijo telefónico">
+                <input style={inputStyle} value={form.phone_code} onChange={e => upd("phone_code", e.target.value)} placeholder="+52" />
+              </Field>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <Field label="Divisa por defecto" hint="Código ISO de 3 letras">
+                <input style={inputStyle} value={form.divisa_default} onChange={e => upd("divisa_default", e.target.value.toUpperCase())} placeholder="MXN" maxLength={3} />
+              </Field>
+              <Field label="Idioma por defecto" hint="Código ISO de 2 letras">
+                <input style={inputStyle} value={form.idioma_default} onChange={e => upd("idioma_default", e.target.value.toLowerCase())} placeholder="es" maxLength={3} />
+              </Field>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <Field label="Locale completo" hint="Ej: es-MX, en-US">
+                <input style={inputStyle} value={form.default_locale} onChange={e => upd("default_locale", e.target.value)} placeholder={form.idioma_default && form.pais ? form.idioma_default + "-" + form.pais : "es-MX"} />
+              </Field>
+              <Field label="Zona horaria" hint="Ej: America/Mexico_City">
+                <input style={inputStyle} value={form.default_timezone} onChange={e => upd("default_timezone", e.target.value)} placeholder="America/Mexico_City" />
+              </Field>
+            </div>
+
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8, marginTop: 16, paddingTop: 12, borderTop: `1px solid ${C.border}` }}>
+              <button onClick={() => setMode("pick")} style={cancelBtnStyle}>← Volver</button>
+              <button onClick={onCreateCustom} disabled={saving} style={saveBtnStyle}>
+                {saving ? "Creando…" : "Crear país"}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-// Modal para añadir/editar empresa (con todos los campos legales)
 function ModalEditCompany({ existing, isNew, paisCode, paisConfig, tenantId, onSaved, onCancel }) {
   const [form, setForm] = useState(() => {
     const e = existing || {};
