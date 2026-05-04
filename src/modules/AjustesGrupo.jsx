@@ -782,54 +782,129 @@ function CompanyRow({ company, onEdit, onArchive }) {
 }
 
 // Editor de catálogos legales por país (SMLMV, Aux. Transporte, UVT, horas)
+// Editor de catálogos legales por país con HISTÓRICO y COMPARADOR
 function CountryLegalConstantsEditor({ pais }) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [data, setData] = useState(null);
-  const [form, setForm] = useState({ smlmv: "", aux_transporte: "", uvt: "", horas_mensuales_legal: "", year: "" });
+  const [data, setData] = useState(null); // legal_constants completo
+  const [view, setView] = useState("current"); // "current" | "history" | "compare"
+  const currentYear = new Date().getFullYear();
 
   const load = async () => {
     setLoading(true);
     const { data: row } = await sb.from("country_configs").select("config").eq("pais", pais).single();
     setLoading(false);
-    if (!row) return;
-    const lc = (row.config && row.config.legal_constants) || {};
-    setData(lc);
-    setForm({
-      smlmv: (lc.smlmv && lc.smlmv.value) ?? "",
-      aux_transporte: (lc.aux_transporte && lc.aux_transporte.value) ?? "",
-      uvt: (lc.uvt && lc.uvt.value) ?? "",
-      horas_mensuales_legal: lc.horas_mensuales_legal ?? "",
-      year: (lc.smlmv && lc.smlmv.year) ?? new Date().getFullYear(),
-    });
+    if (row) setData((row.config && row.config.legal_constants) || {});
   };
 
   useEffect(() => { if (open && !data) load(); }, [open]);
 
-  const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  // Helper: obtener history ordenada DESC + año actual incluido
+  const getHistoryDesc = (key) => {
+    const entry = (data && data[key]) || null;
+    if (!entry || typeof entry !== "object") return [];
+    const arr = Array.isArray(entry.history) ? [...entry.history] : [];
+    if (entry.year !== undefined && !arr.find(h => h && h.year === entry.year)) {
+      arr.push({ year: entry.year, value: entry.value });
+    }
+    return arr.filter(Boolean).sort((a, b) => (b.year || 0) - (a.year || 0));
+  };
+
+  const getYears = () => {
+    const all = new Set();
+    ["smlmv","aux_transporte","uvt"].forEach(k => getHistoryDesc(k).forEach(h => all.add(h.year)));
+    return Array.from(all).sort((a, b) => b - a);
+  };
+
+  // Actualizar valor actual: cambia entry.value y entry.year, y añade entrada al history si no existe
+  const updateCurrentValue = (key, newValue, newYear) => {
+    setData(d => {
+      const prev = d || {};
+      const entry = prev[key] || {};
+      const oldHistory = Array.isArray(entry.history) ? [...entry.history] : [];
+      // Si cambias el año, añade la entrada anterior al history (si no estaba ya)
+      if (entry.year !== undefined && entry.year !== newYear) {
+        if (!oldHistory.find(h => h && h.year === entry.year)) {
+          oldHistory.push({ year: entry.year, value: entry.value });
+        }
+      }
+      // Si actualizas mismo año, sólo cambias value
+      return {
+        ...prev,
+        [key]: { value: newValue, year: newYear, history: oldHistory.filter(h => h && h.year !== newYear) },
+      };
+    });
+  };
+
+  // Editar un valor en history (year específico)
+  const updateHistoryValue = (key, year, newValue) => {
+    setData(d => {
+      const prev = d || {};
+      const entry = prev[key] || {};
+      if (entry.year === year) {
+        return { ...prev, [key]: { ...entry, value: newValue } };
+      }
+      const newHist = (entry.history || []).map(h => h && h.year === year ? { year, value: newValue } : h);
+      return { ...prev, [key]: { ...entry, history: newHist } };
+    });
+  };
+
+  // Añadir un año nuevo al history
+  const addHistoryYear = (year) => {
+    if (!year || isNaN(year)) return;
+    setData(d => {
+      const prev = d || {};
+      const out = { ...prev };
+      ["smlmv","aux_transporte","uvt"].forEach(key => {
+        const entry = out[key] || { year: currentYear, value: 0 };
+        const hist = Array.isArray(entry.history) ? [...entry.history] : [];
+        if (entry.year !== year && !hist.find(h => h && h.year === year)) {
+          hist.push({ year, value: 0 });
+        }
+        out[key] = { ...entry, history: hist };
+      });
+      return out;
+    });
+  };
+
+  // Eliminar un año del history (no se puede eliminar el año actual)
+  const removeHistoryYear = (year) => {
+    setData(d => {
+      const prev = d || {};
+      const out = { ...prev };
+      ["smlmv","aux_transporte","uvt"].forEach(key => {
+        const entry = out[key];
+        if (!entry || entry.year === year) return;
+        const hist = (entry.history || []).filter(h => h && h.year !== year);
+        out[key] = { ...entry, history: hist };
+      });
+      return out;
+    });
+  };
+
+  // Actualizar horas mensuales (campo simple, sin histórico)
+  const updateHoras = (newValue) => {
+    setData(d => ({ ...(d || {}), horas_mensuales_legal: newValue }));
+  };
 
   const onSave = async () => {
     setSaving(true);
-    const year = parseInt(form.year, 10) || new Date().getFullYear();
-    const newLc = { ...(data || {}) };
-    if (form.smlmv !== "") newLc.smlmv = { value: parseInt(form.smlmv, 10), year };
-    else delete newLc.smlmv;
-    if (form.aux_transporte !== "") newLc.aux_transporte = { value: parseInt(form.aux_transporte, 10), year };
-    else delete newLc.aux_transporte;
-    if (form.uvt !== "") newLc.uvt = { value: parseInt(form.uvt, 10), year };
-    else delete newLc.uvt;
-    if (form.horas_mensuales_legal !== "") newLc.horas_mensuales_legal = parseFloat(form.horas_mensuales_legal);
-    else delete newLc.horas_mensuales_legal;
-
-    // Leer config actual y mergear legal_constants
+    // Leer config actual y mergear
     const { data: row } = await sb.from("country_configs").select("config").eq("pais", pais).single();
-    const newConfig = { ...(row && row.config || {}), legal_constants: newLc };
+    const newConfig = { ...(row && row.config || {}), legal_constants: data || {} };
     const { error } = await sb.from("country_configs").update({ config: newConfig }).eq("pais", pais);
     setSaving(false);
     if (error) { window.toast("Error: " + error.message, "error"); return; }
     window.toast("Catálogos legales guardados", "success");
-    setData(newLc);
+  };
+
+  // ─── helpers de presentación ───
+  const fmtMoney = (n) => (typeof n === "number" ? n.toLocaleString("es-CO") : (n || "—"));
+  const computeDiff = (current, previous) => {
+    if (!current || !previous || previous === 0) return null;
+    const pct = ((current - previous) / previous) * 100;
+    return { pct, abs: current - previous };
   };
 
   return (
@@ -844,33 +919,160 @@ function CountryLegalConstantsEditor({ pais }) {
         <div style={{ marginTop: 12 }}>
           {loading ? (
             <p style={{ ...F, fontSize: 12, color: C.inkLight }}>Cargando…</p>
+          ) : !data ? (
+            <p style={{ ...F, fontSize: 12, color: C.inkLight }}>Sin datos.</p>
           ) : (
             <>
-              <p style={{ ...F, fontSize: 11, color: C.inkLight, margin: "0 0 12px" }}>
-                Estos valores se aplican a todos los cálculos de nómina, liquidación y certificaciones del país. Si dejas un campo vacío se usa el valor de fallback del código (mismos valores 2026 hardcodeados).
-              </p>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                <Field label="SMLMV" hint={pais === "CO" ? "Salario mínimo legal mensual vigente" : "Salario mínimo nacional"}>
-                  <input style={inputStyle} type="number" value={form.smlmv} onChange={e => upd("smlmv", e.target.value)} placeholder="1750905" />
-                </Field>
-                <Field label="Auxilio de Transporte" hint={pais === "CO" ? "Auxilio mensual obligatorio (CO)" : "Aplica solo si existe en el país"}>
-                  <input style={inputStyle} type="number" value={form.aux_transporte} onChange={e => upd("aux_transporte", e.target.value)} placeholder="249095" />
-                </Field>
-                <Field label="UVT" hint={pais === "CO" ? "Unidad de Valor Tributario (CO)" : "Si aplica"}>
-                  <input style={inputStyle} type="number" value={form.uvt} onChange={e => upd("uvt", e.target.value)} placeholder="49799" />
-                </Field>
-                <Field label="Horas mensuales legales" hint="Para cálculo de jornada y horas extra">
-                  <input style={inputStyle} type="number" step="0.01" value={form.horas_mensuales_legal} onChange={e => upd("horas_mensuales_legal", e.target.value)} placeholder="220" />
-                </Field>
-                <Field label="Año vigencia" hint="Para historial de cambios anuales">
-                  <input style={inputStyle} type="number" value={form.year} onChange={e => upd("year", e.target.value)} placeholder="2026" />
-                </Field>
+              <div style={{ display: "flex", gap: 4, marginBottom: 12, padding: 4, background: "#fff", borderRadius: 6, border: `1px solid ${C.border}`, width: "fit-content" }}>
+                <button onClick={() => setView("current")} style={tabBtnStyle(view === "current")}>Año actual</button>
+                <button onClick={() => setView("history")} style={tabBtnStyle(view === "history")}>Histórico</button>
+                <button onClick={() => setView("compare")} style={tabBtnStyle(view === "compare")}>Comparador</button>
               </div>
 
-              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+              {view === "current" && (
+                <>
+                  <p style={{ ...F, fontSize: 11, color: C.inkLight, margin: "0 0 12px" }}>
+                    Valores aplicados HOY a todos los cálculos. Editar aquí cambia el valor vigente. El valor anterior queda guardado en histórico automáticamente al cambiar el año.
+                  </p>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                    {["smlmv","aux_transporte","uvt"].map(key => {
+                      const entry = data[key] || {};
+                      const labels = { smlmv: "SMLMV", aux_transporte: "Auxilio de Transporte", uvt: "UVT" };
+                      const hints = {
+                        smlmv: pais === "CO" ? "Salario mínimo legal mensual vigente" : "Salario mínimo nacional",
+                        aux_transporte: pais === "CO" ? "Auxilio mensual obligatorio (CO)" : "Si aplica",
+                        uvt: pais === "CO" ? "Unidad de Valor Tributario (CO)" : "Si aplica",
+                      };
+                      return (
+                        <div key={key}>
+                          <Field label={labels[key]} hint={hints[key]}>
+                            <div style={{ display: "flex", gap: 6 }}>
+                              <input style={{ ...inputStyle, flex: 2 }} type="number" value={entry.value || ""} onChange={e => updateCurrentValue(key, parseInt(e.target.value, 10) || 0, entry.year || currentYear)} placeholder="0" />
+                              <input style={{ ...inputStyle, flex: 1 }} type="number" value={entry.year || ""} onChange={e => updateCurrentValue(key, entry.value || 0, parseInt(e.target.value, 10) || currentYear)} placeholder="2026" title="Año vigencia" />
+                            </div>
+                          </Field>
+                        </div>
+                      );
+                    })}
+                    <Field label="Horas mensuales legales" hint="Para cálculo de jornada y horas extra">
+                      <input style={inputStyle} type="number" step="0.01" value={data.horas_mensuales_legal || ""} onChange={e => updateHoras(parseFloat(e.target.value) || 0)} placeholder="220" />
+                    </Field>
+                  </div>
+                </>
+              )}
+
+              {view === "history" && (
+                <>
+                  <p style={{ ...F, fontSize: 11, color: C.inkLight, margin: "0 0 12px" }}>
+                    Histórico anual editable. El año vigente está marcado. Los valores anteriores se usan en liquidaciones retroactivas y reportes.
+                  </p>
+                  <div style={{ overflowX: "auto", border: `1px solid ${C.border}`, borderRadius: 6, background: "#fff" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", ...F, fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ background: "#FAFAFA" }}>
+                          <th style={thStyle}>Año</th>
+                          <th style={thStyle}>SMLMV</th>
+                          <th style={thStyle}>Auxilio Transporte</th>
+                          <th style={thStyle}>UVT</th>
+                          <th style={thStyle}></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {getYears().map(year => {
+                          const isCurrent = ["smlmv","aux_transporte","uvt"].some(k => (data[k] && data[k].year === year));
+                          const valFor = (key) => {
+                            const e = data[key] || {};
+                            if (e.year === year) return e.value;
+                            const h = (e.history || []).find(x => x && x.year === year);
+                            return h ? h.value : null;
+                          };
+                          return (
+                            <tr key={year} style={{ borderTop: `1px solid ${C.bg}` }}>
+                              <td style={tdStyle}>
+                                <strong>{year}</strong> {isCurrent && <span style={{ ...F, fontSize: 9, padding: "1px 5px", borderRadius: 3, background: C.ink, color: "#fff", marginLeft: 4 }}>VIGENTE</span>}
+                              </td>
+                              {["smlmv","aux_transporte","uvt"].map(key => (
+                                <td key={key} style={tdStyle}>
+                                  <input type="number" style={{ ...inputStyle, padding: "4px 6px", fontSize: 11, width: 110 }} value={valFor(key) ?? ""} onChange={e => updateHistoryValue(key, year, parseInt(e.target.value, 10) || 0)} />
+                                </td>
+                              ))}
+                              <td style={tdStyle}>
+                                {!isCurrent && <button onClick={() => removeHistoryYear(year)} style={{ ...F, fontSize: 11, color: C.danger, background: "transparent", border: "none", cursor: "pointer", padding: 4 }}>Borrar</button>}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center", marginTop: 10 }}>
+                    <input id="newHistYear" type="number" placeholder="Año nuevo (ej: 2027)" style={{ ...inputStyle, width: 180, fontSize: 12 }} />
+                    <button onClick={() => {
+                      const v = parseInt(document.getElementById("newHistYear").value, 10);
+                      if (v) { addHistoryYear(v); document.getElementById("newHistYear").value = ""; }
+                    }} style={{ ...F, fontSize: 12, fontWeight: 600, padding: "6px 12px", border: `1px solid ${C.border}`, borderRadius: 6, background: "#fff", cursor: "pointer", color: C.ink }}>+ Añadir año</button>
+                  </div>
+                </>
+              )}
+
+              {view === "compare" && (
+                <>
+                  <p style={{ ...F, fontSize: 11, color: C.inkLight, margin: "0 0 12px" }}>
+                    Variación anual de cada catálogo. Útil para análisis de costes y proyecciones.
+                  </p>
+                  <div style={{ overflowX: "auto", border: `1px solid ${C.border}`, borderRadius: 6, background: "#fff" }}>
+                    <table style={{ width: "100%", borderCollapse: "collapse", ...F, fontSize: 12 }}>
+                      <thead>
+                        <tr style={{ background: "#FAFAFA" }}>
+                          <th style={thStyle}>Año</th>
+                          <th style={thStyle}>SMLMV</th>
+                          <th style={thStyle}>Δ vs año anterior</th>
+                          <th style={thStyle}>Auxilio Transporte</th>
+                          <th style={thStyle}>Δ vs año anterior</th>
+                          <th style={thStyle}>UVT</th>
+                          <th style={thStyle}>Δ vs año anterior</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(() => {
+                          const years = getYears();
+                          const valFor = (key, year) => {
+                            const e = data[key] || {};
+                            if (e.year === year) return e.value;
+                            const h = (e.history || []).find(x => x && x.year === year);
+                            return h ? h.value : null;
+                          };
+                          return years.map((year, i) => {
+                            const prevYear = years[i + 1];
+                            return (
+                              <tr key={year} style={{ borderTop: `1px solid ${C.bg}` }}>
+                                <td style={tdStyle}><strong>{year}</strong></td>
+                                {["smlmv","aux_transporte","uvt"].map(key => {
+                                  const cur = valFor(key, year);
+                                  const prev = prevYear ? valFor(key, prevYear) : null;
+                                  const diff = computeDiff(cur, prev);
+                                  return (
+                                    <React.Fragment key={key}>
+                                      <td style={tdStyle}>$ {fmtMoney(cur)}</td>
+                                      <td style={{ ...tdStyle, color: diff && diff.pct >= 0 ? "#0a7c2c" : C.inkLight, fontVariantNumeric: "tabular-nums" }}>
+                                        {diff ? `${diff.pct >= 0 ? "+" : ""}${diff.pct.toFixed(1)}%` : "—"}
+                                      </td>
+                                    </React.Fragment>
+                                  );
+                                })}
+                              </tr>
+                            );
+                          });
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16, paddingTop: 12, borderTop: `1px solid ${C.bg}` }}>
                 <button onClick={onSave} disabled={saving} style={saveBtnStyle}>
-                  {saving ? "Guardando…" : "Guardar catálogos"}
+                  {saving ? "Guardando…" : "Guardar todos los cambios"}
                 </button>
               </div>
             </>
@@ -881,8 +1083,17 @@ function CountryLegalConstantsEditor({ pais }) {
   );
 }
 
-// Modal para seleccionar nuevo país a abrir
-// Modal para seleccionar nuevo país a abrir
+// Estilos auxiliares para tablas y tabs del editor de catálogos legales
+const tabBtnStyle = (active) => ({
+  ...F, fontSize: 11, fontWeight: 600,
+  padding: "6px 12px", border: "none", borderRadius: 4,
+  cursor: "pointer",
+  background: active ? C.ink : "transparent",
+  color: active ? "#fff" : C.inkMid,
+});
+const thStyle = { ...F, padding: "8px 10px", textAlign: "left", fontSize: 11, fontWeight: 600, color: C.inkMid, textTransform: "uppercase", letterSpacing: 0.3 };
+const tdStyle = { padding: "6px 10px", verticalAlign: "middle", fontVariantNumeric: "tabular-nums" };
+
 function ModalAddCountry({ available, onSelect, onClose }) {
   const [mode, setMode] = useState("pick"); // "pick" | "custom"
   const [form, setForm] = useState({
