@@ -664,6 +664,62 @@ export function getTenantLegalRepresentativeSync() {
  * valor. Para constantes legales (cambian 1 vez al año) es aceptable.
  */
 /**
+ * Devuelve la tasa de cambio entre dos divisas para una fecha específica.
+ * Si no se pasa fecha, devuelve la tasa "current" (más reciente).
+ * Si la fecha exacta no está, devuelve la tasa más cercana ANTERIOR a esa fecha.
+ *
+ * Estructura esperada en country_configs.config.exchange_rates:
+ *   {
+ *     current: { USD_COP: 4150, EUR_COP: 4720, updated_at: "2026-05-04" },
+ *     rates: [ {date, from, to, value, source}, ... ]
+ *   }
+ *
+ * @param {string} pais - código ISO-2 del país (donde vive el catálogo)
+ * @param {string} from - divisa origen (ej: "USD")
+ * @param {string} to - divisa destino (ej: "COP")
+ * @param {string} [date] - fecha objetivo en formato YYYY-MM-DD. Si se omite, devuelve current.
+ * @returns {number|null} valor de conversión o null si no se encuentra
+ */
+export function getExchangeRateSync(pais, from, to, date) {
+  const c = getCountryConfigSync(pais);
+  const ex = (c && c.exchange_rates) || {};
+  // Mismo código → 1
+  if (from === to) return 1;
+  // Si no se pasa fecha, usar current
+  if (!date) {
+    const key = from + "_" + to;
+    const cur = ex.current && ex.current[key];
+    if (typeof cur === "number") return cur;
+    // Intentar inversa: si pidió EUR_USD y no está, buscar USD_EUR e invertir
+    const inv = ex.current && ex.current[to + "_" + from];
+    if (typeof inv === "number" && inv !== 0) return 1 / inv;
+    // Cae en última entrada del array que coincida
+    const list = (ex.rates || []).filter(r => r && r.from === from && r.to === to);
+    list.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    return list.length ? list[0].value : null;
+  }
+  // Buscar la entrada con fecha ≤ date más reciente
+  const list = (ex.rates || []).filter(r => r && r.from === from && r.to === to && (r.date || "") <= date);
+  list.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  if (list.length) return list[0].value;
+  // Inversa
+  const listInv = (ex.rates || []).filter(r => r && r.from === to && r.to === from && (r.date || "") <= date);
+  listInv.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  if (listInv.length && listInv[0].value !== 0) return 1 / listInv[0].value;
+  return null;
+}
+
+/**
+ * Devuelve toda la serie histórica de tasas de un par from→to ordenada por fecha DESC.
+ */
+export function getExchangeRateHistorySync(pais, from, to) {
+  const c = getCountryConfigSync(pais);
+  const ex = (c && c.exchange_rates) || {};
+  const list = (ex.rates || []).filter(r => r && r.from === from && r.to === to);
+  return list.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+}
+
+/**
  * Devuelve el valor de una constante legal para un AÑO específico desde el histórico.
  * Si no se pasa year, devuelve el valor actual.
  *
