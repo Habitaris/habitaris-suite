@@ -1,12 +1,15 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { HAB_LOGO } from "./habLogo.js";
-import { getTenantUrlsSync, getTenantIdentitySync } from "../core/configHelpers.js";
+import { getTenantUrlsSync, getTenantIdentitySync, getLegalConstantsSync } from "../core/configHelpers.js";
 import { downloadPDF } from "./pdfUtil.js";
 import { buildNominaHtml } from "./nominaHtml.js";
 import { BannerPagos } from "./BannerPagos.jsx";
 import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
-const SMLMV = 1_750_905, AUX_TR = 249_095, UVT = 49_799;
+// Sprint C Capa 3 paso 7: catálogos legales desde country_configs (BD prioritaria con fallback al hardcoded 2026).
+// Si en BD se cambia el SMLMV, hay que recargar la página para que estos valores se actualicen (constantes evaluadas al cargar el módulo).
+const __LC_NOM = getLegalConstantsSync("CO");
+const SMLMV = __LC_NOM.smlmv ?? 1_750_905, AUX_TR = __LC_NOM.aux_transporte ?? 249_095, UVT = __LC_NOM.uvt ?? 49_799;
 const ARL_OPTS = [
   { n:"I", t:0.00522, lbl:"I — Mínimo" }, { n:"II", t:0.01044, lbl:"II — Bajo" },
   { n:"III", t:0.02436, lbl:"III — Medio" }, { n:"IV", t:0.04350, lbl:"IV — Alto" },
