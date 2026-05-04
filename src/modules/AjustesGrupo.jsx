@@ -723,6 +723,7 @@ function TabLegal({ companies: initialCompanies }) {
                 await reload();
               }} />)}
             </div>
+            <CountryLegalConstantsEditor pais={pais} />
           </div>
         );
       })}
@@ -776,6 +777,106 @@ function CompanyRow({ company, onEdit, onArchive }) {
         <button onClick={onEdit} style={{ ...F, fontSize: 11, padding: "5px 10px", border: `1px solid ${C.border}`, borderRadius: 5, background: "#fff", cursor: "pointer", color: C.ink }}>Editar</button>
         <button onClick={onArchive} style={{ ...F, fontSize: 11, padding: "5px 10px", border: `1px solid ${C.border}`, borderRadius: 5, background: "#fff", cursor: "pointer", color: C.danger }}>Archivar</button>
       </div>
+    </div>
+  );
+}
+
+// Editor de catálogos legales por país (SMLMV, Aux. Transporte, UVT, horas)
+function CountryLegalConstantsEditor({ pais }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [data, setData] = useState(null);
+  const [form, setForm] = useState({ smlmv: "", aux_transporte: "", uvt: "", horas_mensuales_legal: "", year: "" });
+
+  const load = async () => {
+    setLoading(true);
+    const { data: row } = await sb.from("country_configs").select("config").eq("pais", pais).single();
+    setLoading(false);
+    if (!row) return;
+    const lc = (row.config && row.config.legal_constants) || {};
+    setData(lc);
+    setForm({
+      smlmv: (lc.smlmv && lc.smlmv.value) ?? "",
+      aux_transporte: (lc.aux_transporte && lc.aux_transporte.value) ?? "",
+      uvt: (lc.uvt && lc.uvt.value) ?? "",
+      horas_mensuales_legal: lc.horas_mensuales_legal ?? "",
+      year: (lc.smlmv && lc.smlmv.year) ?? new Date().getFullYear(),
+    });
+  };
+
+  useEffect(() => { if (open && !data) load(); }, [open]);
+
+  const upd = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const onSave = async () => {
+    setSaving(true);
+    const year = parseInt(form.year, 10) || new Date().getFullYear();
+    const newLc = { ...(data || {}) };
+    if (form.smlmv !== "") newLc.smlmv = { value: parseInt(form.smlmv, 10), year };
+    else delete newLc.smlmv;
+    if (form.aux_transporte !== "") newLc.aux_transporte = { value: parseInt(form.aux_transporte, 10), year };
+    else delete newLc.aux_transporte;
+    if (form.uvt !== "") newLc.uvt = { value: parseInt(form.uvt, 10), year };
+    else delete newLc.uvt;
+    if (form.horas_mensuales_legal !== "") newLc.horas_mensuales_legal = parseFloat(form.horas_mensuales_legal);
+    else delete newLc.horas_mensuales_legal;
+
+    // Leer config actual y mergear legal_constants
+    const { data: row } = await sb.from("country_configs").select("config").eq("pais", pais).single();
+    const newConfig = { ...(row && row.config || {}), legal_constants: newLc };
+    const { error } = await sb.from("country_configs").update({ config: newConfig }).eq("pais", pais);
+    setSaving(false);
+    if (error) { window.toast("Error: " + error.message, "error"); return; }
+    window.toast("Catálogos legales guardados", "success");
+    setData(newLc);
+  };
+
+  return (
+    <div style={{ borderTop: `1px solid ${C.bg}`, padding: "10px 18px", background: "#FAFAFA" }}>
+      <button onClick={() => setOpen(!open)}
+        style={{ ...F, fontSize: 12, fontWeight: 600, color: C.inkMid, background: "transparent", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 6, width: "100%", textAlign: "left" }}>
+        <span style={{ display: "inline-block", transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>▶</span>
+        Catálogos legales · SMLMV, Aux. Transporte, UVT, horas
+      </button>
+
+      {open && (
+        <div style={{ marginTop: 12 }}>
+          {loading ? (
+            <p style={{ ...F, fontSize: 12, color: C.inkLight }}>Cargando…</p>
+          ) : (
+            <>
+              <p style={{ ...F, fontSize: 11, color: C.inkLight, margin: "0 0 12px" }}>
+                Estos valores se aplican a todos los cálculos de nómina, liquidación y certificaciones del país. Si dejas un campo vacío se usa el valor de fallback del código (mismos valores 2026 hardcodeados).
+              </p>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                <Field label="SMLMV" hint={pais === "CO" ? "Salario mínimo legal mensual vigente" : "Salario mínimo nacional"}>
+                  <input style={inputStyle} type="number" value={form.smlmv} onChange={e => upd("smlmv", e.target.value)} placeholder="1750905" />
+                </Field>
+                <Field label="Auxilio de Transporte" hint={pais === "CO" ? "Auxilio mensual obligatorio (CO)" : "Aplica solo si existe en el país"}>
+                  <input style={inputStyle} type="number" value={form.aux_transporte} onChange={e => upd("aux_transporte", e.target.value)} placeholder="249095" />
+                </Field>
+                <Field label="UVT" hint={pais === "CO" ? "Unidad de Valor Tributario (CO)" : "Si aplica"}>
+                  <input style={inputStyle} type="number" value={form.uvt} onChange={e => upd("uvt", e.target.value)} placeholder="49799" />
+                </Field>
+                <Field label="Horas mensuales legales" hint="Para cálculo de jornada y horas extra">
+                  <input style={inputStyle} type="number" step="0.01" value={form.horas_mensuales_legal} onChange={e => upd("horas_mensuales_legal", e.target.value)} placeholder="220" />
+                </Field>
+                <Field label="Año vigencia" hint="Para historial de cambios anuales">
+                  <input style={inputStyle} type="number" value={form.year} onChange={e => upd("year", e.target.value)} placeholder="2026" />
+                </Field>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 12 }}>
+                <button onClick={onSave} disabled={saving} style={saveBtnStyle}>
+                  {saving ? "Guardando…" : "Guardar catálogos"}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
