@@ -724,6 +724,7 @@ function TabLegal({ companies: initialCompanies }) {
               }} />)}
             </div>
             <CountryLegalConstantsEditor pais={pais} />
+            <CountryExchangeRatesEditor pais={pais} />
           </div>
         );
       })}
@@ -1093,6 +1094,212 @@ const tabBtnStyle = (active) => ({
 });
 const thStyle = { ...F, padding: "8px 10px", textAlign: "left", fontSize: 11, fontWeight: 600, color: C.inkMid, textTransform: "uppercase", letterSpacing: 0.3 };
 const tdStyle = { padding: "6px 10px", verticalAlign: "middle", fontVariantNumeric: "tabular-nums" };
+
+// Editor de tasas de cambio por país (TRM, EUR/COP, etc.) con histórico
+function CountryExchangeRatesEditor({ pais }) {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [data, setData] = useState(null); // { current: {...}, rates: [...] }
+  const [pair, setPair] = useState("USD_COP"); // par seleccionado para vista
+  const [newRate, setNewRate] = useState({ date: "", from: "USD", to: "COP", value: "" });
+
+  const load = async () => {
+    setLoading(true);
+    const { data: row } = await sb.from("country_configs").select("config").eq("pais", pais).single();
+    setLoading(false);
+    if (row) setData((row.config && row.config.exchange_rates) || { current: {}, rates: [] });
+  };
+
+  useEffect(() => { if (open && !data) load(); }, [open]);
+
+  // Lista de pares únicos en el historial
+  const getPairs = () => {
+    if (!data) return [];
+    const set = new Set();
+    (data.rates || []).forEach(r => { if (r && r.from && r.to) set.add(r.from + "_" + r.to); });
+    Object.keys(data.current || {}).forEach(k => { if (k.includes("_")) set.add(k); });
+    return Array.from(set).sort();
+  };
+
+  // Histórico ordenado DESC del par seleccionado
+  const getHistory = () => {
+    if (!data) return [];
+    const [from, to] = pair.split("_");
+    return (data.rates || [])
+      .filter(r => r && r.from === from && r.to === to)
+      .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  };
+
+  const updateCurrent = (key, value) => {
+    setData(d => ({
+      ...(d || { rates: [] }),
+      current: { ...((d && d.current) || {}), [key]: parseFloat(value) || 0, updated_at: new Date().toISOString().slice(0, 10) },
+    }));
+  };
+
+  const updateRateValue = (idx, newValue) => {
+    setData(d => {
+      const rates = [...((d && d.rates) || [])];
+      rates[idx] = { ...rates[idx], value: parseFloat(newValue) || 0 };
+      return { ...d, rates };
+    });
+  };
+
+  const updateRateDate = (idx, newDate) => {
+    setData(d => {
+      const rates = [...((d && d.rates) || [])];
+      rates[idx] = { ...rates[idx], date: newDate };
+      return { ...d, rates };
+    });
+  };
+
+  const removeRate = (idx) => {
+    setData(d => {
+      const rates = [...((d && d.rates) || [])];
+      rates.splice(idx, 1);
+      return { ...d, rates };
+    });
+  };
+
+  const addRate = () => {
+    const v = parseFloat(newRate.value);
+    if (!newRate.date || !newRate.from || !newRate.to || !v) {
+      window.toast("Completa todos los campos para añadir una tasa", "error");
+      return;
+    }
+    setData(d => ({
+      ...(d || { current: {} }),
+      rates: [...((d && d.rates) || []), {
+        date: newRate.date, from: newRate.from.toUpperCase(),
+        to: newRate.to.toUpperCase(), value: v, source: "manual",
+      }],
+    }));
+    setNewRate({ date: "", from: newRate.from, to: newRate.to, value: "" });
+  };
+
+  const onSave = async () => {
+    setSaving(true);
+    const { data: row } = await sb.from("country_configs").select("config").eq("pais", pais).single();
+    const newConfig = { ...(row && row.config || {}), exchange_rates: data || { current: {}, rates: [] } };
+    const { error } = await sb.from("country_configs").update({ config: newConfig }).eq("pais", pais);
+    setSaving(false);
+    if (error) { window.toast("Error: " + error.message, "error"); return; }
+    window.toast("Tasas de cambio guardadas", "success");
+  };
+
+  const fmtNum = (n) => (typeof n === "number" ? n.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (n || "—"));
+
+  return (
+    <div style={{ borderTop: `1px solid ${C.bg}`, padding: "10px 18px", background: "#FAFAFA" }}>
+      <button onClick={() => setOpen(!open)}
+        style={{ ...F, fontSize: 12, fontWeight: 600, color: C.inkMid, background: "transparent", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: 6, width: "100%", textAlign: "left" }}>
+        <span style={{ display: "inline-block", transform: open ? "rotate(90deg)" : "none", transition: "transform 0.15s" }}>▶</span>
+        Tasas de cambio · USD/COP, EUR/COP, históricos
+      </button>
+
+      {open && (
+        <div style={{ marginTop: 12 }}>
+          {loading ? (
+            <p style={{ ...F, fontSize: 12, color: C.inkLight }}>Cargando…</p>
+          ) : !data ? (
+            <p style={{ ...F, fontSize: 12, color: C.inkLight }}>Sin datos.</p>
+          ) : (
+            <>
+              <h5 style={{ ...F, fontSize: 11, fontWeight: 700, color: C.inkMid, margin: "0 0 8px", textTransform: "uppercase", letterSpacing: 0.4 }}>Valores actuales</h5>
+              <p style={{ ...F, fontSize: 11, color: C.inkLight, margin: "0 0 10px" }}>
+                Tasas que se aplican HOY al CRM, facturación y reportes. Última actualización: {(data.current && data.current.updated_at) || "—"}
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
+                {Object.keys(data.current || {}).filter(k => k.includes("_")).map(key => {
+                  const [from, to] = key.split("_");
+                  return (
+                    <Field key={key} label={`${from} → ${to}`} hint={`1 ${from} = X ${to}`}>
+                      <input style={inputStyle} type="number" step="0.01" value={data.current[key] || ""} onChange={e => updateCurrent(key, e.target.value)} placeholder="0.00" />
+                    </Field>
+                  );
+                })}
+              </div>
+
+              <h5 style={{ ...F, fontSize: 11, fontWeight: 700, color: C.inkMid, margin: "16px 0 8px", textTransform: "uppercase", letterSpacing: 0.4 }}>Histórico</h5>
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 8 }}>
+                <label style={{ ...F, fontSize: 11, color: C.inkMid }}>Par:</label>
+                <select value={pair} onChange={e => setPair(e.target.value)} style={{ ...inputStyle, width: 150, fontSize: 12 }}>
+                  {getPairs().map(p => <option key={p} value={p}>{p.replace("_", " → ")}</option>)}
+                </select>
+                <span style={{ ...F, fontSize: 11, color: C.inkLight }}>{getHistory().length} registros</span>
+              </div>
+              <div style={{ overflowX: "auto", border: `1px solid ${C.border}`, borderRadius: 6, background: "#fff", maxHeight: 300, overflowY: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse", ...F, fontSize: 12 }}>
+                  <thead style={{ position: "sticky", top: 0, background: "#FAFAFA" }}>
+                    <tr>
+                      <th style={thStyle}>Fecha</th>
+                      <th style={thStyle}>Valor</th>
+                      <th style={thStyle}>Δ vs anterior</th>
+                      <th style={thStyle}>Origen</th>
+                      <th style={thStyle}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const hist = getHistory();
+                      const allRates = (data.rates || []);
+                      return hist.map((r, hidx) => {
+                        const prev = hist[hidx + 1];
+                        const diff = prev ? ((r.value - prev.value) / prev.value * 100) : null;
+                        const realIdx = allRates.indexOf(r);
+                        return (
+                          <tr key={hidx} style={{ borderTop: `1px solid ${C.bg}` }}>
+                            <td style={tdStyle}>
+                              <input type="date" style={{ ...inputStyle, padding: "4px 6px", fontSize: 11, width: 130 }} value={r.date || ""} onChange={e => updateRateDate(realIdx, e.target.value)} />
+                            </td>
+                            <td style={tdStyle}>
+                              <input type="number" step="0.01" style={{ ...inputStyle, padding: "4px 6px", fontSize: 11, width: 110, fontVariantNumeric: "tabular-nums" }} value={r.value || ""} onChange={e => updateRateValue(realIdx, e.target.value)} />
+                            </td>
+                            <td style={{ ...tdStyle, color: diff && diff >= 0 ? "#0a7c2c" : (diff && diff < 0 ? C.danger : C.inkLight) }}>
+                              {diff !== null ? `${diff >= 0 ? "+" : ""}${diff.toFixed(2)}%` : "—"}
+                            </td>
+                            <td style={{ ...tdStyle, ...F, fontSize: 11, color: C.inkLight }}>{r.source || "manual"}</td>
+                            <td style={tdStyle}>
+                              <button onClick={() => removeRate(realIdx)} style={{ ...F, fontSize: 11, color: C.danger, background: "transparent", border: "none", cursor: "pointer", padding: 4 }}>Borrar</button>
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+
+              <h5 style={{ ...F, fontSize: 11, fontWeight: 700, color: C.inkMid, margin: "16px 0 8px", textTransform: "uppercase", letterSpacing: 0.4 }}>Añadir tasa</h5>
+              <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr 1.5fr auto", gap: 6, alignItems: "end" }}>
+                <Field label="Fecha">
+                  <input type="date" style={inputStyle} value={newRate.date} onChange={e => setNewRate(r => ({ ...r, date: e.target.value }))} />
+                </Field>
+                <Field label="De">
+                  <input style={inputStyle} value={newRate.from} onChange={e => setNewRate(r => ({ ...r, from: e.target.value.toUpperCase() }))} placeholder="USD" maxLength={3} />
+                </Field>
+                <Field label="A">
+                  <input style={inputStyle} value={newRate.to} onChange={e => setNewRate(r => ({ ...r, to: e.target.value.toUpperCase() }))} placeholder="COP" maxLength={3} />
+                </Field>
+                <Field label="Valor">
+                  <input type="number" step="0.01" style={inputStyle} value={newRate.value} onChange={e => setNewRate(r => ({ ...r, value: e.target.value }))} placeholder="0.00" />
+                </Field>
+                <button onClick={addRate} style={{ ...F, fontSize: 12, fontWeight: 600, padding: "8px 14px", border: `1px solid ${C.border}`, borderRadius: 6, background: "#fff", cursor: "pointer", color: C.ink, height: 36 }}>+ Añadir</button>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16, paddingTop: 12, borderTop: `1px solid ${C.bg}` }}>
+                <button onClick={onSave} disabled={saving} style={saveBtnStyle}>
+                  {saving ? "Guardando…" : "Guardar todos los cambios"}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ModalAddCountry({ available, onSelect, onClose }) {
   const [mode, setMode] = useState("pick"); // "pick" | "custom"
