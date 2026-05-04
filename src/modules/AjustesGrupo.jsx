@@ -1211,7 +1211,7 @@ function CountryExchangeRatesEditor({ pais }) {
                 Tasas que se aplican HOY al CRM, facturación y reportes. Última actualización: {(data.current && data.current.updated_at) || "—"}
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
-                {Object.keys(data.current || {}).filter(k => k.includes("_")).map(key => {
+                {Object.keys(data.current || {}).filter(k => /^[A-Z]{3}_[A-Z]{3}$/.test(k)).map(key => {
                   const [from, to] = key.split("_");
                   return (
                     <Field key={key} label={`${from} → ${to}`} hint={`1 ${from} = X ${to}`}>
