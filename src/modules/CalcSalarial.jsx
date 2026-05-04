@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, Component } from "react";
-import { getTenantDefaultsSync } from "../core/configHelpers.js";
+import { getTenantDefaultsSync, getLegalConstantsSync } from "../core/configHelpers.js";
 
 // Error Boundary — shows error instead of blank screen
 export class ErrorBoundary extends Component{
@@ -20,7 +20,11 @@ export class ErrorBoundary extends Component{
 /* ══════════════════════════════════════════════════════════════════
    CONSTANTS — COLOMBIA 2026
    ══════════════════════════════════════════════════════════════════ */
-const SMLMV_DEF=1750905, AUX_DEF=249095, MAX_HRS=42, UVT_DEF=49799;
+// Sprint C Capa 3 paso 7: catálogos legales desde country_configs (BD prioritaria con fallback al hardcoded 2026).
+// Si en BD se cambia el SMLMV, hay que recargar la página para que estos valores se actualicen (constantes evaluadas al cargar el módulo).
+const __LC_CALC = getLegalConstantsSync("CO");
+const SMLMV_DEF = __LC_CALC.smlmv ?? 1750905, AUX_DEF = __LC_CALC.aux_transporte ?? 249095, UVT_DEF = __LC_CALC.uvt ?? 49799;
+const MAX_HRS = 42;
 const INTEGRAL_F=13;
 const ARL=[{n:"I",t:0.522,d:"Mínimo"},{n:"II",t:1.044,d:"Bajo"},{n:"III",t:2.436,d:"Medio"},{n:"IV",t:4.350,d:"Alto"},{n:"V",t:6.960,d:"Máximo"}];
 const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
