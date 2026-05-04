@@ -663,6 +663,46 @@ export function getTenantLegalRepresentativeSync() {
  * los cálculos en TabNomina/TabLiquidacion/CalcSalarial usen el nuevo
  * valor. Para constantes legales (cambian 1 vez al año) es aceptable.
  */
+/**
+ * Devuelve el valor de una constante legal para un AÑO específico desde el histórico.
+ * Si no se pasa year, devuelve el valor actual.
+ *
+ * Estructura esperada en country_configs.config.legal_constants[key]:
+ *   { value: 1750905, year: 2026, history: [{year, value}, ...] }
+ *
+ * @param {string} pais - código ISO-2 (ej: "CO")
+ * @param {string} key - clave de la constante (ej: "smlmv", "aux_transporte", "uvt")
+ * @param {number} [year] - año objetivo. Si se omite, devuelve el valor actual.
+ */
+export function getLegalConstantForYearSync(pais, key, year) {
+  const c = getCountryConfigSync(pais);
+  const lc = (c && c.legal_constants) || {};
+  const entry = lc[key];
+  if (entry === undefined || entry === null) return null;
+  // Compatibilidad: si entry no es objeto, es valor directo (legacy)
+  if (typeof entry !== "object") return entry;
+  if (!year || year === entry.year) return entry.value ?? null;
+  const hit = (entry.history || []).find(h => h && h.year === year);
+  return hit ? (hit.value ?? null) : null;
+}
+
+/**
+ * Devuelve el array completo de history de una constante (ordenado por año desc).
+ * Incluye el año actual si no está duplicado en history.
+ */
+export function getLegalConstantHistorySync(pais, key) {
+  const c = getCountryConfigSync(pais);
+  const lc = (c && c.legal_constants) || {};
+  const entry = lc[key];
+  if (!entry || typeof entry !== "object") return [];
+  const arr = Array.isArray(entry.history) ? [...entry.history] : [];
+  // Asegurar año actual incluido
+  if (entry.year !== undefined && !arr.find(h => h && h.year === entry.year)) {
+    arr.push({ year: entry.year, value: entry.value });
+  }
+  return arr.filter(Boolean).sort((a, b) => (b.year || 0) - (a.year || 0));
+}
+
 export function getLegalConstantsSync(pais) {
   const code = pais || "CO";
   const cc = getCountryConfigSync(code);
