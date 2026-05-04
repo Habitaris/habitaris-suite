@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { HAB_LOGO } from "./habLogo.js";
 import { downloadPDF } from "./pdfUtil.js";
-import { getTenantDefaultsSync } from "../core/configHelpers.js";
+import { getTenantDefaultsSync, getLegalConstantsSync } from "../core/configHelpers.js";
 
-const SMLMV = 1_750_905, AUX_TR = 249_095;
+// Sprint C Capa 3 paso 7: catálogos legales desde country_configs (BD prioritaria con fallback al hardcoded 2026).
+// Si en BD se cambia el SMLMV, hay que recargar la página para que estos valores se actualicen (constantes evaluadas al cargar el módulo).
+const __LC_LIQ = getLegalConstantsSync("CO");
+const SMLMV = __LC_LIQ.smlmv ?? 1_750_905, AUX_TR = __LC_LIQ.aux_transporte ?? 249_095;
 const fmt = n => n == null || isNaN(n) ? "$0" : "$" + Math.round(n).toLocaleString(getTenantDefaultsSync().locale);
 const T = {
   ink:"#1A1A19",inkMid:"#6B6B69",inkLight:"#9B9B99",
