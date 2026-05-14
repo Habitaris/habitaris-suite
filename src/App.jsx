@@ -507,7 +507,7 @@ function AppInner() {
     if (company && company.id) {
       sessionStorage.setItem("hab:company_active", JSON.stringify({ id: company.id, slug: company.slug, pais: company.pais, display_name: company.display_name }));
     }
-    sessionStorage.removeItem("hab:active_module");
+    sessionStorage.setItem("hab:active_module", "__home__");
     setActive(null);
     goTo("/");
   };
