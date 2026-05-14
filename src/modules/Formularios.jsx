@@ -927,9 +927,9 @@ render();
               <div style={{fontSize:8,fontWeight:700,color:"#888",textTransform:"uppercase",marginBottom:8}}>👤 Datos del cliente</div>
               <div style={{display:"flex",gap:8,marginBottom:6}}>
                 <div style={{flex:1}}>
-                  <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Nombre *</label>
+                  <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Nombres y apellidos *</label>
                   <input value={shareClient.nombre} onChange={e=>{ setShareClient({...shareClient,nombre:e.target.value}); setShareGenerated(""); }}
-                    placeholder="Juan Pérez" style={{...inp,width:"100%",fontSize:11}}/>
+                    placeholder="Juan Carlos Pérez García" style={{...inp,width:"100%",fontSize:11}}/>
                 </div>
                 <div style={{flex:1}}>
                   <label style={{fontSize:7,fontWeight:700,color:"#888",textTransform:"uppercase"}}>Email</label>
