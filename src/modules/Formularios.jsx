@@ -916,7 +916,7 @@ render();
       )}
 
       {/* Share modal — generates downloadable HTML form */}
-      {showShare && (
+      {showShare && createPortal((
         <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:9999,display:"flex",alignItems:"flex-start",justifyContent:"center",paddingTop:40,overflowY:"auto"}} onClick={closeShare}>
           <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:8,padding:28,width:460,maxHeight:"85vh",overflowY:"auto",boxShadow:"0 12px 40px rgba(0,0,0,0.2)",marginBottom:40}}>
             <h3 style={{margin:0,fontSize:16,fontWeight:700,marginBottom:4}}>📤 Enviar formulario a cliente</h3>
@@ -1007,7 +1007,7 @@ render();
             <Btn v={shareGenerated?"pri":"sec"} on={closeShare} style={{width:"100%",marginTop:14,justifyContent:"center"}}>Cerrar</Btn>
           </div>
         </div>
-      )}
+      ), document.body)}
     </div>
   );
 }
