@@ -1084,6 +1084,190 @@ function CountryLegalConstantsEditor({ pais }) {
   );
 }
 
+// ============================================================
+// TabComunicaciones — Destinatarios de notificaciones por correo
+// Lee/edita la tabla notification_recipients (configurable, multi-tenant)
+// NO embeber correos en código: todo viene de aquí.
+// ============================================================
+function TabComunicaciones() {
+  const [recipients, setRecipients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState(null);
+
+  const EVENT_LABELS = {
+    "briefing.request_received": "Nueva solicitud de briefing",
+    "briefing.completed": "Briefing completado por cliente",
+    "pqrs.received": "PQRS / Reclamación recibida",
+    "cv.received": "Hoja de vida recibida",
+    "cotizacion.received": "Solicitud de cotización recibida",
+  };
+
+  const ROLE_LABELS = {
+    approver: { label: "APROBADOR", color: "#92400e", bg: "#fef3c7", desc: "Recibe el correo con botones aprobar/rechazar" },
+    cc: { label: "COPIA", color: "#1e40af", bg: "#dbeafe", desc: "Recibe copia informativa" },
+    info: { label: "INFO", color: "#374151", bg: "#f3f4f6", desc: "Solo recibe la notificación" },
+  };
+
+  async function loadRecipients() {
+    setLoading(true);
+    setErr(null);
+    const { data, error } = await sb
+      .from("notification_recipients")
+      .select("*")
+      .eq("tenant_id", "habitaris")
+      .order("event_type", { ascending: true })
+      .order("email", { ascending: true });
+    if (error) setErr(error.message);
+    setRecipients(data || []);
+    setLoading(false);
+  }
+
+  useEffect(() => { loadRecipients(); }, []);
+
+  async function toggleActive(rec) {
+    setSaving(true);
+    const { error } = await sb
+      .from("notification_recipients")
+      .update({ active: !rec.active, updated_at: new Date().toISOString() })
+      .eq("id", rec.id);
+    if (error) {
+      window.toast && window.toast("Error: " + error.message, "error");
+    } else {
+      window.toast && window.toast(rec.active ? "Desactivado" : "Activado", "success");
+      await loadRecipients();
+    }
+    setSaving(false);
+  }
+
+  async function deleteRecipient(rec) {
+    if (!window.confirm("¿Eliminar destinatario " + rec.email + "?")) return;
+    setSaving(true);
+    const { error } = await sb.from("notification_recipients").delete().eq("id", rec.id);
+    if (error) {
+      window.toast && window.toast("Error: " + error.message, "error");
+    } else {
+      window.toast && window.toast("Destinatario eliminado", "success");
+      await loadRecipients();
+    }
+    setSaving(false);
+  }
+
+  async function addRecipient(eventType) {
+    const email = window.prompt("Email del destinatario:");
+    if (!email || !email.trim()) return;
+    const emailTrim = email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
+      window.toast && window.toast("Email inválido", "error");
+      return;
+    }
+    let role = window.prompt("Rol (approver / cc / info):", "info");
+    if (!role) return;
+    role = role.trim().toLowerCase();
+    if (!["approver", "cc", "info"].includes(role)) {
+      window.toast && window.toast("Rol debe ser: approver, cc o info", "error");
+      return;
+    }
+    setSaving(true);
+    const { error } = await sb.from("notification_recipients").insert({
+      tenant_id: "habitaris",
+      event_type: eventType,
+      email: emailTrim,
+      role,
+      active: true,
+    });
+    if (error) {
+      if (error.code === "23505") {
+        window.toast && window.toast("Ese email ya está registrado para este evento", "error");
+      } else {
+        window.toast && window.toast("Error: " + error.message, "error");
+      }
+    } else {
+      window.toast && window.toast("Destinatario añadido", "success");
+      await loadRecipients();
+    }
+    setSaving(false);
+  }
+
+  // Agrupar por event_type
+  const grouped = recipients.reduce((acc, r) => {
+    if (!acc[r.event_type]) acc[r.event_type] = [];
+    acc[r.event_type].push(r);
+    return acc;
+  }, {});
+
+  if (loading) return <div style={{ padding: 24, color: "#666" }}>Cargando destinatarios…</div>;
+
+  return (
+    <div style={{ padding: 24, maxWidth: 900 }}>
+      <div style={{ marginBottom: 24 }}>
+        <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Destinatarios de notificaciones por correo</h2>
+        <p style={{ margin: "8px 0 0 0", fontSize: 13, color: "#666", lineHeight: 1.5 }}>
+          Qué emails reciben cada tipo de notificación del sistema. Los marcados como <strong>APROBADOR</strong> ven los botones de aprobar/rechazar en el correo. Los marcados como <strong>COPIA</strong> o <strong>INFO</strong> solo reciben la notificación. Si una fila está desactivada, ese destinatario no recibe nada de ese evento.
+        </p>
+      </div>
+
+      {err && (
+        <div style={{ padding: 12, background: "#fee", border: "1px solid #fcc", borderRadius: 6, marginBottom: 16, color: "#c00", fontSize: 13 }}>
+          Error cargando datos: {err}
+        </div>
+      )}
+
+      {Object.keys(EVENT_LABELS).map((eventType) => {
+        const list = grouped[eventType] || [];
+        return (
+          <div key={eventType} style={{ marginBottom: 20, border: "1px solid #e5e7eb", borderRadius: 8, overflow: "hidden", background: "#fff" }}>
+            <div style={{ padding: "12px 16px", background: "#f9fafb", borderBottom: "1px solid #e5e7eb", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 14, color: "#111" }}>{EVENT_LABELS[eventType]}</div>
+                <div style={{ fontSize: 11, color: "#888", fontFamily: "ui-monospace, monospace", marginTop: 2 }}>{eventType}</div>
+              </div>
+              <button onClick={() => addRecipient(eventType)} disabled={saving} style={{ padding: "6px 12px", fontSize: 12, background: "#111", color: "#fff", border: "none", borderRadius: 4, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.5 : 1 }}>
+                + Añadir email
+              </button>
+            </div>
+            {list.length === 0 ? (
+              <div style={{ padding: 16, fontSize: 13, color: "#999", fontStyle: "italic" }}>
+                Sin destinatarios. Nadie recibirá notificación de este evento.
+              </div>
+            ) : (
+              <div>
+                {list.map((r) => {
+                  const roleInfo = ROLE_LABELS[r.role] || ROLE_LABELS.info;
+                  return (
+                    <div key={r.id} style={{ display: "flex", alignItems: "center", padding: "10px 16px", borderBottom: "1px solid #f3f4f6" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: r.active ? 500 : 400, color: r.active ? "#111" : "#9ca3af", textDecoration: r.active ? "none" : "line-through", wordBreak: "break-all" }}>
+                          {r.email}
+                        </div>
+                      </div>
+                      <div title={roleInfo.desc} style={{ padding: "3px 8px", fontSize: 10, background: roleInfo.bg, color: roleInfo.color, borderRadius: 4, marginRight: 12, fontWeight: 700, letterSpacing: 0.5, flexShrink: 0 }}>
+                        {roleInfo.label}
+                      </div>
+                      <button onClick={() => toggleActive(r)} disabled={saving} style={{ padding: "4px 10px", fontSize: 11, marginRight: 6, background: r.active ? "#fff" : "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 4, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.5 : 1, color: "#374151" }}>
+                        {r.active ? "Desactivar" : "Activar"}
+                      </button>
+                      <button onClick={() => deleteRecipient(r)} disabled={saving} style={{ padding: "4px 10px", fontSize: 11, background: "#fff", border: "1px solid #fecaca", borderRadius: 4, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.5 : 1, color: "#dc2626" }}>
+                        Eliminar
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      <div style={{ marginTop: 24, padding: 14, background: "#f9fafb", border: "1px solid #e5e7eb", borderRadius: 6, fontSize: 12, color: "#6b7280", lineHeight: 1.5 }}>
+        <strong style={{ color: "#374151" }}>Otros ajustes de Comunicaciones</strong> (servidor SMTP, dominio verificado, plantillas maestras de correo a 3 niveles grupo→país→empresa) están en desarrollo. Hoy los correos transaccionales salen vía Resend.
+      </div>
+    </div>
+  );
+}
+
+
+
 // Estilos auxiliares para tablas y tabs del editor de catálogos legales
 const tabBtnStyle = (active) => ({
   ...F, fontSize: 11, fontWeight: 600,
@@ -1719,11 +1903,7 @@ export default function AjustesGrupo({ onBack }) {
                 : <TabLegal companies={companies} />
             )}
             {active === "comms" && (
-              <TabPlaceholder
-                title="Comunicaciones del grupo"
-                desc="Servidor SMTP, dominio verificado y plantillas maestras de correo. Configurables a 3 niveles (grupo → país → empresa) con herencia. El módulo Notificaciones genérico configurable vivirá aquí."
-                sprintRef="Próximamente — Sprint posterior"
-              />
+              <TabComunicaciones />
             )}
             {active === "miembros" && (
               <TabPlaceholder
