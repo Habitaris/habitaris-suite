@@ -1045,7 +1045,7 @@ async function handleBriefingApprove(req, res) {
       form_name: formName,
       client_name: reqRow.nombre_completo,
       client_email: reqRow.email,
-      client_phone: reqRow.telefono,
+      client_tel: reqRow.telefono,
       max_uses: 2,
       current_uses: 0,
       expires_at: linkExpiresAt,
