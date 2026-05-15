@@ -30,6 +30,7 @@ import Comunicaciones from './modules/Comunicaciones.jsx'
 import Calendario, { CalendarioPublico } from './modules/Calendario.jsx'
 import PortalCliente from './modules/PortalCliente.jsx'
 import FormularioPublico from './modules/FormularioPublico.jsx'
+import SolicitarBriefing from "./modules/SolicitarBriefing.jsx";
 import Usuarios from './modules/Usuarios.jsx'
 import Grupo from './modules/Grupo.jsx'
 import AjustesGrupo from './modules/AjustesGrupo.jsx'
@@ -446,6 +447,7 @@ function AppInner() {
   if (path.startsWith("/recuperar")) return <RecuperarPassword />
   if (path.startsWith("/portal")) return <PortalCliente />
   if (path.startsWith("/form")) return <FormularioPublico />
+  if (path.startsWith("/solicitar-briefing")) return <SolicitarBriefing />;
   if (path.startsWith("/agendar")) return <CalendarioPublico />
 
   // Auth gate — only if auth is configured
