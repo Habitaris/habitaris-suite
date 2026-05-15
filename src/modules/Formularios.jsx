@@ -2242,7 +2242,6 @@ export default function Formularios() {
         });
       }
       await loadEnvios();
-        {tab === "publicos" && <TabPublicos forms={forms} setForms={setForms} />}
     } catch(err) { console.warn("deleteEnvio error:", err); }
   };
 
@@ -2404,6 +2403,7 @@ export default function Formularios() {
         {tab === "respuestas"   && <TabRespuestas forms={forms} respuestas={respuestas} onReload={loadResponses} loading={respLoading} onDelete={deleteResponse} onClearAll={clearAllResponses}/>}
         {tab === "estadisticas" && <TabEstadisticas forms={forms}/>}
         {tab === "plantillas"   && <TabPlantillas forms={forms} setForms={setForms} onEdit={goConstructor}/>}
+        {tab === "publicos" && <TabPublicos forms={forms} setForms={setForms} />}
       </div>
     </>
   );
