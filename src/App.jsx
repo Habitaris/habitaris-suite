@@ -447,6 +447,7 @@ function AppInner() {
   if (path.startsWith("/recuperar")) return <RecuperarPassword />
   if (path.startsWith("/portal")) return <PortalCliente />
   if (path.startsWith("/form")) return <FormularioPublico />
+  if (path.startsWith("/solicitar/")) return <SolicitarBriefing />;
   if (path.startsWith("/solicitar-briefing")) return <SolicitarBriefing />;
   if (path.startsWith("/agendar")) return <CalendarioPublico />
 
