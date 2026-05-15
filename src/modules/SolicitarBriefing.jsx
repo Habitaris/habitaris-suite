@@ -1,107 +1,121 @@
 import React, { useState } from "react";
 
 // ===========================================================
-// SolicitarBriefing — Pagina publica para que un cliente
-// potencial solicite el formulario de briefing inicial.
-// Ruta: /solicitar-briefing (sin login).
+// SolicitarBriefing — Pagina publica de captacion de leads.
+// Estetica 1:1 con plantilla invitation del email
+//   exterior lavanda #f3f0ff, card blanca radius 8px,
+//   header con logo .jpg, boton negro #111 radius 6px,
+//   footer con razon social + NIT + telefono.
+// Ruta publica: /solicitar-briefing (sin login).
 // POST a /api/send-email?action=briefing_request
 // ===========================================================
 
-const COLORS = {
-  cream: "#f5f2ee",
-  ink: "#111110",
-  inkSoft: "#3a3a39",
-  muted: "#888",
-  bgSoft: "#faf8f5",
-  border: "#e8e3dc",
-  errorBg: "#fdecea",
-  errorTxt: "#a51c0e",
-  successBg: "#e8f5e9",
-};
+const LOGO_URL = "https://suite.habitaris.es/logo-habitaris.jpg";
+
+const COLOR_EXT = "#f3f0ff";   // lavanda fondo exterior
+const COLOR_INK = "#111";       // texto/boton principal
+const COLOR_SOFT = "#333";      // texto secundario
+const COLOR_MUTED = "#888";     // metadata, footer claro
+const COLOR_BORDER = "#eee";    // borde header
+const COLOR_INPUT_BORDER = "#ddd";
+const COLOR_ERROR_BG = "#fdecea";
+const COLOR_ERROR_TXT = "#a51c0e";
 
 const S = {
   page: {
     minHeight: "100vh",
-    background: COLORS.cream,
-    fontFamily: "-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif",
-    color: COLORS.ink,
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "center",
-    padding: "48px 16px",
+    margin: 0,
+    padding: "32px 16px",
+    background: COLOR_EXT,
+    color: COLOR_INK,
+    fontFamily: "Outfit, -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica, Arial, sans-serif",
     boxSizing: "border-box",
-  },
-  wrap: {
-    width: "100%",
-    maxWidth: 520,
-  },
-  brand: {
-    fontSize: 13,
-    letterSpacing: "2px",
-    color: COLORS.muted,
-    textTransform: "uppercase",
-    marginBottom: 16,
-    textAlign: "center",
   },
   card: {
     background: "#fff",
-    borderRadius: 12,
-    padding: "36px 32px",
-    boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
+    borderRadius: 8,
+    maxWidth: 560,
+    width: "100%",
+    margin: "0 auto",
+    overflow: "hidden",
+  },
+  header: {
+    background: "#fff",
+    padding: 24,
+    textAlign: "center",
+    borderBottom: "1px solid " + COLOR_BORDER,
+  },
+  logo: {
+    height: 50,
+    width: "auto",
+    display: "inline-block",
+  },
+  body: {
+    padding: "32px 40px",
   },
   h1: {
-    fontSize: 24,
-    margin: "0 0 10px",
-    fontWeight: 600,
+    margin: "0 0 16px 0",
+    fontSize: 20,
+    fontWeight: 700,
+    color: COLOR_INK,
   },
   intro: {
-    margin: "0 0 24px",
-    color: COLORS.inkSoft,
-    lineHeight: 1.55,
+    margin: "0 0 16px 0",
     fontSize: 15,
+    lineHeight: 1.6,
+    color: COLOR_SOFT,
   },
+  highlightBox: {
+    background: COLOR_EXT,
+    borderLeft: "3px solid " + COLOR_INK,
+    padding: "14px 16px",
+    margin: "20px 0",
+    borderRadius: 4,
+    fontSize: 14,
+    color: COLOR_SOFT,
+  },
+  field: { marginBottom: 16 },
   label: {
     display: "block",
     fontSize: 12,
     fontWeight: 600,
     letterSpacing: "0.5px",
     textTransform: "uppercase",
-    color: COLORS.inkSoft,
+    color: COLOR_SOFT,
     marginBottom: 6,
   },
   input: {
     width: "100%",
     padding: "12px 14px",
     fontSize: 15,
-    border: "1px solid " + COLORS.border,
-    borderRadius: 8,
+    border: "1px solid " + COLOR_INPUT_BORDER,
+    borderRadius: 6,
     background: "#fff",
-    color: COLORS.ink,
+    color: COLOR_INK,
     fontFamily: "inherit",
     boxSizing: "border-box",
     outline: "none",
   },
-  field: { marginBottom: 18 },
   row: { display: "flex", gap: 8 },
   prefix: {
     padding: "12px 14px",
     fontSize: 15,
-    border: "1px solid " + COLORS.border,
-    borderRadius: 8,
-    background: COLORS.bgSoft,
-    color: COLORS.ink,
+    border: "1px solid " + COLOR_INPUT_BORDER,
+    borderRadius: 6,
+    background: "#fff",
+    color: COLOR_INK,
     fontFamily: "inherit",
     outline: "none",
-    minWidth: 88,
+    minWidth: 92,
   },
   textarea: {
     width: "100%",
     padding: "12px 14px",
     fontSize: 15,
-    border: "1px solid " + COLORS.border,
-    borderRadius: 8,
+    border: "1px solid " + COLOR_INPUT_BORDER,
+    borderRadius: 6,
     background: "#fff",
-    color: COLORS.ink,
+    color: COLOR_INK,
     fontFamily: "inherit",
     boxSizing: "border-box",
     outline: "none",
@@ -116,37 +130,48 @@ const S = {
     opacity: 0,
     pointerEvents: "none",
   },
+  ctaWrap: { textAlign: "center", margin: "28px 0 8px" },
   btn: {
-    width: "100%",
-    padding: "14px 24px",
+    display: "inline-block",
+    minWidth: 220,
+    padding: "12px 28px",
     fontSize: 15,
     fontWeight: 600,
-    background: COLORS.ink,
+    background: COLOR_INK,
     color: "#fff",
     border: "none",
-    borderRadius: 8,
+    borderRadius: 6,
     cursor: "pointer",
     fontFamily: "inherit",
-    marginTop: 8,
   },
-  btnDisabled: {
-    opacity: 0.55,
-    cursor: "not-allowed",
-  },
+  btnDisabled: { opacity: 0.55, cursor: "not-allowed" },
   error: {
-    background: COLORS.errorBg,
-    color: COLORS.errorTxt,
+    background: COLOR_ERROR_BG,
+    color: COLOR_ERROR_TXT,
     padding: "10px 14px",
-    borderRadius: 8,
+    borderRadius: 6,
     fontSize: 14,
     marginBottom: 16,
   },
-  footer: {
-    marginTop: 20,
-    fontSize: 12,
-    color: COLORS.muted,
+  smallPrint: {
+    margin: "16px 0 0",
+    fontSize: 13,
+    color: COLOR_SOFT,
+    lineHeight: 1.6,
     textAlign: "center",
-    lineHeight: 1.5,
+  },
+  footer: {
+    padding: "16px 24px 24px",
+    textAlign: "center",
+    fontSize: 12,
+    color: COLOR_MUTED,
+    lineHeight: 1.6,
+    borderTop: "1px solid " + COLOR_BORDER,
+  },
+  footerAuto: {
+    marginTop: 6,
+    fontSize: 11,
+    color: COLOR_MUTED,
   },
 };
 export default function SolicitarBriefing() {
@@ -156,7 +181,7 @@ export default function SolicitarBriefing() {
   const [telefono, setTelefono] = useState("");
   const [mensaje, setMensaje] = useState("");
   const [website, setWebsite] = useState(""); // honeypot
-  const [status, setStatus] = useState("idle"); // idle | sending | success | error
+  const [status, setStatus] = useState("idle"); // idle | sending | success
   const [errorMsg, setErrorMsg] = useState("");
 
   async function handleSubmit(e) {
@@ -206,26 +231,39 @@ export default function SolicitarBriefing() {
     }
   }
 
+  const FooterBlock = (
+    <div style={S.footer}>
+      Habitaris S.A.S &middot; NIT 901.922.136-8 &middot; Bogota D.C., Colombia &middot; +57 350 566 1545
+      <div style={S.footerAuto}>Si tienes cualquier duda, escribenos a comercial@habitaris.es.</div>
+    </div>
+  );
+
+  const Header = (
+    <div style={S.header}>
+      <img src={LOGO_URL} alt="Habitaris" style={S.logo} />
+    </div>
+  );
+
   // ---- PANTALLA DE EXITO ----
   if (status === "success") {
     return (
       <div style={S.page}>
-        <div style={S.wrap}>
-          <div style={S.brand}>Habitaris</div>
-          <div style={S.card}>
+        <div style={S.card}>
+          {Header}
+          <div style={S.body}>
             <h1 style={S.h1}>Solicitud recibida</h1>
             <p style={S.intro}>
               Gracias, <strong>{nombre.trim()}</strong>. Hemos recibido tu solicitud.
-              {" "}En las proximas horas recibiras un correo en <strong>{email.trim().toLowerCase()}</strong>{" "}
+            </p>
+            <div style={S.highlightBox}>
+              En las proximas horas recibiras un correo en <strong>{email.trim().toLowerCase()}</strong>{" "}
               con el formulario de briefing para que podamos entender tu proyecto.
-            </p>
-            <p style={S.intro}>
-              Si no lo ves en tu bandeja de entrada, revisa la carpeta de promociones o spam.
-            </p>
-            <div style={S.footer}>
-              Habitaris S.A.S. &middot; Diseno e Interiorismo &middot; Bogota
             </div>
+            <p style={S.intro}>
+              Si no lo ves en tu bandeja principal, revisa la carpeta de promociones o spam.
+            </p>
           </div>
+          {FooterBlock}
         </div>
       </div>
     );
@@ -236,9 +274,9 @@ export default function SolicitarBriefing() {
   // ---- PANTALLA DEL FORMULARIO ----
   return (
     <div style={S.page}>
-      <div style={S.wrap}>
-        <div style={S.brand}>Habitaris</div>
-        <div style={S.card}>
+      <div style={S.card}>
+        {Header}
+        <div style={S.body}>
           <h1 style={S.h1}>Solicita tu briefing</h1>
           <p style={S.intro}>
             Cuentanos un poco sobre ti y te enviaremos por correo el formulario de briefing inicial.
@@ -337,16 +375,18 @@ export default function SolicitarBriefing() {
               />
             </div>
 
-            <button type="submit" style={btnStyle} disabled={sending}>
-              {sending ? "Enviando..." : "Solicitar briefing"}
-            </button>
-          </form>
+            <div style={S.ctaWrap}>
+              <button type="submit" style={btnStyle} disabled={sending}>
+                {sending ? "Enviando..." : "Solicitar briefing"}
+              </button>
+            </div>
 
-          <div style={S.footer}>
-            Tus datos solo se usan para contactarte sobre tu proyecto.
-            <br />Habitaris S.A.S. &middot; Diseno e Interiorismo &middot; Bogota
-          </div>
+            <p style={S.smallPrint}>
+              Tus datos solo se usan para contactarte sobre tu proyecto.
+            </p>
+          </form>
         </div>
+        {FooterBlock}
       </div>
     </div>
   );
