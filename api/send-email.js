@@ -3,6 +3,12 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(200).end();
+
+  // === BRIEFING FLOW ROUTER (3 acciones publicas) ===
+  const briefingAction = req.query && req.query.action;
+  if (briefingAction === "briefing_request") return await handleBriefingRequest(req, res);
+  if (briefingAction === "briefing_approve") return await handleBriefingApprove(req, res);
+  if (briefingAction === "briefing_reject")  return await handleBriefingReject(req, res);
   // Cron de Vercel hace GET con query string. Permitimos GET solo para crons unificados.
   const cronTypes = ["cron_daily"];
   const isCronGet = req.method === "GET" && (req.query && cronTypes.indexOf(req.query.type) !== -1);
@@ -801,3 +807,362 @@ async function handlePasswordResetConfirm(body, res) {
     return res.status(500).json({ ok: false, error: String(e && e.message || e) });
   }
 }
+
+// ====================================================
+// BRIEFING FLOW: helpers + 3 handlers
+// ====================================================
+
+function briefingEscape(s) {
+  if (s === null || s === undefined) return "";
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function briefingHtmlPage(title, bodyHtml) {
+  return [
+    "<!doctype html><html lang=\"es\"><head><meta charset=\"utf-8\"/>",
+    "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/>",
+    "<title>" + briefingEscape(title) + " - Habitaris</title>",
+    "<style>",
+    "body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;background:#f5f2ee;color:#111110;}",
+    ".wrap{max-width:520px;margin:48px auto;padding:32px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.06);}",
+    "h1{font-size:22px;margin:0 0 16px;font-weight:600;}",
+    "p{margin:8px 0;line-height:1.55;color:#3a3a39;}",
+    ".small{font-size:13px;color:#888;margin-top:24px;}",
+    "</style></head><body><div class=\"wrap\">" + bodyHtml + "</div></body></html>",
+  ].join("");
+}
+
+async function briefingGetRecipients(sb, eventType) {
+  try {
+    const u = sb.url + "/rest/v1/notification_recipients?tenant_id=eq.habitaris&event_type=eq." + encodeURIComponent(eventType) + "&active=is.true&select=email,role";
+    const r = await fetch(u, { headers: sb.headers });
+    if (!r.ok) return [];
+    const rows = await r.json();
+    return Array.isArray(rows) ? rows : [];
+  } catch (e) { return []; }
+}
+async function handleBriefingRequest(req, res) {
+  try {
+    if (req.method !== "POST") {
+      return res.status(405).json({ ok: false, error: "Metodo no permitido" });
+    }
+    const body = req.body || {};
+    const nombre = String(body.nombre_completo || "").trim();
+    const email = String(body.email || "").trim().toLowerCase();
+    const telefono = String(body.telefono || "").trim();
+    const mensaje = String(body.mensaje_opcional || "").trim();
+    const honey = String(body.website || "").trim();
+
+    if (honey.length > 0) {
+      return res.status(200).json({ ok: true });
+    }
+
+    if (nombre.length < 3) return res.status(400).json({ ok: false, error: "Nombre demasiado corto" });
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, error: "Email invalido" });
+    if (telefono.length < 7) return res.status(400).json({ ok: false, error: "Telefono invalido" });
+
+    const RESEND_KEY = process.env.RESEND_API_KEY;
+    if (!RESEND_KEY) return res.status(500).json({ ok: false, error: "Servidor mal configurado" });
+
+    const sb = getSupabaseClient();
+
+    const approveToken = randomToken(20);
+    const rejectToken = randomToken(20);
+    const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+    const ipAddress = String(req.headers["x-forwarded-for"] || "").split(",")[0].trim() || null;
+    const userAgent = String(req.headers["user-agent"] || "").slice(0, 500);
+
+    const insertRes = await fetch(sb.url + "/rest/v1/briefing_requests", {
+      method: "POST",
+      headers: { ...sb.headers, "Content-Type": "application/json", "Prefer": "return=representation" },
+      body: JSON.stringify({
+        tenant_id: "habitaris",
+        nombre_completo: nombre,
+        email: email,
+        telefono: telefono,
+        mensaje_opcional: mensaje || null,
+        status: "pendiente",
+        approve_token: approveToken,
+        reject_token: rejectToken,
+        token_expires_at: expiresAt,
+        ip_address: ipAddress,
+        user_agent: userAgent,
+      }),
+    });
+    if (!insertRes.ok) {
+      const errTxt = await insertRes.text().catch(() => "");
+      console.error("[briefing_request] insert failed:", insertRes.status, errTxt);
+      return res.status(500).json({ ok: false, error: "No se pudo guardar la solicitud" });
+    }
+
+    const recipients = await briefingGetRecipients(sb, "briefing.request_received");
+    const approvers = recipients.filter(r => r.role === "approver").map(r => r.email);
+    const ccList = recipients.filter(r => r.role === "cc" || r.role === "info").map(r => r.email);
+
+    if (approvers.length === 0) {
+      console.warn("[briefing_request] no approvers configured");
+      return res.status(200).json({ ok: true, warning: "no_approvers" });
+    }
+
+    const baseUrl = "https://suite.habitaris.es";
+    const approveUrl = baseUrl + "/api/send-email?action=briefing_approve&token=" + encodeURIComponent(approveToken);
+    const rejectUrl  = baseUrl + "/api/send-email?action=briefing_reject&token="  + encodeURIComponent(rejectToken);
+
+    const emailHtml = [
+      "<!doctype html><html><head><meta charset=\"utf-8\"/><style>",
+      "body{margin:0;padding:0;background:#f5f2ee;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;color:#111110;}",
+      ".container{max-width:560px;margin:24px auto;background:#fff;padding:32px;border-radius:12px;}",
+      ".brand{font-size:13px;letter-spacing:2px;color:#888;text-transform:uppercase;margin-bottom:24px;}",
+      "h1{font-size:20px;margin:0 0 8px;font-weight:600;}",
+      ".intro{color:#3a3a39;margin:0 0 24px;line-height:1.5;font-size:15px;}",
+      ".datos{background:#faf8f5;border-radius:8px;padding:16px;margin:16px 0;}",
+      ".datos .row{display:block;margin:6px 0;font-size:14px;}",
+      ".datos .label{color:#888;text-transform:uppercase;font-size:11px;letter-spacing:1px;}",
+      ".datos .val{color:#111110;font-weight:500;}",
+      ".buttons{margin:28px 0 12px;text-align:center;}",
+      ".btn{display:inline-block;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;margin:6px;}",
+      ".btn-approve{background:#111110;color:#fff;}",
+      ".btn-reject{background:#f0ece6;color:#3a3a39;}",
+      ".footer{margin-top:28px;font-size:12px;color:#888;text-align:center;line-height:1.5;}",
+      "</style></head><body><div class=\"container\">",
+      "<div class=\"brand\">Habitaris</div>",
+      "<h1>Nueva solicitud de briefing</h1>",
+      "<p class=\"intro\">Un cliente potencial ha solicitado el formulario de briefing. Revisa los datos y aprueba o rechaza la solicitud.</p>",
+      "<div class=\"datos\">",
+      "<div class=\"row\"><span class=\"label\">Nombre</span><br><span class=\"val\">" + briefingEscape(nombre) + "</span></div>",
+      "<div class=\"row\"><span class=\"label\">Email</span><br><span class=\"val\">" + briefingEscape(email) + "</span></div>",
+      "<div class=\"row\"><span class=\"label\">Telefono</span><br><span class=\"val\">" + briefingEscape(telefono) + "</span></div>",
+      mensaje ? "<div class=\"row\"><span class=\"label\">Mensaje</span><br><span class=\"val\">" + briefingEscape(mensaje) + "</span></div>" : "",
+      "</div>",
+      "<div class=\"buttons\">",
+      "<a href=\"" + approveUrl + "\" class=\"btn btn-approve\">Aprobar y enviar</a>",
+      "<a href=\"" + rejectUrl + "\" class=\"btn btn-reject\">Rechazar</a>",
+      "</div>",
+      "<p class=\"footer\">Si apruebas, el cliente recibe automaticamente su link de briefing (validez 48h, 2 usos).<br>Estos botones expiran en 48 horas. Si los dos aprobadores hacen clic, gana el primero.</p>",
+      "</div></body></html>"
+    ].join("");
+
+    const resendBody = {
+      from: "Habitaris <noreply@habitaris.es>",
+      to: approvers,
+      cc: ccList.length > 0 ? ccList : undefined,
+      reply_to: "comercial@habitaris.es",
+      subject: "Nueva solicitud de briefing - " + nombre,
+      html: emailHtml,
+    };
+
+    const sendRes = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify(resendBody),
+    });
+    if (!sendRes.ok) {
+      const errTxt = await sendRes.text().catch(() => "");
+      console.error("[briefing_request] resend failed:", sendRes.status, errTxt);
+    }
+
+    return res.status(200).json({ ok: true });
+  } catch (e) {
+    console.error("[briefing_request] error:", e);
+    return res.status(500).json({ ok: false, error: "Error interno" });
+  }
+}
+async function handleBriefingApprove(req, res) {
+  try {
+    const token = String((req.query && req.query.token) || "").trim();
+    if (!token || token.length < 20) {
+      return res.status(400).send(briefingHtmlPage("Link invalido", "<h1>Link invalido</h1><p>El enlace no es valido o esta incompleto.</p>"));
+    }
+
+    const RESEND_KEY = process.env.RESEND_API_KEY;
+    const sb = getSupabaseClient();
+
+    const findUrl = sb.url + "/rest/v1/briefing_requests?approve_token=eq." + encodeURIComponent(token) + "&select=*";
+    const findRes = await fetch(findUrl, { headers: sb.headers });
+    if (!findRes.ok) {
+      return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>No se pudo verificar el enlace. Intenta de nuevo en unos minutos.</p>"));
+    }
+    const rows = await findRes.json();
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(404).send(briefingHtmlPage("No encontrado", "<h1>Solicitud no encontrada</h1><p>El enlace ya no es valido o nunca existio.</p>"));
+    }
+    const reqRow = rows[0];
+
+    if (reqRow.status === "aprobado") {
+      const who = reqRow.approved_by || "otro aprobador";
+      const when = reqRow.approved_at ? new Date(reqRow.approved_at).toLocaleString("es-CO") : "";
+      return res.status(200).send(briefingHtmlPage("Ya aprobada", "<h1>Ya fue aprobada</h1><p>Esta solicitud ya fue aprobada por <strong>" + briefingEscape(who) + "</strong>" + (when ? " el " + briefingEscape(when) : "") + ".</p><p class=\"small\">El cliente ya recibio su link de briefing.</p>"));
+    }
+    if (reqRow.status === "rechazado") {
+      return res.status(200).send(briefingHtmlPage("Ya rechazada", "<h1>Ya fue rechazada</h1><p>Esta solicitud ya fue rechazada por otro aprobador.</p>"));
+    }
+    if (new Date(reqRow.token_expires_at) < new Date()) {
+      return res.status(200).send(briefingHtmlPage("Caducada", "<h1>Solicitud caducada</h1><p>El enlace ha expirado (validez 48h).</p>"));
+    }
+
+    const updateUrl = sb.url + "/rest/v1/briefing_requests?id=eq." + encodeURIComponent(reqRow.id) + "&status=eq.pendiente";
+    const updateRes = await fetch(updateUrl, {
+      method: "PATCH",
+      headers: { ...sb.headers, "Content-Type": "application/json", "Prefer": "return=representation" },
+      body: JSON.stringify({ status: "aprobado", approved_at: new Date().toISOString(), approved_by: "aprobador" }),
+    });
+    if (!updateRes.ok) {
+      console.error("[briefing_approve] update failed:", updateRes.status);
+      return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>No se pudo procesar la aprobacion.</p>"));
+    }
+    const updRows = await updateRes.json();
+    if (!Array.isArray(updRows) || updRows.length === 0) {
+      return res.status(200).send(briefingHtmlPage("Ya procesada", "<h1>Ya fue procesada</h1><p>Otro aprobador acaba de procesar esta solicitud.</p>"));
+    }
+
+    // Crear form_link
+    const kvUrl = sb.url + "/rest/v1/kv_store?tenant_id=eq.habitaris&key=eq.habitaris_formularios&select=value";
+    const kvRes = await fetch(kvUrl, { headers: sb.headers });
+    let formDef = null;
+    let formName = "Briefing Inicial";
+    try {
+      const kvRows = await kvRes.json();
+      if (Array.isArray(kvRows) && kvRows.length > 0) {
+        const data = typeof kvRows[0].value === "string" ? JSON.parse(kvRows[0].value) : kvRows[0].value;
+        const forms = (data && data.forms) || [];
+        formDef = forms.find(f => f && f.id === "vxlk7nma") || null;
+        if (formDef && formDef.nombre) formName = formDef.nombre;
+      }
+    } catch (e) {
+      console.error("[briefing_approve] kv_store parse error:", e);
+    }
+
+    const linkId = "b" + randomToken(6);
+    const linkExpiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+
+    const linkBody = {
+      link_id: linkId,
+      form_id: "vxlk7nma",
+      form_name: formName,
+      client_name: reqRow.nombre_completo,
+      client_email: reqRow.email,
+      client_phone: reqRow.telefono,
+      max_uses: 2,
+      current_uses: 0,
+      expires_at: linkExpiresAt,
+      active: true,
+      modulo: "CRM / Ofertas",
+    };
+    if (formDef) linkBody.form_def = formDef;
+
+    const linkInsertRes = await fetch(sb.url + "/rest/v1/form_links", {
+      method: "POST",
+      headers: { ...sb.headers, "Content-Type": "application/json", "Prefer": "return=representation" },
+      body: JSON.stringify(linkBody),
+    });
+    if (!linkInsertRes.ok) {
+      const errTxt = await linkInsertRes.text().catch(() => "");
+      console.error("[briefing_approve] form_link insert failed:", linkInsertRes.status, errTxt);
+      return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>La solicitud fue aprobada pero no se pudo generar el link. Contacta al equipo tecnico.</p>"));
+    }
+    const linkInserted = await linkInsertRes.json();
+    const newFormLinkId = Array.isArray(linkInserted) && linkInserted[0] ? linkInserted[0].id : null;
+
+    if (newFormLinkId) {
+      await fetch(sb.url + "/rest/v1/briefing_requests?id=eq." + encodeURIComponent(reqRow.id), {
+        method: "PATCH",
+        headers: { ...sb.headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ form_link_id: newFormLinkId }),
+      }).catch(e => console.error("[briefing_approve] form_link_id update failed:", e));
+    }
+
+    const clientUrl = "https://suite.habitaris.es/formulario/" + linkId;
+    if (RESEND_KEY) {
+      const clientHtml = [
+        "<!doctype html><html><head><meta charset=\"utf-8\"/><style>",
+        "body{margin:0;padding:0;background:#f5f2ee;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;color:#111110;}",
+        ".container{max-width:560px;margin:24px auto;background:#fff;padding:32px;border-radius:12px;}",
+        ".brand{font-size:13px;letter-spacing:2px;color:#888;text-transform:uppercase;margin-bottom:24px;}",
+        "h1{font-size:22px;margin:0 0 12px;font-weight:600;}",
+        "p{color:#3a3a39;line-height:1.55;font-size:15px;}",
+        ".cta{margin:28px 0;text-align:center;}",
+        ".btn{display:inline-block;background:#111110;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px;}",
+        ".footer{margin-top:28px;font-size:12px;color:#888;text-align:center;line-height:1.5;}",
+        "</style></head><body><div class=\"container\">",
+        "<div class=\"brand\">Habitaris</div>",
+        "<h1>Hola " + briefingEscape(reqRow.nombre_completo) + ",</h1>",
+        "<p>Hemos recibido tu solicitud y nos alegra que quieras trabajar con nosotros. A continuacion encontraras el formulario de briefing inicial para que podamos entender mejor tu proyecto.</p>",
+        "<div class=\"cta\"><a href=\"" + clientUrl + "\" class=\"btn\">Abrir mi briefing</a></div>",
+        "<p class=\"footer\">Este enlace es valido durante 48 horas y permite hasta 2 accesos. Si tienes cualquier duda, responde a este correo.</p>",
+        "</div></body></html>"
+      ].join("");
+
+      await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          from: "Habitaris <noreply@habitaris.es>",
+          to: [reqRow.email],
+          reply_to: "comercial@habitaris.es",
+          subject: "Tu briefing con Habitaris esta listo",
+          html: clientHtml,
+        }),
+      }).catch(e => console.error("[briefing_approve] resend client failed:", e));
+    }
+
+    return res.status(200).send(briefingHtmlPage("Aprobado", "<h1>&#10003; Briefing enviado</h1><p>Se ha enviado el link de briefing a <strong>" + briefingEscape(reqRow.nombre_completo) + "</strong> (" + briefingEscape(reqRow.email) + ").</p><p class=\"small\">El link caduca en 48 horas y permite 2 usos.</p>"));
+  } catch (e) {
+    console.error("[briefing_approve] error:", e);
+    return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>Algo salio mal.</p>"));
+  }
+}
+async function handleBriefingReject(req, res) {
+  try {
+    const token = String((req.query && req.query.token) || "").trim();
+    if (!token || token.length < 20) {
+      return res.status(400).send(briefingHtmlPage("Link invalido", "<h1>Link invalido</h1><p>El enlace no es valido.</p>"));
+    }
+    const sb = getSupabaseClient();
+
+    const findUrl = sb.url + "/rest/v1/briefing_requests?reject_token=eq." + encodeURIComponent(token) + "&select=*";
+    const findRes = await fetch(findUrl, { headers: sb.headers });
+    if (!findRes.ok) {
+      return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>No se pudo verificar el enlace.</p>"));
+    }
+    const rows = await findRes.json();
+    if (!Array.isArray(rows) || rows.length === 0) {
+      return res.status(404).send(briefingHtmlPage("No encontrado", "<h1>Solicitud no encontrada</h1><p>El enlace ya no es valido.</p>"));
+    }
+    const reqRow = rows[0];
+
+    if (reqRow.status === "aprobado") {
+      return res.status(200).send(briefingHtmlPage("Ya aprobada", "<h1>Ya fue aprobada</h1><p>Esta solicitud ya fue aprobada por otro aprobador.</p>"));
+    }
+    if (reqRow.status === "rechazado") {
+      return res.status(200).send(briefingHtmlPage("Ya rechazada", "<h1>Ya fue rechazada</h1><p>Esta solicitud ya esta marcada como rechazada.</p>"));
+    }
+    if (new Date(reqRow.token_expires_at) < new Date()) {
+      return res.status(200).send(briefingHtmlPage("Caducada", "<h1>Solicitud caducada</h1><p>El enlace ha expirado.</p>"));
+    }
+
+    const updateUrl = sb.url + "/rest/v1/briefing_requests?id=eq." + encodeURIComponent(reqRow.id) + "&status=eq.pendiente";
+    const updateRes = await fetch(updateUrl, {
+      method: "PATCH",
+      headers: { ...sb.headers, "Content-Type": "application/json", "Prefer": "return=representation" },
+      body: JSON.stringify({ status: "rechazado", rejected_at: new Date().toISOString(), rejected_by: "aprobador" }),
+    });
+    if (!updateRes.ok) {
+      console.error("[briefing_reject] update failed:", updateRes.status);
+      return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>No se pudo procesar el rechazo.</p>"));
+    }
+    const updRows = await updateRes.json();
+    if (!Array.isArray(updRows) || updRows.length === 0) {
+      return res.status(200).send(briefingHtmlPage("Ya procesada", "<h1>Ya fue procesada</h1><p>Otro aprobador acaba de procesar esta solicitud.</p>"));
+    }
+
+    return res.status(200).send(briefingHtmlPage("Rechazada", "<h1>Solicitud rechazada</h1><p>La solicitud de <strong>" + briefingEscape(reqRow.nombre_completo) + "</strong> ha sido rechazada.</p><p class=\"small\">El cliente no recibe ninguna notificacion.</p>"));
+  } catch (e) {
+    console.error("[briefing_reject] error:", e);
+    return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>Algo salio mal.</p>"));
+  }
+}
+
