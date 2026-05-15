@@ -2133,11 +2133,11 @@ function TabPublicos({ forms, setForms }) {
     if (!f) { setEditingFormId(null); return null; }
     return (
       <div style={{ padding: 24 }}>
-        <div style={{ background: surface, border: "1px solid " + border, borderRadius: 8, padding: 24, maxWidth: 640 }}>
+        <div style={{ background: T.surface, border: "1px solid " + T.border, borderRadius: 8, padding: 24, maxWidth: 640 }}>
           <h2 style={{ margin: "0 0 12px", fontSize: 20 }}>Configurar formulario publico</h2>
-          <p style={{ margin: "0 0 8px", color: inkMid }}>Formulario: <strong>{f.nombre || f.title || f.id}</strong></p>
-          <p style={{ margin: "0 0 16px", color: inkMid, fontSize: 14 }}>El editor visual completo se implementa en el siguiente paso. Por ahora, la configuracion se gestiona desde la BD.</p>
-          <button onClick={() => setEditingFormId(null)} style={{ padding: "8px 14px", background: ink, color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}>Volver al listado</button>
+          <p style={{ margin: "0 0 8px", color: T.inkMid }}>Formulario: <strong>{f.nombre || f.title || f.id}</strong></p>
+          <p style={{ margin: "0 0 16px", color: T.inkMid, fontSize: 14 }}>El editor visual completo se implementa en el siguiente paso. Por ahora, la configuracion se gestiona desde la BD.</p>
+          <button onClick={() => setEditingFormId(null)} style={{ padding: "8px 14px", background: T.ink, color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 600 }}>Volver al listado</button>
         </div>
       </div>
     );
@@ -2147,14 +2147,14 @@ function TabPublicos({ forms, setForms }) {
   return (
     <div style={{ padding: "24px 0" }}>
       <div style={{ marginBottom: 24 }}>
-        <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 600, color: ink }}>Formularios publicos</h2>
-        <p style={{ margin: 0, color: inkMid, fontSize: 14, lineHeight: 1.55 }}>
+        <h2 style={{ margin: "0 0 8px", fontSize: 24, fontWeight: 600, color: T.ink }}>Formularios publicos</h2>
+        <p style={{ margin: 0, color: T.inkMid, fontSize: 14, lineHeight: 1.55 }}>
           Configura que formularios pueden solicitarse desde una pagina publica, quien debe aprobar la solicitud y como se le entrega al cliente.
         </p>
       </div>
 
       {publicForms.length === 0 ? (
-        <div style={{ background: surface, border: "1px solid " + border, borderRadius: 8, padding: 32, textAlign: "center", color: inkMid }}>
+        <div style={{ background: T.surface, border: "1px solid " + T.border, borderRadius: 8, padding: 32, textAlign: "center", color: T.inkMid }}>
           Ningun formulario tiene configurada solicitud publica todavia.
         </div>
       ) : (
@@ -2163,11 +2163,11 @@ function TabPublicos({ forms, setForms }) {
             const pr = getPR(f);
             const url = buildPublicUrl(pr.slug);
             return (
-              <div key={f.id} style={{ background: surface, border: "1px solid " + border, borderRadius: 8, padding: 16 }}>
+              <div key={f.id} style={{ background: T.surface, border: "1px solid " + T.border, borderRadius: 8, padding: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
                   <div style={{ flex: "1 1 200px", minWidth: 0 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontWeight: 600, fontSize: 15, color: ink }}>{f.nombre || f.title || f.id}</span>
+                      <span style={{ fontWeight: 600, fontSize: 15, color: T.ink }}>{f.nombre || f.title || f.id}</span>
                       <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 12, background: pr.enabled ? "#dcfce7" : "#fee2e2", color: pr.enabled ? "#166534" : "#991b1b", fontWeight: 600 }}>
                         {pr.enabled ? "ACTIVO" : "INACTIVO"}
                       </span>
@@ -2175,18 +2175,18 @@ function TabPublicos({ forms, setForms }) {
                         {pr.requireApproval ? "APROBACION MANUAL" : "AUTO"}
                       </span>
                     </div>
-                    <div style={{ fontSize: 12, color: inkMid, fontFamily: "monospace", wordBreak: "break-all" }}>
+                    <div style={{ fontSize: 12, color: T.inkMid, fontFamily: "monospace", wordBreak: "break-all" }}>
                       {url}
                     </div>
                   </div>
                   <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                    <button onClick={() => handleCopy(pr.slug)} style={{ padding: "8px 14px", fontSize: 13, fontWeight: 500, background: copiedSlug === pr.slug ? "#16a34a" : surface, color: copiedSlug === pr.slug ? "#fff" : ink, border: "1px solid " + border, borderRadius: 6, cursor: "pointer" }}>
+                    <button onClick={() => handleCopy(pr.slug)} style={{ padding: "8px 14px", fontSize: 13, fontWeight: 500, background: copiedSlug === pr.slug ? "#16a34a" : T.surface, color: copiedSlug === pr.slug ? "#fff" : T.ink, border: "1px solid " + T.border, borderRadius: 6, cursor: "pointer" }}>
                       {copiedSlug === pr.slug ? "Copiado" : "Copiar link"}
                     </button>
-                    <button onClick={() => handleToggleEnabled(f.id, pr.enabled)} style={{ padding: "8px 14px", fontSize: 13, fontWeight: 500, background: surface, color: ink, border: "1px solid " + border, borderRadius: 6, cursor: "pointer" }}>
+                    <button onClick={() => handleToggleEnabled(f.id, pr.enabled)} style={{ padding: "8px 14px", fontSize: 13, fontWeight: 500, background: T.surface, color: T.ink, border: "1px solid " + T.border, borderRadius: 6, cursor: "pointer" }}>
                       {pr.enabled ? "Desactivar" : "Activar"}
                     </button>
-                    <button onClick={() => setEditingFormId(f.id)} style={{ padding: "8px 14px", fontSize: 13, fontWeight: 600, background: ink, color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" }}>
+                    <button onClick={() => setEditingFormId(f.id)} style={{ padding: "8px 14px", fontSize: 13, fontWeight: 600, background: T.ink, color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" }}>
                       Configurar
                     </button>
                   </div>
@@ -2199,15 +2199,15 @@ function TabPublicos({ forms, setForms }) {
 
       {formsSinPublic.length > 0 && (
         <div style={{ marginTop: 32 }}>
-          <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 600, color: ink }}>Formularios sin configurar</h3>
-          <p style={{ margin: "0 0 12px", fontSize: 13, color: inkMid }}>
+          <h3 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 600, color: T.ink }}>Formularios sin configurar</h3>
+          <p style={{ margin: "0 0 12px", fontSize: 13, color: T.inkMid }}>
             Estos formularios todavia no tienen configurada solicitud publica. Activa la opcion para empezar.
           </p>
           <div style={{ display: "grid", gap: 8 }}>
             {formsSinPublic.map(f => (
-              <div key={f.id} style={{ background: surface, border: "1px solid " + border, borderRadius: 8, padding: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                <span style={{ fontWeight: 500, color: ink }}>{f.nombre || f.title || f.id}</span>
-                <button onClick={() => handleEnablePublic(f.id)} style={{ padding: "6px 12px", fontSize: 13, background: surface, color: ink, border: "1px solid " + border, borderRadius: 6, cursor: "pointer" }}>
+              <div key={f.id} style={{ background: T.surface, border: "1px solid " + T.border, borderRadius: 8, padding: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                <span style={{ fontWeight: 500, color: T.ink }}>{f.nombre || f.title || f.id}</span>
+                <button onClick={() => handleEnablePublic(f.id)} style={{ padding: "6px 12px", fontSize: 13, background: T.surface, color: T.ink, border: "1px solid " + T.border, borderRadius: 6, cursor: "pointer" }}>
                   Habilitar solicitud publica
                 </button>
               </div>
