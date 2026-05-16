@@ -538,37 +538,66 @@ function preExpiryReminderTemplate(link, hoursBeforeExpiry) {
 function invitationTemplate(link) {
   const clientName = link.client_name || "";
   const formName = link.form_name || "tu briefing";
-  const expiresDate = link.expires_at ? new Date(link.expires_at).toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" }) : "la fecha indicada";
-  const formUrl = `https://suite.habitaris.es/formulario/${link.link_id}`;
-  const greeting = clientName ? `Hola ${clientName},` : "Hola,";
+  const formUrl = "https://suite.habitaris.es/formulario/" + link.link_id;
+  const greeting = clientName ? "Hola " + clientName + "," : "Hola,";
   const maxUses = link.max_uses;
-  const expiryRulesText = (maxUses && maxUses > 0)
-    ? `Caduca el ${expiresDate} y tienes un máximo de ${maxUses} ${maxUses === 1 ? 'apertura' : 'aperturas'}.`
-    : `Tienes hasta el ${expiresDate} para completarlo.`;
-  return `<!DOCTYPE html>
+
+  // Calcular horas hasta caducidad (ahora vs expires_at)
+  let hoursUntilExpiry = null;
+  if (link.expires_at) {
+    const now = new Date();
+    const exp = new Date(link.expires_at);
+    const diffMs = exp.getTime() - now.getTime();
+    if (diffMs > 0) hoursUntilExpiry = Math.round(diffMs / (1000 * 60 * 60));
+  }
+
+  // Texto dinamico de aperturas
+  let aperturasText;
+  if (!maxUses || maxUses === 0) {
+    aperturasText = "Puedes abrirlo las veces que quieras";
+  } else if (maxUses === 1) {
+    aperturasText = "Puedes abrirlo una sola vez para completarlo";
+  } else {
+    aperturasText = "Puedes abrirlo hasta " + maxUses + " veces para completarlo";
+  }
+
+  // Texto completo de vigencia
+  let vigenciaText;
+  if (hoursUntilExpiry === null || hoursUntilExpiry <= 0) {
+    if (!maxUses || maxUses === 0) {
+      vigenciaText = "Este link no caduca y puedes abrirlo cuantas veces quieras.";
+    } else {
+      vigenciaText = "Este link no caduca. " + aperturasText + ".";
+    }
+  } else {
+    const horaWord = hoursUntilExpiry === 1 ? "hora" : "horas";
+    vigenciaText = "Tu link caduca " + hoursUntilExpiry + " " + horaWord + " despues de recibir este correo. " + aperturasText + ".";
+  }
+
+  return `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f3f0ff;font-family:DM Sans,Arial,sans-serif;color:#111;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f0ff;padding:32px 16px;">
+<body style="margin:0;padding:0;background:#f3f0ff;font-family:'DM Sans',Arial,sans-serif;color:#111;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f0ff;padding:32px 16px;">
     <tr><td align="center">
-      <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
-        <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="https://suite.habitaris.es/logo-habitaris.jpg" alt="Habitaris" height="50" style="display:block;margin:0 auto;"/></td></tr>
-        <tr><td style="padding:32px 40px;">
-          <h2 style="margin:0 0 16px 0;font-size:20px;font-weight:700;color:#111;">${greeting}</h2>
-          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Aquí tienes tu <strong>${formName}</strong>.</p>
-          <div style="background:#f3f0ff;border-left:3px solid #111;padding:14px 16px;margin:20px 0;border-radius:4px;">
-            <p style="margin:0;font-size:14px;color:#333;">📅 <strong>${expiryRulesText}</strong></p>
-          </div>
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#fff;border-radius:8px;overflow:hidden;">
+        <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;">
+          <img src="https://suite.habitaris.es/logo-habitaris.jpg" alt="Habitaris" height="50" style="height:50px;display:inline-block;">
+        </td></tr>
+        <tr><td style="padding:32px 28px;">
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#111;">${greeting}</p>
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Aqui tienes tu <strong>${formName}</strong>. Rellenalo con calma para que podamos entender bien tu proyecto.</p>
           <div style="text-align:center;margin:28px 0;">
-            <a href="${formUrl}" style="display:inline-block;padding:12px 28px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:15px;">Empezar el briefing</a>
+            <a href="${formUrl}" style="display:inline-block;padding:14px 32px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:500;">Empezar el briefing</a>
           </div>
-          <p style="margin:16px 0 0 0;font-size:14px;color:#333;">Un saludo,<br><strong>El equipo de Habitaris</strong></p>
+          <div style="background:#f3f0ff;border-left:3px solid #111;border-radius:6px;padding:14px 18px;margin:24px 0;font-size:13px;line-height:1.6;color:#333;">
+            ${vigenciaText}
+          </div>
+          <p style="margin:24px 0 0 0;font-size:14px;line-height:1.6;color:#333;">Si tienes cualquier duda, escribenos a <a href="mailto:comercial@habitaris.es" style="color:#111;">comercial@habitaris.es</a>.</p>
+          <p style="margin:24px 0 0 0;font-size:14px;line-height:1.6;color:#333;">Un saludo,<br>El equipo de Habitaris</p>
         </td></tr>
-        <tr><td style="padding:0 40px 16px 40px;text-align:center;">
-          <p style="margin:0 0 6px 0;font-size:12px;color:#666;">Si tienes cualquier duda, escríbenos a <a href="mailto:comercial@habitaris.es" style="color:#111;text-decoration:underline;">comercial@habitaris.es</a>.</p>
-          <p style="margin:0;font-size:11px;color:#999;font-style:italic;">Correo automático. Por favor, no responder a esta dirección.</p>
-        </td></tr>
-        <tr><td style="background:#fafafa;padding:16px 40px;border-top:1px solid #eee;">
-          <p style="margin:0;font-size:11px;color:#999;line-height:1.5;">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia · +57 350 566 1545</p>
+        <tr><td style="padding:20px 28px;border-top:1px solid #eee;text-align:center;font-size:11px;color:#888;line-height:1.5;">
+          Habitaris S.A.S &middot; NIT 901.922.136-8 &middot; Bogota D.C., Colombia &middot; +57 350 566 1545<br>
+          <span style="color:#aaa;">Correo automatico. Por favor, no responder a esta direccion.</span>
         </td></tr>
       </table>
     </td></tr>
