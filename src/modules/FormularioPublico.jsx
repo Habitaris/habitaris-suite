@@ -175,6 +175,7 @@ export default function FormularioPublico() {
   const [animDir, setAnimDir] = useState("next");
   const [animKey, setAnimKey] = useState(0);
   const [blocked, setBlocked] = useState(null); // null | "expired" | "maxuses" | "inactive"
+  const [loaded, setLoaded] = useState(false);
   const [tenantCfg, setTenantCfg] = useState(null);
   const topRef = useRef(null);
   const openTimeRef = useRef(Date.now());
@@ -317,10 +318,12 @@ export default function FormularioPublico() {
             setDef({ ...data.form_def, cliente: { nombre: data.client_name, email: data.client_email, tel: data.client_tel }, linkConfig: { linkId: data.link_id }, marca: data.marca || {}, modulo: data.modulo || "crm" });
           } else { setDef(null); }
         } catch (e) { console.error("form_links fetch error:", e); setDef(null); }
+        finally { setLoaded(true); }
       })();
     } else {
       // Legacy: decode from hash
       setDef(decode());
+      setLoaded(true);
     }
   }, []);
 
@@ -390,7 +393,20 @@ export default function FormularioPublico() {
     return () => window.removeEventListener("beforeunload", handleClose);
   }, [def]);
 
-  /* ── Loading / invalid ── */
+  /* ── Loading ── */
+  if (!loaded) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f3f0ff", fontFamily: "Outfit, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}>
+        <div style={{ textAlign: "center", color: "#666" }}>
+          <div style={{ width: 32, height: 32, border: "3px solid #e0e0e0", borderTop: "3px solid #111", borderRadius: "50%", margin: "0 auto 16px", animation: "fpSpin 1s linear infinite" }} />
+          <div style={{ fontSize: 14 }}>Cargando tu briefing...</div>
+        </div>
+        <style>{`@keyframes fpSpin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  /* ── Invalid ── */
   if (!def) {
     const _cfg = tenantCfg || ((typeof store !== "undefined" && store.getSync) ? (store.getSync("habitaris_config") || {}) : {});
     const _tel = String((_cfg && _cfg.empresa && _cfg.empresa.telefono) || "").replace(/[^0-9]/g, "");
