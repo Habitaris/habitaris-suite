@@ -838,12 +838,22 @@ function briefingHtmlPage(title, bodyHtml) {
 
 async function briefingGetRecipients(sb, eventType) {
   try {
-    const u = sb.url + "/rest/v1/notification_recipients?tenant_id=eq.habitaris&event_type=eq." + encodeURIComponent(eventType) + "&active=is.true&select=email,role";
+    const u = sb.url + "/rest/v1/notification_recipients?tenant_id=eq.habitaris&event_type=eq." + encodeURIComponent(eventType) + "&active=is.true&select=email,role,form_id";
+    console.log("[briefing_recipients] URL:", u);
+    console.log("[briefing_recipients] headers keys:", Object.keys(sb.headers || {}));
     const r = await fetch(u, { headers: sb.headers });
+    console.log("[briefing_recipients] status:", r.status, "ok:", r.ok);
+    const bodyText = await r.text();
+    console.log("[briefing_recipients] body (first 500):", bodyText.slice(0, 500));
     if (!r.ok) return [];
-    const rows = await r.json();
+    let rows;
+    try { rows = JSON.parse(bodyText); } catch(e) { console.error("[briefing_recipients] JSON parse fail:", e.message); return []; }
+    console.log("[briefing_recipients] parsed rows count:", Array.isArray(rows) ? rows.length : 'NOT_ARRAY', "sample:", JSON.stringify(rows).slice(0, 300));
     return Array.isArray(rows) ? rows : [];
-  } catch (e) { return []; }
+  } catch (e) {
+    console.error("[briefing_recipients] EXCEPTION:", e.message, e.stack);
+    return [];
+  }
 }
 async function handleBriefingRequest(req, res) {
   try {
