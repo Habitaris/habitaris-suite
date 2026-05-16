@@ -912,6 +912,8 @@ async function handleBriefingRequest(req, res) {
     const recipients = await briefingGetRecipients(sb, "briefing.request_received");
     const approvers = recipients.filter(r => r.role === "approver").map(r => r.email);
     const ccList = recipients.filter(r => r.role === "cc" || r.role === "info").map(r => r.email);
+    console.log("[briefing_request] approvers count:", approvers.length, "list:", JSON.stringify(approvers));
+    console.log("[briefing_request] ccList count:", ccList.length, "list:", JSON.stringify(ccList));
 
     if (approvers.length === 0) {
       console.warn("[briefing_request] no approvers configured");
@@ -965,11 +967,19 @@ async function handleBriefingRequest(req, res) {
       html: emailHtml,
     };
 
-    const sendRes = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
-      body: JSON.stringify(resendBody),
-    });
+    console.log("[briefing_request] about to call resend, body.to:", JSON.stringify(resendBody.to), "subject:", resendBody.subject);
+    let sendRes;
+    try {
+      sendRes = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify(resendBody),
+      });
+      console.log("[briefing_request] resend returned status:", sendRes.status, "ok:", sendRes.ok);
+    } catch (fetchErr) {
+      console.error("[briefing_request] resend FETCH THREW:", fetchErr.message, fetchErr.stack);
+      return res.status(500).json({ ok: false, error: "resend_fetch_threw", detail: fetchErr.message });
+    }
     if (!sendRes.ok) {
       const errTxt = await sendRes.text().catch(() => "");
       console.error("[briefing_request] resend failed:", sendRes.status, errTxt);
