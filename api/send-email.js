@@ -1139,7 +1139,9 @@ async function handleBriefingApprove(req, res) {
 
     const clientUrl = "https://suite.habitaris.es/formulario/" + linkId;
     if (RESEND_KEY) {
-      const clientHtml = invitationTemplate(linkInserted || linkBody);
+      const linkRow = (Array.isArray(linkInserted) && linkInserted.length > 0) ? linkInserted[0] : linkBody;
+      console.log("[briefing_approve] linkRow keys:", Object.keys(linkRow || {}), "max_uses:", linkRow && linkRow.max_uses, "expires_at:", linkRow && linkRow.expires_at, "link_id:", linkRow && linkRow.link_id);
+      const clientHtml = invitationTemplate(linkRow);
 
       await fetch("https://api.resend.com/emails", {
         method: "POST",
