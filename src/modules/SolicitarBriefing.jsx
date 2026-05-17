@@ -10,7 +10,17 @@ import React, { useState } from "react";
 // POST a /api/send-email?action=briefing_request
 // ===========================================================
 
-const LOGO_URL = "https://suite.habitaris.es/logo-habitaris.jpg";
+// TODO: Cargar dinámicamente desde tenant_config (ver MEMORIA_HABITARIS.md)
+// Por ahora, marca por defecto del tenant Habitaris.
+const MARCA = {
+  logo: "https://suite.habitaris.es/logo-habitaris.jpg",
+  empresa: "Habitaris S.A.S",
+  nit: "NIT 901.922.136-8",
+  ciudad: "Bogotá D.C., Colombia",
+  telefono: "+57 350 566 1545",
+  emailContacto: "comercial@habitaris.es",
+};
+const LOGO_URL = MARCA.logo;
 
 const COLOR_EXT = "#f3f0ff";   // lavanda fondo exterior
 const COLOR_INK = "#111";       // texto/boton principal
@@ -233,8 +243,8 @@ export default function SolicitarBriefing() {
 
   const FooterBlock = (
     <div style={S.footer}>
-      Habitaris S.A.S &middot; NIT 901.922.136-8 &middot; Bogota D.C., Colombia &middot; +57 350 566 1545
-      <div style={S.footerAuto}>Si tienes cualquier duda, escribenos a comercial@habitaris.es.</div>
+      {`${MARCA.empresa} · ${MARCA.nit} · ${MARCA.ciudad} · ${MARCA.telefono}`}
+      <div style={S.footerAuto}>{`Si tienes cualquier duda, escríbenos a ${MARCA.emailContacto}.`}</div>
     </div>
   );
 
