@@ -277,6 +277,59 @@ export default async function handler(req, res) {
  * Esto resuelve el problema de que cambiar el nombre del formulario en la suite
  * no se reflejaba en los emails (el snapshot quedaba con el nombre antiguo).
  */
+// Carga branding/identidad del tenant desde tenant_config.config (UNA SOLA query)
+// Devuelve objeto plano con fallbacks a valores actuales para no romper nada.
+// Primer paso para destrabar marca blanca: ir migrando hardcodes a brand.* progresivamente.
+async function loadBrand(sb, tenantId) {
+  const fallback = {
+    empresa: "Habitaris",
+    razon_social: "Habitaris S.A.S",
+    nit: "901.922.136-8",
+    tagline: "Diseño · Interiorismo · Arquitectura",
+    ciudad: "Bogotá D.C., Colombia",
+    pais: "Colombia",
+    telefono: "+57 350 566 1545",
+    email_publico: "comercial@habitaris.es",
+    email_legal: "legal@habitaris.es",
+    email_noreply: "noreply@habitaris.es",
+    app_url: "https://suite.habitaris.es",
+    web_url: "https://www.habitaris.es",
+    logo_white_url: "/logo-habitaris-blanco.jpg",
+    logo_black_url: "/logo-habitaris-negro.svg",
+  };
+  if (!sb || !tenantId) return fallback;
+  try {
+    const { data } = await sb.from("tenant_config").select("config").eq("tenant_id", tenantId).maybeSingle();
+    const c = data && data.config ? data.config : {};
+    const identity = c.identity || {};
+    const empresa = c.empresa || {};
+    const contact = c.contact || {};
+    const contacto = c.contacto || {};
+    const urls = c.urls || {};
+    const branding = c.branding || {};
+    const domCo = c.domicilio_co || {};
+    const ciudad = domCo.ciudad ? (domCo.ciudad + (domCo.pais === "CO" ? " D.C., Colombia" : "")) : null;
+    return {
+      empresa:        identity.display_name   || empresa.nombre        || fallback.empresa,
+      razon_social:   identity.legal_name     || empresa.razon_social  || fallback.razon_social,
+      nit:            empresa.nit             || fallback.nit,
+      tagline:        identity.tagline        || fallback.tagline,
+      ciudad:         ciudad                  || fallback.ciudad,
+      pais:           domCo.pais === "CO" ? "Colombia" : (domCo.pais || fallback.pais),
+      telefono:       contact.primary_phone   || contacto.tel_co       || fallback.telefono,
+      email_publico:  contact.primary_email   || contacto.email_publico|| fallback.email_publico,
+      email_legal:    contact.legal_email     || fallback.email_legal,
+      email_noreply:  contact.noreply_email   || fallback.email_noreply,
+      app_url:        urls.app                || fallback.app_url,
+      web_url:        urls.public_website     || fallback.web_url,
+      logo_white_url: branding.logo_white_url || fallback.logo_white_url,
+      logo_black_url: branding.logo_black_url || fallback.logo_black_url,
+    };
+  } catch (e) {
+    return fallback;
+  }
+}
+
 async function getCurrentFormName(link, sb) {
   try {
     const tenantId = link.tenant_id || "habitaris";
@@ -535,7 +588,8 @@ function preExpiryReminderTemplate(link, hoursBeforeExpiry) {
 </div>`;
 }
 
-function invitationTemplate(link) {
+function invitationTemplate(link, brand) {
+  brand = brand || {};
   const clientName = link.client_name || "";
   const formName = link.form_name || "tu briefing";
   const formUrl = "https://suite.habitaris.es/formulario/" + link.link_id;
