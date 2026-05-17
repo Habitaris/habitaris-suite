@@ -839,7 +839,7 @@ async function handlePasswordResetRequest(body, res) {
       body: JSON.stringify({
         from: (__brand.empresa || "Habitaris") + " <" + (__brand.email_noreply || "noreply@habitaris.es") + ">",
         to: [found.email],
-        subject: "Restablecer contraseña — Habitaris Suite",
+        subject: "Restablecer contraseña — " + (__brand.empresa || "Habitaris") + " Suite",
         html: html,
       }),
     });
