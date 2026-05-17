@@ -92,6 +92,24 @@ export async function crearFormLink({
 
   const expires_at = computeExpiresAt(horasDuracion, fechaExacta);
 
+  // Si marca llega vacía, cargar branding del tenant_config (marca blanca por defecto)
+  let marcaFinal = marca && Object.keys(marca).length > 0 ? marca : {};
+  if (Object.keys(marcaFinal).length === 0) {
+    try {
+      const { data: tc } = await sb.from("tenant_config").select("config").eq("tenant_id", "habitaris").maybeSingle();
+      const cfg = tc && tc.config ? tc.config : {};
+      const b = cfg.branding || {};
+      const ident = cfg.identity || {};
+      marcaFinal = {
+        logo: b.logo_white_url || "/logo-habitaris-blanco.jpg",
+        empresa: ident.display_name || "Habitaris",
+        colorPrimario: b.color_primary || "#111111",
+        tipografia: (b.font_family || "Outfit"),
+        slogan: ident.tagline || "Diseño · Interiorismo · Arquitectura",
+      };
+    } catch (e) { /* keep marcaFinal as {} */ }
+  }
+
   try {
     const { error } = await sb.from("form_links").upsert({
       link_id: linkId,
@@ -101,7 +119,7 @@ export async function crearFormLink({
       client_name: cliente.nombre || null,
       client_email: cliente.email || null,
       client_tel: cliente.tel || null,
-      marca: marca || {},
+      marca: marcaFinal,
       modulo: modulo || "general",
       max_uses: maxUsos || 0,
       current_uses: 0,
