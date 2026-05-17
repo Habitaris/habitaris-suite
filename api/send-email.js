@@ -41,6 +41,7 @@ export default async function handler(req, res) {
 
     // ── 0) OTP code email (PIN reset / 2FA) ──
     if (body.type === "otp") {
+      const __brand = await loadBrand(sb, body.tenant_id || "habitaris");
       var code = body.code || "000000";
       var nombre = body.nombre || "Empleado";
       var otpHtml = '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5F4F1;font-family:Arial,sans-serif">'
@@ -62,7 +63,7 @@ export default async function handler(req, res) {
         method: "POST",
         headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Habitaris <noreply@habitaris.es>",
+          from: (__brand.empresa || "Habitaris") + " <" + (__brand.email_noreply || "noreply@habitaris.es") + ">",
           to: [recipientEmail],
           subject: code + " — Código de verificación Habitaris",
           html: otpHtml,
@@ -777,6 +778,8 @@ async function resolveUserForReset(identifier) {
 }
 
 async function handlePasswordResetRequest(body, res) {
+  const sb = getSupabaseClient();
+  const __brand = await loadBrand(sb, body.tenant_id || "habitaris");
   try {
     const identifier = body.identifier;
     if (!identifier) return res.status(400).json({ ok: false, error: "identifier required" });
@@ -834,7 +837,7 @@ async function handlePasswordResetRequest(body, res) {
       method: "POST",
       headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "Habitaris <noreply@habitaris.es>",
+        from: (__brand.empresa || "Habitaris") + " <" + (__brand.email_noreply || "noreply@habitaris.es") + ">",
         to: [found.email],
         subject: "Restablecer contraseña — Habitaris Suite",
         html: html,
@@ -963,6 +966,7 @@ async function handleBriefingRequest(req, res) {
     if (!RESEND_KEY) return res.status(500).json({ ok: false, error: "Servidor mal configurado" });
 
     const sb = getSupabaseClient();
+    const __brand = await loadBrand(sb, body.tenant_id || "habitaris");
 
     const approveToken = randomToken(20);
     const rejectToken = randomToken(20);
@@ -1056,7 +1060,7 @@ async function handleBriefingRequest(req, res) {
     ].join("");
 
     const resendBody = {
-      from: "Habitaris <noreply@habitaris.es>",
+      from: (__brand.empresa || "Habitaris") + " <" + (__brand.email_noreply || "noreply@habitaris.es") + ">",
       to: approvers,
       cc: ccList.length > 0 ? ccList : undefined,
       reply_to: "comercial@habitaris.es",
@@ -1203,10 +1207,10 @@ async function handleBriefingApprove(req, res) {
         method: "POST",
         headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: (__brand2.empresa || "Habitaris") + " <" + (__brand2.email_noreply || "noreply@habitaris.es") + ">",
+          from: (__brand.empresa || "Habitaris") + " <" + (__brand.email_noreply || "noreply@habitaris.es") + ">",
           to: [reqRow.email],
-          reply_to: (__brand2.email_publico || "comercial@habitaris.es"),
-          subject: "Tu briefing con " + (__brand2.empresa || "Habitaris") + " está listo",
+          reply_to: "comercial@habitaris.es",
+          subject: "Tu briefing con Habitaris está listo",
           html: clientHtml,
         }),
       }).catch(e => console.error("[briefing_approve] resend client failed:", e));
