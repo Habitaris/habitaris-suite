@@ -197,11 +197,12 @@ export default async function handler(req, res) {
             if (cfg[def]) waPhone = cfg[def];
           }
         } catch (_) {}
-        const html = expiredTemplate(link, waPhone);
-        const fromAddr = body.from || "Habitaris <noreply@habitaris.es>";
+        const __brand_exp = await loadBrand(sb, link.tenant_id || "habitaris");
+        const html = expiredTemplate(link, waPhone, __brand_exp);
+        const fromAddr = body.from || ((__brand_exp && __brand_exp.empresa) ? `${__brand_exp.empresa} <${__brand_exp.email_noreply || "noreply@habitaris.es"}>` : "Habitaris <noreply@habitaris.es>");
         const _short = (link.client_name || '').trim().split(/\s+/).filter(Boolean);
         const _shortName = _short.length >= 2 ? (_short[0] + ' ' + _short[_short.length - 1]) : (_short[0] || '');
-        const subject = _shortName ? `Tu enlace ha caducado — Habitaris — ${_shortName}` : 'Tu enlace ha caducado — Habitaris';
+        const subject = _shortName ? `Tu enlace ha caducado — ${(__brand_exp && __brand_exp.empresa) || "Habitaris"} — ${_shortName}` : (`Tu enlace ha caducado — ${(__brand_exp && __brand_exp.empresa) || "Habitaris"}`);
         const sendR = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
@@ -661,7 +662,8 @@ function invitationTemplate(link, brand) {
 </body></html>`;
 }
 
-function expiredTemplate(link, whatsappPhone) {
+function expiredTemplate(link, whatsappPhone, brand) {
+  brand = brand || {};
   const clientName = link.client_name || "";
   const formName = link.form_name || "tu briefing";
   const greeting = clientName ? `Hola ${clientName},` : "Hola,";
