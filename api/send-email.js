@@ -119,7 +119,7 @@ export default async function handler(req, res) {
         + '</td></tr>'
         + '<tr><td style="background:#F5F4F1;padding:24px 40px;text-align:center;border-top:1px solid #E4E1DB">'
         + '<div style="font-size:11px;color:#888;font-weight:bold">Gracias por confiar en nosotros!</div>'
-        + '<div style="font-size:10px;color:#aaa;margin-top:8px">' + emp + ' · Bogota D.C. · noreply@habitaris.es</div>'
+        + '<div style="font-size:10px;color:#aaa;margin-top:8px">' + emp + ' · Bogotá D.C. · noreply@habitaris.es</div>'
         + '</td></tr></table></td></tr></table></body></html>';
 
       var r2 = await fetch("https://api.resend.com/emails", {
@@ -240,7 +240,7 @@ export default async function handler(req, res) {
       + 'Es rapido y sencillo. Si tienes alguna pregunta,<br>no dudes en responder a este correo.</div></td></tr>'
       + '<tr><td style="background:#F5F4F1;padding:24px 40px;text-align:center;border-top:1px solid #E4E1DB">'
       + '<div style="font-size:11px;color:#888;font-weight:bold">Gracias por confiar en nosotros!</div>'
-      + '<div style="font-size:10px;color:#aaa;margin-top:8px">' + empresa + ' · Bogota D.C. · noreply@habitaris.es</div>'
+      + '<div style="font-size:10px;color:#aaa;margin-top:8px">' + empresa + ' · Bogotá D.C. · noreply@habitaris.es</div>'
       + '</td></tr></table></td></tr></table></body></html>';
 
     var response = await fetch("https://api.resend.com/emails", {
@@ -585,7 +585,7 @@ function invitationTemplate(link) {
         </td></tr>
         <tr><td style="padding:32px 28px;">
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#111;">${greeting}</p>
-          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Aqui tienes tu <strong>${formName}</strong>. Rellenalo con calma para que podamos entender bien tu proyecto.</p>
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Aquí tienes tu <strong>${formName}</strong>. Rellénalo con calma para que podamos entender bien tu proyecto.</p>
           <div style="text-align:center;margin:28px 0;">
             <a href="${formUrl}" style="display:inline-block;padding:14px 32px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:500;">Empezar el briefing</a>
           </div>
@@ -596,8 +596,8 @@ function invitationTemplate(link) {
           <p style="margin:24px 0 0 0;font-size:14px;line-height:1.6;color:#333;">Un saludo,<br>El equipo de Habitaris</p>
         </td></tr>
         <tr><td style="padding:20px 28px;border-top:1px solid #eee;text-align:center;font-size:11px;color:#888;line-height:1.5;">
-          Habitaris S.A.S &middot; NIT 901.922.136-8 &middot; Bogota D.C., Colombia &middot; +57 350 566 1545<br>
-          <span style="color:#aaa;">Correo automatico. Por favor, no responder a esta direccion.</span>
+          Habitaris S.A.S &middot; NIT 901.922.136-8 &middot; Bogotá D.C., Colombia &middot; +57 350 566 1545<br>
+          <span style="color:#aaa;">Correo automático. Por favor, no responder a esta dirección.</span>
         </td></tr>
       </table>
     </td></tr>
@@ -987,7 +987,7 @@ async function handleBriefingRequest(req, res) {
       "<div class=\"datos\">",
       "<div class=\"row\"><span class=\"label\">Nombre</span><span class=\"val\">" + briefingEscape(nombre) + "</span></div>",
       "<div class=\"row\"><span class=\"label\">Email</span><span class=\"val\">" + briefingEscape(email) + "</span></div>",
-      "<div class=\"row\"><span class=\"label\">Telefono</span><span class=\"val\">" + briefingEscape(telefono) + "</span></div>",
+      "<div class=\"row\"><span class=\"label\">Teléfono</span><span class=\"val\">" + briefingEscape(telefono) + "</span></div>",
       mensaje ? "<div class=\"row\"><span class=\"label\">Mensaje</span><span class=\"val\">" + briefingEscape(mensaje) + "</span></div>" : "",
       "</div>",
       "<div class=\"buttons\">",
@@ -996,7 +996,7 @@ async function handleBriefingRequest(req, res) {
       "</div>",
       "<p class=\"note\">Si apruebas, el cliente recibe automaticamente su link de briefing (validez 48h, 2 usos). Los botones expiran en 48 horas. Si los dos aprobadores hacen clic, gana el primero.</p>",
       "</div>",
-      "<div class=\"footer\">Habitaris S.A.S &middot; NIT 901.922.136-8 &middot; Bogota D.C., Colombia &middot; +57 350 566 1545<div class=\"sub\">Si tienes cualquier duda, escribenos a comercial@habitaris.es</div></div>",
+      "<div class=\"footer\">Habitaris S.A.S &middot; NIT 901.922.136-8 &middot; Bogotá D.C., Colombia &middot; +57 350 566 1545<div class=\"sub\">Si tienes cualquier duda, escribenos a comercial@habitaris.es</div></div>",
       "</div></div></body></html>"
     ].join("");
 
@@ -1150,7 +1150,7 @@ async function handleBriefingApprove(req, res) {
           from: "Habitaris <noreply@habitaris.es>",
           to: [reqRow.email],
           reply_to: "comercial@habitaris.es",
-          subject: "Tu briefing con Habitaris esta listo",
+          subject: "Tu briefing con Habitaris está listo",
           html: clientHtml,
         }),
       }).catch(e => console.error("[briefing_approve] resend client failed:", e));
