@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { sb } from "../core/supabase.js";
 import { store } from "../core/store.js";
+import HAB_LOGO from "./habLogo.js";
 
 import * as SB from "./supabase.js";
 
@@ -764,7 +765,7 @@ export default function FormularioPublico() {
           {marca.logo ? (
             <img src={marca.logo} alt="Logo" style={{ height:28, objectFit:"contain" }}/>
           ) : (
-            <div style={{ ...BF, fontWeight:700, fontSize:14, letterSpacing:3, color:"#fff", textTransform:"uppercase" }}>{marca.empresa || "HABITARIS"}</div>
+            <img src={HAB_LOGO} alt="Habitaris" style={{ height:28, objectFit:"contain", filter:"brightness(0) invert(1)" }}/>
           )}
           {marca.slogan && <div style={{ ...BF, fontSize:7, letterSpacing:2, color:"rgba(255,255,255,.4)", textTransform:"uppercase" }}>{marca.slogan}</div>}
         </div>
