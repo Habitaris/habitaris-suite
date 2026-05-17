@@ -21,7 +21,7 @@ import { HAB_LOGO } from "../habLogo.js";
 import { getTenantDefaultsSync } from "../../core/configHelpers.js";
 
 const C = {
-  bg: "#FAFAFA",
+  bg: "#f3f0ff",
   border: "#E5E5E5",
   ink: "#111",
   inkMid: "#666",
@@ -34,7 +34,7 @@ const C = {
   redBg: "#FAE8E8",
   blue: "#2563EB",
   blueBg: "#EFF6FF",
-  accent: "#F5F4F1",
+  accent: "#ebe7ff",
 };
 
 /* ── Helpers ────────────────────────────────────────────────── */
@@ -311,7 +311,8 @@ export default function RespuestaModal({ open, resp, form, onClose, onProcesar, 
 
   return (
     <div onClick={onClose}
-      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 9999, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 30, paddingBottom: 30, overflowY: "auto", fontFamily: "'DM Sans',sans-serif" }}>
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 9999, display: "flex", alignItems: "flex-start", justifyContent: "center", paddingTop: 30, paddingBottom: 30, overflowY: "auto", fontFamily: "'Outfit','DM Sans',sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');`}</style>
       <div onClick={e => e.stopPropagation()}
         style={{ background: "#fff", borderRadius: 8, width: "min(820px, 94vw)", maxHeight: "calc(100vh - 60px)", display: "flex", flexDirection: "column", boxShadow: "0 12px 40px rgba(0,0,0,0.25)", overflow: "hidden" }}>
 
