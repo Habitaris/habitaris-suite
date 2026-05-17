@@ -153,7 +153,8 @@ export default async function handler(req, res) {
         link.form_name = await getCurrentFormName(link, sb);
         const recipient = body.to || link.client_email;
         if (!recipient) return res.status(400).json({ ok: false, error: "recipient required" });
-        const html = invitationTemplate(link);
+        const __brand = await loadBrand(sb, link.tenant_id || "habitaris");
+        const html = invitationTemplate(link, __brand);
         const fromAddr = body.from || "Habitaris <noreply@habitaris.es>";
         const _short = (link.client_name || '').trim().split(/\s+/).filter(Boolean);
         const _shortName = _short.length >= 2 ? (_short[0] + ' ' + _short[_short.length - 1]) : (_short[0] || '');
@@ -592,7 +593,7 @@ function invitationTemplate(link, brand) {
   brand = brand || {};
   const clientName = link.client_name || "";
   const formName = link.form_name || "tu briefing";
-  const formUrl = "https://suite.habitaris.es/formulario/" + link.link_id;
+  const formUrl = (brand.app_url || "https://suite.habitaris.es") + "/formulario/" + link.link_id;
   const greeting = clientName ? "Hola " + clientName + "," : "Hola,";
   const maxUses = link.max_uses;
 
@@ -650,7 +651,7 @@ function invitationTemplate(link, brand) {
           <p style="margin:24px 0 0 0;font-size:14px;line-height:1.6;color:#333;">Un saludo,<br>El equipo de Habitaris</p>
         </td></tr>
         <tr><td style="padding:20px 28px;border-top:1px solid #eee;text-align:center;font-size:11px;color:#888;line-height:1.5;">
-          Habitaris S.A.S &middot; NIT 901.922.136-8 &middot; Bogotá D.C., Colombia &middot; +57 350 566 1545<br>
+          " + (brand.razon_social || "Habitaris S.A.S") + " &middot; NIT " + (brand.nit || "901.922.136-8") + " &middot; " + (brand.ciudad || "Bogotá D.C., Colombia") + " &middot; " + (brand.telefono || "+57 350 566 1545") + "<br>
           <span style="color:#aaa;">Correo automático. Por favor, no responder a esta dirección.</span>
         </td></tr>
       </table>
@@ -1195,7 +1196,8 @@ async function handleBriefingApprove(req, res) {
     if (RESEND_KEY) {
       const linkRow = (Array.isArray(linkInserted) && linkInserted.length > 0) ? linkInserted[0] : linkBody;
       console.log("[briefing_approve] linkRow keys:", Object.keys(linkRow || {}), "max_uses:", linkRow && linkRow.max_uses, "expires_at:", linkRow && linkRow.expires_at, "link_id:", linkRow && linkRow.link_id);
-      const clientHtml = invitationTemplate(linkRow);
+      const __brand2 = await loadBrand(sb, linkRow.tenant_id || "habitaris");
+      const clientHtml = invitationTemplate(linkRow, __brand2);
 
       await fetch("https://api.resend.com/emails", {
         method: "POST",
