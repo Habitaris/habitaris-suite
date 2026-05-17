@@ -5,13 +5,13 @@ import { store } from "../core/store.js";
 import * as SB from "./supabase.js";
 
 const BASE = {
-  bg:"#F5F4F1", surface:"#FFFFFF", ink:"#111", inkMid:"#555",
+  bg:"#f3f0ff", surface:"#FFFFFF", ink:"#111", inkMid:"#555",
   inkLight:"#909090", border:"#E0E0E0",
   success:"#111111", successBg:"#E8F4EE",
   accent:"#3B3B3B", accentBg:"#F0F0F0",
   gold:"#C9A84C",
 };
-const F = { fontFamily:"'DM Sans',sans-serif" };
+const F = { fontFamily:"'Outfit','DM Sans',sans-serif" };
 
 function decode() {
   try {
@@ -445,7 +445,7 @@ export default function FormularioPublico() {
       blocked: { icon:"🚫", title:"Formulario bloqueado", desc:"Este formulario ha sido bloqueado por el remitente. Si crees que es un error, contacta a quien te lo envió." },
     };
     const m = msgs[blocked] || msgs.expired;
-    const brandFont2 = (def?.marca?.tipografia) || "DM Sans";
+    const brandFont2 = (def?.marca?.tipografia) || "Outfit";
     return (
       <div style={{ minHeight:"100vh", background:BASE.bg, display:"flex", alignItems:"center", justifyContent:"center" }}>
         <style>{`@import url('https://fonts.googleapis.com/css2?family=${brandFont2.replace(/ /g,"+")}:wght@300;400;500;600;700;800&display=swap');`}</style>
