@@ -1203,10 +1203,10 @@ async function handleBriefingApprove(req, res) {
         method: "POST",
         headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: "Habitaris <noreply@habitaris.es>",
+          from: (__brand2.empresa || "Habitaris") + " <" + (__brand2.email_noreply || "noreply@habitaris.es") + ">",
           to: [reqRow.email],
-          reply_to: "comercial@habitaris.es",
-          subject: "Tu briefing con Habitaris está listo",
+          reply_to: (__brand2.email_publico || "comercial@habitaris.es"),
+          subject: "Tu briefing con " + (__brand2.empresa || "Habitaris") + " está listo",
           html: clientHtml,
         }),
       }).catch(e => console.error("[briefing_approve] resend client failed:", e));
