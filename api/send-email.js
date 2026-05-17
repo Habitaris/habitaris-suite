@@ -155,10 +155,10 @@ export default async function handler(req, res) {
         if (!recipient) return res.status(400).json({ ok: false, error: "recipient required" });
         const __brand = await loadBrand(sb, link.tenant_id || "habitaris");
         const html = invitationTemplate(link, __brand);
-        const fromAddr = body.from || "Habitaris <noreply@habitaris.es>";
+        const fromAddr = body.from || (__brand && __brand.empresa ? `${__brand.empresa} <${__brand.email_noreply || "noreply@habitaris.es"}>` : "Habitaris <noreply@habitaris.es>");
         const _short = (link.client_name || '').trim().split(/\s+/).filter(Boolean);
         const _shortName = _short.length >= 2 ? (_short[0] + ' ' + _short[_short.length - 1]) : (_short[0] || '');
-        const subject = _shortName ? `${link.form_name || 'Habitaris'} — ${_shortName}` : (link.form_name || 'Habitaris');
+        const subject = _shortName ? `${link.form_name || (__brand && __brand.empresa) || 'Habitaris'} — ${_shortName}` : (link.form_name || (__brand && __brand.empresa) || 'Habitaris');
         const sendR = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { Authorization: `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
