@@ -445,7 +445,8 @@ async function runCronReminders() {
       const sender = "Habitaris <noreply@habitaris.es>";
       // Leer en vivo el nombre actual del formulario (kv_store > snapshot del link)
       try { link.form_name = await getCurrentFormName(link, sb); } catch(_) {}
-      const html = preExpiryReminderTemplate(link, hoursBeforeExpiry);
+      const __brand_pre = await loadBrand(sb, link.tenant_id || "habitaris");
+      const html = preExpiryReminderTemplate(link, hoursBeforeExpiry, __brand_pre);
       const _formName = link.form_name || "tu formulario";
       const subject = `Caduca pronto — ${_formName} · Habitaris`;
       try {
