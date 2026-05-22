@@ -917,16 +917,28 @@ function briefingHtmlPage(title, bodyHtml) {
     "<!doctype html><html lang=\"es\"><head><meta charset=\"utf-8\"/>",
     "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/>",
     "<title>" + briefingEscape(title) + " - Habitaris</title>",
+    "<link href=\"https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap\" rel=\"stylesheet\">",
     "<style>",
-    "body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;background:#f5f2ee;color:#111110;}",
-    ".wrap{max-width:520px;margin:48px auto;padding:32px;background:#fff;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,0.06);}",
-    "h1{font-size:22px;margin:0 0 16px;font-weight:600;}",
-    "p{margin:8px 0;line-height:1.55;color:#3a3a39;}",
-    ".small{font-size:13px;color:#888;margin-top:24px;}",
-    "</style></head><body><div class=\"wrap\">" + bodyHtml + "</div></body></html>",
+    "*{box-sizing:border-box;}",
+    "body{margin:0;font-family:Outfit,DM Sans,-apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial,sans-serif;background:#f3f0ff;color:#111;min-height:100vh;}",
+    ".card{max-width:560px;margin:48px auto;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.06);}",
+    ".header{background:#fff;padding:24px;text-align:center;border-bottom:1px solid #ebe7ff;}",
+    ".header img{height:50px;display:inline-block;}",
+    ".content{padding:32px 24px;text-align:center;}",
+    "h1{font-size:24px;margin:0 0 16px;font-weight:600;color:#111;}",
+    "p{margin:8px 0;font-size:15px;line-height:1.6;color:#3a3a39;}",
+    ".small{font-size:13px;color:#666;margin-top:16px;}",
+    ".footer{padding:16px 24px;text-align:center;font-size:11px;color:#999;background:#fafafa;}",
+    "</style></head><body>",
+    "<div class=\"card\">",
+    "<div class=\"header\"><img src=\"https://suite.habitaris.es/logo-habitaris.jpg\" alt=\"Habitaris\"></div>",
+    "<div class=\"content\">",
+    bodyHtml,
+    "</div>",
+    "<div class=\"footer\">Habitaris S.A.S &middot; NIT 901.922.136-8 &middot; Bogot\u00e1 D.C., Colombia &middot; +57 350 566 1545</div>",
+    "</div></body></html>",
   ].join("");
 }
-
 async function briefingGetRecipients(sb, eventType) {
   try {
     const u = sb.url + "/rest/v1/notification_recipients?tenant_id=eq.habitaris&event_type=eq." + encodeURIComponent(eventType) + "&active=is.true&select=email,role,form_id";
