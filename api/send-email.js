@@ -492,7 +492,7 @@ async function runCronExpired() {
 
     const now = Date.now();
     const candidates = all.filter(l => {
-      const byTime = l.expires_at && new Date(l.expires_at).getTime() < now;
+      const byTime = l.expires_at && new Date(l.expires_at).getTime() < (now - 60 * 60 * 1000);
       const byUses = (l.max_uses || 0) > 0 && (l.current_uses || 0) >= l.max_uses;
       return byTime || byUses;
     });
