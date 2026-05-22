@@ -63,7 +63,7 @@ export default async function handler(req, res) {
         method: "POST",
         headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: (__brand.empresa || "Habitaris") + " <" + (__brand.email_noreply || "noreply@habitaris.es") + ">",
+          from: (__brand2.empresa || "Habitaris") + " <" + (__brand2.email_noreply || "noreply@habitaris.es") + ">",
           to: [recipientEmail],
           subject: code + " — Código de verificación Habitaris",
           html: otpHtml,
