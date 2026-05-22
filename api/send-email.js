@@ -559,7 +559,8 @@ async function runCronExpired() {
   }
 }
 
-function preExpiryReminderTemplate(link, hoursBeforeExpiry) {
+function preExpiryReminderTemplate(link, hoursBeforeExpiry, brand) {
+  brand = brand || {};
   const nombre = (link.client_name || "").split(" ")[0] || "Hola";
   const formName = link.form_name || "tu formulario";
   const linkUrl = "https://suite.habitaris.es/formulario/" + link.link_id;
@@ -569,7 +570,7 @@ function preExpiryReminderTemplate(link, hoursBeforeExpiry) {
   <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:8px;overflow:hidden;">
     <div style="padding:16px 24px;border-bottom:1px solid #f0ecff;">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-        <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #f0ecff"><img src="https://suite.habitaris.es/logo-habitaris.jpg" alt="Habitaris" height="50" style="display:block;margin:0 auto;"/></td></tr>
+        <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #f0ecff"><img src="${(brand.logo_black_url && brand.logo_black_url.indexOf('http')===0) ? brand.logo_black_url : ((brand.app_url || 'https://suite.habitaris.es') + (brand.logo_black_url || '/logo-habitaris.jpg'))}" alt="${brand.empresa || 'Habitaris'}" height="50" style="display:block;margin:0 auto;"/></td></tr>
       </table>
     </div>
     <div style="padding:24px;">
@@ -680,7 +681,7 @@ function expiredTemplate(link, whatsappPhone, brand) {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f0ff;padding:32px 16px;">
     <tr><td align="center">
       <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;overflow:hidden;max-width:560px;width:100%;">
-        <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="https://suite.habitaris.es/logo-habitaris.jpg" alt="Habitaris" height="50" style="display:block;margin:0 auto;"/></td></tr>
+        <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="${(brand.logo_black_url && brand.logo_black_url.indexOf('http')===0) ? brand.logo_black_url : ((brand.app_url || 'https://suite.habitaris.es') + (brand.logo_black_url || '/logo-habitaris.jpg'))}" alt="${brand.empresa || 'Habitaris'}" height="50" style="display:block;margin:0 auto;"/></td></tr>
         <tr><td style="padding:32px 40px;">
           <h2 style="margin:0 0 16px 0;font-size:20px;font-weight:700;color:#111;">${greeting}</h2>
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Tu <strong>${formName}</strong> ha <strong>caducado</strong>.</p>
@@ -688,7 +689,7 @@ function expiredTemplate(link, whatsappPhone, brand) {
           <div style="text-align:center;margin:28px 0;">
             <a href="${waUrl}" style="display:inline-block;padding:12px 28px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;font-size:15px;">Reactivar enlace</a>
           </div>
-          <p style="margin:16px 0 0 0;font-size:14px;color:#333;">Un saludo,<br><strong>El equipo de Habitaris</strong></p>
+          <p style="margin:16px 0 0 0;font-size:14px;color:#333;">Un saludo,<br><strong>El equipo de ${brand.empresa || 'Habitaris'}</strong></p>
         </td></tr>
         <tr><td style="padding:0 40px 16px 40px;text-align:center;">
           <p style="margin:0 0 6px 0;font-size:12px;color:#666;">Si tienes cualquier duda, escríbenos a <a href="mailto:comercial@habitaris.es" style="color:#111;text-decoration:underline;">comercial@habitaris.es</a>.</p>
