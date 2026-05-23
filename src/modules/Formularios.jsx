@@ -331,7 +331,7 @@ function Constructor({ forms, setForms, editId, setEditId, onSaved, envios, addE
     if (openShareOnMount && existing && existing.id === openShareOnMount) {
       setShareClient({nombre:"",email:"",tel:"",codTel:""});
       setShareGenerated(""); setShareFileName(""); setSharePublicUrl(""); setShareLinkId("");
-      setLinkMaxUsos(2); setLinkHorasDuracion(48); setLinkExpiry("");
+      setLinkMaxUsos(typeof existing?.defaultMaxUsos === "number" ? existing.defaultMaxUsos : 2); setLinkHorasDuracion(typeof existing?.defaultHorasDuracion === "number" ? existing.defaultHorasDuracion : 48); setLinkExpiry("");
       setShareOnly(true);
       setShowShare(true);
       onShareOpened?.();
