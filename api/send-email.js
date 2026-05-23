@@ -56,7 +56,7 @@ export default async function handler(req, res) {
         + '<div style="font-size:11px;color:#999;margin-top:16px">Este código expira en 10 minutos.<br>Si no solicitaste este código, ignora este correo.</div>'
         + '</td></tr>'
         + '<tr><td style="background:#F5F4F1;padding:16px;text-align:center;border-top:1px solid #E5E3DE">'
-        + '<div style="font-size:10px;color:#aaa">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia · +57 350 566 1545</div></td></tr>'
+        + '<div style="font-size:10px;color:#aaa">' + (__brand.razon_social || "Habitaris S.A.S") + ' · NIT ' + (__brand.nit || "901.922.136-8") + ' · ' + (__brand.ciudad || "Bogotá D.C., Colombia") + ' · ' + (__brand.telefono || "+57 350 566 1545") + '</div></td></tr>'
         + '</table></td></tr></table></body></html>';
 
       var rOtp = await fetch("https://api.resend.com/emails", {
@@ -835,7 +835,7 @@ async function handlePasswordResetRequest(body, res) {
       + '<div style="font-size:11px;color:#bbb;margin-top:12px;word-break:break-all">Si el botón no funciona, copia este enlace: ' + resetLink + '</div>'
       + '</td></tr>'
       + '<tr><td style="background:#F5F4F1;padding:16px;text-align:center;border-top:1px solid #E5E3DE">'
-      + '<div style="font-size:10px;color:#aaa">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia</div></td></tr>'
+      + '<div style="font-size:10px;color:#aaa">' + (__brand.razon_social || "Habitaris S.A.S") + ' · NIT ' + (__brand.nit || "901.922.136-8") + ' · ' + (__brand.ciudad || "Bogotá D.C., Colombia") + '</div></td></tr>'
       + '</table></td></tr></table></body></html>';
 
     const sendR = await fetch("https://api.resend.com/emails", {
@@ -1072,7 +1072,7 @@ async function handleBriefingRequest(req, res) {
       "</div>",
       "<p class=\"note\">Si apruebas, el cliente recibe automaticamente su link de briefing (validez 48h, 2 usos). Los botones expiran en 48 horas. Si los dos aprobadores hacen clic, gana el primero.</p>",
       "</div>",
-      "<div class=\"footer\">Habitaris S.A.S &middot; NIT 901.922.136-8 &middot; Bogotá D.C., Colombia &middot; +57 350 566 1545<div class=\"sub\">Si tienes cualquier duda, escribenos a comercial@habitaris.es</div></div>",
+      "<div class=\"footer\">" + (__brand.razon_social || "Habitaris S.A.S") + " &middot; NIT " + (__brand.nit || "901.922.136-8") + " &middot; " + (__brand.ciudad || "Bogotá D.C., Colombia") + " &middot; " + (__brand.telefono || "+57 350 566 1545") + "<div class=\"sub\">Si tienes cualquier duda, escribenos a " + (__brand.email_publico || "comercial@habitaris.es") + "</div></div>",
       "</div></div></body></html>"
     ].join("");
 
