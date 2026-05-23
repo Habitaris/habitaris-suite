@@ -913,7 +913,8 @@ function briefingEscape(s) {
     .replace(/"/g, "&quot;");
 }
 
-function briefingHtmlPage(title, bodyHtml) {
+function briefingHtmlPage(title, bodyHtml, brand) {
+  brand = brand || {};
   return [
     "<!doctype html><html lang=\"es\"><head><meta charset=\"utf-8\"/>",
     "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/>",
@@ -936,7 +937,7 @@ function briefingHtmlPage(title, bodyHtml) {
     "<div class=\"content\">",
     bodyHtml,
     "</div>",
-    "<div class=\"footer\">Habitaris S.A.S &middot; NIT 901.922.136-8 &middot; Bogot\u00e1 D.C., Colombia &middot; +57 350 566 1545</div>",
+    "<div class=\"footer\">" + (brand.razon_social || "Habitaris S.A.S") + " &middot; NIT " + (brand.nit || "901.922.136-8") + " &middot; " + (brand.ciudad || "Bogot\u00e1 D.C., Colombia") + " &middot; " + (brand.telefono || "+57 350 566 1545") + "</div>",
     "</div></body></html>",
   ].join("");
 }
@@ -1233,7 +1234,7 @@ async function handleBriefingApprove(req, res) {
       }).catch(e => console.error("[briefing_approve] resend client failed:", e));
     }
 
-    return res.status(200).send(briefingHtmlPage("Aprobado", "<h1>&#10003; Briefing enviado</h1><p>Se ha enviado el link de briefing a <strong>" + briefingEscape(reqRow.nombre_completo) + "</strong> (" + briefingEscape(reqRow.email) + ").</p><p class=\"small\">El link caduca en 48 horas y permite 2 usos.</p>"));
+    return res.status(200).send(briefingHtmlPage("Aprobado", "<h1>&#10003; Briefing enviado</h1><p>Se ha enviado el link de briefing a <strong>" + briefingEscape(reqRow.nombre_completo) + "</strong> (" + briefingEscape(reqRow.email) + ").</p><p class=\"small\">El link caduca en 48 horas y permite 2 usos.</p>", __brand2));
   } catch (e) {
     console.error("[briefing_approve] error:", e);
     return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>Algo salio mal.</p>"));
@@ -1246,6 +1247,7 @@ async function handleBriefingReject(req, res) {
       return res.status(400).send(briefingHtmlPage("Link invalido", "<h1>Link invalido</h1><p>El enlace no es valido.</p>"));
     }
     const sb = getSupabaseClient();
+    const __brand = await loadBrand(sb, "habitaris");
 
     const findUrl = sb.url + "/rest/v1/briefing_requests?reject_token=eq." + encodeURIComponent(token) + "&select=*";
     const findRes = await fetch(findUrl, { headers: sb.headers });
@@ -1283,7 +1285,7 @@ async function handleBriefingReject(req, res) {
       return res.status(200).send(briefingHtmlPage("Ya procesada", "<h1>Ya fue procesada</h1><p>Otro aprobador acaba de procesar esta solicitud.</p>"));
     }
 
-    return res.status(200).send(briefingHtmlPage("Rechazada", "<h1>Solicitud rechazada</h1><p>La solicitud de <strong>" + briefingEscape(reqRow.nombre_completo) + "</strong> ha sido rechazada.</p><p class=\"small\">El cliente no recibe ninguna notificacion.</p>"));
+    return res.status(200).send(briefingHtmlPage("Rechazada", "<h1>Solicitud rechazada</h1><p>La solicitud de <strong>" + briefingEscape(reqRow.nombre_completo) + "</strong> ha sido rechazada.</p><p class=\"small\">El cliente no recibe ninguna notificacion.</p>", __brand));
   } catch (e) {
     console.error("[briefing_reject] error:", e);
     return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>Algo salio mal.</p>"));
