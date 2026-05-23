@@ -442,13 +442,13 @@ async function runCronReminders() {
     for (const link of candidates) {
       const recipient = link.client_email;
       if (!recipient) { failed++; continue; }
-      const sender = "Habitaris <noreply@habitaris.es>";
+      const __brand_pre = await loadBrand(sb, link.tenant_id || "habitaris");
+      const sender = (__brand_pre && __brand_pre.empresa) ? `${__brand_pre.empresa} <${__brand_pre.email_noreply || "noreply@habitaris.es"}>` : "Habitaris <noreply@habitaris.es>";
       // Leer en vivo el nombre actual del formulario (kv_store > snapshot del link)
       try { link.form_name = await getCurrentFormName(link, sb); } catch(_) {}
-      const __brand_pre = await loadBrand(sb, link.tenant_id || "habitaris");
       const html = preExpiryReminderTemplate(link, hoursBeforeExpiry, __brand_pre);
       const _formName = link.form_name || "tu formulario";
-      const subject = `Caduca pronto — ${_formName} · Habitaris`;
+      const subject = `Caduca pronto — ${_formName} · ${(__brand_pre && __brand_pre.empresa) || "Habitaris"}`;
       try {
         const sendR = await fetch("https://api.resend.com/emails", {
           method: "POST",
@@ -529,8 +529,9 @@ async function runCronExpired() {
       }
       // Resolver form_name actualizado
       try { link.form_name = await getCurrentFormName(link, sb); } catch(_) {}
-      const sender = "Habitaris <noreply@habitaris.es>";
-      const html = expiredTemplate(link, waPhone);
+      const __brand_cron_exp = await loadBrand(sb, link.tenant_id || "habitaris");
+      const sender = (__brand_cron_exp && __brand_cron_exp.empresa) ? `${__brand_cron_exp.empresa} <${__brand_cron_exp.email_noreply || "noreply@habitaris.es"}>` : "Habitaris <noreply@habitaris.es>";
+      const html = expiredTemplate(link, waPhone, __brand_cron_exp);
       const _short = (link.client_name || "").trim().split(/\s+/).filter(Boolean);
       const _shortName = _short.length >= 2 ? (_short[0] + " " + _short[_short.length - 1]) : (_short[0] || "");
       const subject = _shortName ? ("Tu enlace ha caducado — Habitaris — " + _shortName) : "Tu enlace ha caducado — Habitaris";
