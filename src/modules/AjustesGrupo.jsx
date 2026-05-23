@@ -2019,7 +2019,7 @@ export default function AjustesGrupo({ onBack }) {
               <TabComunicaciones />
             )}
             {active === "formularios" && (
-              <TabFormularios tenant={t.tenant} tenantConfig={t.tenantConfig} onSaved={onTenantConfigSaved} />
+              <TabFormularios tenant={t.tenant} tenantConfig={t.tenantConfig} onSaved={onTabSaved} />
             )}
             {active === "miembros" && (
               <TabPlaceholder
