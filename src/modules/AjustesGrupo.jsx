@@ -53,7 +53,6 @@ const TABS = [
   { id: "rep_legal", label: "Rep. legal",       desc: "Firmante por defecto" },
   { id: "legal",     label: "Estructura legal", desc: "Países y empresas" },
   { id: "comms",     label: "Comunicaciones",   desc: "SMTP y plantillas" },
-  { id: "formularios", label: "Formularios",            desc: "Links publicos, defaults, plantillas" },
   { id: "miembros",  label: "Miembros",         desc: "Usuarios y permisos" },
 ];
 
@@ -1779,118 +1778,6 @@ const sectionH4 = { ...F, fontSize: 12, fontWeight: 700, color: C.ink, margin: "
 const cancelBtnStyle = { ...F, fontSize: 13, fontWeight: 600, padding: "8px 14px", border: `1px solid ${C.border}`, borderRadius: 6, background: "#fff", cursor: "pointer", color: C.inkMid };
 const saveBtnStyle = { ...F, fontSize: 13, fontWeight: 600, padding: "8px 14px", border: "none", borderRadius: 6, background: C.ink, color: "#fff", cursor: "pointer" };
 
-function TabFormularios({ tenant, tenantConfig, onSaved }) {
-  const initialCfg = (tenantConfig && tenantConfig.formularios) || {};
-  const [diasExpiracion, setDiasExpiracion] = React.useState(initialCfg.dias_expiracion || 7);
-  const [maxUsos, setMaxUsos] = React.useState(initialCfg.max_usos || 1);
-  const [notificarRespuestas, setNotificarRespuestas] = React.useState(initialCfg.notificar_respuestas !== false);
-  const [saving, setSaving] = React.useState(false);
-  
-  const onSave = async () => {
-    if (!tenant || !tenant.id) {
-      if (window.toast) window.toast("Error: tenant no cargado", "error");
-      return;
-    }
-    setSaving(true);
-    try {
-      const sb = (typeof window !== "undefined" && window.__habSupabase) || null;
-      if (!sb || !sb.from) {
-        if (window.toast) window.toast("Error: cliente Supabase no disponible", "error");
-        setSaving(false);
-        return;
-      }
-      const payload = {
-        dias_expiracion: Number(diasExpiracion) || 7,
-        max_usos: Number(maxUsos) || 1,
-        notificar_respuestas: !!notificarRespuestas,
-      };
-      const merged = { ...(tenantConfig || {}), formularios: payload };
-      const { error } = await sb.from("tenant_config").upsert({ tenant_id: tenant.id, ...merged }, { onConflict: "tenant_id" });
-      if (error) {
-        if (window.toast) window.toast("Error guardando: " + error.message, "error");
-      } else {
-        if (window.toast) window.toast("Defaults de formularios guardados", "success");
-        if (onSaved) onSaved();
-      }
-    } catch (e) {
-      if (window.toast) window.toast("Error: " + (e.message || "desconocido"), "error");
-    } finally {
-      setSaving(false);
-    }
-  };
-  
-  return (
-    <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 12, padding: 28 }}>
-      <div style={{ ...F, fontSize: 16, fontWeight: 600, marginBottom: 4 }}>Defaults de Formularios</div>
-      <div style={{ ...F, fontSize: 12, color: C.inkLight, marginBottom: 24 }}>
-        Configura valores por defecto que se aplicaran a TODOS los links publicos nuevos.
-        Cada link puede sobrescribirlos en su propia configuracion.
-      </div>
-      
-      <div style={{ display: "grid", gap: 16, maxWidth: 500 }}>
-        <label style={{ display: "block" }}>
-          <div style={{ ...F, fontSize: 12, color: C.inkLight, marginBottom: 6 }}>Dias de expiracion (default)</div>
-          <input
-            type="number"
-            min="1"
-            max="365"
-            value={diasExpiracion}
-            onChange={(e) => setDiasExpiracion(e.target.value)}
-            style={{ ...F, width: "100%", padding: "10px 12px", border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 14 }}
-          />
-          <div style={{ ...F, fontSize: 11, color: C.inkLight, marginTop: 4 }}>Despues de N dias sin completar, el link caduca y se envia el email "tu link caduco".</div>
-        </label>
-        
-        <label style={{ display: "block" }}>
-          <div style={{ ...F, fontSize: 12, color: C.inkLight, marginBottom: 6 }}>Maximo de usos por link (default)</div>
-          <input
-            type="number"
-            min="1"
-            max="100"
-            value={maxUsos}
-            onChange={(e) => setMaxUsos(e.target.value)}
-            style={{ ...F, width: "100%", padding: "10px 12px", border: `1px solid ${C.border}`, borderRadius: 6, fontSize: 14 }}
-          />
-          <div style={{ ...F, fontSize: 11, color: C.inkLight, marginTop: 4 }}>Numero de veces que un link puede usarse antes de marcarse como agotado.</div>
-        </label>
-        
-        <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", padding: "12px", border: `1px solid ${C.border}`, borderRadius: 6 }}>
-          <input
-            type="checkbox"
-            checked={notificarRespuestas}
-            onChange={(e) => setNotificarRespuestas(e.target.checked)}
-            style={{ width: 16, height: 16 }}
-          />
-          <div>
-            <div style={{ ...F, fontSize: 13, fontWeight: 500 }}>Notificar cada nueva respuesta</div>
-            <div style={{ ...F, fontSize: 11, color: C.inkLight }}>Envia un email al equipo cada vez que un cliente completa un formulario.</div>
-          </div>
-        </label>
-      </div>
-      
-      <div style={{ marginTop: 24 }}>
-        <button
-          onClick={onSave}
-          disabled={saving}
-          style={{
-            ...F,
-            padding: "10px 20px",
-            background: saving ? C.inkLight : C.ink,
-            color: "#fff",
-            border: "none",
-            borderRadius: 6,
-            fontSize: 14,
-            fontWeight: 500,
-            cursor: saving ? "wait" : "pointer",
-          }}
-        >
-          {saving ? "Guardando..." : "Guardar"}
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function TabPlaceholder({ title, desc, sprintRef }) {
   return (
     <div style={{
@@ -2017,9 +1904,6 @@ export default function AjustesGrupo({ onBack }) {
             )}
             {active === "comms" && (
               <TabComunicaciones />
-            )}
-            {active === "formularios" && (
-              <TabFormularios tenant={t.tenant} tenantConfig={t.tenantConfig} onSaved={onTabSaved} />
             )}
             {active === "miembros" && (
               <TabPlaceholder
