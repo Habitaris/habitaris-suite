@@ -439,7 +439,12 @@ function AppInner() {
   const mod = MODULES.find(m => m.id === active)
 
   const selectModule = (id) => { sessionStorage.setItem("hab:active_module", id); setActive(id); }
-  const goHome = () => { sessionStorage.removeItem("hab:active_module"); setActive(null); }
+  const goHome = () => {
+    const hasCompany = !!sessionStorage.getItem("hab:company_active");
+    sessionStorage.setItem("hab:active_module", "__home__");
+    setActive(null);
+    goTo(hasCompany ? "/" : "/grupo");
+  }
   const doLogout = () => { logout(); setAuthed(false); }
 
   // Public routes — no login required
