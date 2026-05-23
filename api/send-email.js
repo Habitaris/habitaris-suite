@@ -47,7 +47,7 @@ export default async function handler(req, res) {
       var otpHtml = '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5F4F1;font-family:Arial,sans-serif">'
         + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:40px 20px"><tr><td align="center">'
         + '<table width="480" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">'
-        + '<tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="https://suite.habitaris.es/logo-habitaris.jpg" alt="Habitaris" width="140"/></td></tr>'
+        + '<tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="' + (__brand.logo_url || "https://suite.habitaris.es/logo-habitaris.jpg") + '" alt="' + (__brand.empresa || "Habitaris") + '" width="140"/></td></tr>'
         + '<tr><td style="padding:32px 40px;text-align:center">'
         + '<div style="font-size:18px;font-weight:bold;color:#111;margin-bottom:8px">Código de verificación</div>'
         + '<div style="font-size:13px;color:#666;margin-bottom:24px">Hola ' + nombre + ', usa este código para verificar tu identidad:</div>'
@@ -63,9 +63,9 @@ export default async function handler(req, res) {
         method: "POST",
         headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
         body: JSON.stringify({
-          from: (__brand2.empresa || "Habitaris") + " <" + (__brand2.email_noreply || "noreply@habitaris.es") + ">",
+          from: (__brand.empresa || "Habitaris") + " <" + (__brand.email_noreply || "noreply@habitaris.es") + ">",
           to: [recipientEmail],
-          subject: code + " — Código de verificación Habitaris",
+          subject: code + " — Código de verificación " + (__brand.empresa || "Habitaris"),
           html: otpHtml,
         }),
       });
@@ -824,10 +824,10 @@ async function handlePasswordResetRequest(body, res) {
     const html = '<!DOCTYPE html><html><body style="margin:0;padding:0;background:#F5F4F1;font-family:Arial,sans-serif">'
       + '<table width="100%" cellpadding="0" cellspacing="0" style="background:#F5F4F1;padding:40px 20px"><tr><td align="center">'
       + '<table width="500" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.08)">'
-      + '<tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="https://suite.habitaris.es/logo-habitaris.jpg" alt="Habitaris" width="140"/></td></tr>'
+      + '<tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee"><img src="' + (__brand.logo_url || "https://suite.habitaris.es/logo-habitaris.jpg") + '" alt="' + (__brand.empresa || "Habitaris") + '" width="140"/></td></tr>'
       + '<tr><td style="padding:32px 40px">'
       + '<div style="font-size:18px;font-weight:bold;color:#111;margin-bottom:12px">Restablecer contraseña</div>'
-      + '<div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:24px">' + greeting + '<br><br>Recibimos una solicitud para restablecer tu contraseña en la suite Habitaris. Pulsa el botón para crear una nueva:</div>'
+      + '<div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:24px">' + greeting + '<br><br>Recibimos una solicitud para restablecer tu contraseña en la suite ' + (__brand.empresa || "Habitaris") + '. Pulsa el botón para crear una nueva:</div>'
       + '<div style="text-align:center;margin:24px 0">'
       + '<a href="' + resetLink + '" style="display:inline-block;background:#111;color:#fff;text-decoration:none;padding:12px 28px;border-radius:6px;font-size:14px;font-weight:600">Establecer nueva contraseña</a>'
       + '</div>'
