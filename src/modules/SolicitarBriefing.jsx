@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 // ===========================================================
 // SolicitarBriefing — Pagina publica de captacion de leads.
@@ -185,6 +185,35 @@ const S = {
   },
 };
 export default function SolicitarBriefing() {
+  // Marca blanca: arranca con MARCA hardcoded y se sobreescribe con tenant_config si carga OK.
+  const [marca, setMarca] = useState(MARCA);
+  useEffect(() => {
+    (async () => {
+      try {
+        const SUPABASE_URL = "https://xlzkasdskatnikuavefh.supabase.co";
+        const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhsemthc2Rza2F0bmlrdWF2ZWZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTE3NzQsImV4cCI6MjA4NzQ2Nzc3NH0.SR9tIpvL0YnV9CNrRq4T-xetifuNQOJZE0OnQpwtYLM";
+        const r = await fetch(SUPABASE_URL + "/rest/v1/tenant_config?tenant_id=eq.habitaris&select=*", {
+          headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+        });
+        if (!r.ok) return;
+        const rows = await r.json();
+        if (!Array.isArray(rows) || !rows.length) return;
+        const cfg = rows[0] || {};
+        const empresa = cfg.empresa || {};
+        const contacto = cfg.contacto || {};
+        const domicilio = cfg.domicilio || {};
+        const marca_cfg = cfg.marca || cfg.branding || {};
+        setMarca({
+          logo: marca_cfg.logo_url || MARCA.logo,
+          empresa: empresa.razon_social || empresa.nombre || MARCA.empresa,
+          nit: empresa.nit ? ("NIT " + empresa.nit) : MARCA.nit,
+          ciudad: domicilio.ciudad ? (domicilio.ciudad + ", " + (domicilio.pais || "Colombia")) : MARCA.ciudad,
+          telefono: contacto.tel_publico || MARCA.telefono,
+          emailContacto: contacto.email_publico || MARCA.emailContacto,
+        });
+      } catch (e) {}
+    })();
+  }, []);
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [prefix, setPrefix] = useState("+57");
@@ -243,14 +272,14 @@ export default function SolicitarBriefing() {
 
   const FooterBlock = (
     <div style={S.footer}>
-      {`${MARCA.empresa} · ${MARCA.nit} · ${MARCA.ciudad} · ${MARCA.telefono}`}
-      <div style={S.footerAuto}>{`Si tienes cualquier duda, escríbenos a ${MARCA.emailContacto}.`}</div>
+      {`${marca.empresa} · ${marca.nit} · ${marca.ciudad} · ${marca.telefono}`}
+      <div style={S.footerAuto}>{`Si tienes cualquier duda, escríbenos a ${marca.emailContacto}.`}</div>
     </div>
   );
 
   const Header = (
     <div style={S.header}>
-      <img src={LOGO_URL} alt="Habitaris" style={S.logo} />
+      <img src={marca.logo} alt={marca.empresa} style={S.logo} />
     </div>
   );
 
