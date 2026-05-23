@@ -588,7 +588,7 @@ function preExpiryReminderTemplate(link, hoursBeforeExpiry, brand) {
       </a>
     </div>
     <div style="padding:16px 24px;border-top:1px solid #f0ecff;font-size:11px;color:#888;">
-      Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia · +57 350 566 1545
+      ${brand.razon_social || "Habitaris S.A.S"} · NIT ${brand.nit || "901.922.136-8"} · ${brand.ciudad || "Bogotá D.C., Colombia"} · ${brand.telefono || "+57 350 566 1545"}
     </div>
   </div>
 </div>`;
@@ -694,11 +694,11 @@ function expiredTemplate(link, whatsappPhone, brand) {
           <p style="margin:16px 0 0 0;font-size:14px;color:#333;">Un saludo,<br><strong>El equipo de ${brand.empresa || 'Habitaris'}</strong></p>
         </td></tr>
         <tr><td style="padding:0 40px 16px 40px;text-align:center;">
-          <p style="margin:0 0 6px 0;font-size:12px;color:#666;">Si tienes cualquier duda, escríbenos a <a href="mailto:comercial@habitaris.es" style="color:#111;text-decoration:underline;">comercial@habitaris.es</a>.</p>
+          <p style="margin:0 0 6px 0;font-size:12px;color:#666;">Si tienes cualquier duda, escríbenos a <a href="mailto:${brand.email_publico || 'comercial@habitaris.es'}" style="color:#111;text-decoration:underline;">${brand.email_publico || 'comercial@habitaris.es'}</a>.</p>
           <p style="margin:0;font-size:11px;color:#999;font-style:italic;">Correo automático. Por favor, no responder a esta dirección.</p>
         </td></tr>
         <tr><td style="background:#fafafa;padding:16px 40px;border-top:1px solid #eee;">
-          <p style="margin:0;font-size:11px;color:#999;line-height:1.5;">Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C., Colombia · +57 350 566 1545</p>
+          <p style="margin:0;font-size:11px;color:#999;line-height:1.5;">${brand.razon_social || "Habitaris S.A.S"} · NIT ${brand.nit || "901.922.136-8"} · ${brand.ciudad || "Bogotá D.C., Colombia"} · ${brand.telefono || "+57 350 566 1545"}</p>
         </td></tr>
       </table>
     </td></tr>
