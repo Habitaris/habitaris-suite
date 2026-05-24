@@ -155,7 +155,7 @@ export default function TabPublicos({ forms, setForms }) {
 // =============================================================================
 function PublicFormEditor({ form, forms, setForms, onClose }) {
   const pr = (form && form.publicRequest) || {};
-  const initialEmails = ((pr.emails && pr.emails.approverList) || ["dparra@habitaris.co"]).join("\n");
+  const initialEmails = ((pr.emails && pr.emails.approverList) || ["dparra@habitaris.es"]).join("\n");
   
   const [slug, setSlug] = useState(pr.slug || "");
   const [requireApproval, setRequireApproval] = useState(pr.requireApproval !== false);
@@ -264,7 +264,7 @@ function PublicFormEditor({ form, forms, setForms, onClose }) {
         
         {requireApproval && (
           <Section title="Emails de aprobadores" desc="Lista de correos que recibiran las solicitudes para aprobar. Uno por linea.">
-            <textarea value={emailsText} onChange={(e) => setEmailsText(e.target.value)} style={taSt} placeholder={"dparra@habitaris.co\ncomercial@habitaris.es"} />
+            <textarea value={emailsText} onChange={(e) => setEmailsText(e.target.value)} style={taSt} placeholder={"dparra@habitaris.es\ncomercial@habitaris.es"} />
           </Section>
         )}
         
@@ -308,7 +308,7 @@ function PublicFormEditor({ form, forms, setForms, onClose }) {
           </Section>
         )}
         
-        <div style={{ display: "flex", gap: 12, alignItems: "center", paddingTop: 12, borderTop: "1px solid " + T.border, marginTop: 12 }}>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", paddingTop: 12, borderTop: "1px solid " + T.border, marginTop: 12, position: "sticky", bottom: 0, background: T.bg || "#fff", paddingBottom: 12, zIndex: 10 }}>
           <button onClick={handleSave} style={{ padding: "10px 20px", background: T.ink, color: "#fff", border: "none", borderRadius: 6, cursor: "pointer", fontWeight: 600, fontSize: 14 }}>
             Guardar cambios
           </button>
