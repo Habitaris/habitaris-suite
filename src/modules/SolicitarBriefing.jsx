@@ -186,6 +186,8 @@ const S = {
 };
 export default function SolicitarBriefing() {
   // Marca blanca: arranca con MARCA hardcoded y se sobreescribe con tenant_config si carga OK.
+  // Form info — slug, formId, formNombre. Cargado desde habitaris_formularios kv_store.
+  const [formInfo, setFormInfo] = useState({ formId: "", formNombre: "Briefing Inicial Habitaris", slug: "briefing-inicial", publicRequest: null });
   const [marca, setMarca] = useState(MARCA);
   useEffect(() => {
     (async () => {
@@ -210,6 +212,42 @@ export default function SolicitarBriefing() {
           ciudad: domicilio.ciudad ? (domicilio.ciudad + ", " + (domicilio.pais || "Colombia")) : MARCA.ciudad,
           telefono: contacto.tel_publico || MARCA.telefono,
           emailContacto: contacto.email_publico || MARCA.emailContacto,
+        });
+      } catch (e) {}
+    })();
+  }, []);
+
+  // D0: cargar formulario por slug de la URL desde habitaris_formularios kv_store.
+  // Si la ruta es /solicitar/{slug}, intentamos cargar ese form especifico.
+  // Si la ruta es /solicitar-briefing (legacy) o no encuentra slug, se queda en defaults.
+  useEffect(() => {
+    (async () => {
+      try {
+        const SUPABASE_URL = "https://xlzkasdskatnikuavefh.supabase.co";
+        const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhsemthc2Rza2F0bmlrdWF2ZWZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTE3NzQsImV4cCI6MjA4NzQ2Nzc3NH0.SR9tIpvL0YnV9CNrRq4T-xetifuNQOJZE0OnQpwtYLM";
+        // Leer slug de la URL: /solicitar/{slug} -> slug. Default briefing-inicial si no hay.
+        const path = (typeof window !== "undefined" && window.location && window.location.pathname) || "";
+        let slugFromUrl = "briefing-inicial";
+        if (path.startsWith("/solicitar/")) {
+          slugFromUrl = path.substring("/solicitar/".length).split("/")[0].split("?")[0] || "briefing-inicial";
+        }
+        const r = await fetch(SUPABASE_URL + "/rest/v1/kv_store?key=eq.habitaris_formularios&select=value", {
+          headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY }
+        });
+        if (!r.ok) return;
+        const rows = await r.json();
+        if (!Array.isArray(rows) || !rows.length) return;
+        const raw = rows[0].value;
+        const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+        const formsArr = (parsed && Array.isArray(parsed.forms)) ? parsed.forms : [];
+        // Buscar form donde publicRequest.slug === slugFromUrl
+        const f = formsArr.find(x => x && x.publicRequest && x.publicRequest.slug === slugFromUrl);
+        if (!f) return;
+        setFormInfo({
+          formId: f.id || "",
+          formNombre: f.nombre || f.name || "Briefing Inicial Habitaris",
+          slug: slugFromUrl,
+          publicRequest: f.publicRequest || null,
         });
       } catch (e) {}
     })();
@@ -255,6 +293,9 @@ export default function SolicitarBriefing() {
           telefono: prefix + " " + telTrim,
           mensaje_opcional: mensaje.trim(),
           website: website,
+          form_id: formInfo.formId,
+          form_nombre: formInfo.formNombre,
+          form_slug: formInfo.slug,
         }),
       });
       const data = await res.json().catch(() => ({}));
