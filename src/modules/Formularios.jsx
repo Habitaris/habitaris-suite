@@ -152,11 +152,7 @@ const CIUDADES_CO = {
   "Vaupés":["Mitú","Otra"],"Vichada":["Puerto Carreño","Otra"]
 };
 const PLANTILLAS = [
-  { id:"briefing_inicial", version:7, nombre:"Briefing Inicial Habitaris", modulo:"crm", desc:"Formulario completo de briefing para nuevos proyectos",
-    defaultMaxUsos: 2,
-    defaultHorasDuracion: 48,
-    modoEnvio: "aprobacion",
-    emailsAprobadores: ["dparra@habitaris.co"],
+  { id:"briefing_inicial", version:6, nombre:"Briefing Inicial Habitaris", modulo:"crm", desc:"Formulario completo de briefing para nuevos proyectos",
     campos:[
       /* ── Aviso de Privacidad (gate) ── */
       {id:"f_privacidad",tipo:"info",label:"Aviso de Privacidad: En Habitaris SAS (NIT 901.922.136-8, domicilio Bogotá D.C., email: comercial.co, tel: +57 350 5661545), tratamos tus datos personales para procesar tu solicitud de briefing, enviar cotizaciones y gestionar proyectos. Cumplimos con la Ley 1581/2012 y Régimen de Protección de Datos. Derechos (acceso, rectificación, supresión, revocación): vía comercial.co.",desc:"",required:false,opciones:[],logica:null},
@@ -331,7 +327,7 @@ function Constructor({ forms, setForms, editId, setEditId, onSaved, envios, addE
     if (openShareOnMount && existing && existing.id === openShareOnMount) {
       setShareClient({nombre:"",email:"",tel:"",codTel:""});
       setShareGenerated(""); setShareFileName(""); setSharePublicUrl(""); setShareLinkId("");
-      setLinkMaxUsos(typeof existing?.defaultMaxUsos === "number" ? existing.defaultMaxUsos : 2); setLinkHorasDuracion(typeof existing?.defaultHorasDuracion === "number" ? existing.defaultHorasDuracion : 48); setLinkExpiry("");
+      setLinkMaxUsos(2); setLinkHorasDuracion(48); setLinkExpiry("");
       setShareOnly(true);
       setShowShare(true);
       onShareOpened?.();
