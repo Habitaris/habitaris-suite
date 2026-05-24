@@ -960,6 +960,35 @@ async function briefingGetRecipients(sb, eventType) {
     return [];
   }
 }
+
+// D1: cargar publicRequest de un form desde kv_store habitaris_formularios.
+// Devuelve { formId, formNombre, publicRequest } o null si no se encuentra.
+// El form se busca primero por id, luego por slug. Silencia cualquier error.
+async function loadPublicRequestByFormId(sb, formId, formSlug) {
+  try {
+    const u = sb.url + "/rest/v1/kv_store?key=eq.habitaris_formularios&select=value";
+    const r = await fetch(u, { headers: sb.headers });
+    if (!r.ok) return null;
+    const rows = await r.json();
+    if (!Array.isArray(rows) || !rows.length) return null;
+    const raw = rows[0].value;
+    const parsed = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!parsed || !Array.isArray(parsed.forms)) return null;
+    let f = null;
+    if (formId) f = parsed.forms.find(x => x && x.id === formId);
+    if (!f && formSlug) f = parsed.forms.find(x => x && x.publicRequest && x.publicRequest.slug === formSlug);
+    if (!f) return null;
+    return {
+      formId: f.id || "",
+      formNombre: f.nombre || f.name || "",
+      publicRequest: f.publicRequest || null,
+    };
+  } catch (e) {
+    console.error("[loadPublicRequestByFormId] error:", e.message);
+    return null;
+  }
+}
+
 async function handleBriefingRequest(req, res) {
   try {
     if (req.method !== "POST") {
@@ -971,6 +1000,11 @@ async function handleBriefingRequest(req, res) {
     const telefono = String(body.telefono || "").trim();
     const mensaje = String(body.mensaje_opcional || "").trim();
     const honey = String(body.website || "").trim();
+    // D1: form_id, form_nombre, form_slug enviados por D0 (SolicitarBriefing.jsx).
+    // Si no vienen, fallback a defaults briefing-inicial.
+    const formIdFromBody = String(body.form_id || "").trim();
+    const formSlugFromBody = String(body.form_slug || "").trim() || "briefing-inicial";
+    const formNombreFromBody = String(body.form_nombre || "").trim() || "Briefing Inicial";
 
     if (honey.length > 0) {
       return res.status(200).json({ ok: true });
@@ -1015,9 +1049,25 @@ async function handleBriefingRequest(req, res) {
       return res.status(500).json({ ok: false, error: "No se pudo guardar la solicitud" });
     }
 
-    const recipients = await briefingGetRecipients(sb, "briefing.request_received");
-    const approvers = recipients.filter(r => r.role === "approver").map(r => r.email);
-    const ccList = recipients.filter(r => r.role === "cc" || r.role === "info").map(r => r.email);
+    // D1: cargar publicRequest del form. Si tiene emails.approverList, usar esa lista.
+    // Sino fallback a notification_recipients (legacy).
+    const formInfo = await loadPublicRequestByFormId(sb, formIdFromBody, formSlugFromBody);
+    const pr = formInfo && formInfo.publicRequest ? formInfo.publicRequest : null;
+    let approvers = [];
+    let ccList = [];
+    if (pr && pr.emails && Array.isArray(pr.emails.approverList) && pr.emails.approverList.length > 0) {
+      // Usar lista del editor visual
+      approvers = pr.emails.approverList.filter(e => typeof e === "string" && e.includes("@"));
+      // Para cc, intentamos pr.emails.ccList si existe (estructura futura), sino vacío
+      if (pr.emails.ccList && Array.isArray(pr.emails.ccList)) {
+        ccList = pr.emails.ccList.filter(e => typeof e === "string" && e.includes("@"));
+      }
+    } else {
+      // Fallback legacy: notification_recipients
+      const recipients = await briefingGetRecipients(sb, "briefing.request_received");
+      approvers = recipients.filter(r => r.role === "approver").map(r => r.email);
+      ccList = recipients.filter(r => r.role === "cc" || r.role === "info").map(r => r.email);
+    }
     console.log("[briefing_request] approvers count:", approvers.length, "list:", JSON.stringify(approvers));
     console.log("[briefing_request] ccList count:", ccList.length, "list:", JSON.stringify(ccList));
 
