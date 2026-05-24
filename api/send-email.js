@@ -989,6 +989,17 @@ async function loadPublicRequestByFormId(sb, formId, formSlug) {
   }
 }
 
+// D2: reemplaza placeholders en texto. Soporta {form_name}, {nombre}, {email}, {tel}.
+function applyPlaceholders(text, ctx) {
+  if (typeof text !== "string") return text;
+  return text
+    .replace(/\{form_name\}/g, (ctx && ctx.formName) || "")
+    .replace(/\{nombre\}/g, (ctx && ctx.nombre) || "")
+    .replace(/\{email\}/g, (ctx && ctx.email) || "")
+    .replace(/\{tel\}/g, (ctx && ctx.tel) || "")
+    .replace(/\{telefono\}/g, (ctx && ctx.tel) || "");
+}
+
 async function handleBriefingRequest(req, res) {
   try {
     if (req.method !== "POST") {
@@ -1109,8 +1120,15 @@ async function handleBriefingRequest(req, res) {
       "<div class=\"wrap\"><div class=\"card\">",
       "<div class=\"header\"><img src=\"https://suite.habitaris.es/logo-habitaris.jpg\" alt=\"Habitaris\"/></div>",
       "<div class=\"body\">",
-      "<h1>Nueva solicitud de briefing</h1>",
-      "<p>Un cliente potencial ha solicitado el formulario de briefing. Revisa los datos y aprueba o rechaza la solicitud.</p>",
+      // D2: si pr.emails.approver.introHtml existe, usar texto personalizado con placeholders
+      (function() {
+        const ctx = { formName: formNombreFromBody, nombre: nombre, email: email, tel: telefono };
+        const customIntroHtml = (pr && pr.emails && pr.emails.approver && pr.emails.approver.introHtml) ? applyPlaceholders(pr.emails.approver.introHtml, ctx) : "";
+        if (customIntroHtml && customIntroHtml.trim().length > 0) {
+          return "<h1>" + applyPlaceholders((pr && pr.emails && pr.emails.approver && pr.emails.approver.subject) || "Nueva solicitud de briefing", ctx) + "</h1>" + customIntroHtml;
+        }
+        return "<h1>Nueva solicitud de briefing</h1><p>Un cliente potencial ha solicitado el formulario de briefing. Revisa los datos y aprueba o rechaza la solicitud.</p>";
+      })(),
       "<div class=\"datos\">",
       "<div class=\"row\"><span class=\"label\">Nombre</span><span class=\"val\">" + briefingEscape(nombre) + "</span></div>",
       "<div class=\"row\"><span class=\"label\">Email</span><span class=\"val\">" + briefingEscape(email) + "</span></div>",
@@ -1132,7 +1150,10 @@ async function handleBriefingRequest(req, res) {
       to: approvers,
       cc: ccList.length > 0 ? ccList : undefined,
       reply_to: "comercial@habitaris.es",
-      subject: "Nueva solicitud de briefing - " + nombre,
+      // D2: subject personalizado si pr.emails.approver.subject existe
+      subject: (pr && pr.emails && pr.emails.approver && pr.emails.approver.subject)
+        ? applyPlaceholders(pr.emails.approver.subject, { formName: formNombreFromBody, nombre: nombre, email: email, tel: telefono })
+        : ("Nueva solicitud de " + (formNombreFromBody || "briefing") + " - " + nombre),
       html: emailHtml,
     };
 
