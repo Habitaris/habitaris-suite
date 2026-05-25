@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 
 // ===========================================================
-// SolicitarBriefing — Pagina publica de captacion de leads.
+// SolicitarBriefing — Página pública de captación de leads.
 // Estetica 1:1 con plantilla invitation del email
 //   exterior lavanda #f3f0ff, card blanca radius 8px,
-//   header con logo .jpg, boton negro #111 radius 6px,
-//   footer con razon social + NIT + telefono.
-// Ruta publica: /solicitar-briefing (sin login).
+//   header con logo .jpg, botón negro #111 radius 6px,
+//   footer con razón social + NIT + teléfono.
+// Ruta pública: /solicitar-briefing (sin login).
 // POST a /api/send-email?action=briefing_request
 // ===========================================================
 
@@ -276,15 +276,15 @@ export default function SolicitarBriefing() {
     const telTrim = telefono.trim();
 
     if (nombreTrim.length < 3) {
-      setErrorMsg("Indica tu nombre completo (minimo 3 caracteres).");
+      setErrorMsg("Indica tu nombre completo (mínimo 3 caracteres).");
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
-      setErrorMsg("El email no parece valido.");
+      setErrorMsg("El email no parece válido.");
       return;
     }
     if (telTrim.length < 7) {
-      setErrorMsg("Indica un telefono valido (minimo 7 digitos).");
+      setErrorMsg("Indica un teléfono válido (mínimo 7 dígitos).");
       return;
     }
 
@@ -403,7 +403,7 @@ export default function SolicitarBriefing() {
             </div>
 
             <div style={S.field}>
-              <label style={S.label} htmlFor="sb-tel">Telefono / WhatsApp</label>
+              <label style={S.label} htmlFor="sb-tel">Teléfono / WhatsApp</label>
               <div style={S.row}>
                 <select
                   style={S.prefix}
