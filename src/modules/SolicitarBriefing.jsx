@@ -489,7 +489,7 @@ export default function SolicitarBriefing() {
             </div>
 
             <div style={S.field}>
-              <label style={S.label} htmlFor="sb-email">Email</label>
+              <label style={S.label} htmlFor="sb-email">Email *</label>
               <input
                 id="sb-email"
                 type="email"
@@ -504,7 +504,7 @@ export default function SolicitarBriefing() {
             </div>
 
             <div style={S.field}>
-              <label style={S.label} htmlFor="sb-tel">Teléfono / WhatsApp</label>
+              <label style={S.label} htmlFor="sb-tel">Teléfono / WhatsApp *</label>
               <div style={S.row}>
                 <select
                   style={S.prefix}
