@@ -116,29 +116,35 @@ export function TenantProvider({ children }) {
     }, 8000);
 
     async function load() {
+      console.log("[TC] A: load() start");
       try {
         // FIX race condition login -> /grupo: la sesión puede estar siendo escrita
         // por el flujo de login mientras este useEffect ya se está ejecutando. Esperamos
         // hasta 3 segundos con polling 250ms antes de asumir que NO hay sesión.
         let raw = sessionStorage.getItem("hab:session");
+        console.log("[TC] B: raw initial:", !!raw, "len:", raw?raw.length:0);
         if (!raw) {
           const maxRetries = 12; // 12 * 250ms = 3000ms
           for (let i = 0; i < maxRetries && !raw; i++) {
             await new Promise(r => setTimeout(r, 250));
-            if (cancelled) return;
+            if (cancelled) { console.log("[TC] C: polling cancelled"); return; }
             raw = sessionStorage.getItem("hab:session");
+            if (raw) console.log("[TC] C: polling found raw at iter", i);
           }
         }
         if (!raw) {
+          console.log("[TC] D: !raw FINAL — bailing out");
           if (!cancelled) {
             completed = true;
             setState(s => ({ ...s, loading: false, error: null }));
           }
           return;
         }
+        console.log("[TC] D: raw OK after polling");
         let sess;
         try { sess = JSON.parse(raw); } catch { sess = null; }
         const userId = sess && sess.user && sess.user.id;
+        console.log("[TC] E: userId:", userId);
         if (!userId) {
           if (!cancelled) {
             completed = true;
@@ -246,6 +252,7 @@ export function TenantProvider({ children }) {
         const _tenantConfigData = (configData && configData.config) || null;
         // Sprint C Capa 3: poblar cache global para uso en funciones planas (emails, PDFs).
         try { setTenantConfigCache(_tenantConfigData); } catch (_) {}
+        console.log("[TC] F: ALL DATA READY, setting state with tenant");
         setState({
           loading: false,
           tenant: tenantData,
@@ -263,7 +270,8 @@ export function TenantProvider({ children }) {
         console.error('[TenantContext] error fatal en load():', e);
         if (!cancelled) {
           completed = true;
-          setState(s => ({ ...s, loading: false, error: (e && e.message) || "Error cargando el contexto del grupo" }));
+          console.error("[TC] G: CAUGHT EXCEPTION:", e && e.message, e && e.stack);
+        setState(s => ({ ...s, loading: false, error: (e && e.message) || "Error cargando el contexto del grupo" }));
         }
       }
     }
