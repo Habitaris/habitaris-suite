@@ -79,6 +79,9 @@ export async function login(identifier, password) {
   const session = { user: { id: user.id, email: user.email, nombre: user.display_name || user.nombre, rol: user.rol, username: user.username }, ts: Date.now() }
   sessionStorage.setItem(SESSION_KEY, JSON.stringify(session))
   window.__habitarisSessionActive = true
+  // FIX race condition: notificar a TenantContext que la sesión está lista,
+  // por si su useEffect ya leyó sessionStorage cuando aún no estaba escrita.
+  try { window.dispatchEvent(new Event('hab:session-changed')); } catch(e){}
   // Actualizar last_login (no bloqueante)
   sb.from('users').update({ ultimo_login: new Date().toISOString() }).eq('id', user.id).then(() => {})
   return user
