@@ -182,6 +182,12 @@ export default function FormularioPublico() {
 
   /* Load tenant config (for error-state CTAs, marca, etc.) */
   useEffect(() => {
+    const orig = document.title;
+    document.title = (def && def.nombre) ? def.nombre + " — Habitaris" : "Formulario — Habitaris";
+    return () => { document.title = orig; };
+  }, [def]);
+
+  useEffect(() => {
     (async () => {
       try {
         const { data } = await sb.from("kv_store").select("value").eq("key", "habitaris_config").eq("tenant_id", "habitaris").maybeSingle();
