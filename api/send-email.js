@@ -641,7 +641,7 @@ function invitationTemplate(link, brand) {
     <tr><td align="center">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#fff;border-radius:8px;overflow:hidden;">
         <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;">
-          <img src="${(brand.logo_black_url && brand.logo_black_url.startsWith('http')) ? brand.logo_black_url : ((brand.app_url || 'https://suite.habitaris.es') + (brand.logo_black_url || '/logo-habitaris.jpg'))}" alt="${brand.empresa || 'Habitaris'}" height="50" style="display:block;margin:0 auto;">
+          <img src="${(brand.logo_black_url && brand.logo_black_url.startsWith('http')) ? brand.logo_black_url : ((brand.app_url || 'https://suite.habitaris.es') + (brand.logo_black_url || '/logo-habitaris.jpg'))}" alt="${brand.empresa || 'Habitaris'}" style="height:50px;display:inline-block;">
         </td></tr>
         <tr><td style="padding:32px 28px;">
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#111;">${greeting}</p>
