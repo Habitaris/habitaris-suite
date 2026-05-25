@@ -117,7 +117,18 @@ export function TenantProvider({ children }) {
 
     async function load() {
       try {
-        const raw = sessionStorage.getItem("hab:session");
+        // FIX race condition login -> /grupo: la sesión puede estar siendo escrita
+        // por el flujo de login mientras este useEffect ya se está ejecutando. Esperamos
+        // hasta 3 segundos con polling 250ms antes de asumir que NO hay sesión.
+        let raw = sessionStorage.getItem("hab:session");
+        if (!raw) {
+          const maxRetries = 12; // 12 * 250ms = 3000ms
+          for (let i = 0; i < maxRetries && !raw; i++) {
+            await new Promise(r => setTimeout(r, 250));
+            if (cancelled) return;
+            raw = sessionStorage.getItem("hab:session");
+          }
+        }
         if (!raw) {
           if (!cancelled) {
             completed = true;
