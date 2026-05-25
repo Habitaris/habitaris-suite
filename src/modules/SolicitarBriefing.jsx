@@ -190,6 +190,12 @@ export default function SolicitarBriefing() {
   const [formInfo, setFormInfo] = useState({ formId: "", formNombre: "Briefing Inicial Habitaris", slug: "briefing-inicial", publicRequest: null });
   const [marca, setMarca] = useState(MARCA);
   useEffect(() => {
+    const orig = document.title;
+    document.title = (formInfo && formInfo.formNombre) ? "Solicita tu " + formInfo.formNombre + " — Habitaris" : "Solicita tu briefing — Habitaris";
+    return () => { document.title = orig; };
+  }, [formInfo]);
+
+  useEffect(() => {
     (async () => {
       try {
         const SUPABASE_URL = "https://xlzkasdskatnikuavefh.supabase.co";
