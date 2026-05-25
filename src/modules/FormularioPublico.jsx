@@ -665,7 +665,7 @@ export default function FormularioPublico() {
         });
         // Register submit event
         await SB.registerSubmit(def.id, def.nombre, linkCfg.linkId, cliente?.nombre, cliente?.email);
-        // Tras enviar exitoso: bloquear link (no permite mas usos), marcar submitted_at, limpiar parciales
+        // Tras enviar exitoso: bloquear link (no permite más usos), marcar submitted_at, limpiar parciales
         if (linkCfg.linkId) {
           SB.updateLink(linkCfg.linkId, {
             active: false,
