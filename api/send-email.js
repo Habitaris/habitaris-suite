@@ -240,7 +240,7 @@ export default async function handler(req, res) {
       + (info ? '<div style="font-size:11px;color:#999;margin-top:16px">' + info + '</div>' : '')
       + '</td></tr></table></td></tr>'
       + '<tr><td style="padding:0 40px 40px"><div style="font-size:12px;color:#999;line-height:1.6;text-align:center">'
-      + 'Es rapido y sencillo. Si tienes alguna pregunta,<br>no dudes en responder a este correo.</div></td></tr>'
+      + 'Es rápido y sencillo. Si tienes alguna pregunta,<br>no dudes en responder a este correo.</div></td></tr>'
       + '<tr><td style="background:#F5F4F1;padding:24px 40px;text-align:center;border-top:1px solid #E4E1DB">'
       + '<div style="font-size:11px;color:#888;font-weight:bold">Gracias por confiar en nosotros!</div>'
       + '<div style="font-size:10px;color:#aaa;margin-top:8px">' + empresa + ' · Bogotá D.C. · noreply@habitaris.es</div>'
@@ -357,7 +357,7 @@ async function getCurrentFormName(link, sb) {
 
 function getSupabaseClient() {
   const url = process.env.SUPABASE_URL || "https://xlzkasdskatnikuavefh.supabase.co";
-  // Fallback hardcodeado a la anon key (publica, ya esta en el frontend). Se puede sobrescribir con env vars.
+  // Fallback hardcodeado a la anon key (pública, ya está en el frontend). Se puede sobrescribir con env vars.
   const key = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhsemthc2Rza2F0bmlrdWF2ZWZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4OTE3NzQsImV4cCI6MjA4NzQ2Nzc3NH0.SR9tIpvL0YnV9CNrRq4T-xetifuNQOJZE0OnQpwtYLM";
   if (!key) throw new Error("missing supabase key");
   const headers = { apikey: key, Authorization: "Bearer " + key, "Content-Type": "application/json" };
@@ -631,7 +631,7 @@ function invitationTemplate(link, brand) {
     }
   } else {
     const horaWord = hoursUntilExpiry === 1 ? "hora" : "horas";
-    vigenciaText = "Tu link caduca " + hoursUntilExpiry + " " + horaWord + " despues de recibir este correo. " + aperturasText + ".";
+    vigenciaText = "Tu link caduca " + hoursUntilExpiry + " " + horaWord + " después de recibir este correo. " + aperturasText + ".";
   }
 
   return `<!doctype html>
@@ -1003,7 +1003,7 @@ function applyPlaceholders(text, ctx) {
 async function handleBriefingRequest(req, res) {
   try {
     if (req.method !== "POST") {
-      return res.status(405).json({ ok: false, error: "Metodo no permitido" });
+      return res.status(405).json({ ok: false, error: "Método no permitido" });
     }
     const body = req.body || {};
     const nombre = String(body.nombre_completo || "").trim();
@@ -1221,7 +1221,7 @@ async function handleBriefingRequest(req, res) {
       "<a href=\"" + approveUrl + "\" class=\"btn btn-approve\">Aprobar y enviar</a>",
       "<a href=\"" + rejectUrl + "\" class=\"btn btn-reject\">Rechazar</a>",
       "</div>",
-      "<p class=\"note\">Si apruebas, el cliente recibe automaticamente su link de briefing (validez 48h, 2 usos). Los botones expiran en 48 horas. Si los dos aprobadores hacen clic, gana el primero.</p>",
+      "<p class=\"note\">Si apruebas, el cliente recibe automáticamente su link de briefing (validez 48h, 2 usos). Los botones expiran en 48 horas. Si los dos aprobadores hacen clic, gana el primero.</p>",
       "</div>",
       "<div class=\"footer\">" + (__brand.razon_social || "Habitaris S.A.S") + " &middot; NIT " + (__brand.nit || "901.922.136-8") + " &middot; " + (__brand.ciudad || "Bogotá D.C., Colombia") + " &middot; " + (__brand.telefono || "+57 350 566 1545") + "<div class=\"sub\">Si tienes cualquier duda, escribenos a " + (__brand.email_publico || "comercial@habitaris.es") + "</div></div>",
       "</div></div></body></html>"
@@ -1304,7 +1304,7 @@ async function handleBriefingApprove(req, res) {
     });
     if (!updateRes.ok) {
       console.error("[briefing_approve] update failed:", updateRes.status);
-      return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>No se pudo procesar la aprobacion.</p>"));
+      return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>No se pudo procesar la aprobación.</p>"));
     }
     const updRows = await updateRes.json();
     if (!Array.isArray(updRows) || updRows.length === 0) {
@@ -1390,7 +1390,7 @@ async function handleBriefingApprove(req, res) {
     return res.status(200).send(briefingHtmlPage("Aprobado", "<h1>&#10003; Briefing enviado</h1><p>Se ha enviado el link de briefing a <strong>" + briefingEscape(reqRow.nombre_completo) + "</strong> (" + briefingEscape(reqRow.email) + ").</p><p class=\"small\">El link caduca en 48 horas y permite 2 usos.</p>", __brand2));
   } catch (e) {
     console.error("[briefing_approve] error:", e);
-    return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>Algo salio mal.</p>"));
+    return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>Algo salió mal.</p>"));
   }
 }
 async function handleBriefingReject(req, res) {
@@ -1438,10 +1438,10 @@ async function handleBriefingReject(req, res) {
       return res.status(200).send(briefingHtmlPage("Ya procesada", "<h1>Ya fue procesada</h1><p>Otro aprobador acaba de procesar esta solicitud.</p>"));
     }
 
-    return res.status(200).send(briefingHtmlPage("Rechazada", "<h1>Solicitud rechazada</h1><p>La solicitud de <strong>" + briefingEscape(reqRow.nombre_completo) + "</strong> ha sido rechazada.</p><p class=\"small\">El cliente no recibe ninguna notificacion.</p>", __brand));
+    return res.status(200).send(briefingHtmlPage("Rechazada", "<h1>Solicitud rechazada</h1><p>La solicitud de <strong>" + briefingEscape(reqRow.nombre_completo) + "</strong> ha sido rechazada.</p><p class=\"small\">El cliente no recibe ninguna notificación.</p>", __brand));
   } catch (e) {
     console.error("[briefing_reject] error:", e);
-    return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>Algo salio mal.</p>"));
+    return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>Algo salió mal.</p>"));
   }
 }
 
