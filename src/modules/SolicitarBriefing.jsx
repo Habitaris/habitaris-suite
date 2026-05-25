@@ -395,7 +395,7 @@ export default function SolicitarBriefing() {
           <div style={S.body}>
             <h1 style={S.h1}>Solicitud recibida</h1>
             <p style={S.intro}>
-              Gracias, <strong>{nombre.trim()}</strong>. Hemos recibido tu solicitud.
+              Gracias, <strong>{[primerNombre, segundoNombre, primerApellido, segundoApellido].map(s => s.trim()).filter(Boolean).join(" ")}</strong>. Hemos recibido tu solicitud.
             </p>
             <div style={S.highlightBox}>
               En las proximas horas recibiras un correo en <strong>{email.trim().toLowerCase()}</strong>{" "}
