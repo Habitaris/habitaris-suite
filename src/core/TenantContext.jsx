@@ -127,7 +127,6 @@ export function TenantProvider({ children }) {
             await new Promise(r => setTimeout(r, 250));
             if (cancelled) return;
             raw = sessionStorage.getItem("hab:session");
-            if (raw)
           }
         }
         if (!raw) {
