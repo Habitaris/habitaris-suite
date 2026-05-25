@@ -277,9 +277,9 @@ export default function FormularioPublico() {
           const { data, error } = await sb.from("form_links").select("*").eq("link_id", linkId).single();
           if (!error && data) {
             // Check expiration
-            if (!data.active) { setBlocked("inactive"); setDef(null); return; }
-            if (data.expires_at && new Date(data.expires_at) < new Date()) { setBlocked("expired"); setDef(null); return; }
-            if (data.max_uses > 0 && (data.current_uses||0) >= data.max_uses) { setBlocked("maxuses"); setDef(null); return; }
+            if (!data.active) { try { window.history.replaceState({}, document.title, "/"); } catch(e){} setBlocked("inactive"); setDef(null); return; }
+            if (data.expires_at && new Date(data.expires_at) < new Date()) { try { window.history.replaceState({}, document.title, "/"); } catch(e){} setBlocked("expired"); setDef(null); return; }
+            if (data.max_uses > 0 && (data.current_uses||0) >= data.max_uses) { try { window.history.replaceState({}, document.title, "/"); } catch(e){} setBlocked("maxuses"); setDef(null); return; }
             // increment moved to submit only
             // Build form object
             // Verificar si hay sesión activa de otro dispositivo (heartbeat <30s)
@@ -352,17 +352,17 @@ export default function FormularioPublico() {
 
     // Check if link was manually blocked
     const linkCfg = def.linkConfig || {};
-    if (linkCfg.blocked) { setBlocked("blocked"); setDef(null); return; }
+    if (linkCfg.blocked) { try { window.history.replaceState({}, document.title, "/"); } catch(e){} setBlocked("blocked"); setDef(null); return; }
 
     // Check link-level limits
     if (linkCfg.fechaCaducidad) {
       const expiry = new Date(linkCfg.fechaCaducidad);
-      if (expiry < new Date()) { setBlocked("expired"); setDef(null); return; }
+      if (expiry < new Date()) { try { window.history.replaceState({}, document.title, "/"); } catch(e){} setBlocked("expired"); setDef(null); return; }
     }
     if (linkCfg.maxUsos && linkCfg.maxUsos > 0) {
       const usedKey = "hab_link_uses_"+(linkCfg.linkId||def.id||"");
       const used = parseInt(store.getSync(usedKey)||"0");
-      if (used >= linkCfg.maxUsos) { setBlocked("maxuses"); setDef(null); return; }
+      if (used >= linkCfg.maxUsos) { try { window.history.replaceState({}, document.title, "/"); } catch(e){} setBlocked("maxuses"); setDef(null); return; }
     }
 
     // Also check via Supabase if configured
