@@ -641,7 +641,7 @@ function invitationTemplate(link, brand) {
     <tr><td align="center">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#fff;border-radius:8px;overflow:hidden;">
         <tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;">
-          <img src="${(brand.logo_black_url && brand.logo_black_url.startsWith('http')) ? brand.logo_black_url : ((brand.app_url || 'https://suite.habitaris.es') + (brand.logo_black_url || '/logo-habitaris.jpg'))}" alt="${brand.empresa || 'Habitaris'}" height="50" style="height:50px;display:inline-block;">
+          <img src="${(brand.logo_black_url && brand.logo_black_url.startsWith('http')) ? brand.logo_black_url : ((brand.app_url || 'https://suite.habitaris.es') + (brand.logo_black_url || '/logo-habitaris.jpg'))}" alt="${brand.empresa || 'Habitaris'}" height="50" style="display:block;margin:0 auto;">
         </td></tr>
         <tr><td style="padding:32px 28px;">
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#111;">${greeting}</p>
@@ -656,7 +656,7 @@ function invitationTemplate(link, brand) {
           <p style="margin:24px 0 0 0;font-size:14px;line-height:1.6;color:#333;">Un saludo,<br>El equipo de Habitaris</p>
         </td></tr>
         <tr><td style="padding:20px 28px;border-top:1px solid #eee;text-align:center;font-size:11px;color:#888;line-height:1.5;">
-          " + (brand.razon_social || "Habitaris S.A.S") + " &middot; NIT " + (brand.nit || "901.922.136-8") + " &middot; " + (brand.ciudad || "Bogotá D.C., Colombia") + " &middot; " + (brand.telefono || "+57 350 566 1545") + "<br>
+          ${brand.razon_social || "Habitaris S.A.S"} &middot; NIT ${brand.nit || "901.922.136-8"} &middot; ${brand.ciudad || "Bogotá D.C., Colombia"} &middot; ${brand.telefono || "+57 350 566 1545"}<br>
           <span style="color:#aaa;">Correo automático. Por favor, no responder a esta dirección.</span>
         </td></tr>
       </table>
