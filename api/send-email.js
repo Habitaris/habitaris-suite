@@ -1082,6 +1082,88 @@ async function handleBriefingRequest(req, res) {
     console.log("[briefing_request] approvers count:", approvers.length, "list:", JSON.stringify(approvers));
     console.log("[briefing_request] ccList count:", ccList.length, "list:", JSON.stringify(ccList));
 
+    // D3: si pr.requireApproval === false (modo Auto), crear link directo + email cliente sin paso aprobador.
+    // Si requireApproval es true o pr no existe -> flujo legacy (email aprobador, abajo).
+    if (pr && pr.requireApproval === false) {
+      try {
+        console.log("[briefing_request] D3 modo AUTO activado");
+        // Leer config del link del publicRequest (con fallbacks)
+        const durationHours = (pr.link && typeof pr.link.durationHours === "number") ? pr.link.durationHours : 48;
+        const maxUses = (pr.link && typeof pr.link.maxUses === "number") ? pr.link.maxUses : 2;
+        // Generar link_id y fecha de expiración
+        const linkId = "b" + randomToken(6);
+        const linkExpiresAt = new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString();
+        // Cargar formDef del kv_store (igual que approve)
+        let formDef = null;
+        let formName = formNombreFromBody || "Briefing Inicial";
+        try {
+          const kvUrl = sb.url + "/rest/v1/kv_store?tenant_id=eq.habitaris&key=eq.habitaris_formularios&select=value";
+          const kvRes = await fetch(kvUrl, { headers: sb.headers });
+          const kvRows = await kvRes.json();
+          if (Array.isArray(kvRows) && kvRows.length > 0) {
+            const data = typeof kvRows[0].value === "string" ? JSON.parse(kvRows[0].value) : kvRows[0].value;
+            const formsList = (data && data.forms) || [];
+            const formIdToUse = formIdFromBody || "vxlk7nma";
+            formDef = formsList.find(f => f && f.id === formIdToUse) || null;
+            if (formDef && formDef.nombre) formName = formDef.nombre;
+          }
+        } catch (e) {
+          console.error("[briefing_request_auto] kv_store read failed:", e.message);
+        }
+        // Construir linkBody (igual schema que handleBriefingApprove)
+        const linkBody = {
+          link_id: linkId,
+          form_id: formIdFromBody || "vxlk7nma",
+          form_name: formName,
+          client_name: nombre,
+          client_email: email,
+          client_tel: telefono,
+          max_uses: maxUses,
+          current_uses: 0,
+          expires_at: linkExpiresAt,
+          active: true,
+          modulo: (formDef && formDef.modulo) || "CRM / Oferta",
+        };
+        if (formDef) linkBody.form_def = formDef;
+        // Insert en form_links
+        const linkInsertRes = await fetch(sb.url + "/rest/v1/form_links", {
+          method: "POST",
+          headers: { ...sb.headers, "Content-Type": "application/json", "Prefer": "return=representation" },
+          body: JSON.stringify(linkBody),
+        });
+        if (!linkInsertRes.ok) {
+          const errTxt = await linkInsertRes.text().catch(() => "");
+          console.error("[briefing_request_auto] form_link insert failed:", linkInsertRes.status, errTxt);
+          // Continuar al flujo aprobador como fallback seguro
+        } else {
+          const linkInserted = await linkInsertRes.json();
+          const linkRow = (Array.isArray(linkInserted) && linkInserted.length > 0) ? linkInserted[0] : linkBody;
+          // Enviar email al cliente con invitationTemplate
+          const clientHtml = invitationTemplate(linkRow, __brand);
+          // Subject: usar pr.emails.client.subject si existe, sino default
+          const subjectAuto = (pr.emails && pr.emails.client && pr.emails.client.subject)
+            ? applyPlaceholders(pr.emails.client.subject, { formName: formName, nombre: nombre, email: email, tel: telefono })
+            : ("Tu " + formName + " - " + (__brand.empresa || "Habitaris"));
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: (__brand.empresa || "Habitaris") + " <" + (__brand.email_noreply || "noreply@habitaris.es") + ">",
+              to: [email],
+              reply_to: "comercial@habitaris.es",
+              subject: subjectAuto,
+              html: clientHtml,
+            }),
+          });
+          console.log("[briefing_request] D3 link creado y email cliente enviado:", linkId);
+          // Devolver éxito y SALTAR el flujo aprobador
+          return res.status(200).json({ ok: true, mode: "auto", link_id: linkId });
+        }
+      } catch (e) {
+        console.error("[briefing_request_auto] excepcion en flujo Auto, fallback aprobador:", e.message);
+      }
+    }
+
     if (approvers.length === 0) {
       console.warn("[briefing_request] no approvers configured");
       return res.status(200).json({ ok: true, warning: "no_approvers" });
