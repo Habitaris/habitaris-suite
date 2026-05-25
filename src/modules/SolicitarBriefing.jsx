@@ -427,7 +427,7 @@ export default function SolicitarBriefing() {
 
           {errorMsg ? <div style={S.error}>{errorMsg}</div> : null}
 
-          <form onSubmit={handleSubmit} noValidate>
+          <form onSubmit={handleSubmit}>
             <div style={S.row}>
               <div style={{ ...S.field, flex: 1 }}>
                 <label style={S.label} htmlFor="sb-pn">Primer nombre *</label>
