@@ -258,7 +258,10 @@ export default function SolicitarBriefing() {
       } catch (e) {}
     })();
   }, []);
-  const [nombre, setNombre] = useState("");
+  const [primerNombre, setPrimerNombre] = useState("");
+  const [segundoNombre, setSegundoNombre] = useState("");
+  const [primerApellido, setPrimerApellido] = useState("");
+  const [segundoApellido, setSegundoApellido] = useState("");
   const [email, setEmail] = useState("");
   const [prefix, setPrefix] = useState("+57");
   const [telefono, setTelefono] = useState("");
@@ -271,22 +274,75 @@ export default function SolicitarBriefing() {
     if (e && e.preventDefault) e.preventDefault();
     setErrorMsg("");
 
-    const nombreTrim = nombre.trim();
+    const pn = primerNombre.trim();
+    const sn = segundoNombre.trim();
+    const pa = primerApellido.trim();
+    const sa = segundoApellido.trim();
     const emailTrim = email.trim().toLowerCase();
     const telTrim = telefono.trim();
 
-    if (nombreTrim.length < 3) {
-      setErrorMsg("Indica tu nombre completo (mínimo 3 caracteres).");
-      return;
+    // Validador de partes del nombre (anti-sinsentido)
+    const NAME_RE = /^[a-záéíóúñüA-ZÁÉÍÓÚÑÜ\s.'\-]+$/;
+    const KBD_RE = /asdf|qwer|zxcv|jkl|hgfd|poiu|wasd/i;
+    function badName(v) {
+      if (v.length < 2) return "muy corto (mínimo 2 letras)";
+      if (v.length > 40) return "muy largo (máximo 40 letras)";
+      if (!NAME_RE.test(v)) return "solo puede contener letras";
+      const counts = {};
+      for (const c of v.toLowerCase()) counts[c] = (counts[c] || 0) + 1;
+      const max = Math.max.apply(null, Object.values(counts));
+      if (max / v.length > 0.7) return "no parece válido";
+      if (KBD_RE.test(v.replace(/\s/g, ""))) return "no parece válido";
+      return null;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrim)) {
+
+    let err = badName(pn);
+    if (err) { setErrorMsg("Primer nombre " + err + "."); return; }
+    if (sn) {
+      err = badName(sn);
+      if (err) { setErrorMsg("Segundo nombre " + err + "."); return; }
+    }
+    err = badName(pa);
+    if (err) { setErrorMsg("Primer apellido " + err + "."); return; }
+    if (sa) {
+      err = badName(sa);
+      if (err) { setErrorMsg("Segundo apellido " + err + "."); return; }
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailTrim)) {
       setErrorMsg("El email no parece válido.");
       return;
     }
-    if (telTrim.length < 7) {
-      setErrorMsg("Indica un teléfono válido (mínimo 7 dígitos).");
+    if (/^(asdf|qwer|zxcv|test|aaaa|bbbb|cccc|1234)/i.test(emailTrim.split("@")[0])) {
+      setErrorMsg("El email no parece válido.");
       return;
     }
+
+    const telClean = telTrim.replace(/[\s\-()]/g, "");
+    if (!/^\d+$/.test(telClean)) {
+      setErrorMsg("El teléfono solo puede contener dígitos.");
+      return;
+    }
+    if (telClean.length < 7 || telClean.length > 15) {
+      setErrorMsg("Indica un teléfono válido (7 a 15 dígitos).");
+      return;
+    }
+    if (/^(\d)\1+$/.test(telClean)) {
+      setErrorMsg("El teléfono no parece válido.");
+      return;
+    }
+    let asc = true, desc = true;
+    for (let i = 1; i < telClean.length; i++) {
+      const d = parseInt(telClean[i], 10), p = parseInt(telClean[i-1], 10);
+      if (d !== p + 1) asc = false;
+      if (d !== p - 1) desc = false;
+    }
+    if (asc || desc) {
+      setErrorMsg("El teléfono no parece válido.");
+      return;
+    }
+
+    const nombreCompleto = [pn, sn, pa, sa].filter(Boolean).join(" ");
 
     setStatus("sending");
     try {
@@ -294,7 +350,7 @@ export default function SolicitarBriefing() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nombre_completo: nombreTrim,
+          nombre_completo: nombreCompleto,
           email: emailTrim,
           telefono: prefix + " " + telTrim,
           mensaje_opcional: mensaje.trim(),
@@ -372,19 +428,64 @@ export default function SolicitarBriefing() {
           {errorMsg ? <div style={S.error}>{errorMsg}</div> : null}
 
           <form onSubmit={handleSubmit} noValidate>
-            <div style={S.field}>
-              <label style={S.label} htmlFor="sb-nombre">Nombres y apellidos</label>
-              <input
-                id="sb-nombre"
-                type="text"
-                style={S.input}
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                placeholder="Juan Carlos Perez Garcia"
-                autoComplete="name"
-                disabled={sending}
-                required
-              />
+            <div style={S.row}>
+              <div style={{ ...S.field, flex: 1 }}>
+                <label style={S.label} htmlFor="sb-pn">Primer nombre *</label>
+                <input
+                  id="sb-pn"
+                  type="text"
+                  style={S.input}
+                  value={primerNombre}
+                  onChange={(e) => setPrimerNombre(e.target.value)}
+                  placeholder="Juan"
+                  autoComplete="given-name"
+                  disabled={sending}
+                  required
+                />
+              </div>
+              <div style={{ ...S.field, flex: 1 }}>
+                <label style={S.label} htmlFor="sb-sn">Segundo nombre</label>
+                <input
+                  id="sb-sn"
+                  type="text"
+                  style={S.input}
+                  value={segundoNombre}
+                  onChange={(e) => setSegundoNombre(e.target.value)}
+                  placeholder="Carlos"
+                  autoComplete="additional-name"
+                  disabled={sending}
+                />
+              </div>
+            </div>
+
+            <div style={S.row}>
+              <div style={{ ...S.field, flex: 1 }}>
+                <label style={S.label} htmlFor="sb-pa">Primer apellido *</label>
+                <input
+                  id="sb-pa"
+                  type="text"
+                  style={S.input}
+                  value={primerApellido}
+                  onChange={(e) => setPrimerApellido(e.target.value)}
+                  placeholder="Pérez"
+                  autoComplete="family-name"
+                  disabled={sending}
+                  required
+                />
+              </div>
+              <div style={{ ...S.field, flex: 1 }}>
+                <label style={S.label} htmlFor="sb-sa">Segundo apellido</label>
+                <input
+                  id="sb-sa"
+                  type="text"
+                  style={S.input}
+                  value={segundoApellido}
+                  onChange={(e) => setSegundoApellido(e.target.value)}
+                  placeholder="García"
+                  autoComplete="family-name"
+                  disabled={sending}
+                />
+              </div>
             </div>
 
             <div style={S.field}>
