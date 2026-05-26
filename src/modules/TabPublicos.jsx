@@ -172,6 +172,13 @@ function PublicFormEditor({ form, forms, setForms, onClose }) {
   const [emailSubject, setEmailSubject] = useState((pr.emails && pr.emails.approver && pr.emails.approver.subject) || "");
   const [emailIntroHtml, setEmailIntroHtml] = useState((pr.emails && pr.emails.approver && pr.emails.approver.introHtml) || "");
   
+  // Fase A: emails al cliente personalizables (al aprobar y al rechazar la solicitud).
+  // Si subject/body vacios, se usa el comportamiento actual (default approve, sin email en reject).
+  const [clientApproveSubject, setClientApproveSubject] = useState((pr.emails && pr.emails.clientApprove && pr.emails.clientApprove.subject) || "");
+  const [clientApproveBody, setClientApproveBody] = useState((pr.emails && pr.emails.clientApprove && pr.emails.clientApprove.introHtml) || "");
+  const [clientRejectSubject, setClientRejectSubject] = useState((pr.emails && pr.emails.clientReject && pr.emails.clientReject.subject) || "");
+  const [clientRejectBody, setClientRejectBody] = useState((pr.emails && pr.emails.clientReject && pr.emails.clientReject.introHtml) || "");
+  
   const [saved, setSaved] = useState(false);
   
   const handleSave = () => {
@@ -201,6 +208,14 @@ function PublicFormEditor({ form, forms, setForms, onClose }) {
             approver: {
               subject: emailSubject,
               introHtml: emailIntroHtml,
+            },
+            clientApprove: {
+              subject: clientApproveSubject,
+              introHtml: clientApproveBody,
+            },
+            clientReject: {
+              subject: clientRejectSubject,
+              introHtml: clientRejectBody,
             },
           },
         },
@@ -305,6 +320,26 @@ function PublicFormEditor({ form, forms, setForms, onClose }) {
             
             <label style={{ ...labelSt, marginTop: 12 }}>Cuerpo del email (HTML permitido)</label>
             <textarea value={emailIntroHtml} onChange={(e) => setEmailIntroHtml(e.target.value)} style={{ ...taSt, minHeight: 120 }} />
+          </Section>
+        )}
+        
+        {requireApproval && (
+          <Section title="Email al cliente al APROBAR" desc="Se envia al cliente cuando apruebas su solicitud, junto con el link al briefing. Si dejas vacios subject y cuerpo, se usa el texto por defecto. Placeholders: {nombre}, {email}, {form_name}.">
+            <label style={labelSt}>Asunto</label>
+            <input type="text" value={clientApproveSubject} onChange={(e) => setClientApproveSubject(e.target.value)} style={inputSt} placeholder="Tu briefing con {empresa} esta listo" />
+            
+            <label style={{ ...labelSt, marginTop: 12 }}>Cuerpo del email (HTML permitido)</label>
+            <textarea value={clientApproveBody} onChange={(e) => setClientApproveBody(e.target.value)} style={{ ...taSt, minHeight: 120 }} placeholder={"Hola {nombre},\n\nGracias por contactarnos. Aqui tienes tu briefing..."} />
+          </Section>
+        )}
+        
+        {requireApproval && (
+          <Section title="Email al cliente al RECHAZAR" desc="Se envia al cliente cuando rechazas su solicitud. Si dejas vacios subject y cuerpo, NO se envia ningun email al rechazar (comportamiento por defecto). Placeholders: {nombre}, {email}, {form_name}.">
+            <label style={labelSt}>Asunto</label>
+            <input type="text" value={clientRejectSubject} onChange={(e) => setClientRejectSubject(e.target.value)} style={inputSt} placeholder="Sobre tu solicitud" />
+            
+            <label style={{ ...labelSt, marginTop: 12 }}>Cuerpo del email (HTML permitido)</label>
+            <textarea value={clientRejectBody} onChange={(e) => setClientRejectBody(e.target.value)} style={{ ...taSt, minHeight: 120 }} placeholder={"Hola {nombre},\n\nGracias por tu interes. Por ahora no podemos atender tu solicitud..."} />
           </Section>
         )}
         
