@@ -468,7 +468,28 @@ export default function FormularioPublico() {
   const campos = def.campos || [];
   const cfg = def.config || {};
   const cliente = def.cliente || null;
-  const marca = def.marca || {};
+  // Marca: cascada def.marca > tenantCfg (apariencia/empresa/correo) > "".
+  // NO hay fallbacks Habitaris. Si ningun nivel aporta el dato, queda vacio
+  // y la UI no renderiza ese campo (marca blanca real).
+  const _e = (tenantCfg && tenantCfg.empresa) || {};
+  const _a = (tenantCfg && tenantCfg.apariencia) || {};
+  const _ec = (tenantCfg && tenantCfg.correo) || {};
+  const _fromDef = def.marca || {};
+  const marca = {
+    ..._fromDef,
+    logo: _fromDef.logo || _a.logo || "",
+    empresa: _fromDef.empresa || _e.nombre || "",
+    razonSocial: _fromDef.razonSocial || _fromDef.razon_social || _e.razonSocial || _e.razon_social || "",
+    nit: _fromDef.nit || _e.nit || "",
+    ciudad: _fromDef.ciudad || _e.domicilio || "",
+    telefono: _fromDef.telefono || _e.telefono || "",
+    slogan: _fromDef.slogan || _a.slogan || _e.eslogan || "",
+    colorPrimario: _fromDef.colorPrimario || _a.colorPrimario || "",
+    colorSecundario: _fromDef.colorSecundario || _a.colorSecundario || "",
+    colorAcento: _fromDef.colorAcento || _a.colorAcento || "",
+    tipografia: _fromDef.tipografia || _a.tipografia || "",
+    adminEmail: _fromDef.adminEmail || _ec.emailPrincipal || ""
+  };
   const ac = cfg.colorAccent || marca.colorPrimario || "#111111";
   const cs = marca.colorSecundario || "#3B3B3B";
   const ca = marca.colorAcento || "#C9A84C";
@@ -764,13 +785,15 @@ export default function FormularioPublico() {
   };
 
   const Header = () => {
-    const logoSrc = marca.logo || "https://suite.habitaris.es/logo-habitaris.jpg";
-    const empresaName = marca.empresa || "Habitaris";
+    const logoSrc = marca.logo || "";
+    const empresaName = marca.empresa || "";
     return (
       <div style={{ background:"#FFFFFF", borderBottom:"1px solid #EEEEEE", padding:"20px 24px" }}>
-        <div style={{ maxWidth:640, margin:"0 auto", textAlign:"center" }}>
-          <img src={logoSrc} alt={empresaName} style={{ height:60, objectFit:"contain", display:"inline-block" }} />
-        </div>
+        {logoSrc && (
+          <div style={{ maxWidth:640, margin:"0 auto", textAlign:"center" }}>
+            <img src={logoSrc} alt={empresaName} style={{ height:60, objectFit:"contain", display:"inline-block" }} />
+          </div>
+        )}
         <div style={{ maxWidth:640, margin:"12px auto 0", textAlign:"center", ...BF, fontSize:11, color:BASE.inkMid, letterSpacing:1, textTransform:"uppercase" }}>
           {vista === "pasos" ? "Paso "+(currentStep+1)+" de "+totalSteps : pctFilled+"% completo"}
         </div>
@@ -782,15 +805,20 @@ export default function FormularioPublico() {
   };
 
   const Footer = () => {
-    const empresaName = marca.empresa || "Habitaris";
-    const razonSocial = marca.razonSocial || marca.razon_social || "Habitaris S.A.S";
-    const nit = marca.nit || "901.922.136-8";
-    const ciudad = marca.ciudad || "Bogotá D.C., Colombia";
-    const telefono = marca.telefono || "+57 350 566 1545";
+    const razonSocial = marca.razonSocial || marca.razon_social || "";
+    const nit = marca.nit || "";
+    const ciudad = marca.ciudad || "";
+    const telefono = marca.telefono || "";
+    const segments = [];
+    if (razonSocial) segments.push(razonSocial);
+    if (nit) segments.push("NIT " + nit);
+    if (ciudad) segments.push(ciudad);
+    if (telefono) segments.push(telefono);
+    if (segments.length === 0) return null;
     return (
       <div style={{ background:"#FFFFFF", borderTop:"1px solid #EEEEEE", padding:"20px 24px", marginTop:40 }}>
         <div style={{ maxWidth:640, margin:"0 auto", textAlign:"center", ...BF, fontSize:11, color:BASE.inkLight, lineHeight:1.6 }}>
-          {razonSocial} &middot; NIT {nit} &middot; {ciudad} &middot; {telefono}
+          {segments.join(" \u00b7 ")}
         </div>
       </div>
     );
