@@ -509,7 +509,20 @@ export default function FormularioPublico() {
         else setVal(c.id, v);
       }} accent={ac} allVals={vals}/>;
     }
-    return <Field key={c.id} campo={c} value={vals[c.id]} onChange={v=>setVal(c.id,v)} accent={ac} allVals={vals}/>;
+    return <Field key={c.id} campo={c} value={vals[c.id]} onChange={v=>{
+      setVal(c.id,v);
+      // Auto-avance al "Si" si el campo es yesno y es la unica pregunta funcional
+      // del paso actual (excluye seccion/info que son decorativos). Mejora UX:
+      // evita un click extra en pasos como el Aviso de Privacidad.
+      // Al "No" NO auto-avanza: el comportamiento actual (pantalla despedida en
+      // caso de privacidad, o seguir editando en otros casos) se preserva.
+      if (c.tipo === "yesno" && v === "S\u00ed" && vista === "pasos") {
+        const onlyFunctional = activeStep && activeStep.fields.filter(f =>
+          isVisible(f) && f.tipo !== "seccion" && f.tipo !== "info"
+        ).length === 1;
+        if (onlyFunctional) setTimeout(() => nextStep(), 350);
+      }
+    }} accent={ac} allVals={vals}/>;
   };
 
   const isVisible = (c) => {
