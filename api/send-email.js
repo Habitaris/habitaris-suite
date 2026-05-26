@@ -1451,12 +1451,14 @@ async function handleBriefingApprove(req, res) {
       const placeholders = {
         nombre: reqRow.nombre_completo || "",
         email: reqRow.email || "",
-        form_name: formName || ""
+        form_name: formName || "",
+        empresa: (__brand2 && __brand2.empresa) || ""
       };
       const fillP = (text) => String(text || "")
         .replace(/\{nombre\}/g, placeholders.nombre)
         .replace(/\{email\}/g, placeholders.email)
-        .replace(/\{form_name\}/g, placeholders.form_name);
+        .replace(/\{form_name\}/g, placeholders.form_name)
+        .replace(/\{empresa\}/g, placeholders.empresa);
       const customSubject = customClientApprove.subject ? fillP(customClientApprove.subject) : "";
       const customIntroFilled = customClientApprove.introHtml ? fillP(customClientApprove.introHtml) : "";
       const finalSubject = customSubject || ("Tu " + formName + " con " + (__brand2.empresa || "Habitaris") + " esta listo");
@@ -1553,12 +1555,14 @@ async function handleBriefingReject(req, res) {
           const placeholders = {
             nombre: reqRow.nombre_completo || "",
             email: reqRow.email || "",
-            form_name: formName
+            form_name: formName,
+            empresa: (__brand && __brand.empresa) || ""
           };
           const fillP = (text) => String(text || "")
             .replace(/\{nombre\}/g, placeholders.nombre)
             .replace(/\{email\}/g, placeholders.email)
-            .replace(/\{form_name\}/g, placeholders.form_name);
+            .replace(/\{form_name\}/g, placeholders.form_name)
+            .replace(/\{empresa\}/g, placeholders.empresa);
           const subject = customClientReject.subject ? fillP(customClientReject.subject) : "Sobre tu solicitud";
           const bodyFilled = customClientReject.introHtml ? fillP(customClientReject.introHtml) : "";
           const html = rejectionTemplate(reqRow, __brand, bodyFilled);
