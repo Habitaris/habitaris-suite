@@ -56,7 +56,7 @@ export default async function handler(req, res) {
         + '<div style="font-size:11px;color:#999;margin-top:16px">Este código expira en 10 minutos.<br>Si no solicitaste este código, ignora este correo.</div>'
         + '</td></tr>'
         + '<tr><td style="background:#F5F4F1;padding:16px;text-align:center;border-top:1px solid #E5E3DE">'
-        + '<div style="font-size:10px;color:#aaa">' + (__brand.razon_social || "Habitaris S.A.S") + ' · NIT ' + (__brand.nit || "901.922.136-8") + ' · ' + (__brand.ciudad || "Bogotá D.C., Colombia") + ' · ' + (__brand.telefono || "+57 350 566 1545") + '</div></td></tr>'
+        + '<div style="font-size:10px;color:#aaa">' + brandFooterLine(__brand) + '</div></td></tr>'
         + '</table></td></tr></table></body></html>';
 
       var rOtp = await fetch("https://api.resend.com/emails", {
@@ -284,7 +284,10 @@ export default async function handler(req, res) {
 // Devuelve objeto plano con fallbacks a valores actuales para no romper nada.
 // Primer paso para destrabar marca blanca: ir migrando hardcodes a brand.* progresivamente.
 async function loadBrand(sb, tenantId) {
-  const fallback = {
+  // Marca blanca real: los datos Habitaris hardcoded solo se usan si el tenant
+  // ES 'habitaris'. Cualquier otro tenant arranca con campos vacios, y si no
+  // aporta el dato via tenant_config, queda vacio (cero exfiltracion de identidad).
+  const HABITARIS_FALLBACK = {
     empresa: "Habitaris",
     razon_social: "Habitaris S.A.S",
     nit: "901.922.136-8",
@@ -300,6 +303,23 @@ async function loadBrand(sb, tenantId) {
     logo_white_url: "/logo-habitaris-blanco.jpg",
     logo_black_url: "/logo-habitaris-negro.svg",
   };
+  const EMPTY_BRAND = {
+    empresa: "",
+    razon_social: "",
+    nit: "",
+    tagline: "",
+    ciudad: "",
+    pais: "",
+    telefono: "",
+    email_publico: "",
+    email_legal: "",
+    email_noreply: "",
+    app_url: "",
+    web_url: "",
+    logo_white_url: "",
+    logo_black_url: "",
+  };
+  const fallback = tenantId === "habitaris" ? HABITARIS_FALLBACK : EMPTY_BRAND;
   if (!sb || !tenantId) return fallback;
   try {
     const { data } = await sb.from("tenant_config").select("config").eq("tenant_id", tenantId).maybeSingle();
@@ -331,6 +351,20 @@ async function loadBrand(sb, tenantId) {
   } catch (e) {
     return fallback;
   }
+}
+
+// Construye la linea de pie estandar "Razon Social  NIT XXX  Ciudad  Telefono"
+// solo con los segmentos que tengan valor. Marca blanca real: si todos vacios,
+// devuelve string vacio (la plantilla puede decidir si oculta el div).
+// opts.skipTelefono: omite el telefono (algunas plantillas no lo incluyen).
+function brandFooterLine(brand, opts) {
+  const o = opts || {};
+  const parts = [];
+  if (brand && brand.razon_social) parts.push(brand.razon_social);
+  if (brand && brand.nit) parts.push("NIT " + brand.nit);
+  if (brand && brand.ciudad) parts.push(brand.ciudad);
+  if (brand && brand.telefono && !o.skipTelefono) parts.push(brand.telefono);
+  return parts.join(" \u00b7 ");
 }
 
 async function getCurrentFormName(link, sb) {
@@ -588,7 +622,7 @@ function preExpiryReminderTemplate(link, hoursBeforeExpiry, brand) {
       </a>
     </div>
     <div style="padding:16px 24px;border-top:1px solid #f0ecff;font-size:11px;color:#888;">
-      ${brand.razon_social || "Habitaris S.A.S"} · NIT ${brand.nit || "901.922.136-8"} · ${brand.ciudad || "Bogotá D.C., Colombia"} · ${brand.telefono || "+57 350 566 1545"}
+      ${brandFooterLine(brand)}
     </div>
   </div>
 </div>`;
@@ -656,7 +690,7 @@ function invitationTemplate(link, brand) {
           <p style="margin:24px 0 0 0;font-size:14px;line-height:1.6;color:#333;">Un saludo,<br>El equipo de Habitaris</p>
         </td></tr>
         <tr><td style="padding:20px 28px;border-top:1px solid #eee;text-align:center;font-size:11px;color:#888;line-height:1.5;">
-          ${brand.razon_social || "Habitaris S.A.S"} &middot; NIT ${brand.nit || "901.922.136-8"} &middot; ${brand.ciudad || "Bogotá D.C., Colombia"} &middot; ${brand.telefono || "+57 350 566 1545"}<br>
+          ${brandFooterLine(brand)}<br>
           <span style="color:#aaa;">Correo automático. Por favor, no responder a esta dirección.</span>
         </td></tr>
       </table>
@@ -698,7 +732,7 @@ function expiredTemplate(link, whatsappPhone, brand) {
           <p style="margin:0;font-size:11px;color:#999;font-style:italic;">Correo automático. Por favor, no responder a esta dirección.</p>
         </td></tr>
         <tr><td style="background:#fafafa;padding:16px 40px;border-top:1px solid #eee;">
-          <p style="margin:0;font-size:11px;color:#999;line-height:1.5;">${brand.razon_social || "Habitaris S.A.S"} · NIT ${brand.nit || "901.922.136-8"} · ${brand.ciudad || "Bogotá D.C., Colombia"} · ${brand.telefono || "+57 350 566 1545"}</p>
+          <p style="margin:0;font-size:11px;color:#999;line-height:1.5;">${brandFooterLine(brand)}</p>
         </td></tr>
       </table>
     </td></tr>
@@ -835,7 +869,7 @@ async function handlePasswordResetRequest(body, res) {
       + '<div style="font-size:11px;color:#bbb;margin-top:12px;word-break:break-all">Si el botón no funciona, copia este enlace: ' + resetLink + '</div>'
       + '</td></tr>'
       + '<tr><td style="background:#F5F4F1;padding:16px;text-align:center;border-top:1px solid #E5E3DE">'
-      + '<div style="font-size:10px;color:#aaa">' + (__brand.razon_social || "Habitaris S.A.S") + ' · NIT ' + (__brand.nit || "901.922.136-8") + ' · ' + (__brand.ciudad || "Bogotá D.C., Colombia") + '</div></td></tr>'
+      + '<div style="font-size:10px;color:#aaa">' + brandFooterLine(__brand, { skipTelefono: true }) + '</div></td></tr>'
       + '</table></td></tr></table></body></html>';
 
     const sendR = await fetch("https://api.resend.com/emails", {
@@ -937,7 +971,7 @@ function briefingHtmlPage(title, bodyHtml, brand) {
     "<div class=\"content\">",
     bodyHtml,
     "</div>",
-    "<div class=\"footer\">" + (brand.razon_social || "Habitaris S.A.S") + " &middot; NIT " + (brand.nit || "901.922.136-8") + " &middot; " + (brand.ciudad || "Bogot\u00e1 D.C., Colombia") + " &middot; " + (brand.telefono || "+57 350 566 1545") + "</div>",
+    "<div class=\"footer\">" + brandFooterLine(brand) + "</div>",
     "</div></body></html>",
   ].join("");
 }
@@ -1223,7 +1257,7 @@ async function handleBriefingRequest(req, res) {
       "</div>",
       "<p class=\"note\">Si apruebas, el cliente recibe automáticamente su link de briefing (validez 48h, 2 usos). Los botones expiran en 48 horas. Si los dos aprobadores hacen clic, gana el primero.</p>",
       "</div>",
-      "<div class=\"footer\">" + (__brand.razon_social || "Habitaris S.A.S") + " &middot; NIT " + (__brand.nit || "901.922.136-8") + " &middot; " + (__brand.ciudad || "Bogotá D.C., Colombia") + " &middot; " + (__brand.telefono || "+57 350 566 1545") + "<div class=\"sub\">Si tienes cualquier duda, escribenos a " + (__brand.email_publico || "comercial@habitaris.es") + "</div></div>",
+      "<div class=\"footer\">" + brandFooterLine(__brand) + (__brand.email_publico ? "<div class=\"sub\">Si tienes cualquier duda, escribenos a " + __brand.email_publico + "</div>" : "") + "</div>",
       "</div></div></body></html>"
     ].join("");
 
