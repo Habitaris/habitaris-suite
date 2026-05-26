@@ -516,11 +516,15 @@ export default function FormularioPublico() {
       // evita un click extra en pasos como el Aviso de Privacidad.
       // Al "No" NO auto-avanza: el comportamiento actual (pantalla despedida en
       // caso de privacidad, o seguir editando en otros casos) se preserva.
+      // Usamos goTo directo (no nextStep) para evitar que validateStep lea vals
+      // stale del closure de React: ya sabemos que este campo tiene valor "Si".
       if (c.tipo === "yesno" && v === "S\u00ed" && vista === "pasos") {
         const onlyFunctional = activeStep && activeStep.fields.filter(f =>
           isVisible(f) && f.tipo !== "seccion" && f.tipo !== "info"
         ).length === 1;
-        if (onlyFunctional) setTimeout(() => nextStep(), 350);
+        if (onlyFunctional && !isLastStep) {
+          setTimeout(() => goTo(currentStep + 1, "next"), 350);
+        }
       }
     }} accent={ac} allVals={vals}/>;
   };
