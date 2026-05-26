@@ -763,26 +763,38 @@ export default function FormularioPublico() {
     </div>);
   };
 
-  const Header = () => (
-    <div style={{ background:ac, padding:"14px 24px" }}>
-      <div style={{ maxWidth:640, margin:"0 auto", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          {marca.logo ? (
-            <img src={marca.logo} alt="Logo" style={{ height:28, objectFit:"contain" }}/>
-          ) : (
-            marca.empresa ? <div style={{ ...BF, fontWeight:700, fontSize:14, letterSpacing:3, color:"#fff", textTransform:"uppercase" }}>{marca.empresa}</div> : null
-          )}
-          {marca.slogan && <div style={{ ...BF, fontSize:7, letterSpacing:2, color:"rgba(255,255,255,.4)", textTransform:"uppercase" }}>{marca.slogan}</div>}
+  const Header = () => {
+    const logoSrc = marca.logo || "https://suite.habitaris.es/logo-habitaris.jpg";
+    const empresaName = marca.empresa || "Habitaris";
+    return (
+      <div style={{ background:"#FFFFFF", borderBottom:"1px solid #EEEEEE", padding:"20px 24px" }}>
+        <div style={{ maxWidth:640, margin:"0 auto", textAlign:"center" }}>
+          <img src={logoSrc} alt={empresaName} style={{ height:60, objectFit:"contain", display:"inline-block" }} />
         </div>
-        <div style={{ ...BF, fontSize:10, color:"rgba(255,255,255,.5)" }}>
+        <div style={{ maxWidth:640, margin:"12px auto 0", textAlign:"center", ...BF, fontSize:11, color:BASE.inkMid, letterSpacing:1, textTransform:"uppercase" }}>
           {vista === "pasos" ? "Paso "+(currentStep+1)+" de "+totalSteps : pctFilled+"% completo"}
         </div>
+        <div style={{ maxWidth:640, margin:"8px auto 0", height:3, background:"#F0F0F0", borderRadius:2 }}>
+          <div style={{ width:(vista==="pasos"?pctStep:pctFilled)+"%", height:"100%", background:ac, borderRadius:2, transition:"width .4s ease" }}/>
+        </div>
       </div>
-      <div style={{ maxWidth:640, margin:"8px auto 0", height:3, background:"rgba(255,255,255,.15)", borderRadius:2 }}>
-        <div style={{ width:(vista==="pasos"?pctStep:pctFilled)+"%", height:"100%", background:ca, borderRadius:2, transition:"width .4s ease" }}/>
+    );
+  };
+
+  const Footer = () => {
+    const empresaName = marca.empresa || "Habitaris";
+    const razonSocial = marca.razonSocial || marca.razon_social || "Habitaris S.A.S";
+    const nit = marca.nit || "901.922.136-8";
+    const ciudad = marca.ciudad || "Bogotá D.C., Colombia";
+    const telefono = marca.telefono || "+57 350 566 1545";
+    return (
+      <div style={{ background:"#FFFFFF", borderTop:"1px solid #EEEEEE", padding:"20px 24px", marginTop:40 }}>
+        <div style={{ maxWidth:640, margin:"0 auto", textAlign:"center", ...BF, fontSize:11, color:BASE.inkLight, lineHeight:1.6 }}>
+          {razonSocial} &middot; NIT {nit} &middot; {ciudad} &middot; {telefono}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const ClientBanner = () => {
     if (!cliente) return null;
@@ -828,6 +840,7 @@ export default function FormularioPublico() {
             <button onClick={doSubmit} style={{ ...BF, padding:"14px 40px", background:ac, color:"#fff", border:"none", borderRadius:8, fontSize:15, fontWeight:700, cursor:"pointer" }}>{btnText} ✓</button>
           </div>
         </div>
+        <Footer/>
       </div>
     );
   }
@@ -875,6 +888,7 @@ export default function FormularioPublico() {
           </button>
         </div>
       </div>
+      <Footer/>
     </div>
   );
 }
