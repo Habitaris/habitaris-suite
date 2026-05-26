@@ -628,7 +628,7 @@ function preExpiryReminderTemplate(link, hoursBeforeExpiry, brand) {
 </div>`;
 }
 
-function invitationTemplate(link, brand) {
+function invitationTemplate(link, brand, customIntroHtml) {
   brand = brand || {};
   const clientName = link.client_name || "";
   const formName = link.form_name || "tu briefing";
@@ -679,7 +679,10 @@ function invitationTemplate(link, brand) {
         </td></tr>
         <tr><td style="padding:32px 28px;">
           <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#111;">${greeting}</p>
-          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Aquí tienes tu <strong>${formName}</strong>. Rellénalo con calma para que podamos entender bien tu proyecto.</p>
+          ${customIntroHtml
+            ? `<div style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">${customIntroHtml}</div>`
+            : `<p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">Aquí tienes tu <strong>${formName}</strong>. Rellénalo con calma para que podamos entender bien tu proyecto.</p>`
+          }
           <div style="text-align:center;margin:28px 0;">
             <a href="${formUrl}" style="display:inline-block;padding:14px 32px;background:#111;color:#fff;text-decoration:none;border-radius:6px;font-size:14px;font-weight:500;">Empezar el briefing</a>
           </div>
@@ -688,6 +691,42 @@ function invitationTemplate(link, brand) {
           </div>
           <p style="margin:24px 0 0 0;font-size:14px;line-height:1.6;color:#333;">Si tienes cualquier duda, escribenos a <a href="mailto:comercial@habitaris.es" style="color:#111;">comercial@habitaris.es</a>.</p>
           <p style="margin:24px 0 0 0;font-size:14px;line-height:1.6;color:#333;">Un saludo,<br>El equipo de Habitaris</p>
+        </td></tr>
+        <tr><td style="padding:20px 28px;border-top:1px solid #eee;text-align:center;font-size:11px;color:#888;line-height:1.5;">
+          ${brandFooterLine(brand)}<br>
+          <span style="color:#aaa;">Correo automático. Por favor, no responder a esta dirección.</span>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+}
+
+// Plantilla de email al cliente cuando se rechaza su solicitud. No hay CTA con link.
+// Solo header con logo del tenant, saludo, cuerpo personalizado (HTML del usuario), y footer.
+// reqRow: fila de briefing_requests con nombre_completo, email, etc.
+// brand: marca cargada via loadBrand.
+// customBodyHtml: el HTML del cuerpo definido por el usuario (ya con placeholders reemplazados).
+function rejectionTemplate(reqRow, brand, customBodyHtml) {
+  brand = brand || {};
+  const clientName = reqRow.nombre_completo || "";
+  const greeting = clientName ? "Hola " + clientName + "," : "Hola,";
+  const logoSrc = (brand.logo_black_url && brand.logo_black_url.startsWith('http'))
+    ? brand.logo_black_url
+    : ((brand.app_url || 'https://suite.habitaris.es') + (brand.logo_black_url || ''));
+  const empresaAlt = brand.empresa || '';
+  return `<!doctype html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f3f0ff;font-family:'DM Sans',Arial,sans-serif;color:#111;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f3f0ff;padding:32px 16px;">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:#fff;border-radius:8px;overflow:hidden;">
+        ${logoSrc ? `<tr><td style="background:#fff;padding:24px;text-align:center;border-bottom:1px solid #eee;">
+          <img src="${logoSrc}" alt="${empresaAlt}" height="50" style="height:50px;display:inline-block;">
+        </td></tr>` : ''}
+        <tr><td style="padding:32px 28px;">
+          <p style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#111;">${greeting}</p>
+          <div style="margin:0 0 16px 0;font-size:15px;line-height:1.6;color:#333;">${customBodyHtml || ''}</div>
         </td></tr>
         <tr><td style="padding:20px 28px;border-top:1px solid #eee;text-align:center;font-size:11px;color:#888;line-height:1.5;">
           ${brandFooterLine(brand)}<br>
@@ -1406,7 +1445,22 @@ async function handleBriefingApprove(req, res) {
     const __brand2 = await loadBrand(sb, linkRow.tenant_id || "habitaris");
     if (RESEND_KEY) {
       console.log("[briefing_approve] linkRow keys:", Object.keys(linkRow || {}), "max_uses:", linkRow && linkRow.max_uses, "expires_at:", linkRow && linkRow.expires_at, "link_id:", linkRow && linkRow.link_id);
-      const clientHtml = invitationTemplate(linkRow, __brand2);
+      // Fase A: leer plantilla custom de clientApprove del form_def (si existe).
+      // Si subject vacio -> usar default. Si introHtml vacio -> usar parrafo por defecto.
+      const customClientApprove = (formDef && formDef.publicRequest && formDef.publicRequest.emails && formDef.publicRequest.emails.clientApprove) || {};
+      const placeholders = {
+        nombre: reqRow.nombre_completo || "",
+        email: reqRow.email || "",
+        form_name: formName || ""
+      };
+      const fillP = (text) => String(text || "")
+        .replace(/\{nombre\}/g, placeholders.nombre)
+        .replace(/\{email\}/g, placeholders.email)
+        .replace(/\{form_name\}/g, placeholders.form_name);
+      const customSubject = customClientApprove.subject ? fillP(customClientApprove.subject) : "";
+      const customIntroFilled = customClientApprove.introHtml ? fillP(customClientApprove.introHtml) : "";
+      const finalSubject = customSubject || ("Tu " + formName + " con " + (__brand2.empresa || "Habitaris") + " esta listo");
+      const clientHtml = invitationTemplate(linkRow, __brand2, customIntroFilled);
 
       await fetch("https://api.resend.com/emails", {
         method: "POST",
@@ -1415,7 +1469,7 @@ async function handleBriefingApprove(req, res) {
           from: (__brand2.empresa || "Habitaris") + " <" + (__brand2.email_noreply || "noreply@habitaris.es") + ">",
           to: [reqRow.email],
           reply_to: "comercial@habitaris.es",
-          subject: "Tu briefing con Habitaris está listo",
+          subject: finalSubject,
           html: clientHtml,
         }),
       }).catch(e => console.error("[briefing_approve] resend client failed:", e));
@@ -1472,7 +1526,65 @@ async function handleBriefingReject(req, res) {
       return res.status(200).send(briefingHtmlPage("Ya procesada", "<h1>Ya fue procesada</h1><p>Otro aprobador acaba de procesar esta solicitud.</p>"));
     }
 
-    return res.status(200).send(briefingHtmlPage("Rechazada", "<h1>Solicitud rechazada</h1><p>La solicitud de <strong>" + briefingEscape(reqRow.nombre_completo) + "</strong> ha sido rechazada.</p><p class=\"small\">El cliente no recibe ninguna notificación.</p>", __brand));
+    // Fase A: enviar email al cliente al rechazar SI hay plantilla custom configurada.
+    // Si subject Y body estan vacios, no se envia nada (comportamiento anterior preservado).
+    let clientNotified = false;
+    const RESEND_KEY = process.env.RESEND_API_KEY;
+    if (RESEND_KEY) {
+      try {
+        // Cargar formDef para obtener publicRequest.emails.clientReject
+        const kvUrl = sb.url + "/rest/v1/kv_store?tenant_id=eq.habitaris&key=eq.habitaris_formularios&select=value";
+        const kvRes = await fetch(kvUrl, { headers: sb.headers });
+        let customClientReject = null;
+        let formName = "tu solicitud";
+        if (kvRes.ok) {
+          const kvRows = await kvRes.json();
+          if (Array.isArray(kvRows) && kvRows.length > 0) {
+            const data = typeof kvRows[0].value === "string" ? JSON.parse(kvRows[0].value) : kvRows[0].value;
+            const forms = (data && data.forms) || [];
+            const fd = forms.find(f => f && f.id === "vxlk7nma") || null;
+            if (fd) {
+              if (fd.nombre) formName = fd.nombre;
+              customClientReject = (fd.publicRequest && fd.publicRequest.emails && fd.publicRequest.emails.clientReject) || null;
+            }
+          }
+        }
+        if (customClientReject && (customClientReject.subject || customClientReject.introHtml)) {
+          const placeholders = {
+            nombre: reqRow.nombre_completo || "",
+            email: reqRow.email || "",
+            form_name: formName
+          };
+          const fillP = (text) => String(text || "")
+            .replace(/\{nombre\}/g, placeholders.nombre)
+            .replace(/\{email\}/g, placeholders.email)
+            .replace(/\{form_name\}/g, placeholders.form_name);
+          const subject = customClientReject.subject ? fillP(customClientReject.subject) : "Sobre tu solicitud";
+          const bodyFilled = customClientReject.introHtml ? fillP(customClientReject.introHtml) : "";
+          const html = rejectionTemplate(reqRow, __brand, bodyFilled);
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: (__brand.empresa || "Habitaris") + " <" + (__brand.email_noreply || "noreply@habitaris.es") + ">",
+              to: [reqRow.email],
+              reply_to: __brand.email_publico || "comercial@habitaris.es",
+              subject,
+              html,
+            }),
+          });
+          clientNotified = true;
+        }
+      } catch (eMail) {
+        console.error("[briefing_reject] send client email failed:", eMail);
+        // No bloqueamos la respuesta al aprobador si falla el email al cliente.
+      }
+    }
+
+    const notifMsg = clientNotified
+      ? "El cliente ha sido notificado por correo."
+      : "El cliente no recibe ninguna notificación.";
+    return res.status(200).send(briefingHtmlPage("Rechazada", "<h1>Solicitud rechazada</h1><p>La solicitud de <strong>" + briefingEscape(reqRow.nombre_completo) + "</strong> ha sido rechazada.</p><p class=\"small\">" + notifMsg + "</p>", __brand));
   } catch (e) {
     console.error("[briefing_reject] error:", e);
     return res.status(500).send(briefingHtmlPage("Error", "<h1>Error</h1><p>Algo salió mal.</p>"));
