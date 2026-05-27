@@ -72,6 +72,17 @@ const NOV_TIPOS = [
   {id:"licNoRem",label:"Lic. NO rem.",color:"#F3E8FF",icon:"⚠️"},
   {id:"ausencia",label:"Ausencia",color:"#FEE2E2",icon:"❌"},
 ];
+
+// Catálogo OOTT mockeado (mismo que se usa en PortalEmpleado L2955 RRHH.jsx).
+// Futuro: leer dinámicamente desde CRM (ofertas ganadas con Gantt exportado)
+// o desde un módulo de configuración de OOTT. Por ahora, hardcoded para arrancar.
+const OOTT_CATALOGO = [
+  {id:"OT-DIN_250101_01", label:"OT-DIN_250101_01 — Diseño interior 01", color:"#DDD6FE"},
+  {id:"OT-INT_250115_02", label:"OT-INT_250115_02 — Interventoría 02",    color:"#FED7AA"},
+  {id:"OT-INT_250201_03", label:"OT-INT_250201_03 — Interventoría 03",    color:"#A7F3D0"},
+];
+const OOTT_KV_KEY = "hab:rrhh:imputaciones"; // {empId:{dayKey:otCodigo}}
+
 const uid = () => Math.random().toString(36).slice(2, 10);
 const fmt = n => n == null || isNaN(n) ? "$0" : "$" + Math.round(n).toLocaleString(getTenantDefaultsSync().locale);
 const fPct = n => (n * 100).toFixed(2) + "%";
@@ -661,6 +672,12 @@ export function TabNomina(){
   const festivosMes=holidays.filter(h=>h.date.getMonth()===mes);
   const [novDias,setNovDias]=useState({});  // {dayKey: novType}
   const [selNovTipo,setSelNovTipo]=useState("incapacidad");
+  // Imputaciones OOTT: se persisten dentro de cada nómina mensual como selN.impDias
+  // (mismo patrón que selN.novDias). Un día puede tener novedad Y/O imputación —
+  // son ortogonales: la novedad reduce días salariales, la imputación dice a qué OT
+  // imputar las horas trabajadas. No interfieren en cálculos de nómina.
+  const [modoCal,setModoCal]=useState("novedad"); // "novedad" | "imputacion"
+  const [selOtt,setSelOtt]=useState(OOTT_CATALOGO[0].id);
   const [novHist,setNovHist]=useState([]);
   const [novYear,setNovYear]=useState(hoy.getFullYear());
   const [buscar,setBuscar]=useState("");
@@ -879,7 +896,12 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
               </div>
               <div style={{display:"flex",gap:4,marginBottom:8,flexWrap:"wrap"}}>
                 <span style={{fontSize:9,color:T.inkLight,padding:"4px 0"}}>Clic en día →</span>
-                {NOV_TIPOS.filter(n=>n.id!=="normal").map(n=><button key={n.id} type="button" onClick={()=>setSelNovTipo(n.id)} style={{padding:"3px 8px",fontSize:10,fontWeight:selNovTipo===n.id?700:400,border:selNovTipo===n.id?"2px solid #111":"1px solid "+T.border,borderRadius:4,background:selNovTipo===n.id?n.color:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",opacity:selNovTipo===n.id?1:0.6}}>{n.icon} {n.label}</button>)}
+                {/* Selector de modo: Novedad vs Imputación OOTT */}
+                <button type="button" onClick={()=>setModoCal("novedad")} style={{padding:"3px 8px",fontSize:10,fontWeight:modoCal==="novedad"?700:400,border:modoCal==="novedad"?"2px solid #111":"1px solid "+T.border,borderRadius:4,background:modoCal==="novedad"?"#F3F4F6":"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>📋 Novedad</button>
+                <button type="button" onClick={()=>setModoCal("imputacion")} style={{padding:"3px 8px",fontSize:10,fontWeight:modoCal==="imputacion"?700:400,border:modoCal==="imputacion"?"2px solid #111":"1px solid "+T.border,borderRadius:4,background:modoCal==="imputacion"?"#EDE9FE":"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>📊 Imputar OT</button>
+                <span style={{width:1,background:T.border,margin:"0 4px"}}/>
+                {modoCal==="novedad" && NOV_TIPOS.filter(n=>n.id!=="normal").map(n=><button key={n.id} type="button" onClick={()=>setSelNovTipo(n.id)} style={{padding:"3px 8px",fontSize:10,fontWeight:selNovTipo===n.id?700:400,border:selNovTipo===n.id?"2px solid #111":"1px solid "+T.border,borderRadius:4,background:selNovTipo===n.id?n.color:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",opacity:selNovTipo===n.id?1:0.6}}>{n.icon} {n.label}</button>)}
+                {modoCal==="imputacion" && <select value={selOtt} onChange={e=>setSelOtt(e.target.value)} style={{padding:"3px 8px",fontSize:10,border:`1px solid ${T.border}`,borderRadius:4,background:"#fff",fontFamily:"'DM Sans',sans-serif"}}>{OOTT_CATALOGO.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}</select>}
               </div>
               {/* Calendar grid */}
               {(()=>{
@@ -888,6 +910,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                 const startPad=(firstDay.getDay()+6)%7; // Monday=0
                 const totalDays=lastDay.getDate();
                 const nDias=selN.novDias||{};
+                const iDias=selN.impDias||{}; // {dayKey: otCodigo}
                 // Count novedades
                 const counts={incapacidad:0,vacaciones:0,licencia:0,licNoRem:0,ausencia:0};
                 Object.values(nDias).forEach(v=>{if(counts[v]!==undefined)counts[v]++;});
@@ -898,6 +921,18 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                 const toggleDay=(day)=>{
                   if(!ed)return;
                   const k=anio+"-"+String(mes+1).padStart(2,"0")+"-"+String(day).padStart(2,"0");
+                  // Modo IMPUTACIÓN: marca/desmarca OT en el día (no toca novedades)
+                  if(modoCal==="imputacion"){
+                    const cur={...iDias};
+                    if(cur[k]===selOtt){
+                      delete cur[k]; // mismo OT clicado de nuevo → borrar
+                    } else {
+                      cur[k]=selOtt; // marcar / sobrescribir con OT seleccionada
+                    }
+                    u({impDias:cur}); // persistencia: mismo flujo que novedades
+                    return;
+                  }
+                  // Modo NOVEDAD (comportamiento original, sin cambios)
                   const cur={...nDias};
                   const wasSet=cur[k]===selNovTipo;
                   if(wasSet)delete cur[k]; else cur[k]=selNovTipo;
@@ -934,9 +969,16 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                       const isRest=isSun||!!hol; // Festivos = descanso remunerado
                       const nov=nDias[k];
                       const novInfo=nov?NOV_TIPOS.find(n=>n.id===nov):null;
+                      const imp=iDias[k];
+                      const impInfo=imp?OOTT_CATALOGO.find(o=>o.id===imp):null;
                       const isToday=sameDay(date,new Date());
 
-                      return <div key={day} onClick={()=>!isRest&&toggleDay(day)} title={hol?("🔶 "+hol.name+" — Descanso remunerado"):(novInfo?novInfo.label:"")} style={{
+                      const tooltipParts=[];
+                      if(hol)tooltipParts.push("🔶 "+hol.name+" — Descanso remunerado");
+                      if(novInfo)tooltipParts.push(novInfo.label);
+                      if(impInfo)tooltipParts.push("OT: "+impInfo.id);
+
+                      return <div key={day} onClick={()=>!isRest&&toggleDay(day)} title={tooltipParts.join(" · ")} style={{
                         textAlign:"center",padding:"4px 2px",borderRadius:4,fontSize:11,fontWeight:isToday?800:(hol?700:400),
                         cursor:isRest||!ed?"default":"pointer",
                         background:novInfo?novInfo.color:hol?"#FDE68A":isSun?"#F5F4F1":"transparent",
@@ -948,6 +990,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                         {hol&&<div style={{fontSize:6,color:"#D97706",lineHeight:1,marginTop:1}}>🔶</div>}
                         {isSun&&!hol&&<div style={{fontSize:6,color:"#ccc",lineHeight:1,marginTop:1}}>—</div>}
                         {novInfo&&<div style={{fontSize:7,lineHeight:1,marginTop:1}}>{novInfo.icon}</div>}
+                        {impInfo&&<div style={{position:"absolute",bottom:0,left:0,right:0,height:3,background:impInfo.color,borderRadius:"0 0 4px 4px"}}/>}
                       </div>;
                     })}
                   </div>
