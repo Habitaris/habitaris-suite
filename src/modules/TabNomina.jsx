@@ -831,6 +831,107 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
 </body></html>`;
             const w=window.open('','_blank');w.document.write(html);w.document.close();
           }}>📄 Reporte novedades</Btn>
+          <Btn small onClick={()=>{
+            const iDias=selN.impDias||{};
+            // Resolver impInfo (codigo + nombre) por cada día imputado.
+            // Si la OT no se encuentra en BD (centros), mostrar id raw.
+            const impList=Object.entries(iDias).sort().map(([k,otId])=>{
+              const d=new Date(k+"T12:00:00");
+              const c=centros.find(x=>x.id===otId);
+              return{
+                fecha:d.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"}),
+                otCodigo:c?c.codigo:otId,
+                otNombre:c?c.nombre:"(OT no encontrada)"
+              };
+            });
+            // Agrupar por OT para resumen
+            const resumen={};
+            impList.forEach(r=>{
+              const k=r.otCodigo+"|"+r.otNombre;
+              if(!resumen[k])resumen[k]={codigo:r.otCodigo,nombre:r.otNombre,dias:0};
+              resumen[k].dias++;
+            });
+            const resumenArr=Object.values(resumen);
+            // Estimar horas (presuncion 8h/dia) y coste (proporcional al salario diario)
+            const salDiario=(selN.sal||0)/30;
+            const totalDias=impList.length;
+            const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);
+            const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
+            const fileName=`IMP-${mAbr}${a2}-${ape}-${selN.cc||""}`;
+            const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+#content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.35;box-shadow:0 0 8px rgba(0,0,0,.15)}
+.hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
+.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
+.hdr img{height:36px}
+h1{font-size:12pt;text-align:center;margin:4px 0 2px;clear:both}
+h2{font-size:9.5pt;margin:10px 0 4px;border-bottom:1px solid #ccc;padding-bottom:2px;clear:both}
+.sub{font-size:8pt;color:#666;text-align:center;margin-bottom:10px}
+.info{margin-bottom:10px;font-size:8.5pt;overflow:hidden}.info div{float:left;width:50%;padding:1px 0}
+.info span{color:#666}.info b{color:#111}
+table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:8.5pt;clear:both}
+th{text-align:left;padding:4px 6px;font-size:7pt;font-weight:700;text-transform:uppercase;border-bottom:2px solid #111}
+td{padding:3px 6px;border-bottom:1px solid #ddd}
+.imp{background:#f4f4f4}
+.summary{margin:8px 0;overflow:hidden}
+.sbox{float:left;width:31%;margin-right:3%;border:1px solid #ccc;border-radius:4px;padding:6px;text-align:center;margin-bottom:6px}
+.sbox:nth-child(3n){margin-right:0}
+.sbox .n{font-size:16pt;font-weight:800;font-family:monospace}.sbox .l{font-size:7pt;color:#666;text-transform:uppercase}
+.sig{margin-top:20px;overflow:hidden}.sig div{float:left;width:30%;margin-right:5%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:5px}
+.sig div:last-child{margin-right:0}
+.foot{font-size:6.5pt;color:#999;text-align:center;margin-top:10px;clear:both}
+.np{text-align:center;margin:16px auto;max-width:794px}
+.btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
+.btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
+@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+</style></head><body>
+<div id="content">
+<div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>
+<h1>REPORTE DE IMPUTACIONES POR ÓRDENES DE TRABAJO</h1>
+<div class="sub">${MESES[mes]} ${anio} · Ref: ${fileName}</div>
+<div class="info">
+<div><span>Empleado: </span><b>${selN.nombre}</b></div>
+<div><span>Documento: </span><b>${selN.cc}</b></div>
+<div><span>Cargo: </span><b>${selN.cargo}</b></div>
+<div><span>Contrato: </span><b>${selN.tipoContrato||"fijo"}</b></div>
+<div><span>Salario base: </span><b>${fmt(selN.sal||0)}</b></div>
+<div><span>Salario diario: </span><b>${fmt(salDiario)}</b></div>
+</div>
+<h2>Imputaciones por día</h2>
+<table><thead><tr><th>Fecha</th><th>OT (código)</th><th>Centro / Proyecto</th><th style="text-align:right">Horas (presunción)</th></tr></thead><tbody>
+${impList.length>0?impList.map(i=>`<tr class="imp"><td>${i.fecha}</td><td>${i.otCodigo}</td><td>${i.otNombre}</td><td style="text-align:right">8h</td></tr>`).join(""):`<tr><td colspan="4" style="color:#999;text-align:center">Sin imputaciones registradas</td></tr>`}
+</tbody></table>
+<h2>Resumen agregado por OT</h2>
+<table><thead><tr><th>OT (código)</th><th>Centro / Proyecto</th><th style="text-align:right">Días</th><th style="text-align:right">Horas est.</th><th style="text-align:right">Coste trabajador</th></tr></thead><tbody>
+${resumenArr.length>0?resumenArr.map(r=>`<tr class="imp"><td>${r.codigo}</td><td>${r.nombre}</td><td style="text-align:right">${r.dias}</td><td style="text-align:right">${r.dias*8}h</td><td style="font-family:monospace;text-align:right">${fmt(r.dias*salDiario)}</td></tr>`).join(""):`<tr><td colspan="5" style="color:#999;text-align:center">Sin imputaciones</td></tr>`}
+</tbody></table>
+<h2>Totales del período</h2>
+<div class="summary">
+<div class="sbox"><div class="n">${totalDias}</div><div class="l">Días imputados</div></div>
+<div class="sbox"><div class="n">${totalDias*8}h</div><div class="l">Horas estimadas</div></div>
+<div class="sbox"><div class="n">${resumenArr.length}</div><div class="l">OTs distintas</div></div>
+</div>
+<div style="margin-top:8px;padding:8px;background:#FEF3C7;border:1px solid #F59E0B;border-radius:4px;font-size:7.5pt;color:#92400E">
+<b>Nota:</b> Las horas son una presunción de 8h por día imputado (horario asignado del empleado). El coste trabajador es proporcional al salario base / 30 días. Para coste empresa (con prestaciones sociales) consultar reporte de nómina. Las imputaciones NO afectan los cálculos de nómina — son informativas para imputar costes por OT.
+</div>
+<div class="sig">
+<div>Elaborado por<br><span style="color:#999">RRHH Habitaris</span></div>
+<div>Revisado por<br><span style="color:#999">Gerencia</span></div>
+<div>Aprobado por<br><span style="color:#999">Dirección</span></div>
+</div>
+<div class="foot">Habitaris Suite · ${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})} · ${fileName}</div>
+</div>
+<div class="np">
+<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';document.querySelector('.np').style.display='none';var st=document.createElement('div');st.style.cssText='text-align:center;padding:10px;font-family:monospace;color:#999';st.textContent='Generando PDF...';document.body.appendChild(st);html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(canvas){var img=canvas.toDataURL('image/jpeg',0.98);var iW=canvas.width,iH=canvas.height,pW=210,pH=(iH*pW)/iW;var J=jspdf.jsPDF;var pdf=new J({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileName}.pdf');st.textContent='PDF descargado ✅';el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display='';}).catch(function(e){st.textContent='Error: '+e.message;document.querySelector('.np').style.display=''})})()">📥 Descargar PDF</button>
+<button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
+</div>
+</body></html>`;
+            const w=window.open('','_blank');w.document.write(html);w.document.close();
+          }}>📊 Reporte imputaciones</Btn>
           <EstadoPills n={selN}/>
         </div>
 
