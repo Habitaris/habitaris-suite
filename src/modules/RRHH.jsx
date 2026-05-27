@@ -254,6 +254,17 @@ const DEF_PARTE = () => ({
   descripcion: "", estado: "Borrador",
 });
 
+// Dias de la semana para calendarios laborales de OTs
+const DIAS_SEM = [
+  { id: "L", label: "Lun" },
+  { id: "M", label: "Mar" },
+  { id: "X", label: "Mie" },
+  { id: "J", label: "Jue" },
+  { id: "V", label: "Vie" },
+  { id: "S", label: "Sab" },
+  { id: "D", label: "Dom" },
+];
+
 
 // Roles que pueden crear partes
 const ROLES_PARTE = ["encargado","supervisor","jefe_obra","residente","admin","superadmin"];
@@ -1350,6 +1361,11 @@ function TabCentros() {
   const [emps, setEmps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editId, setEditId] = useState(null);
+  // Calendarios laborales por OT: state para controlar qué centro tiene el panel abierto
+  const [editCalsId, setEditCalsId] = useState(null);
+  // Form para crear/editar un calendario. null = cerrado.
+  // Estructura: { centroId, cal: {id, nombre, dias:[], entrada, salida, empleados:[]}, isNew }
+  const [calForm, setCalForm] = useState(null);
   const [filtroTipo, setFiltroTipo] = useState("todos");
   // Estado para panel de "Horas fichadas" (paso 4 Punto 1: rentabilidad por OT)
   // - verHorasId: qué OT tiene el panel expandido (solo una a la vez)
@@ -1645,9 +1661,120 @@ function TabCentros() {
             <div style={{display:"flex",gap:6}}>
               <button onClick={()=>updateCentro(centro.id,{activo:!centro.activo})} style={{padding:"4px 10px",fontSize:10,border:"1px solid #E0E0E0",borderRadius:4,background:centro.activo?"#fff":"#E8F4EE",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{centro.activo?"Desactivar":"Activar"}</button>
               <button onClick={()=>{const nowOpen=verHorasId===centro.id;setVerHorasId(nowOpen?null:centro.id);if(!nowOpen)loadAttendance();}} style={{padding:"4px 10px",fontSize:10,border:"1px solid #E0E0E0",borderRadius:4,background:verHorasId===centro.id?"#111":"#fff",color:verHorasId===centro.id?"#fff":"#111",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{verHorasId===centro.id?"Cerrar":"📊 Horas"}</button>
-              <button onClick={()=>setEditId(editId===centro.id?null:centro.id)} style={{padding:"4px 10px",fontSize:10,border:"1px solid #E0E0E0",borderRadius:4,background:editId===centro.id?"#111":"#fff",color:editId===centro.id?"#fff":"#111",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{editId===centro.id?"Cerrar":"Asignar empleados"}</button>
+              <button onClick={()=>{setEditCalsId(editCalsId===centro.id?null:centro.id);setCalForm(null);}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #E0E0E0",borderRadius:4,background:editCalsId===centro.id?"#7C3AED":"#fff",color:editCalsId===centro.id?"#fff":"#111",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{editCalsId===centro.id?"Cerrar":"📅 Calendarios"}</button>
+            <button onClick={()=>setEditId(editId===centro.id?null:centro.id)} style={{padding:"4px 10px",fontSize:10,border:"1px solid #E0E0E0",borderRadius:4,background:editId===centro.id?"#111":"#fff",color:editId===centro.id?"#fff":"#111",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{editId===centro.id?"Cerrar":"Asignar empleados"}</button>
             </div>
           </div>
+
+          {/* Calendarios de la OT (panel CRUD) */}
+          {editCalsId===centro.id && (
+            <div style={{marginTop:10,padding:"12px",background:"#F9F8F4",borderRadius:6,border:"1px solid #E5E3DE"}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                <div style={{fontSize:11,fontWeight:700,color:"#666",textTransform:"uppercase",letterSpacing:"0.06em"}}>📅 Calendarios de esta OT</div>
+                {!calForm && <button onClick={()=>setCalForm({centroId:centro.id,cal:{id:uid(),nombre:"",dias:[],entrada:"08:00",salida:"16:00",empleados:[]},isNew:true})} style={{padding:"4px 10px",fontSize:10,fontWeight:600,border:"1px solid #111",borderRadius:4,background:"#111",color:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>+ Nuevo calendario</button>}
+              </div>
+              {/* Lista de calendarios actuales */}
+              {(centro.calendarios||[]).length===0 && !calForm && (
+                <div style={{padding:"10px",fontSize:11,color:"#999",fontStyle:"italic",textAlign:"center"}}>Sin calendarios definidos. Crea uno para asignar horarios y empleados.</div>
+              )}
+              {(centro.calendarios||[]).map(cal => (
+                <div key={cal.id} style={{padding:"8px 10px",background:"#fff",border:"1px solid #E5E3DE",borderRadius:4,marginBottom:6,display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:10}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{fontSize:12,fontWeight:600,color:"#111"}}>{cal.nombre||"(sin nombre)"}</div>
+                    <div style={{fontSize:10,color:"#666",marginTop:2}}>
+                      {(cal.dias||[]).map(d=>DIAS_SEM.find(x=>x.id===d)?.label).filter(Boolean).join(" · ")||"(sin dias)"} · {cal.entrada}-{cal.salida}
+                    </div>
+                    <div style={{marginTop:4,display:"flex",gap:3,flexWrap:"wrap"}}>
+                      {(cal.empleados||[]).map(eId => {
+                        const emp = emps.find(e=>e.id===eId);
+                        return <span key={eId} style={{fontSize:9,padding:"2px 6px",background:"#E6F2EC",color:"#1E6B42",borderRadius:8,fontWeight:600}}>{emp?(emp.candidato_nombre||"").split(" ").slice(-2).join(" "):"???"}</span>;
+                      })}
+                      {(cal.empleados||[]).length===0 && <span style={{fontSize:9,color:"#D97706",fontStyle:"italic"}}>Sin empleados asignados</span>}
+                    </div>
+                  </div>
+                  <div style={{display:"flex",gap:4}}>
+                    <button onClick={()=>setCalForm({centroId:centro.id,cal:{...cal,empleados:[...(cal.empleados||[])],dias:[...(cal.dias||[])]},isNew:false})} style={{padding:"3px 8px",fontSize:10,border:"1px solid #E5E3DE",borderRadius:4,background:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>✏️ Editar</button>
+                    <button onClick={async()=>{
+                      if(!confirm("¿Eliminar este calendario? Los empleados asignados dejarán de tenerlo en el liquidador.")) return;
+                      const newCals = (centro.calendarios||[]).filter(c=>c.id!==cal.id);
+                      const newCentros = centros.map(c => c.id===centro.id ? {...c, calendarios: newCals} : c);
+                      setCentros(newCentros);
+                      await fetch("/api/hiring?kv=centros&anio=0&mes=0",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:newCentros})});
+                    }} style={{padding:"3px 8px",fontSize:10,border:"1px solid #dc2626",borderRadius:4,background:"#fff",color:"#dc2626",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>🗑 Eliminar</button>
+                  </div>
+                </div>
+              ))}
+              {/* Form inline para crear/editar */}
+              {calForm && calForm.centroId===centro.id && (
+                <div style={{padding:"12px",background:"#fff",border:"2px solid #7C3AED",borderRadius:6,marginTop:8}}>
+                  <div style={{fontSize:12,fontWeight:700,color:"#111",marginBottom:10}}>{calForm.isNew?"Nuevo calendario":"Editar calendario"}</div>
+                  {/* Nombre */}
+                  <div style={{marginBottom:10}}>
+                    <div style={{fontSize:10,color:"#666",marginBottom:3,fontWeight:600}}>Nombre del calendario</div>
+                    <input value={calForm.cal.nombre} onChange={e=>setCalForm({...calForm,cal:{...calForm.cal,nombre:e.target.value}})} placeholder="Ej: Turno mañana L-V 8-16h" style={{width:"100%",padding:"6px 10px",fontSize:11,border:"1px solid #E5E3DE",borderRadius:4,fontFamily:"'DM Sans',sans-serif"}}/>
+                  </div>
+                  {/* Días */}
+                  <div style={{marginBottom:10}}>
+                    <div style={{fontSize:10,color:"#666",marginBottom:3,fontWeight:600}}>Días de la semana</div>
+                    <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+                      {DIAS_SEM.map(d => {
+                        const active = calForm.cal.dias.includes(d.id);
+                        return <button key={d.id} type="button" onClick={()=>{
+                          const nd = active ? calForm.cal.dias.filter(x=>x!==d.id) : [...calForm.cal.dias, d.id];
+                          setCalForm({...calForm,cal:{...calForm.cal,dias:nd}});
+                        }} style={{padding:"5px 10px",fontSize:10,fontWeight:active?700:400,border:active?"2px solid #111":"1px solid #E5E3DE",borderRadius:4,background:active?"#EDE9FE":"#fff",color:active?"#111":"#666",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",minWidth:40}}>{d.label}</button>;
+                      })}
+                    </div>
+                  </div>
+                  {/* Horario */}
+                  <div style={{marginBottom:10,display:"flex",gap:10,alignItems:"center"}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:10,color:"#666",marginBottom:3,fontWeight:600}}>Entrada</div>
+                      <input type="time" value={calForm.cal.entrada} onChange={e=>setCalForm({...calForm,cal:{...calForm.cal,entrada:e.target.value}})} style={{width:"100%",padding:"6px 10px",fontSize:11,border:"1px solid #E5E3DE",borderRadius:4,fontFamily:"'DM Sans',sans-serif"}}/>
+                    </div>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:10,color:"#666",marginBottom:3,fontWeight:600}}>Salida</div>
+                      <input type="time" value={calForm.cal.salida} onChange={e=>setCalForm({...calForm,cal:{...calForm.cal,salida:e.target.value}})} style={{width:"100%",padding:"6px 10px",fontSize:11,border:"1px solid #E5E3DE",borderRadius:4,fontFamily:"'DM Sans',sans-serif"}}/>
+                    </div>
+                  </div>
+                  {/* Empleados asignados a este calendario (solo los que están en el centro) */}
+                  <div style={{marginBottom:10}}>
+                    <div style={{fontSize:10,color:"#666",marginBottom:3,fontWeight:600}}>Empleados que siguen este calendario</div>
+                    {(centro.empleados||[]).length===0 ? (
+                      <div style={{padding:"8px",fontSize:10,color:"#D97706",background:"#FEF3C7",borderRadius:4}}>⚠️ Asigna primero empleados a esta OT (botón "Asignar empleados") y luego podrás ponerlos en este calendario.</div>
+                    ) : (
+                      <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                        {(centro.empleados||[]).map(eId => {
+                          const emp = emps.find(e=>e.id===eId);
+                          const isOn = calForm.cal.empleados.includes(eId);
+                          return <button key={eId} type="button" onClick={()=>{
+                            const ne = isOn ? calForm.cal.empleados.filter(x=>x!==eId) : [...calForm.cal.empleados, eId];
+                            setCalForm({...calForm,cal:{...calForm.cal,empleados:ne}});
+                          }} style={{padding:"5px 10px",fontSize:10,fontWeight:isOn?700:400,border:isOn?"2px solid #1E6B42":"1px solid #E5E3DE",borderRadius:4,background:isOn?"#E6F2EC":"#fff",color:isOn?"#1E6B42":"#666",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{isOn?"✓ ":""}{(emp?.candidato_nombre||"???").split(" ").slice(-2).join(" ")}</button>;
+                        })}
+                      </div>
+                    )}
+                  </div>
+                  {/* Acciones */}
+                  <div style={{display:"flex",gap:6,marginTop:12}}>
+                    <button onClick={async()=>{
+                      if(!calForm.cal.nombre.trim()){alert("Pon un nombre al calendario");return;}
+                      if(calForm.cal.dias.length===0){alert("Selecciona al menos un día");return;}
+                      if(!calForm.cal.entrada || !calForm.cal.salida){alert("Indica entrada y salida");return;}
+                      if(calForm.cal.entrada>=calForm.cal.salida){alert("La salida debe ser posterior a la entrada");return;}
+                      const existing = (centro.calendarios||[]);
+                      const newCals = calForm.isNew ? [...existing, calForm.cal] : existing.map(c => c.id===calForm.cal.id ? calForm.cal : c);
+                      const newCentros = centros.map(c => c.id===centro.id ? {...c, calendarios: newCals} : c);
+                      setCentros(newCentros);
+                      await fetch("/api/hiring?kv=centros&anio=0&mes=0",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:newCentros})});
+                      setCalForm(null);
+                    }} style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:"1px solid #111",borderRadius:4,background:"#111",color:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{calForm.isNew?"Crear":"Guardar"}</button>
+                    <button onClick={()=>setCalForm(null)} style={{padding:"6px 14px",fontSize:11,fontWeight:600,border:"1px solid #E5E3DE",borderRadius:4,background:"#fff",color:"#666",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>Cancelar</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Assigned employees chips */}
           <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:editId===centro.id?10:0}}>
