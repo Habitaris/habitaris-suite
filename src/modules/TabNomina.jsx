@@ -701,6 +701,17 @@ export function TabNomina(){
     });
   },[anio,mes]);
 
+
+  // Calendarios laborales por empleado (configurados en TabPersonal). Estructura:
+  // { [empId]: [{id, otId, dias:["L","M",...], entrada, salida, vigencia_desde, vigencia_hasta}] }
+  // Cargar una sola vez al montar. Se usan para auto-rellenar el calendario mensual del empleado.
+  const [calendariosBase,setCalendariosBase]=useState({});
+  useEffect(()=>{
+    fetch("/api/hiring?kv=calendarios&anio=0&mes=0").then(r=>r.json()).then(d=>{
+      if(d.ok && d.data && typeof d.data === "object" && !Array.isArray(d.data)) setCalendariosBase(d.data);
+      else setCalendariosBase({});
+    }).catch(()=>setCalendariosBase({}));
+  },[]);
   // Helper: dado un día del mes (1..31), devuelve la letra del día de la semana en formato L M X J V S D
   // (Lunes=L, Martes=M, Miércoles=X, Jueves=J, Viernes=V, Sábado=S, Domingo=D)
   // Hacemos esto para que coincida con DIAS_SEM del módulo TabPersonal (RRHH.jsx).
@@ -766,17 +777,6 @@ export function TabNomina(){
     fetch("/api/hiring?kv=centros&anio=0&mes=0").then(r=>r.json()).then(d=>{
       if(d.ok && Array.isArray(d.data)) setCentros(d.data);
     }).catch(()=>setCentros([]));
-  },[]);
-
-  // Calendarios laborales por empleado (configurados en TabPersonal). Estructura:
-  // { [empId]: [{id, otId, dias:["L","M",...], entrada, salida, vigencia_desde, vigencia_hasta}] }
-  // Cargar una sola vez al montar. Se usan para auto-rellenar el calendario mensual del empleado.
-  const [calendariosBase,setCalendariosBase]=useState({});
-  useEffect(()=>{
-    fetch("/api/hiring?kv=calendarios&anio=0&mes=0").then(r=>r.json()).then(d=>{
-      if(d.ok && d.data && typeof d.data === "object" && !Array.isArray(d.data)) setCalendariosBase(d.data);
-      else setCalendariosBase({});
-    }).catch(()=>setCalendariosBase({}));
   },[]);
 
   const selN=useMemo(()=>noms.find(n=>n.id===sel),[noms,sel]);
