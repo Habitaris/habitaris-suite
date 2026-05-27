@@ -829,14 +829,23 @@ export function TabNomina(){
     };
     return(
       <div className="fade-up" style={{maxWidth:1050,margin:"0 auto"}}>
-        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:16}}>
+        {/* FILA 1: acciones primarias (Volver, nombre/cargo, Guardar, Pagar, Ref pago, EstadoPills) */}
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8,flexWrap:"wrap"}}>
           <Btn onClick={()=>{setVista("lista");setSubTab("nomina");}}>← Volver</Btn>
-          <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selN.nombre}</div><div style={{fontSize:11,color:T.inkLight}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio} · <span style={{fontWeight:600,color:selN.modalidadPago==="mensual"?T.ink:T.blue}}>{selN.modalidadPago==="mensual"?"Pago mensual":"Pago quincenal"}</span></div></div>
+          <div style={{flex:1,minWidth:240}}>
+            <div style={{fontSize:16,fontWeight:700,lineHeight:1.2}}>{selN.nombre}</div>
+            <div style={{fontSize:11,color:T.inkLight,marginTop:2}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio} · <span style={{fontWeight:600,color:selN.modalidadPago==="mensual"?T.ink:T.blue}}>{selN.modalidadPago==="mensual"?"Pago mensual":"Pago quincenal"}</span></div>
+          </div>
+          <EstadoPills n={selN}/>
           <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
-          {isQ&&selN.estado==="borrador"&&<Btn small disabled={periodoQ1.count > 0} onClick={()=>{if(periodoQ1.count > 0){alert("⚠️ Quedan "+periodoQ1.count+" día(s) pendientes en la primera quincena (1-15). Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"q1",ref:"",soporte:null});}}>💵 Pagar Q1 (anticipo){periodoQ1.count > 0?" ⚠️":""}</Btn>}
-          {isQ&&selN.estado==="q1_pagado"&&<Btn pri small disabled={periodoQ2.count > 0} onClick={()=>{if(periodoQ2.count > 0){alert("⚠️ Quedan "+periodoQ2.count+" día(s) pendientes en la segunda quincena. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:"",soporte:null});}}>💵 Pagar Q2 (liquidar){periodoQ2.count > 0?" ⚠️":""}</Btn>}
-          {!isQ&&selN.estado==="borrador"&&<Btn pri small disabled={periodoMes.count > 0} onClick={()=>{if(periodoMes.count > 0){alert("⚠️ Quedan "+periodoMes.count+" día(s) pendientes en el mes. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:"",soporte:null});}}>💵 Pagar nómina{periodoMes.count > 0?" ⚠️":""}</Btn>}
+          {isQ&&selN.estado==="borrador"&&<Btn small disabled={periodoQ1.count > 0} onClick={()=>{if(periodoQ1.count > 0){alert("⚠️ Quedan "+periodoQ1.count+" día(s) pendientes en la primera quincena (1-15). Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"q1",ref:"",soporte:null});}}>💵 Pagar Q1 (anticipo)</Btn>}
+          {isQ&&selN.estado==="q1_pagado"&&<Btn pri small disabled={periodoQ2.count > 0} onClick={()=>{if(periodoQ2.count > 0){alert("⚠️ Quedan "+periodoQ2.count+" día(s) pendientes en la segunda quincena. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:"",soporte:null});}}>💵 Pagar Q2 (liquidar)</Btn>}
+          {!isQ&&selN.estado==="borrador"&&<Btn pri small disabled={periodoMes.count > 0} onClick={()=>{if(periodoMes.count > 0){alert("⚠️ Quedan "+periodoMes.count+" día(s) pendientes en el mes. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:"",soporte:null});}}>💵 Pagar nómina</Btn>}
           {(selN.estado==="q1_pagado"||selN.estado==="liquidada"||selN.estado==="pagada")&&selN.refPago&&<span style={{fontSize:9,color:T.inkLight,padding:"4px 8px",background:T.accent,borderRadius:4}}>Ref: {selN.refPago}</span>}
+        </div>
+        {/* FILA 2: reportes (Link empleados, Novedades, Imputaciones, Costes) */}
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16,paddingTop:8,borderTop:`1px dashed ${T.border}`,flexWrap:"wrap"}}>
+          <span style={{fontSize:10,fontWeight:600,color:T.inkLight,textTransform:"uppercase",letterSpacing:"0.05em",marginRight:4}}>📊 Reportes:</span>
           <Btn small onClick={()=>{(()=>{const u=getTenantUrlsSync();const id=getTenantIdentitySync();window.open("https://wa.me/?text="+encodeURIComponent(id.displayName+"\n\n👤 Portal del empleado:\n"+u.portalEmpleado+"\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");})();}}>💬 Link empleados</Btn>
           <Btn small onClick={()=>{
             const nDias=selN.novDias||{};
@@ -1139,7 +1148,6 @@ ${body}
             w.document.write(html);
             w.document.close();
           }}>📈 Costes por OT</Btn>
-          <EstadoPills n={selN}/>
         </div>
 
         {/* Payment form */}
