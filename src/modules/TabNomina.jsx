@@ -73,15 +73,16 @@ const NOV_TIPOS = [
   {id:"ausencia",label:"Ausencia",color:"#FEE2E2",icon:"❌"},
 ];
 
-// Catálogo OOTT mockeado (mismo que se usa en PortalEmpleado L2955 RRHH.jsx).
-// Futuro: leer dinámicamente desde CRM (ofertas ganadas con Gantt exportado)
-// o desde un módulo de configuración de OOTT. Por ahora, hardcoded para arrancar.
-const OOTT_CATALOGO = [
-  {id:"OT-DIN_250101_01", label:"OT-DIN_250101_01 — Diseño interior 01", color:"#DDD6FE"},
-  {id:"OT-INT_250115_02", label:"OT-INT_250115_02 — Interventoría 02",    color:"#FED7AA"},
-  {id:"OT-INT_250201_03", label:"OT-INT_250201_03 — Interventoría 03",    color:"#A7F3D0"},
-];
-const OOTT_KV_KEY = "hab:rrhh:imputaciones"; // {empId:{dayKey:otCodigo}}
+// Paleta de 8 colores que se asigna deterministamente a cada OT por su id (hash mod 8).
+// Así dos OTs distintas se ven con colores distintos en el calendario sin necesidad
+// de almacenar un color por OT en BD (las OTs vienen de Centros de Trabajo).
+const OT_COLORS = ["#DDD6FE","#FED7AA","#A7F3D0","#FBCFE8","#BFDBFE","#FDE68A","#C7D2FE","#FCA5A5"];
+function colorForOT(otId){
+  let h = 0;
+  const s = String(otId || "");
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+  return OT_COLORS[Math.abs(h) % OT_COLORS.length];
+}
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const fmt = n => n == null || isNaN(n) ? "$0" : "$" + Math.round(n).toLocaleString(getTenantDefaultsSync().locale);
@@ -677,7 +678,10 @@ export function TabNomina(){
   // son ortogonales: la novedad reduce días salariales, la imputación dice a qué OT
   // imputar las horas trabajadas. No interfieren en cálculos de nómina.
   const [modoCal,setModoCal]=useState("novedad"); // "novedad" | "imputacion"
-  const [selOtt,setSelOtt]=useState(OOTT_CATALOGO[0].id);
+  // Centros de Trabajo (OTs) cargados desde BD. Cada centro: {id, codigo, nombre, activo, empleados:[uuid]}.
+  // Las OTs disponibles para imputar a un empleado se filtran por activo=true AND selN.empId IN empleados.
+  const [centros,setCentros]=useState([]);
+  const [selOtt,setSelOtt]=useState(""); // se inicializa al primer OT disponible del empleado seleccionado
   const [novHist,setNovHist]=useState([]);
   const [novYear,setNovYear]=useState(hoy.getFullYear());
   const [buscar,setBuscar]=useState("");
@@ -696,6 +700,13 @@ export function TabNomina(){
       setNoms(lista);setLoading(false);
     });
   },[anio,mes]);
+
+  // Cargar Centros de Trabajo (OTs) una vez al montar. Se filtran después por empleado.
+  useEffect(()=>{
+    fetch("/api/hiring?kv=centros&anio=0&mes=0").then(r=>r.json()).then(d=>{
+      if(d.ok && Array.isArray(d.data)) setCentros(d.data);
+    }).catch(()=>setCentros([]));
+  },[]);
 
   const selN=useMemo(()=>noms.find(n=>n.id===sel),[noms,sel]);
   const calc=useMemo(()=>selN?calcN(selN):null,[selN]);
@@ -901,7 +912,18 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                 <button type="button" onClick={()=>setModoCal("imputacion")} style={{padding:"3px 8px",fontSize:10,fontWeight:modoCal==="imputacion"?700:400,border:modoCal==="imputacion"?"2px solid #111":"1px solid "+T.border,borderRadius:4,background:modoCal==="imputacion"?"#EDE9FE":"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>📊 Imputar OT</button>
                 <span style={{width:1,background:T.border,margin:"0 4px"}}/>
                 {modoCal==="novedad" && NOV_TIPOS.filter(n=>n.id!=="normal").map(n=><button key={n.id} type="button" onClick={()=>setSelNovTipo(n.id)} style={{padding:"3px 8px",fontSize:10,fontWeight:selNovTipo===n.id?700:400,border:selNovTipo===n.id?"2px solid #111":"1px solid "+T.border,borderRadius:4,background:selNovTipo===n.id?n.color:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",opacity:selNovTipo===n.id?1:0.6}}>{n.icon} {n.label}</button>)}
-                {modoCal==="imputacion" && <select value={selOtt} onChange={e=>setSelOtt(e.target.value)} style={{padding:"3px 8px",fontSize:10,border:`1px solid ${T.border}`,borderRadius:4,background:"#fff",fontFamily:"'DM Sans',sans-serif"}}>{OOTT_CATALOGO.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}</select>}
+                {modoCal==="imputacion" && (()=>{
+                  // Filtrar centros activos asignados al empleado seleccionado
+                  const centrosEmp = centros.filter(c=>c.activo && Array.isArray(c.empleados) && c.empleados.includes(selN.empId));
+                  if (centrosEmp.length === 0) {
+                    return <span style={{fontSize:10,color:"#D97706",padding:"3px 8px",background:"#FEF3C7",borderRadius:4,fontFamily:"'DM Sans',sans-serif"}}>⚠️ {selN.nombre} no tiene OTs asignadas. Asígnalas en <a href="#centros" onClick={e=>{e.preventDefault();if(typeof window!=="undefined"&&window.dispatchEvent)window.dispatchEvent(new CustomEvent("rrhh:navigate",{detail:{tab:"centros"}}));}} style={{color:T.ink,fontWeight:700,textDecoration:"underline"}}>Centros de Trabajo</a>.</span>;
+                  }
+                  // Si el OT seleccionado no está en la lista del empleado, escoger el primero
+                  if (!selOtt || !centrosEmp.find(c=>c.id===selOtt)) {
+                    setTimeout(()=>setSelOtt(centrosEmp[0].id), 0);
+                  }
+                  return <select value={selOtt} onChange={e=>setSelOtt(e.target.value)} style={{padding:"3px 8px",fontSize:10,border:`1px solid ${T.border}`,borderRadius:4,background:"#fff",fontFamily:"'DM Sans',sans-serif"}}>{centrosEmp.map(c=><option key={c.id} value={c.id}>{c.codigo} — {c.nombre}</option>)}</select>;
+                })()}
               </div>
               {/* Calendar grid */}
               {(()=>{
@@ -970,13 +992,14 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                       const nov=nDias[k];
                       const novInfo=nov?NOV_TIPOS.find(n=>n.id===nov):null;
                       const imp=iDias[k];
-                      const impInfo=imp?OOTT_CATALOGO.find(o=>o.id===imp):null;
+                      const impInfo=imp?centros.find(c=>c.id===imp):null;
+                      const impColor=imp?colorForOT(imp):null;
                       const isToday=sameDay(date,new Date());
 
                       const tooltipParts=[];
                       if(hol)tooltipParts.push("🔶 "+hol.name+" — Descanso remunerado");
                       if(novInfo)tooltipParts.push(novInfo.label);
-                      if(impInfo)tooltipParts.push("OT: "+impInfo.id);
+                      if(impInfo)tooltipParts.push("OT: "+impInfo.codigo+" — "+impInfo.nombre);
 
                       return <div key={day} onClick={()=>!isRest&&toggleDay(day)} title={tooltipParts.join(" · ")} style={{
                         textAlign:"center",padding:"4px 2px",borderRadius:4,fontSize:11,fontWeight:isToday?800:(hol?700:400),
@@ -990,7 +1013,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
                         {hol&&<div style={{fontSize:6,color:"#D97706",lineHeight:1,marginTop:1}}>🔶</div>}
                         {isSun&&!hol&&<div style={{fontSize:6,color:"#ccc",lineHeight:1,marginTop:1}}>—</div>}
                         {novInfo&&<div style={{fontSize:7,lineHeight:1,marginTop:1}}>{novInfo.icon}</div>}
-                        {impInfo&&<div style={{position:"absolute",bottom:0,left:0,right:0,height:3,background:impInfo.color,borderRadius:"0 0 4px 4px"}}/>}
+                        {impColor&&<div style={{position:"absolute",bottom:0,left:0,right:0,height:3,background:impColor,borderRadius:"0 0 4px 4px"}}/>}
                       </div>;
                     })}
                   </div>
