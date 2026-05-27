@@ -315,13 +315,28 @@ export default function Grupo({ onSelectCountry, onEnterCompanyDashboard, onEnte
 
   const reload = useCallback(() => setReloadKey(k => k + 1), []);
 
+  // FIX 27/5/26: cuando React monta este componente, antes de que t.isReady sea true
+  // hay un instante donde paisesActivos queda en [] y los KPIs muestran 0 países.
+  // Para evitar tener que refrescar (F5), si TenantContext ya tiene companies cargadas,
+  // las usamos como fuente inicial inmediata. La query propia se sigue lanzando para:
+  // - traer paisesCatalogo (no está en context)
+  // - refrescar cuando reloadKey>0 tras un cambio
   useEffect(() => {
-    // Si TenantContext ya cargó companies, usar esa fuente como verdad inicial
-    // y solo refrescar si reloadKey>0 o necesitamos paisesCatalogo
-    if (!t.isReady || !tenantId) return;
+    if (!t.isReady) {
+      // Mientras TenantContext carga, si ya tiene companies parciales las usamos
+      if (Array.isArray(t.companies) && t.companies.length > 0) {
+        setCompanies(t.companies);
+        setLoading(false);
+      }
+      return;
+    }
+    if (!tenantId) return;
     let cancelled = false;
     async function load() {
-      setLoading(true);
+      // Si ya tenemos companies del context, no mostramos spinner — render inmediato
+      if (!Array.isArray(t.companies) || t.companies.length === 0) {
+        setLoading(true);
+      }
       try {
         const [r1, r2] = await Promise.all([
           sb.from("companies").select("*").eq("tenant_id", tenantId).order("pais").order("display_name"),
@@ -334,7 +349,7 @@ export default function Grupo({ onSelectCountry, onEnterCompanyDashboard, onEnte
     }
     load();
     return () => { cancelled = true; };
-  }, [t.isReady, tenantId, reloadKey]);
+  }, [t.isReady, t.companies, tenantId, reloadKey]);
 
   // Carga de KPIs en paralelo. Cada KPI falla independientemente: si una API
   // no responde, esa KPI queda en "—" pero el resto se muestra.
