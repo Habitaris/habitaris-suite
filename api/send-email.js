@@ -637,12 +637,18 @@ function invitationTemplate(link, brand, customIntroHtml) {
   const maxUses = link.max_uses;
 
   // Construir URL del logo para EMAIL (no para web).
-  // SVG renderiza inconsistente en clientes de email (Gmail mobile, Outlook): se ve
-  // minúsculo o no respeta height. Forzamos PNG si el branding configura un SVG.
-  const _rawLogo = (brand.logo_black_url && brand.logo_black_url.startsWith('http'))
-    ? brand.logo_black_url
-    : ((brand.app_url || 'https://suite.habitaris.es') + (brand.logo_black_url || '/logo-habitaris.jpg'));
-  const emailLogoSrc = _rawLogo.endsWith('.svg') ? _rawLogo.replace(/\.svg$/, '.png') : _rawLogo;
+  // FIX 27/5/26: en lugar de pasar por brand.logo_black_url (que para Habitaris venía
+  // resolviendo a /logo-habitaris-negro.svg cuadrado pequeño), forzamos el mismo logo
+  // que usa el email APROBADOR (logo-habitaris.jpg rectangular 812x224) cuando el
+  // tenant es 'habitaris'. Para otros tenants (futura marca blanca) lee de brand normal.
+  // TODO: cuando haya >1 tenant real, refactorizar para que cada tenant declare
+  // logo_email_url separado en tenant_config.branding (distinto al de la suite web).
+  const isHabitaris = !brand.empresa || brand.empresa === "Habitaris";
+  const emailLogoSrc = isHabitaris
+    ? "https://suite.habitaris.es/logo-habitaris.jpg"
+    : ((brand.logo_black_url && brand.logo_black_url.startsWith('http'))
+        ? brand.logo_black_url
+        : ((brand.app_url || '') + (brand.logo_black_url || '')));
 
   // Calcular horas hasta caducidad (ahora vs expires_at)
   let hoursUntilExpiry = null;
@@ -719,12 +725,14 @@ function rejectionTemplate(reqRow, brand, customBodyHtml) {
   brand = brand || {};
   const clientName = reqRow.nombre_completo || "";
   const greeting = clientName ? "Hola " + clientName + "," : "Hola,";
-  // Misma transformacion SVG -> PNG que invitationTemplate (clientes de email
-  // renderizan SVG inconsistente; preferimos PNG).
-  const _rawLogo = (brand.logo_black_url && brand.logo_black_url.startsWith('http'))
-    ? brand.logo_black_url
-    : ((brand.app_url || 'https://suite.habitaris.es') + (brand.logo_black_url || ''));
-  const logoSrc = _rawLogo && _rawLogo.endsWith('.svg') ? _rawLogo.replace(/\.svg$/, '.png') : _rawLogo;
+  // FIX 27/5/26 mismo razonamiento que invitationTemplate: para tenant Habitaris
+  // forzar el JPG rectangular bueno. Para otros tenants (futuro) lee de brand normal.
+  const isHabitaris = !brand.empresa || brand.empresa === "Habitaris";
+  const logoSrc = isHabitaris
+    ? "https://suite.habitaris.es/logo-habitaris.jpg"
+    : ((brand.logo_black_url && brand.logo_black_url.startsWith('http'))
+        ? brand.logo_black_url
+        : ((brand.app_url || '') + (brand.logo_black_url || '')));
   const empresaAlt = brand.empresa || '';
   return `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
