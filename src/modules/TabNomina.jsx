@@ -701,11 +701,82 @@ export function TabNomina(){
     });
   },[anio,mes]);
 
+  // Helper: dado un día del mes (1..31), devuelve la letra del día de la semana en formato L M X J V S D
+  // (Lunes=L, Martes=M, Miércoles=X, Jueves=J, Viernes=V, Sábado=S, Domingo=D)
+  // Hacemos esto para que coincida con DIAS_SEM del módulo TabPersonal (RRHH.jsx).
+  const diaSemanaLetra = (a,m,d) => {
+    const dow = new Date(a, m, d).getDay(); // 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb
+    return ["D","L","M","X","J","V","S"][dow];
+  };
+
+  // aplicaBaseAEmpleado(n): recorre el mes del empleado n y devuelve impDias auto-generadas
+  // desde sus calendarios base. Salta domingos, festivos y días con novedad existente.
+  // Si un día está cubierto por varios calendarios → devuelve "__conflicto__" para ese día,
+  // lo que dispara el render visual de conflicto.
+  const aplicaBaseAEmpleado = (n) => {
+    const cals = calendariosBase[n.empId] || [];
+    if (cals.length === 0) return {};
+    const hols = getHolidays(n.anio);
+    const totalDays = new Date(n.anio, n.mes+1, 0).getDate();
+    const novDias = n.novDias || {};
+    const result = {};
+    for (let d = 1; d <= totalDays; d++) {
+      const date = new Date(n.anio, n.mes, d);
+      const dow = date.getDay();
+      if (dow === 0) continue; // domingo: descanso
+      if (hols.find(h => sameDay(h.date, date))) continue; // festivo: descanso
+      const k = n.anio+"-"+String(n.mes+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+      if (novDias[k]) continue; // novedad ya registrada, no auto-imputar
+      const letra = diaSemanaLetra(n.anio, n.mes, d);
+      // Buscar calendarios cuya vigencia incluye este día y tienen esta letra
+      const aplicables = cals.filter(c => {
+        if (!Array.isArray(c.dias) || !c.dias.includes(letra)) return false;
+        if (c.vigencia_desde && k < c.vigencia_desde) return false;
+        if (c.vigencia_hasta && k > c.vigencia_hasta) return false;
+        return true;
+      });
+      if (aplicables.length === 1) {
+        result[k] = aplicables[0].otId;
+      } else if (aplicables.length > 1) {
+        result[k] = "__conflicto__"; // marcador especial para render visual
+      }
+    }
+    return result;
+  };
+
+  // Una vez cargados los calendarios y las nóminas, aplicar el calendario base
+  // SOLO a los empleados cuyo impDias está vacío (primera vez que se abre el mes).
+  // Esto cumple la opción 2: "auto-aplica primera vez, respeta cambios manuales".
+  useEffect(()=>{
+    if (Object.keys(calendariosBase).length === 0) return;
+    if (noms.length === 0) return;
+    setNoms(prev => prev.map(n => {
+      const tieneImp = n.impDias && Object.keys(n.impDias).length > 0;
+      if (tieneImp) return n; // ya tiene imputaciones manuales, no tocar
+      const cals = calendariosBase[n.empId] || [];
+      if (cals.length === 0) return n; // empleado sin calendarios base
+      const autoImp = aplicaBaseAEmpleado(n);
+      if (Object.keys(autoImp).length === 0) return n;
+      return { ...n, impDias: autoImp };
+    }));
+  },[calendariosBase, noms.length, anio, mes]);
+
   // Cargar Centros de Trabajo (OTs) una vez al montar. Se filtran después por empleado.
   useEffect(()=>{
     fetch("/api/hiring?kv=centros&anio=0&mes=0").then(r=>r.json()).then(d=>{
       if(d.ok && Array.isArray(d.data)) setCentros(d.data);
     }).catch(()=>setCentros([]));
+  },[]);
+
+  // Calendarios laborales por empleado (configurados en TabPersonal). Estructura:
+  // { [empId]: [{id, otId, dias:["L","M",...], entrada, salida, vigencia_desde, vigencia_hasta}] }
+  // Cargar una sola vez al montar. Se usan para auto-rellenar el calendario mensual del empleado.
+  const [calendariosBase,setCalendariosBase]=useState({});
+  useEffect(()=>{
+    fetch("/api/hiring?kv=calendarios&anio=0&mes=0").then(r=>r.json()).then(d=>{
+      if(d.ok && d.data && typeof d.data === "object" && !Array.isArray(d.data)) setCalendariosBase(d.data);
+      else setCalendariosBase({});
+    }).catch(()=>setCalendariosBase({}));
   },[]);
 
   const selN=useMemo(()=>noms.find(n=>n.id===sel),[noms,sel]);
@@ -1005,6 +1076,24 @@ ${resumenArr.length>0?resumenArr.map(r=>`<tr class="imp"><td>${r.codigo}</td><td
             <Card accent={T.ink} style={{marginBottom:12}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                 <STit>📅 Calendario {MESES[mes]} {anio}</STit>
+                {(() => {
+                  const calsEmp = calendariosBase[selN.empId] || [];
+                  if (calsEmp.length === 0) return null;
+                  return (
+                    <button
+                      type="button"
+                      onClick={()=>{
+                        if (!ed) return;
+                        if (!confirm("Esto sobrescribirá las imputaciones manuales del mes con las del calendario base del empleado. ¿Continuar?")) return;
+                        const autoImp = aplicaBaseAEmpleado(selN);
+                        u({impDias: autoImp});
+                      }}
+                      disabled={!ed}
+                      title={!ed ? "Mes ya pagado, no se puede modificar" : "Re-aplica el calendario laboral del empleado al mes actual (sobrescribe imputaciones manuales)"}
+                      style={{padding:"4px 10px",fontSize:10,fontWeight:600,border:`1px solid ${T.border}`,borderRadius:4,background:ed?"#fff":"#f5f5f5",color:ed?T.inkMid:"#999",cursor:ed?"pointer":"not-allowed",fontFamily:"'DM Sans',sans-serif"}}
+                    >🔄 Resetear desde calendario base</button>
+                  );
+                })()}
               </div>
               <div style={{display:"flex",gap:4,marginBottom:8,flexWrap:"wrap"}}>
                 <span style={{fontSize:9,color:T.inkLight,padding:"4px 0"}}>Clic en día →</span>
@@ -1093,14 +1182,16 @@ ${resumenArr.length>0?resumenArr.map(r=>`<tr class="imp"><td>${r.codigo}</td><td
                       const nov=nDias[k];
                       const novInfo=nov?NOV_TIPOS.find(n=>n.id===nov):null;
                       const imp=iDias[k];
-                      const impInfo=imp?centros.find(c=>c.id===imp):null;
-                      const impColor=imp?colorForOT(imp):null;
+                      const isConflicto = imp === "__conflicto__";
+                      const impInfo=imp && !isConflicto?centros.find(c=>c.id===imp):null;
+                      const impColor=imp && !isConflicto?colorForOT(imp):null;
                       const isToday=sameDay(date,new Date());
 
                       const tooltipParts=[];
                       if(hol)tooltipParts.push("🔶 "+hol.name+" — Descanso remunerado");
                       if(novInfo)tooltipParts.push(novInfo.label);
-                      if(impInfo)tooltipParts.push("OT: "+impInfo.codigo+" — "+impInfo.nombre);
+                      if(isConflicto)tooltipParts.push("⚠️ Conflicto: el empleado tiene 2+ OTs configuradas para este día. Click para resolver.");
+                      else if(impInfo)tooltipParts.push("OT: "+impInfo.codigo+" — "+impInfo.nombre);
 
                       return <div key={day} onClick={()=>!isRest&&toggleDay(day)} title={tooltipParts.join(" · ")} style={{
                         textAlign:"center",padding:"4px 2px",borderRadius:4,fontSize:11,fontWeight:isToday?800:(hol?700:400),
@@ -1114,7 +1205,9 @@ ${resumenArr.length>0?resumenArr.map(r=>`<tr class="imp"><td>${r.codigo}</td><td
                         {hol&&<div style={{fontSize:6,color:"#D97706",lineHeight:1,marginTop:1}}>🔶</div>}
                         {isSun&&!hol&&<div style={{fontSize:6,color:"#ccc",lineHeight:1,marginTop:1}}>—</div>}
                         {novInfo&&<div style={{fontSize:7,lineHeight:1,marginTop:1}}>{novInfo.icon}</div>}
+                        {isConflicto&&<div style={{fontSize:8,lineHeight:1,marginTop:1,color:"#dc2626",fontWeight:700}}>⚠️</div>}
                         {impColor&&<div style={{position:"absolute",bottom:0,left:0,right:0,height:3,background:impColor,borderRadius:"0 0 4px 4px"}}/>}
+                        {isConflicto&&<div style={{position:"absolute",bottom:0,left:0,right:0,height:3,background:"repeating-linear-gradient(45deg,#dc2626,#dc2626 3px,#FCA5A5 3px,#FCA5A5 6px)",borderRadius:"0 0 4px 4px"}}/>}
                       </div>;
                     })}
                   </div>
