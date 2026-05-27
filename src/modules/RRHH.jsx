@@ -2949,10 +2949,37 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
   const [formNov,setFormNov]=useState(null);
   const [fichaEdit,setFichaEdit]=useState(false);
   const [fichaForm,setFichaForm]=useState(null);
+  // Centros de Trabajo (OTs) cargados desde BD + empId del empleado logueado por nombre.
+  // El portal solo conoce el nombre del empleado, pero los centros se filtran por uuid del empleado.
+  // Resolución: buscar en /api/hiring por nombre y obtener id, luego filtrar centros activos.
+  const [centros,setCentros]=useState([]);
+  const [empIdLogged,setEmpIdLogged]=useState(null);
+  useEffect(()=>{
+    if(!logged||!nombre)return;
+    // 1. Buscar el empId por nombre (busca en todos los estados activos)
+    Promise.all([
+      fetch("/api/hiring?estado=firmado").then(r=>r.json()).catch(()=>({data:[]})),
+      fetch("/api/hiring?estado=afiliaciones").then(r=>r.json()).catch(()=>({data:[]})),
+      fetch("/api/hiring?estado=completado").then(r=>r.json()).catch(()=>({data:[]})),
+    ]).then(([r1,r2,r3])=>{
+      const all=[...(r1.data||[]),...(r2.data||[]),...(r3.data||[])];
+      const emp=all.find(e=>(e.candidato_nombre||"").trim()===nombre.trim());
+      if(emp)setEmpIdLogged(emp.id);
+    });
+    // 2. Cargar centros de trabajo
+    fetch("/api/hiring?kv=centros&anio=0&mes=0").then(r=>r.json()).then(d=>{
+      if(d.ok&&Array.isArray(d.data))setCentros(d.data);
+    }).catch(()=>setCentros([]));
+  },[logged,nombre]);
 
   const DIAS=["Lu","Ma","Mi","Ju","Vi","Sa","Do"];
   const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-  const OTS=["OT-DIN_250101_01","OT-INT_250115_02","OT-INT_250201_03"];
+  // OTs del empleado logueado: centros activos que tengan su empId en empleados[].
+  // Si no se ha resuelto empIdLogged todavía, array vacío (el form mostrará mensaje útil).
+  const OTS=empIdLogged
+    ? centros.filter(c=>c.activo&&Array.isArray(c.empleados)&&c.empleados.includes(empIdLogged))
+              .map(c=>({id:c.id,codigo:c.codigo,nombre:c.nombre,label:c.codigo+" — "+c.nombre}))
+    : [];
 
   const misPartes=partes.filter(p=>p.empleadoNombre===nombre);
   const misNov=novedades.filter(n=>n.empleadoNombre===nombre);
@@ -3552,8 +3579,11 @@ function PortalEmpleado({ partes, savePartes, novedades, saveNovedades, fichas, 
         <h3 style={{marginBottom:16,fontSize:14,fontWeight:700}}>Imputar horas · {formParte.fecha}</h3>
         <FieldRow label="Fecha"><Input type="date" value={formParte.fecha} onChange={v=>upd(setFormParte,"fecha",v)}/></FieldRow>
         <FieldRow label="Orden de trabajo (OT)">
-          <Select value={formParte.otCodigo} onChange={v=>upd(setFormParte,"otCodigo",v)}
-            options={[{value:"",label:"Seleccionar OT..."},...OTS.map(o=>({value:o,label:o}))]}/>
+          {OTS.length===0
+            ? <div style={{padding:"8px 12px",background:"#FEF3C7",border:`1px solid #F59E0B`,borderRadius:6,fontSize:12,color:"#92400E"}}>⚠️ No tienes OTs asignadas. Contacta con tu encargado para que te asigne en Centros de Trabajo.</div>
+            : <Select value={formParte.otCodigo} onChange={v=>upd(setFormParte,"otCodigo",v)}
+                options={[{value:"",label:"Seleccionar OT..."},...OTS.map(o=>({value:o.id,label:o.label}))]}/>
+          }
         </FieldRow>
         <FieldRow label="Actividad"><Input value={formParte.actividad} onChange={v=>upd(setFormParte,"actividad",v)} placeholder="Ej. Diseño conceptual"/></FieldRow>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
