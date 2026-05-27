@@ -1036,6 +1036,8 @@ ${resumenArr.length>0?resumenArr.map(r=>`<tr class="imp"><td>${r.codigo}</td><td
           }}>📊 Reporte imputaciones</Btn>
           <Btn small onClick={()=>{
             // Sprint D: Informe de costes por OT con Fórmula A (proporcional a días imputados)
+            // Por cada empleado: repartir calcN(n).costoT entre las OTs según días imputados.
+            // Domingos, festivos y novedades quedan absorbidos proporcionalmente.
             const acumOT={};
             noms.forEach(n=>{
               const calc=calcN(n);
@@ -1063,33 +1065,76 @@ ${resumenArr.length>0?resumenArr.map(r=>`<tr class="imp"><td>${r.codigo}</td><td
             otsArr.forEach(x=>x.info.empleados.forEach(e=>empUnicos.add(e.empId)));
             const totalEmpUnicos=empUnicos.size;
             const totalDiasGlobal=otsArr.reduce((s,x)=>s+x.info.dias,0);
-            const fechaGen=new Date().toLocaleDateString("es-CO");
-            const styleBlock='<style>body{font-family:"DM Sans",sans-serif;max-width:1100px;margin:24px auto;padding:0 24px;color:#111;font-size:13px;line-height:1.5;}h1{font-size:22px;margin:0 0 4px;}h2{font-size:16px;margin:24px 0 8px;border-bottom:2px solid #111;padding-bottom:4px;}h3{font-size:14px;margin:18px 0 6px;color:#1E6B42;}.sub{color:#666;font-size:12px;margin-bottom:14px;}table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:12px;}th{background:#F0F0F0;text-align:left;padding:6px 10px;border-bottom:1px solid #ccc;font-weight:700;}td{padding:5px 10px;border-bottom:1px solid #eee;}tr.total{font-weight:700;background:#F5F4F1;}.note{margin-top:24px;font-size:11px;color:#555;font-style:italic;padding:10px;background:#FAFAF7;border-left:3px solid #1E6B42;}.footer{font-size:10px;color:#999;margin-top:16px;text-align:center;}.no-data{padding:24px;text-align:center;color:#999;font-style:italic;background:#FAFAF7;border-radius:4px;}.right{text-align:right;}</style>';
-            let html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Costes por OT - '+MESES[mes]+' '+anio+'</title>'+styleBlock+'</head><body>';
-            html+='<h1>📈 Informe de costes por OT</h1>';
-            html+='<div class="sub">'+MESES[mes]+' '+anio+' · Habitaris S.A.S. NIT 901.922.136-8 · Generado el '+fechaGen+'</div>';
+            const mAbr=MESES[mes].substring(0,3).toUpperCase();
+            const a2=String(anio).slice(-2);
+            const fileName=`COSTES-OT-${mAbr}${a2}`;
+            const fechaGen=new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"});
+            let body='';
             if(otsArr.length===0){
-              html+='<div class="no-data">No hay imputaciones de OT en este mes para distribuir costes. Asegúrate de que los empleados tienen calendarios laborales asignados en Centros de Trabajo.</div>';
+              body='<div style="padding:24px;text-align:center;color:#999;font-style:italic;background:#FAFAF7;border-radius:4px;">No hay imputaciones de OT en este mes para distribuir costes. Asegúrate de que los empleados tienen calendarios laborales asignados en Centros de Trabajo.</div>';
             }else{
-              html+='<h2>Resumen por OT</h2><table><thead><tr><th>OT</th><th>Empleados</th><th>Días imp.</th><th class="right">% del total</th><th class="right">Coste imputado</th></tr></thead><tbody>';
+              // Tarjetas resumen tipo "sbox"
+              body+=`<div class="summary">`;
+              body+=`<div class="sbox"><div class="n">${totalEmpUnicos}</div><div class="l">Empleados</div></div>`;
+              body+=`<div class="sbox"><div class="n">${totalDiasGlobal}</div><div class="l">Días imputados</div></div>`;
+              body+=`<div class="sbox"><div class="n" style="font-size:11pt;">${fmtCurr(totalCostes)}</div><div class="l">Coste total</div></div>`;
+              body+=`</div>`;
+              // Tabla resumen por OT
+              body+='<h2>Resumen por OT</h2><table><thead><tr><th>OT</th><th>Nombre</th><th style="text-align:right">Empleados</th><th style="text-align:right">Días</th><th style="text-align:right">% del total</th><th style="text-align:right">Coste imputado</th></tr></thead><tbody>';
               otsArr.forEach(x=>{
                 const pct=totalCostes?((x.info.coste/totalCostes)*100).toFixed(1):'0';
-                html+='<tr><td><strong>'+(x.centro?x.centro.codigo:x.id)+'</strong> '+(x.centro?x.centro.nombre:'')+'</td><td>'+x.info.empleados.length+'</td><td>'+x.info.dias+'</td><td class="right">'+pct+'%</td><td class="right">'+fmtCurr(x.info.coste)+'</td></tr>';
+                body+=`<tr><td><b>${x.centro?x.centro.codigo:x.id}</b></td><td>${x.centro?x.centro.nombre:''}</td><td style="text-align:right">${x.info.empleados.length}</td><td style="text-align:right">${x.info.dias}</td><td style="text-align:right">${pct}%</td><td style="text-align:right"><b>${fmtCurr(x.info.coste)}</b></td></tr>`;
               });
-              html+='<tr class="total"><td>TOTAL</td><td>'+totalEmpUnicos+'</td><td>'+totalDiasGlobal+'</td><td class="right">100%</td><td class="right">'+fmtCurr(totalCostes)+'</td></tr></tbody></table>';
-              html+='<h2>Detalle por OT</h2>';
+              body+=`<tr class="imp"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right"><b>${totalEmpUnicos}</b></td><td style="text-align:right"><b>${totalDiasGlobal}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right"><b>${fmtCurr(totalCostes)}</b></td></tr>`;
+              body+='</tbody></table>';
+              // Detalle por OT
+              body+='<h2>Detalle por OT</h2>';
               otsArr.forEach(x=>{
-                html+='<h3>'+(x.centro?x.centro.codigo:x.id)+' — '+(x.centro?x.centro.nombre:'')+' · '+fmtCurr(x.info.coste)+' ('+x.info.dias+' días)</h3>';
-                html+='<table><thead><tr><th>Empleado</th><th>Cargo</th><th class="right">Días</th><th class="right">Coste empresa total</th><th class="right">Coste imputado</th></tr></thead><tbody>';
+                body+=`<h3 style="font-size:9pt;margin:8px 0 4px;color:#111;background:#f4f4f4;padding:4px 6px;">${x.centro?x.centro.codigo:x.id} — ${x.centro?x.centro.nombre:''} · ${fmtCurr(x.info.coste)} (${x.info.dias} días)</h3>`;
+                body+='<table><thead><tr><th>Empleado</th><th>Cargo</th><th style="text-align:right">Días</th><th style="text-align:right">Coste empresa total</th><th style="text-align:right">Coste imputado</th></tr></thead><tbody>';
                 x.info.empleados.forEach(e=>{
-                  html+='<tr><td>'+e.nombre+'</td><td>'+(e.cargo||'-')+'</td><td class="right">'+e.dias+'</td><td class="right">'+fmtCurr(e.costoTotal)+'</td><td class="right"><strong>'+fmtCurr(e.coste)+'</strong></td></tr>';
+                  body+=`<tr><td>${e.nombre}</td><td>${e.cargo||'-'}</td><td style="text-align:right">${e.dias}</td><td style="text-align:right">${fmtCurr(e.costoTotal)}</td><td style="text-align:right"><b>${fmtCurr(e.coste)}</b></td></tr>`;
                 });
-                html+='</tbody></table>';
+                body+='</tbody></table>';
               });
+              body+='<div style="margin-top:12px;font-size:7.5pt;color:#555;font-style:italic;padding:8px;background:#FAFAF7;border-left:3px solid #111;">Fórmula A (proporcional a días imputados): el coste mensual de cada empleado (devengado + auxilios + cargas empresariales) se reparte entre las OTs según los días imputados. Domingos, festivos y novedades quedan absorbidos proporcionalmente.</div>';
             }
-            html+='<div class="note"><strong>Fórmula A (proporcional a días imputados):</strong> el coste mensual de cada empleado (devengado + auxilios + cargas empresariales) se reparte entre las OTs según los días imputados. Domingos, festivos y novedades quedan absorbidos proporcionalmente.</div>';
-            html+='<div class="footer">Habitaris S.A.S. NIT 901.922.136-8 — habitaris.es</div>';
-            html+='</body></html>';
+            const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+#content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.35;box-shadow:0 0 8px rgba(0,0,0,.15)}
+.hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
+.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
+.hdr img{height:36px}
+h1{font-size:12pt;text-align:center;margin:4px 0 2px;clear:both}
+h2{font-size:9.5pt;margin:10px 0 4px;border-bottom:1px solid #ccc;padding-bottom:2px;clear:both}
+.sub{font-size:8pt;color:#666;text-align:center;margin-bottom:10px}
+table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:8.5pt;clear:both}
+th{text-align:left;padding:4px 6px;font-size:7pt;font-weight:700;text-transform:uppercase;border-bottom:2px solid #111}
+td{padding:3px 6px;border-bottom:1px solid #ddd}
+.imp{background:#f4f4f4}
+.summary{margin:8px 0;overflow:hidden}
+.sbox{float:left;width:31%;margin-right:3%;border:1px solid #ccc;border-radius:4px;padding:6px;text-align:center;margin-bottom:6px}
+.sbox:nth-child(3n){margin-right:0}
+.sbox .n{font-size:16pt;font-weight:800;font-family:monospace}.sbox .l{font-size:7pt;color:#666;text-transform:uppercase}
+.foot{font-size:6.5pt;color:#999;text-align:center;margin-top:10px;clear:both}
+.np{text-align:center;margin:16px auto;max-width:794px}
+.btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
+.btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
+@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+</style></head><body>
+<div id="content">
+<div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>
+<h1>INFORME DE COSTES POR ORDEN DE TRABAJO</h1>
+<div class="sub">${MESES[mes]} ${anio} · Ref: ${fileName}</div>
+${body}
+<div class="foot">Habitaris Suite · ${fechaGen} · ${fileName}</div>
+</div>
+<div class="np"><button class="btn" onclick="window.print()">🖨 Imprimir</button><button class="btn2" onclick="window.close()">Cerrar</button></div>
+</body></html>`;
             const w=window.open('','_blank');
             w.document.write(html);
             w.document.close();
