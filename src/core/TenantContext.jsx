@@ -273,11 +273,18 @@ export function TenantProvider({ children }) {
     // disparado desde Login.jsx después de setItem('hab:session'). Esto cubre el
     // caso edge donde el polling falla por timing inusual (e.g., bundle nuevo
     // tras deploy mientras hay sesión escrita en background).
+    //
+    // FIX 27/5/26: ANTES la guard era `if (!cancelled && !completed)`. Pero cuando
+    // el usuario carga la app sin sesión, load() termina rápido (3s polling) y
+    // marca completed=true. Luego el usuario hace login → dispatch session-changed,
+    // pero el listener no entraba porque completed ya estaba true. Resultado:
+    // companies=[] forever, pantalla "Cargando…" eterna hasta F5.
+    // Ahora: si llega session-changed, SIEMPRE reactivamos. La guard cancelled
+    // sigue protegiendo contra ejecuciones tras unmount.
     const onSessionChanged = () => {
-      if (!cancelled && !completed) {
-        completed = true;
-        setReloadKey(k => k + 1);
-      }
+      if (cancelled) return;
+      completed = true; // si load() aún está corriendo, se invalida su efecto
+      setReloadKey(k => k + 1);
     };
     window.addEventListener('hab:session-changed', onSessionChanged);
     return () => {
