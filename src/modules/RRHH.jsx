@@ -254,6 +254,30 @@ const DEF_PARTE = () => ({
   descripcion: "", estado: "Borrador",
 });
 
+// Días de la semana para calendarios laborales (L=lunes ... D=domingo)
+const DIAS_SEM = [
+  { id: "L", label: "Lun" },
+  { id: "M", label: "Mar" },
+  { id: "X", label: "Mié" },
+  { id: "J", label: "Jue" },
+  { id: "V", label: "Vie" },
+  { id: "S", label: "Sáb" },
+  { id: "D", label: "Dom" },
+];
+
+// Modelo de calendario laboral del empleado.
+// Cada calendario asocia una OT a unos días de la semana con un horario.
+// Un empleado puede tener varios calendarios (ej. Gloria L-M-X en CT-106 + J-V-S en CT-126).
+const DEF_CAL = () => ({
+  id: uid(),
+  otId: "",                  // id del centro de trabajo (centro1, centro2...)
+  dias: [],                  // array de "L","M","X","J","V","S","D"
+  entrada: "08:00",
+  salida: "16:00",
+  vigencia_desde: today(),   // primer día de validez
+  vigencia_hasta: "",        // vacío = en curso, sin fecha de fin
+});
+
 // Roles que pueden crear partes
 const ROLES_PARTE = ["encargado","supervisor","jefe_obra","residente","admin","superadmin"];
 
@@ -4272,6 +4296,15 @@ function TabPersonal() {
   const [selEmp, setSelEmp] = useState(null);
   const [buscar, setBuscar] = useState("");
 
+  // Calendarios laborales: { [empId]: [calendario1, calendario2, ...] }
+  // Una sola lectura para todos los empleados (storage compartido en hab:calendarios:0:0).
+  const [calendarios, setCalendarios] = useState({});
+  // Centros de Trabajo (OTs) para los dropdowns del editor de calendario
+  const [centros, setCentros] = useState([]);
+  // Estado del editor de calendario: null = cerrado, objeto = mostrando modal
+  // Estructura: { empId, cal: DEF_CAL() | calendario existente, isNew: bool }
+  const [calEditor, setCalEditor] = useState(null);
+
   const loadEmpleados = async () => {
     try {
       const r = await fetch("/api/hiring?estado=completado");
@@ -4288,6 +4321,52 @@ function TabPersonal() {
   };
 
   useEffect(() => { loadEmpleados(); }, []);
+
+  // Cargar centros de trabajo (OTs) y calendarios laborales al montar
+  useEffect(() => {
+    fetch("/api/hiring?kv=centros&anio=0&mes=0").then(r=>r.json()).then(d=>{
+      if(d.ok && Array.isArray(d.data)) setCentros(d.data);
+    }).catch(()=>setCentros([]));
+    fetch("/api/hiring?kv=calendarios&anio=0&mes=0").then(r=>r.json()).then(d=>{
+      // Almacenado como objeto { empId: [calendarios] }. Si no existe, lo inicializamos vacío.
+      if(d.ok && d.data && typeof d.data === "object" && !Array.isArray(d.data)) setCalendarios(d.data);
+      else setCalendarios({});
+    }).catch(()=>setCalendarios({}));
+  }, []);
+
+  // Guardar el objeto completo de calendarios en BD. Llamado tras cada CRUD.
+  const saveCalendarios = async (nuevo) => {
+    setCalendarios(nuevo);
+    try {
+      await fetch("/api/hiring?kv=calendarios&anio=0&mes=0", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ data: nuevo })
+      });
+    } catch(e) { console.error("Error guardando calendarios:", e); }
+  };
+
+  // CRUD: añadir/actualizar un calendario para un empleado
+  const upsertCalendario = (empId, cal) => {
+    const lista = calendarios[empId] || [];
+    const idx = lista.findIndex(c => c.id === cal.id);
+    const nueva = idx >= 0
+      ? lista.map((c,i) => i === idx ? cal : c)
+      : [...lista, cal];
+    saveCalendarios({ ...calendarios, [empId]: nueva });
+  };
+
+  // CRUD: eliminar un calendario de un empleado
+  const removeCalendario = (empId, calId) => {
+    const lista = (calendarios[empId] || []).filter(c => c.id !== calId);
+    if (lista.length === 0) {
+      const sinEmp = { ...calendarios };
+      delete sinEmp[empId];
+      saveCalendarios(sinEmp);
+    } else {
+      saveCalendarios({ ...calendarios, [empId]: lista });
+    }
+  };
 
   const fmtMoney = (n) => n ? new Intl.NumberFormat(getTenantDefaultsSync().locale,{style:"currency",currency:getTenantDefaultsSync().currency,maximumFractionDigits:0}).format(n) : "$0";
 
@@ -4476,11 +4555,168 @@ function TabPersonal() {
 
                 {/* Expediente completo */}
                 <AnexosPanel p={emp}/>
+
+                {/* ── Calendarios laborales del empleado ── */}
+                <div style={{marginTop:18,borderTop:`1px solid ${C.border}`,paddingTop:14}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+                    <div style={{fontSize:12,fontWeight:700,color:C.inkLight,letterSpacing:"0.06em",textTransform:"uppercase"}}>📅 Calendarios laborales</div>
+                    <button
+                      onClick={()=>setCalEditor({ empId: emp.id, cal: DEF_CAL(), isNew: true })}
+                      style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #111",borderRadius:6,background:"#111",color:"#fff",cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}
+                    >+ Añadir calendario</button>
+                  </div>
+
+                  {(() => {
+                    const lista = calendarios[emp.id] || [];
+                    if (lista.length === 0) {
+                      return <div style={{padding:"10px 12px",fontSize:11,color:C.inkLight,background:"#FAFAF7",border:`1px dashed ${C.border}`,borderRadius:6}}>
+                        Sin calendarios laborales asignados. Añade uno para definir qué días trabaja {(emp.candidato_nombre||"este empleado").split(" ")[0]} en cada OT.
+                      </div>;
+                    }
+                    return <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {lista.map(cal => {
+                        const centro = centros.find(c => c.id === cal.otId);
+                        const otLabel = centro ? `${centro.codigo} — ${centro.nombre}` : `(OT no encontrada: ${cal.otId})`;
+                        const diasLabel = (cal.dias||[]).map(d => DIAS_SEM.find(x=>x.id===d)?.label || d).join(" · ");
+                        return (
+                          <div key={cal.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",background:"#FAFAF7",border:`1px solid ${C.border}`,borderRadius:6}}>
+                            <div style={{flex:1,minWidth:0}}>
+                              <div style={{fontSize:12,fontWeight:600,color:C.ink}}>{otLabel}</div>
+                              <div style={{fontSize:10,color:C.inkLight,marginTop:2}}>
+                                <strong>{diasLabel || "(sin días)"}</strong>
+                                <span style={{margin:"0 6px",color:C.border}}>·</span>
+                                {cal.entrada} — {cal.salida}
+                                {cal.vigencia_hasta && <span style={{marginLeft:6,color:"#D97706"}}>· hasta {cal.vigencia_hasta}</span>}
+                              </div>
+                            </div>
+                            <div style={{display:"flex",gap:6}}>
+                              <button
+                                onClick={()=>setCalEditor({ empId: emp.id, cal: {...cal}, isNew: false })}
+                                style={{padding:"4px 10px",fontSize:10,border:`1px solid ${C.border}`,borderRadius:5,background:"#fff",cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}
+                              >✏️ Editar</button>
+                              <button
+                                onClick={()=>{ if(confirm("¿Eliminar este calendario? Esta acción no se puede deshacer.")) removeCalendario(emp.id, cal.id); }}
+                                style={{padding:"4px 10px",fontSize:10,border:"1px solid #dc2626",borderRadius:5,background:"#fff",color:"#dc2626",cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}
+                              >🗑 Eliminar</button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>;
+                  })()}
+                </div>
               </div>
             )}
           </Card>
         );
       })}
+
+      {/* ── Modal editor de calendario laboral ── */}
+      {calEditor && (() => {
+        const { empId, cal, isNew } = calEditor;
+        const emp = empleados.find(e => e.id === empId);
+        const empNombre = emp?.candidato_nombre || "Empleado";
+        // OTs disponibles: solo centros activos donde este empleado está asignado.
+        // Si el centro tiene "empleados" definido y NO incluye al empId, se filtra.
+        // Esto evita que se asigne un calendario a una OT donde el empleado no trabaja.
+        const otsDisponibles = centros.filter(c =>
+          c.activo !== false &&
+          (!Array.isArray(c.empleados) || c.empleados.includes(empId))
+        );
+        const toggleDia = (dia) => {
+          const dias = cal.dias.includes(dia)
+            ? cal.dias.filter(d => d !== dia)
+            : [...cal.dias, dia];
+          setCalEditor({ ...calEditor, cal: { ...cal, dias } });
+        };
+        const setField = (k, v) => setCalEditor({ ...calEditor, cal: { ...cal, [k]: v } });
+        const guardar = () => {
+          if (!cal.otId) { alert("Selecciona una OT"); return; }
+          if (!cal.dias || cal.dias.length === 0) { alert("Selecciona al menos un día de la semana"); return; }
+          if (!cal.entrada || !cal.salida) { alert("Indica horario de entrada y salida"); return; }
+          if (cal.entrada >= cal.salida) { alert("La hora de salida debe ser posterior a la entrada"); return; }
+          upsertCalendario(empId, cal);
+          setCalEditor(null);
+        };
+        return (
+          <div style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setCalEditor(null)}>
+            <div onClick={e=>e.stopPropagation()} style={{maxWidth:520,width:"100%",background:"#fff",borderRadius:12,padding:24,boxShadow:"0 8px 30px rgba(0,0,0,.2)"}}>
+              <div style={{marginBottom:14}}>
+                <div style={{fontSize:15,fontWeight:700,color:C.ink}}>{isNew ? "Nuevo calendario laboral" : "Editar calendario laboral"}</div>
+                <div style={{fontSize:11,color:C.inkLight,marginTop:2}}>{empNombre}</div>
+              </div>
+
+              {/* OT */}
+              <div style={{marginBottom:14}}>
+                <Lbl>OT / Centro de trabajo</Lbl>
+                {otsDisponibles.length === 0
+                  ? <div style={{padding:"8px 12px",fontSize:11,color:"#D97706",background:"#FEF3C7",border:"1px solid #F59E0B",borderRadius:6}}>
+                      ⚠️ Este empleado no tiene OTs asignadas. Asígnalas primero en <strong>Centros de Trabajo</strong>.
+                    </div>
+                  : <select value={cal.otId} onChange={e=>setField("otId", e.target.value)} style={{width:"100%",padding:"8px 10px",border:`1px solid ${C.border}`,borderRadius:6,fontSize:13,fontFamily:"DM Sans,sans-serif",background:"#fff"}}>
+                      <option value="">— Seleccionar OT —</option>
+                      {otsDisponibles.map(c => <option key={c.id} value={c.id}>{c.codigo} — {c.nombre}</option>)}
+                    </select>
+                }
+              </div>
+
+              {/* Días de la semana */}
+              <div style={{marginBottom:14}}>
+                <Lbl>Días de la semana</Lbl>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                  {DIAS_SEM.map(d => {
+                    const activo = cal.dias.includes(d.id);
+                    return (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={()=>toggleDia(d.id)}
+                        style={{padding:"6px 12px",fontSize:11,fontWeight:activo?700:400,border:activo?"2px solid #111":`1px solid ${C.border}`,borderRadius:6,background:activo?"#EDE9FE":"#fff",color:activo?"#111":C.inkMid,cursor:"pointer",fontFamily:"DM Sans,sans-serif",minWidth:48}}
+                      >{d.label}</button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Horario */}
+              <div style={{marginBottom:14}}>
+                <Lbl>Horario</Lbl>
+                <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                  <input type="time" value={cal.entrada} onChange={e=>setField("entrada", e.target.value)} style={{padding:"7px 10px",border:`1px solid ${C.border}`,borderRadius:6,fontSize:13,fontFamily:"DM Sans,sans-serif",flex:1}}/>
+                  <span style={{color:C.inkLight,fontSize:12}}>a</span>
+                  <input type="time" value={cal.salida} onChange={e=>setField("salida", e.target.value)} style={{padding:"7px 10px",border:`1px solid ${C.border}`,borderRadius:6,fontSize:13,fontFamily:"DM Sans,sans-serif",flex:1}}/>
+                </div>
+              </div>
+
+              {/* Vigencia */}
+              <div style={{marginBottom:14}}>
+                <Lbl>Vigencia</Lbl>
+                <div style={{display:"flex",gap:10,alignItems:"center"}}>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:10,color:C.inkLight,marginBottom:3}}>Desde</div>
+                    <input type="date" value={cal.vigencia_desde} onChange={e=>setField("vigencia_desde", e.target.value)} style={{width:"100%",padding:"7px 10px",border:`1px solid ${C.border}`,borderRadius:6,fontSize:13,fontFamily:"DM Sans,sans-serif"}}/>
+                  </div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:10,color:C.inkLight,marginBottom:3}}>Hasta (opcional)</div>
+                    <input type="date" value={cal.vigencia_hasta} onChange={e=>setField("vigencia_hasta", e.target.value)} style={{width:"100%",padding:"7px 10px",border:`1px solid ${C.border}`,borderRadius:6,fontSize:13,fontFamily:"DM Sans,sans-serif"}} placeholder="En curso"/>
+                  </div>
+                </div>
+                <div style={{fontSize:10,color:C.inkLight,marginTop:4}}>Si dejas "Hasta" en blanco, el calendario sigue en curso indefinidamente.</div>
+              </div>
+
+              {/* Acciones */}
+              <div style={{display:"flex",gap:8,marginTop:18}}>
+                <button onClick={guardar} disabled={otsDisponibles.length === 0} style={{padding:"9px 18px",fontSize:12,fontWeight:600,border:"1px solid #111",borderRadius:6,background:otsDisponibles.length === 0 ? "#999" : "#111",color:"#fff",cursor:otsDisponibles.length === 0 ? "not-allowed" : "pointer",fontFamily:"DM Sans,sans-serif",flex:1}}>
+                  {isNew ? "Crear calendario" : "Guardar cambios"}
+                </button>
+                <button onClick={()=>setCalEditor(null)} style={{padding:"9px 18px",fontSize:12,fontWeight:600,border:`1px solid ${C.border}`,borderRadius:6,background:"#fff",color:C.ink,cursor:"pointer",fontFamily:"DM Sans,sans-serif"}}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
