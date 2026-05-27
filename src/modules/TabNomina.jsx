@@ -792,6 +792,33 @@ export function TabNomina(){
   const totQ1=noms.reduce((s,n)=>s+calcN(n).q1,0);
   const totQ2=noms.reduce((s,n)=>s+calcN(n).q2,0);
 
+  // Sprint C: validación de pendientes por periodo para bloqueo de liquidación
+  // Recorre los días del periodo y detecta los que están sin imputar o en conflicto
+  // (excluyendo domingos, festivos y días con novedad registrada).
+  const validarPeriodo = (n, dDesde, dHasta) => {
+    if (!n) return { pendientes: [], count: 0 };
+    const hols = getHolidays(n.anio);
+    const novDias = n.novDias || {};
+    const impDias = n.impDias || {};
+    const pendientes = [];
+    for (let d = dDesde; d <= dHasta; d++) {
+      const date = new Date(n.anio, n.mes, d);
+      if (date.getDay() === 0) continue;
+      if (hols.find(h => sameDay(h.date, date))) continue;
+      const k = n.anio+"-"+String(n.mes+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+      if (novDias[k]) continue;
+      const imp = impDias[k];
+      if (!imp) pendientes.push({ day: d, key: k, motivo: "sin_imputar" });
+      else if (imp === "__conflicto__") pendientes.push({ day: d, key: k, motivo: "conflicto" });
+    }
+    return { pendientes, count: pendientes.length };
+  };
+  // Calcular pendientes del mes/quincena para selN
+  const _lastDay = selN ? new Date(selN.anio, selN.mes+1, 0).getDate() : 0;
+  const periodoQ1 = selN ? validarPeriodo(selN, 1, 15) : { pendientes: [], count: 0 };
+  const periodoQ2 = selN ? validarPeriodo(selN, 16, _lastDay) : { pendientes: [], count: 0 };
+  const periodoMes = selN ? validarPeriodo(selN, 1, _lastDay) : { pendientes: [], count: 0 };
+
   if(vista==="detalle"&&selN&&calc){
     const ed=selN.estado==="borrador"||selN.estado==="q1_pagado";
     const isQ=selN.modalidadPago!=="mensual";
@@ -806,9 +833,9 @@ export function TabNomina(){
           <Btn onClick={()=>{setVista("lista");setSubTab("nomina");}}>← Volver</Btn>
           <div style={{flex:1}}><div style={{fontSize:16,fontWeight:700}}>{selN.nombre}</div><div style={{fontSize:11,color:T.inkLight}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio} · <span style={{fontWeight:600,color:selN.modalidadPago==="mensual"?T.ink:T.blue}}>{selN.modalidadPago==="mensual"?"Pago mensual":"Pago quincenal"}</span></div></div>
           <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
-          {isQ&&selN.estado==="borrador"&&<Btn small onClick={()=>setPagoForm({tipo:"q1",ref:"",soporte:null})}>💵 Pagar Q1 (anticipo)</Btn>}
-          {isQ&&selN.estado==="q1_pagado"&&<Btn pri small onClick={()=>setPagoForm({tipo:"nomina",ref:"",soporte:null})}>💵 Pagar Q2 (liquidar)</Btn>}
-          {!isQ&&selN.estado==="borrador"&&<Btn pri small onClick={()=>setPagoForm({tipo:"nomina",ref:"",soporte:null})}>💵 Pagar nómina</Btn>}
+          {isQ&&selN.estado==="borrador"&&<Btn small disabled={periodoQ1.count > 0} onClick={()=>{if(periodoQ1.count > 0){alert("⚠️ Quedan "+periodoQ1.count+" día(s) pendientes en la primera quincena (1-15). Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"q1",ref:"",soporte:null});}}>💵 Pagar Q1 (anticipo){periodoQ1.count > 0?" ⚠️":""}</Btn>}
+          {isQ&&selN.estado==="q1_pagado"&&<Btn pri small disabled={periodoQ2.count > 0} onClick={()=>{if(periodoQ2.count > 0){alert("⚠️ Quedan "+periodoQ2.count+" día(s) pendientes en la segunda quincena. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:"",soporte:null});}}>💵 Pagar Q2 (liquidar){periodoQ2.count > 0?" ⚠️":""}</Btn>}
+          {!isQ&&selN.estado==="borrador"&&<Btn pri small disabled={periodoMes.count > 0} onClick={()=>{if(periodoMes.count > 0){alert("⚠️ Quedan "+periodoMes.count+" día(s) pendientes en el mes. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:"",soporte:null});}}>💵 Pagar nómina{periodoMes.count > 0?" ⚠️":""}</Btn>}
           {(selN.estado==="q1_pagado"||selN.estado==="liquidada"||selN.estado==="pagada")&&selN.refPago&&<span style={{fontSize:9,color:T.inkLight,padding:"4px 8px",background:T.accent,borderRadius:4}}>Ref: {selN.refPago}</span>}
           <Btn small onClick={()=>{(()=>{const u=getTenantUrlsSync();const id=getTenantIdentitySync();window.open("https://wa.me/?text="+encodeURIComponent(id.displayName+"\n\n👤 Portal del empleado:\n"+u.portalEmpleado+"\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");})();}}>💬 Link empleados</Btn>
           <Btn small onClick={()=>{
@@ -1078,6 +1105,29 @@ ${resumenArr.length>0?resumenArr.map(r=>`<tr class="imp"><td>${r.codigo}</td><td
           <div>
             {/* ── CALENDARIO + NOVEDADES ── */}
             <Card accent={T.ink} style={{marginBottom:12}}>
+              {/* Sprint C: Banner de pendientes que bloquean la liquidación */}
+              {(() => {
+                const isMensual = !isQ;
+                // Mostrar banner si hay pendientes en el período que aplica:
+                //  - Quincenal Q1 (mientras esté en borrador y no se haya pagado Q1)
+                //  - Quincenal Q2 (siempre que haya pendientes en Q2)
+                //  - Mensual (siempre que haya pendientes en el mes)
+                const showQ1 = isQ && selN.estado === "borrador" && periodoQ1.count > 0;
+                const showQ2 = isQ && periodoQ2.count > 0;
+                const showMes = isMensual && periodoMes.count > 0;
+                if (!showQ1 && !showQ2 && !showMes) return null;
+                const renderDias = (lista) => lista.slice(0,10).map(p => {
+                  const lbl = p.motivo === "conflicto" ? "⚠️" : "🔴";
+                  return p.day + " " + lbl;
+                }).join(" · ") + (lista.length > 10 ? " · …+"+(lista.length-10)+" más" : "");
+                return <div style={{padding:"10px 14px",marginBottom:14,background:"#FEE2E2",border:"1px solid #dc2626",borderRadius:6}}>
+                  <div style={{fontSize:12,fontWeight:700,color:"#991B1B",marginBottom:4}}>⚠️ Liquidación bloqueada — días pendientes</div>
+                  {showQ1 && <div style={{fontSize:11,color:"#991B1B",marginTop:4}}><strong>Primera quincena:</strong> {periodoQ1.count} día(s) sin imputar. {renderDias(periodoQ1.pendientes)}</div>}
+                  {showQ2 && <div style={{fontSize:11,color:"#991B1B",marginTop:4}}><strong>Segunda quincena:</strong> {periodoQ2.count} día(s) sin imputar. {renderDias(periodoQ2.pendientes)}</div>}
+                  {showMes && <div style={{fontSize:11,color:"#991B1B",marginTop:4}}><strong>Mes completo:</strong> {periodoMes.count} día(s) sin imputar. {renderDias(periodoMes.pendientes)}</div>}
+                  <div style={{fontSize:10,color:"#7F1D1D",marginTop:6,fontStyle:"italic"}}>🔴 = día laboral sin OT · ⚠️ = día con conflicto entre calendarios. Haz click en el día del calendario para resolverlo, o registra una novedad si no se trabajó.</div>
+                </div>;
+              })()}
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                 <STit>📅 Calendario {MESES[mes]} {anio}</STit>
                 {(() => {
