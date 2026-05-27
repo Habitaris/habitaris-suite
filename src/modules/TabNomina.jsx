@@ -702,17 +702,7 @@ export function TabNomina(){
   },[anio,mes]);
 
 
-  // Calendarios laborales por empleado (configurados en TabPersonal). Estructura:
-  // { [empId]: [{id, otId, dias:["L","M",...], entrada, salida, vigencia_desde, vigencia_hasta}] }
-  // Cargar una sola vez al montar. Se usan para auto-rellenar el calendario mensual del empleado.
-  const [calendariosBase,setCalendariosBase]=useState({});
-  useEffect(()=>{
-    fetch("/api/hiring?kv=calendarios&anio=0&mes=0").then(r=>r.json()).then(d=>{
-      if(d.ok && d.data && typeof d.data === "object" && !Array.isArray(d.data)) setCalendariosBase(d.data);
-      else setCalendariosBase({});
-    }).catch(()=>setCalendariosBase({}));
-  },[]);
-  // Helper: dado un día del mes (1..31), devuelve la letra del día de la semana en formato L M X J V S D
+    // Helper: dado un día del mes (1..31), devuelve la letra del día de la semana en formato L M X J V S D
   // (Lunes=L, Martes=M, Miércoles=X, Jueves=J, Viernes=V, Sábado=S, Domingo=D)
   // Hacemos esto para que coincida con DIAS_SEM del módulo TabPersonal (RRHH.jsx).
   const diaSemanaLetra = (a,m,d) => {
@@ -725,7 +715,17 @@ export function TabNomina(){
   // Si un día está cubierto por varios calendarios → devuelve "__conflicto__" para ese día,
   // lo que dispara el render visual de conflicto.
   const aplicaBaseAEmpleado = (n) => {
-    const cals = calendariosBase[n.empId] || [];
+    // Recorrer centros y juntar calendarios donde este empleado este asignado.
+    // Cada centro tiene array opcional "calendarios" con {id, dias, entrada, salida, empleados:[], vigencia_*}.
+    const cals = [];
+    for (const c of centros) {
+      if (!Array.isArray(c.calendarios)) continue;
+      for (const cal of c.calendarios) {
+        if (Array.isArray(cal.empleados) && cal.empleados.includes(n.empId)) {
+          cals.push({ ...cal, otId: c.id });
+        }
+      }
+    }
     if (cals.length === 0) return {};
     const hols = getHolidays(n.anio);
     const totalDays = new Date(n.anio, n.mes+1, 0).getDate();
@@ -755,22 +755,26 @@ export function TabNomina(){
     return result;
   };
 
-  // Una vez cargados los calendarios y las nóminas, aplicar el calendario base
+  // Una vez cargados los centros (con sus calendarios) y las nóminas, aplicar el calendario base
   // SOLO a los empleados cuyo impDias está vacío (primera vez que se abre el mes).
-  // Esto cumple la opción 2: "auto-aplica primera vez, respeta cambios manuales".
+  // Cumple la opción 2: "auto-aplica primera vez, respeta cambios manuales".
   useEffect(()=>{
-    if (Object.keys(calendariosBase).length === 0) return;
+    if (centros.length === 0) return;
     if (noms.length === 0) return;
     setNoms(prev => prev.map(n => {
       const tieneImp = n.impDias && Object.keys(n.impDias).length > 0;
       if (tieneImp) return n; // ya tiene imputaciones manuales, no tocar
-      const cals = calendariosBase[n.empId] || [];
-      if (cals.length === 0) return n; // empleado sin calendarios base
+      // Verificar rápido si el empleado tiene algún calendario asignado en algún centro
+      const tieneCals = centros.some(c =>
+        Array.isArray(c.calendarios) &&
+        c.calendarios.some(cal => Array.isArray(cal.empleados) && cal.empleados.includes(n.empId))
+      );
+      if (!tieneCals) return n;
       const autoImp = aplicaBaseAEmpleado(n);
       if (Object.keys(autoImp).length === 0) return n;
       return { ...n, impDias: autoImp };
     }));
-  },[calendariosBase, noms.length, anio, mes]);
+  },[centros, noms.length, anio, mes]);
 
   // Cargar Centros de Trabajo (OTs) una vez al montar. Se filtran después por empleado.
   useEffect(()=>{
@@ -1077,8 +1081,12 @@ ${resumenArr.length>0?resumenArr.map(r=>`<tr class="imp"><td>${r.codigo}</td><td
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
                 <STit>📅 Calendario {MESES[mes]} {anio}</STit>
                 {(() => {
-                  const calsEmp = calendariosBase[selN.empId] || [];
-                  if (calsEmp.length === 0) return null;
+                  // Verificar que el empleado tiene calendarios asignados en algún centro
+                  const tieneCals = centros.some(c =>
+                    Array.isArray(c.calendarios) &&
+                    c.calendarios.some(cal => Array.isArray(cal.empleados) && cal.empleados.includes(selN.empId))
+                  );
+                  if (!tieneCals) return null;
                   return (
                     <button
                       type="button"
