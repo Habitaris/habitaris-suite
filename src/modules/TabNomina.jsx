@@ -1327,7 +1327,7 @@ ${body}
           ))}
         </div>
         <div style={{display:"flex",gap:0,marginBottom:14,borderBottom:`1px solid ${T.border}`}}>
-          {[{id:"nomina",lbl:"💰 Nómina"},{id:"novedades",lbl:"📋 Novedades"},{id:"asistencia",lbl:"📍 Asistencia"},{id:"ficha",lbl:"👤 Ficha"},{id:"descargables",lbl:"📊 Informes"},{id:"liqfinal",lbl:"🚪 Liquidación Final"}].map(t=>(
+          {[{id:"nomina",lbl:"💰 Nómina"},{id:"novedades",lbl:"📋 Novedades"},{id:"asistencia",lbl:"📍 Asistencia"},{id:"ficha",lbl:"👤 Ficha"},{id:"descargables",lbl:"📊 Reportes"},{id:"liqfinal",lbl:"🚪 Liquidación Final"}].map(t=>(
             <button key={t.id} onClick={()=>setSubTab(t.id)} style={{padding:"8px 16px",fontSize:11,fontWeight:subTab===t.id?700:400,border:"none",borderBottom:subTab===t.id?`2px solid ${T.ink}`:"2px solid transparent",background:"transparent",color:subTab===t.id?T.ink:T.inkLight,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{t.lbl}</button>
           ))}
         </div>
@@ -1574,7 +1574,7 @@ ${body}
 
         {subTab==="descargables"&&(
           <Card accent={T.ink}>
-            <STit>📊 Informes y documentos</STit>
+            <STit>📊 Reportes y documentos</STit>
             <div style={{fontSize:11,color:T.inkLight,marginBottom:14}}>{selN.nombre} — {MESES[mes]} {anio}</div>
             {[
               ...(selN.modalidadPago!=="mensual"?[
