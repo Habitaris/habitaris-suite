@@ -690,6 +690,7 @@ export function TabNomina(){
   // Se persiste en kv_store con clave hab:nov_adjuntos:<anio>:<mes> (mismo mecanismo que soporte de pago).
   const [novAdjuntos,setNovAdjuntos]=useState({});
   const [adjUploading,setAdjUploading]=useState(false);
+  const [rangoFin,setRangoFin]=useState(""); // fecha fin opcional al registrar novedad en rango
   // Centros de Trabajo (OTs) cargados desde BD. Cada centro: {id, codigo, nombre, activo, empleados:[uuid]}.
   // Las OTs disponibles para imputar a un empleado se filtran por activo=true AND selN.empId IN empleados.
   const [centros,setCentros]=useState([]);
@@ -1386,7 +1387,7 @@ ${body}
                       if(isConflicto)tooltipParts.push("⚠️ Conflicto: el empleado tiene 2+ OTs configuradas para este día. Click para resolver.");
                       else if(impInfo)tooltipParts.push("OT: "+impInfo.codigo+" — "+impInfo.nombre);
 
-                      return <div key={day} onClick={()=>{if(!hol&&ed){setDayEditor({day,k,date});}}} title={tooltipParts.join(" · ")} style={{
+                      return <div key={day} onClick={()=>{if(!hol&&ed){setRangoFin("");setDayEditor({day,k,date});}}} title={tooltipParts.join(" · ")} style={{
                         textAlign:"center",padding:"4px 2px",borderRadius:4,fontSize:11,fontWeight:isToday?800:(hol?700:400),
                         cursor:hol||!ed?"default":"pointer",
                         background:novInfo?novInfo.color:hol?"#FDE68A":isSun?"#F5F4F1":"transparent",
@@ -1710,19 +1711,33 @@ ${body}
           setDayEditor(null);
         };
 
-        // Aplicar acción: registrar novedad
+        // Aplicar acción: registrar novedad (un día o un rango k..rangoFin)
         const aplicarNov = (tipoNov) => {
           const cur = {...nDias};
-          cur[k] = tipoNov;
-          // Si había OT imputada, quitarla (excluyentes)
           const iCur = {...iDias};
-          if (currentImp) delete iCur[k];
+          const tipoMap={incapacidad:"incapacidad",vacaciones:"vacaciones",licencia:"licencia_remunerada",licNoRem:"licencia_no_remunerada",ausencia:"ausencia"};
+          // Construir lista de días a marcar: solo k, o el rango k..rangoFin
+          const dias=[];
+          const fin = rangoFin && rangoFin>k ? rangoFin : k;
+          let cursor=new Date(k+"T12:00:00");
+          const finDate=new Date(fin+"T12:00:00");
+          while(cursor<=finDate){
+            const kk=cursor.getFullYear()+"-"+String(cursor.getMonth()+1).padStart(2,"0")+"-"+String(cursor.getDate()).padStart(2,"0");
+            const esDom=cursor.getDay()===0;
+            const esFest=holidays.some(h=>sameDay(h.date,cursor));
+            // Domingos y festivos no se marcan como novedad (son descanso); el resto sí
+            if(!esDom&&!esFest) dias.push(kk);
+            cursor.setDate(cursor.getDate()+1);
+          }
+          if(dias.length===0) dias.push(k); // seguridad: al menos el día clicado
+          // Aplicar el tipo a cada día del rango y quitar imputación OT de esos días (excluyentes)
+          dias.forEach(kk=>{ cur[kk]=tipoNov; if(iCur[kk]) delete iCur[kk]; });
           const ncCounts={incapacidad:0,vacaciones:0,licencia:0,licNoRem:0,ausencia:0};
           Object.values(cur).forEach(v=>{if(ncCounts[v]!==undefined)ncCounts[v]++;});
           const diasRed = ncCounts.incapacidad + ncCounts.vacaciones + ncCounts.licNoRem + ncCounts.ausencia;
           u({novDias:cur,impDias:iCur,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem});
-          const tipoMap={incapacidad:"incapacidad",vacaciones:"vacaciones",licencia:"licencia_remunerada",licNoRem:"licencia_no_remunerada",ausencia:"ausencia"};
-          fetch("/api/novelties",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,employee_nombre:selN.nombre,tipo:tipoMap[tipoNov]||tipoNov,fecha_inicio:k,fecha_fin:k,motivo:"Registrado por RRHH",source:"rrhh"})}).catch(()=>{});
+          // Registrar en hr_novelties como UN solo registro con fecha_inicio..fecha_fin (el adjunto del día inicio cubre el rango)
+          fetch("/api/novelties",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,employee_nombre:selN.nombre,tipo:tipoMap[tipoNov]||tipoNov,fecha_inicio:k,fecha_fin:dias[dias.length-1]||k,motivo:"Registrado por RRHH",source:"rrhh"})}).catch(()=>{});
           // No cerramos el modal: el usuario puede adjuntar archivos a la novedad recién creada.
         };
 
@@ -1788,6 +1803,12 @@ ${body}
               {/* SECCIÓN 2: Novedad */}
               <div style={{marginBottom:18}}>
                 <div style={{fontSize:11,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:"0.05em",marginBottom:8}}>📋 ¿O fue novedad?</div>
+                {/* Rango opcional: aplicar la novedad desde este día hasta una fecha fin */}
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,padding:"6px 10px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:6}}>
+                  <span style={{fontSize:10,color:T.inkLight}}>Aplicar desde <strong>{k}</strong> hasta:</span>
+                  <input type="date" value={rangoFin} min={k} onChange={e=>setRangoFin(e.target.value)} style={{fontSize:11,padding:"3px 6px",border:`1px solid ${T.border}`,borderRadius:4,fontFamily:"'DM Sans',sans-serif"}}/>
+                  {rangoFin&&<button type="button" onClick={()=>setRangoFin("")} style={{fontSize:10,color:"#dc2626",border:"none",background:"none",cursor:"pointer"}}>✕ solo este día</button>}
+                </div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:6}}>
                   {novOpts.map(n => {
                     const isActive = currentNov === n.id;
@@ -1803,6 +1824,7 @@ ${body}
                     );
                   })}
                 </div>
+                {rangoFin&&rangoFin>k&&<div style={{fontSize:9,color:T.inkLight,marginTop:6}}>Se aplicará a los días laborables entre {k} y {rangoFin} (omite domingos y festivos). El adjunto del día inicial cubre todo el rango.</div>}
               </div>
 
               {/* SECCIÓN 3: Adjuntos de la novedad (solo si hay novedad activa) */}
