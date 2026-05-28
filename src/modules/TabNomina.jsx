@@ -677,7 +677,9 @@ export function TabNomina(){
   // (mismo patrón que selN.novDias). Un día puede tener novedad Y/O imputación —
   // son ortogonales: la novedad reduce días salariales, la imputación dice a qué OT
   // imputar las horas trabajadas. No interfieren en cálculos de nómina.
-  const [modoCal,setModoCal]=useState("novedad"); // "novedad" | "imputacion"
+  const [modoCal,setModoCal]=useState("novedad"); // "novedad" | "imputacion" (mantenido por compatibilidad, ya no se usa en UI)
+  // Sprint UX-1: modal contextual al clicar día. null = cerrado, {day, k} = abierto sobre ese día
+  const [dayEditor,setDayEditor]=useState(null);
   // Centros de Trabajo (OTs) cargados desde BD. Cada centro: {id, codigo, nombre, activo, empleados:[uuid]}.
   // Las OTs disponibles para imputar a un empleado se filtran por activo=true AND selN.empId IN empleados.
   const [centros,setCentros]=useState([]);
@@ -1266,25 +1268,8 @@ ${body}
                   );
                 })()}
               </div>
-              <div style={{display:"flex",gap:4,marginBottom:8,flexWrap:"wrap"}}>
-                <span style={{fontSize:9,color:T.inkLight,padding:"4px 0"}}>Clic en día →</span>
-                {/* Selector de modo: Novedad vs Imputación OOTT */}
-                <button type="button" onClick={()=>setModoCal("novedad")} style={{padding:"3px 8px",fontSize:10,fontWeight:modoCal==="novedad"?700:400,border:modoCal==="novedad"?"2px solid #111":"1px solid "+T.border,borderRadius:4,background:modoCal==="novedad"?"#F3F4F6":"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>📋 Novedad</button>
-                <button type="button" onClick={()=>setModoCal("imputacion")} style={{padding:"3px 8px",fontSize:10,fontWeight:modoCal==="imputacion"?700:400,border:modoCal==="imputacion"?"2px solid #111":"1px solid "+T.border,borderRadius:4,background:modoCal==="imputacion"?"#EDE9FE":"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>📊 Imputar OT</button>
-                <span style={{width:1,background:T.border,margin:"0 4px"}}/>
-                {modoCal==="novedad" && NOV_TIPOS.filter(n=>n.id!=="normal").map(n=><button key={n.id} type="button" onClick={()=>setSelNovTipo(n.id)} style={{padding:"3px 8px",fontSize:10,fontWeight:selNovTipo===n.id?700:400,border:selNovTipo===n.id?"2px solid #111":"1px solid "+T.border,borderRadius:4,background:selNovTipo===n.id?n.color:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",opacity:selNovTipo===n.id?1:0.6}}>{n.icon} {n.label}</button>)}
-                {modoCal==="imputacion" && (()=>{
-                  // Filtrar centros activos asignados al empleado seleccionado
-                  const centrosEmp = centros.filter(c=>c.activo && Array.isArray(c.empleados) && c.empleados.includes(selN.empId));
-                  if (centrosEmp.length === 0) {
-                    return <span style={{fontSize:10,color:"#D97706",padding:"3px 8px",background:"#FEF3C7",borderRadius:4,fontFamily:"'DM Sans',sans-serif"}}>⚠️ {selN.nombre} no tiene OTs asignadas. Asígnalas en <a href="#centros" onClick={e=>{e.preventDefault();if(typeof window!=="undefined"&&window.dispatchEvent)window.dispatchEvent(new CustomEvent("rrhh:navigate",{detail:{tab:"centros"}}));}} style={{color:T.ink,fontWeight:700,textDecoration:"underline"}}>Centros de Trabajo</a>.</span>;
-                  }
-                  // Si el OT seleccionado no está en la lista del empleado, escoger el primero
-                  if (!selOtt || !centrosEmp.find(c=>c.id===selOtt)) {
-                    setTimeout(()=>setSelOtt(centrosEmp[0].id), 0);
-                  }
-                  return <select value={selOtt} onChange={e=>setSelOtt(e.target.value)} style={{padding:"3px 8px",fontSize:10,border:`1px solid ${T.border}`,borderRadius:4,background:"#fff",fontFamily:"'DM Sans',sans-serif"}}>{centrosEmp.map(c=><option key={c.id} value={c.id}>{c.codigo} — {c.nombre}</option>)}</select>;
-                })()}
+              <div style={{display:"flex",gap:6,marginBottom:8,alignItems:"center",padding:"6px 10px",background:"#F9F8F4",borderRadius:4,border:`1px dashed ${T.border}`}}>
+                <span style={{fontSize:10,color:T.inkLight}}>💡 <strong>Haz click en cualquier día</strong> para imputar OT, registrar novedad o limpiar.</span>
               </div>
               {/* Calendar grid */}
               {(()=>{
@@ -1364,7 +1349,7 @@ ${body}
                       if(isConflicto)tooltipParts.push("⚠️ Conflicto: el empleado tiene 2+ OTs configuradas para este día. Click para resolver.");
                       else if(impInfo)tooltipParts.push("OT: "+impInfo.codigo+" — "+impInfo.nombre);
 
-                      return <div key={day} onClick={()=>!isRest&&toggleDay(day)} title={tooltipParts.join(" · ")} style={{
+                      return <div key={day} onClick={()=>!isRest&&ed&&setDayEditor({day,k,date})} title={tooltipParts.join(" · ")} style={{
                         textAlign:"center",padding:"4px 2px",borderRadius:4,fontSize:11,fontWeight:isToday?800:(hol?700:400),
                         cursor:isRest||!ed?"default":"pointer",
                         background:novInfo?novInfo.color:hol?"#FDE68A":isSun?"#F5F4F1":"transparent",
@@ -1753,6 +1738,149 @@ ${body}
         <span>CST Art. 127-128 · Ley 100/93 · Art. 114-1 ET</span>
         <span>Q1 = anticipo fijo · Q2 = ajuste real · Bono Art.128 = NO salarial</span>
       </div>
+
+      {/* Sprint UX-1: Modal contextual al clicar día del calendario */}
+      {dayEditor && (() => {
+        const {day,k,date} = dayEditor;
+        const nDias=selN.novDias||{};
+        const iDias=selN.impDias||{};
+        const currentNov = nDias[k] || null;
+        const currentImp = iDias[k] || null;
+        const isConflict = currentImp === "__conflicto__";
+        const centrosEmp = centros.filter(c=>c.activo && Array.isArray(c.empleados) && c.empleados.includes(selN.empId));
+        const fechaLabel = date.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+        const novOpts = NOV_TIPOS.filter(n=>n.id!=="normal");
+
+        // Aplicar acción: imputar OT
+        const aplicarOT = (otId) => {
+          const cur = {...iDias};
+          cur[k] = otId;
+          // Si había novedad, quitarla (excluyentes)
+          if (currentNov) {
+            const nc = {...nDias};
+            delete nc[k];
+            const ncCounts={incapacidad:0,vacaciones:0,licencia:0,licNoRem:0,ausencia:0};
+            Object.values(nc).forEach(v=>{if(ncCounts[v]!==undefined)ncCounts[v]++;});
+            const diasRed = ncCounts.incapacidad + ncCounts.vacaciones + ncCounts.licNoRem + ncCounts.ausencia;
+            u({impDias:cur,novDias:nc,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem});
+            const tipoMap={incapacidad:"incapacidad",vacaciones:"vacaciones",licencia:"licencia_remunerada",licNoRem:"licencia_no_remunerada",ausencia:"ausencia"};
+            fetch("/api/novelties",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,fecha_inicio:k,tipo:tipoMap[currentNov]||currentNov})}).catch(()=>{});
+          } else {
+            u({impDias:cur});
+          }
+          setDayEditor(null);
+        };
+
+        // Aplicar acción: registrar novedad
+        const aplicarNov = (tipoNov) => {
+          const cur = {...nDias};
+          cur[k] = tipoNov;
+          // Si había OT imputada, quitarla (excluyentes)
+          const iCur = {...iDias};
+          if (currentImp) delete iCur[k];
+          const ncCounts={incapacidad:0,vacaciones:0,licencia:0,licNoRem:0,ausencia:0};
+          Object.values(cur).forEach(v=>{if(ncCounts[v]!==undefined)ncCounts[v]++;});
+          const diasRed = ncCounts.incapacidad + ncCounts.vacaciones + ncCounts.licNoRem + ncCounts.ausencia;
+          u({novDias:cur,impDias:iCur,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem});
+          const tipoMap={incapacidad:"incapacidad",vacaciones:"vacaciones",licencia:"licencia_remunerada",licNoRem:"licencia_no_remunerada",ausencia:"ausencia"};
+          fetch("/api/novelties",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,employee_nombre:selN.nombre,tipo:tipoMap[tipoNov]||tipoNov,fecha_inicio:k,fecha_fin:k,motivo:"Registrado por RRHH",source:"rrhh"})}).catch(()=>{});
+          setDayEditor(null);
+        };
+
+        // Aplicar acción: limpiar día
+        const limpiarDia = () => {
+          const iCur = {...iDias};
+          const nCur = {...nDias};
+          if (currentImp) delete iCur[k];
+          if (currentNov) {
+            delete nCur[k];
+            const ncCounts={incapacidad:0,vacaciones:0,licencia:0,licNoRem:0,ausencia:0};
+            Object.values(nCur).forEach(v=>{if(ncCounts[v]!==undefined)ncCounts[v]++;});
+            const diasRed = ncCounts.incapacidad + ncCounts.vacaciones + ncCounts.licNoRem + ncCounts.ausencia;
+            u({impDias:iCur,novDias:nCur,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem});
+            const tipoMap={incapacidad:"incapacidad",vacaciones:"vacaciones",licencia:"licencia_remunerada",licNoRem:"licencia_no_remunerada",ausencia:"ausencia"};
+            fetch("/api/novelties",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,fecha_inicio:k,tipo:tipoMap[currentNov]||currentNov})}).catch(()=>{});
+          } else {
+            u({impDias:iCur});
+          }
+          setDayEditor(null);
+        };
+
+        return (
+          <div style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setDayEditor(null)}>
+            <div onClick={e=>e.stopPropagation()} style={{maxWidth:560,width:"100%",maxHeight:"90vh",overflowY:"auto",background:"#fff",borderRadius:12,padding:24,boxShadow:"0 8px 30px rgba(0,0,0,.2)"}}>
+              {/* Header */}
+              <div style={{marginBottom:16,borderBottom:`1px solid ${T.border}`,paddingBottom:12}}>
+                <div style={{fontSize:11,color:T.inkLight,textTransform:"uppercase",letterSpacing:"0.06em",fontWeight:600}}>📅 Editando día</div>
+                <div style={{fontSize:18,fontWeight:700,color:T.ink,marginTop:2,textTransform:"capitalize"}}>{fechaLabel}</div>
+                {/* Estado actual */}
+                {(currentImp||currentNov||isConflict)&&(
+                  <div style={{marginTop:8,padding:"6px 10px",background:isConflict?"#FEE2E2":currentNov?(NOV_TIPOS.find(n=>n.id===currentNov)?.color||"#F3F4F6"):"#EDE9FE",borderRadius:4,fontSize:11,fontWeight:600,color:isConflict?"#991B1B":T.ink}}>
+                    Estado actual: {isConflict?"⚠️ Conflicto entre 2+ calendarios — elige una OT":currentNov?(NOV_TIPOS.find(n=>n.id===currentNov)?.icon+" "+NOV_TIPOS.find(n=>n.id===currentNov)?.label):"📊 Imputado a "+(centros.find(c=>c.id===currentImp)?.codigo||currentImp)}
+                  </div>
+                )}
+              </div>
+
+              {/* SECCIÓN 1: Imputar OT */}
+              <div style={{marginBottom:18}}>
+                <div style={{fontSize:11,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:"0.05em",marginBottom:8}}>📊 ¿Trabajó en una OT?</div>
+                {centrosEmp.length===0 ? (
+                  <div style={{padding:"8px 12px",fontSize:11,color:"#D97706",background:"#FEF3C7",borderRadius:6}}>⚠️ El empleado no tiene OTs asignadas. Configúralas en Centros de Trabajo.</div>
+                ) : (
+                  <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                    {centrosEmp.map(c => {
+                      const isActive = currentImp === c.id;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={()=>aplicarOT(c.id)}
+                          style={{textAlign:"left",padding:"8px 12px",fontSize:12,fontWeight:isActive?700:500,border:isActive?"2px solid #111":`1px solid ${T.border}`,borderRadius:6,background:isActive?colorForOT(c.id):"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",justifyContent:"space-between"}}
+                        >
+                          <span><strong>{c.codigo}</strong> — {c.nombre}</span>
+                          {isActive && <span style={{fontSize:10,color:T.green}}>✓ actual</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* SECCIÓN 2: Novedad */}
+              <div style={{marginBottom:18}}>
+                <div style={{fontSize:11,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:"0.05em",marginBottom:8}}>📋 ¿O fue novedad?</div>
+                <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:6}}>
+                  {novOpts.map(n => {
+                    const isActive = currentNov === n.id;
+                    return (
+                      <button
+                        key={n.id}
+                        type="button"
+                        onClick={()=>aplicarNov(n.id)}
+                        style={{padding:"8px 12px",fontSize:11,fontWeight:isActive?700:500,border:isActive?"2px solid #111":`1px solid ${T.border}`,borderRadius:6,background:isActive?n.color:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",textAlign:"left"}}
+                      >
+                        {n.icon} {n.label} {isActive && <span style={{fontSize:9,color:T.green,marginLeft:4}}>✓</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Acciones inferiores */}
+              <div style={{display:"flex",gap:8,paddingTop:12,borderTop:`1px solid ${T.border}`}}>
+                {(currentImp||currentNov) && (
+                  <button onClick={limpiarDia} style={{padding:"8px 16px",fontSize:11,fontWeight:600,border:"1px solid #dc2626",borderRadius:6,background:"#fff",color:"#dc2626",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",flex:1}}>
+                    🗑 Limpiar este día
+                  </button>
+                )}
+                <button onClick={()=>setDayEditor(null)} style={{padding:"8px 16px",fontSize:11,fontWeight:600,border:`1px solid ${T.border}`,borderRadius:6,background:"#fff",color:T.ink,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",flex:1}}>
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
