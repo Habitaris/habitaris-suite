@@ -690,6 +690,9 @@ export function TabNomina(){
   // Se persiste en kv_store con clave hab:nov_adjuntos:<anio>:<mes> (mismo mecanismo que soporte de pago).
   const [novAdjuntos,setNovAdjuntos]=useState({});
   const [adjUploading,setAdjUploading]=useState(false);
+  // Justificantes de pago del mes. kv_store hab:soporte_pago:<anio>:<mes>.
+  // Formato antiguo: objeto plano {empId,tipo,ref,archivo,data}. Formato nuevo: { "<empId>:<tipo>": {ref,archivo,data} }.
+  const [soportesPago,setSoportesPago]=useState({});
   const [rangoFin,setRangoFin]=useState(""); // fecha fin opcional al registrar novedad en rango
   // Centros de Trabajo (OTs) cargados desde BD. Cada centro: {id, codigo, nombre, activo, empleados:[uuid]}.
   // Las OTs disponibles para imputar a un empleado se filtran por activo=true AND selN.empId IN empleados.
@@ -716,6 +719,16 @@ export function TabNomina(){
     fetch("/api/hiring?kv=nov_adjuntos&anio="+anio+"&mes="+mes).then(r=>r.json()).then(d=>{
       setNovAdjuntos(d.ok && d.data && !Array.isArray(d.data) ? d.data : {});
     }).catch(()=>setNovAdjuntos({}));
+    // Cargar justificantes de pago del mes. Normaliza formato antiguo (plano) a indexado {empId:tipo}.
+    fetch("/api/hiring?kv=soporte_pago&anio="+anio+"&mes="+mes).then(r=>r.json()).then(d=>{
+      const raw = d.ok && d.data && !Array.isArray(d.data) ? d.data : {};
+      // Formato antiguo: tiene empId+tipo a nivel raíz → migrar a clave indexada
+      if (raw.empId && raw.tipo) {
+        setSoportesPago({ [raw.empId+":"+raw.tipo]: {ref:raw.ref,archivo:raw.archivo,data:raw.data} });
+      } else {
+        setSoportesPago(raw);
+      }
+    }).catch(()=>setSoportesPago({}));
   },[anio,mes]);
 
 
@@ -1219,9 +1232,12 @@ ${body}
                     // Build updated array locally so saveN has the fresh value (avoids React setState closure bug)
                     const updatedNoms=noms.map(n=>n.id===selN.id?{...n,estado:nuevoEstado,refPago:pagoForm.ref,soportePago:pagoForm.soporte?pagoForm.soporte.name:null}:n);
                     setNoms(updatedNoms);
-                    // Save soporte in kv if exists
+                    // Save soporte in kv if exists. Indexado por empId:tipo para no pisar
+                    // soportes de otros empleados ni de la otra quincena del mismo mes.
                     if(pagoForm.soporte){
-                      fetch("/api/hiring?kv=soporte_pago&anio="+anio+"&mes="+mes,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:{empId:selN.empId,tipo,ref:pagoForm.ref,archivo:pagoForm.soporte.name,data:pagoForm.soporte.data}})});
+                      const nuevoSoporte={...soportesPago,[selN.empId+":"+tipo]:{ref:pagoForm.ref,archivo:pagoForm.soporte.name,data:pagoForm.soporte.data}};
+                      setSoportesPago(nuevoSoporte);
+                      fetch("/api/hiring?kv=soporte_pago&anio="+anio+"&mes="+mes,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:nuevoSoporte})});
                     }
                     // Persist the updated array directly - don't rely on guardar() which uses stale closure
                     setGuard(true);
@@ -1525,6 +1541,30 @@ ${body}
                 </div>
               </div>
             ))}
+            {/* Justificantes de pago subidos (soportes de transferencia) */}
+            {(()=>{
+              const tipos=[{k:"anticipo",lbl:"Justificante de pago — Anticipo Q1"},{k:"nomina",lbl:"Justificante de pago — Nómina/Q2"}];
+              const items=tipos.map(t=>({...t,sop:soportesPago[selN.empId+":"+t.k]})).filter(t=>t.sop&&t.sop.data);
+              if(items.length===0) return null;
+              return (
+                <div style={{marginTop:18,paddingTop:14,borderTop:`1px solid ${T.border}`}}>
+                  <div style={{fontSize:11,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:"0.05em",marginBottom:10}}>💳 Justificantes de pago adjuntados</div>
+                  {items.map((t,i)=>(
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 16px",background:"#F0FDF4",border:`1px solid #BBF7D0`,borderRadius:8,marginBottom:8}}>
+                      <div style={{fontSize:22,width:36,textAlign:"center"}}>💳</div>
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:13,fontWeight:700,color:T.ink}}>{t.lbl}</div>
+                        <div style={{fontSize:10,color:T.inkLight,marginTop:1}}>{t.sop.archivo}{t.sop.ref?` · Ref: ${t.sop.ref}`:""}</div>
+                      </div>
+                      <div style={{display:"flex",gap:6}}>
+                        <a href={t.sop.data} target="_blank" rel="noopener noreferrer" style={{fontSize:11,fontWeight:600,color:T.blue,textDecoration:"none",background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px"}}>👁 Ver</a>
+                        <a href={t.sop.data} download={t.sop.archivo} style={{fontSize:11,fontWeight:600,color:T.ink,textDecoration:"none",background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px"}}>⬇ Descargar</a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </Card>
         )}
 
