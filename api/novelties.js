@@ -31,6 +31,17 @@ export default async function handler(req, res) {
       if (!body.employee_id || !body.tipo) {
         return res.status(400).json({ ok: false, error: "employee_id and tipo required" });
       }
+      // Dedupe: borrar cualquier registro previo con el mismo empleado+fecha+tipo
+      // antes de insertar, para que marcar/desmarcar/re-marcar no genere duplicados.
+      // La combinación employee_id+fecha_inicio+tipo debe ser única.
+      if (body.fecha_inicio) {
+        try {
+          await fetch(SB_URL + "/rest/v1/hr_novelties?employee_id=eq." + body.employee_id +
+            "&fecha_inicio=eq." + body.fecha_inicio + "&tipo=eq." + body.tipo, {
+            method: "DELETE", headers: sbHeaders()
+          });
+        } catch (e) { /* si falla el borrado previo, continuamos con el insert */ }
+      }
       var record = {
         employee_id: body.employee_id,
         employee_nombre: body.employee_nombre || "",
