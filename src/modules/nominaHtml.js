@@ -26,7 +26,7 @@ export function buildNominaHtml({ selN, calc, anio, mes, tipo, refBancaria }) {
   const isQuinc = selN.modalidadPago !== "mensual";
 
   const items = [
-    { c:"Salario básico", d:calc.salProp, dd:0 },
+    { c:`Salario básico (${calc.dias}d)`, d:calc.salProp, dd:0 },
     calc.aux>0 && { c:`Aux. transporte (${calc.diasComm}d)`, d:calc.aux, dd:0 },
     calc.bono>0 && { c:`Bono asistencia (${calc.diasAsist}d)`, d:calc.bono, dd:0 }, _diasIncapHtml>0 && {c:`Incapacidad (${_diasIncapHtml}d)`, d:_auxIncapHtml, ded:0},
     calc.totHex>0 && { c:"Horas extra", d:calc.totHex, dd:0 },
