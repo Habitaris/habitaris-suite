@@ -5,7 +5,7 @@ import { getTenantUrlsSync, getTenantIdentitySync, getLegalConstantsSync } from 
 import { downloadPDF } from "./pdfUtil.js";
 import { buildNominaHtml } from "./nominaHtml.js";
 import { BannerPagos } from "./BannerPagos.jsx";
-import { openReport } from "./reportModal.js";
+import { openReport, openFileViewer } from "./reportModal.js";
 import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 // Sprint C Capa 3 paso 7: catálogos legales desde country_configs (BD prioritaria con fallback al hardcoded 2026).
@@ -92,19 +92,11 @@ const fPct = n => (n * 100).toFixed(2) + "%";
 // Abre un archivo (data URI base64) en una pestaña nueva. Los navegadores bloquean abrir
 // data: URIs grandes directamente con target=_blank (política anti-phishing), así que lo
 // convertimos a un Blob URL, que sí se permite. Funciona para PDF e imágenes de cualquier tamaño.
-const verArchivo = (dataUri) => {
+const verArchivo = (dataUri, filename) => {
   try {
     if (!dataUri) return;
-    if (!dataUri.startsWith("data:")) { window.open(dataUri, "_blank"); return; }
-    const [meta, b64] = dataUri.split(",");
-    const mime = (meta.match(/data:([^;]+)/) || [])[1] || "application/octet-stream";
-    const bin = atob(b64);
-    const bytes = new Uint8Array(bin.length);
-    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-    const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
-    window.open(url, "_blank");
-    // Liberar el objeto URL tras un tiempo prudencial (la pestaña ya lo cargó)
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    // Abrir en el visor modal dentro de la app (no en pestaña nueva): obliga a Descargar o Cerrar.
+    openFileViewer(dataUri, filename || "archivo");
   } catch (e) {
     window.toast && window.toast("No se pudo abrir el archivo", "error");
   }
@@ -1627,7 +1619,7 @@ ${body}
                         <div style={{fontSize:10,color:T.inkLight,marginTop:1}}>{t.sop.archivo}{t.sop.ref?` · Ref: ${t.sop.ref}`:""}</div>
                       </div>
                       <div style={{display:"flex",gap:6}}>
-                        <button onClick={()=>verArchivo(t.sop.data)} style={{fontSize:11,fontWeight:600,color:T.blue,background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>👁 Ver</button>
+                        <button onClick={()=>verArchivo(t.sop.data, t.sop.archivo)} style={{fontSize:11,fontWeight:600,color:T.blue,background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>👁 Ver</button>
                         <a href={t.sop.data} download={t.sop.archivo} style={{fontSize:11,fontWeight:600,color:T.ink,textDecoration:"none",background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px"}}>⬇ Descargar</a>
                       </div>
                     </div>
@@ -1659,7 +1651,7 @@ ${body}
                           <div style={{fontSize:10,color:T.inkLight,marginTop:1}}>{info?.label||"Novedad"} · {fechaLbl} · {(f.size/1024).toFixed(0)} KB</div>
                         </div>
                         <div style={{display:"flex",gap:6}}>
-                          <button onClick={()=>verArchivo(f.data)} style={{fontSize:11,fontWeight:600,color:T.blue,background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>👁 Ver</button>
+                          <button onClick={()=>verArchivo(f.data, f.name)} style={{fontSize:11,fontWeight:600,color:T.blue,background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>👁 Ver</button>
                           <a href={f.data} download={f.name} style={{fontSize:11,fontWeight:600,color:T.ink,textDecoration:"none",background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px"}}>⬇ Descargar</a>
                         </div>
                       </div>
@@ -2083,7 +2075,7 @@ ${body}
                           <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 8px",background:"#fff",border:`1px solid ${T.border}`,borderRadius:5,fontSize:11}}>
                             <span style={{flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>📄 {f.name}</span>
                             <span style={{fontSize:9,color:T.inkLight}}>{(f.size/1024).toFixed(0)} KB</span>
-                            <button onClick={()=>verArchivo(f.data)} style={{fontSize:10,fontWeight:600,color:T.blue,background:"none",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",padding:0}}>👁 Ver</button>
+                            <button onClick={()=>verArchivo(f.data, f.name)} style={{fontSize:10,fontWeight:600,color:T.blue,background:"none",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",padding:0}}>👁 Ver</button>
                             <a href={f.data} download={f.name} style={{fontSize:10,fontWeight:600,color:T.ink,textDecoration:"none"}}>⬇ Descargar</a>
                             {ed && <button onClick={()=>delAdjunto(k,i)} style={{fontSize:10,fontWeight:600,color:"#dc2626",border:"none",background:"none",cursor:"pointer"}}>✕</button>}
                           </div>
@@ -2131,10 +2123,15 @@ ${body}
                     🗑 Limpiar este día
                   </button>
                 )}
-                <button onClick={()=>setDayEditor(null)} style={{padding:"8px 16px",fontSize:11,fontWeight:600,border:`1px solid ${T.border}`,borderRadius:6,background:"#fff",color:T.ink,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",flex:1}}>
-                  Cerrar
+                <button onClick={()=>setDayEditor(null)} style={{padding:"8px 16px",fontSize:12,fontWeight:700,border:"none",borderRadius:6,background:T.ink,color:"#fff",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",flex:2}}>
+                  ✓ Aceptar
                 </button>
               </div>
+              {ed && (
+                <div style={{fontSize:10,color:T.amber,marginTop:8,textAlign:"center",lineHeight:1.4}}>
+                  💡 Los cambios se aplican al aceptar. Recuerda pulsar <strong>💾 Guardar</strong> arriba para dejarlos permanentes.
+                </div>
+              )}
             </div>
           </div>
         ), document.body);
