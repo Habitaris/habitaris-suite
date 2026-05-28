@@ -62,14 +62,11 @@ export function openReport(html, opts) {
   const btns = document.createElement("div");
   btns.style.cssText = "display:flex;gap:8px";
 
-  const bPrint = document.createElement("button");
-  bPrint.textContent = "🖨 Imprimir / PDF";
-  bPrint.style.cssText = "padding:7px 14px;font-size:12px;font-weight:600;border:1px solid #111;border-radius:6px;background:#111;color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif";
   const bClose = document.createElement("button");
   bClose.textContent = "✕ Cerrar";
   bClose.style.cssText = "padding:7px 14px;font-size:12px;font-weight:600;border:1px solid #E5E3DE;border-radius:6px;background:#fff;color:#111;cursor:pointer;font-family:'DM Sans',sans-serif";
   bClose.addEventListener("click", closeReport);
-  btns.appendChild(bPrint); btns.appendChild(bClose);
+  btns.appendChild(bClose);
   bar.appendChild(tlbl); bar.appendChild(btns);
 
   // Iframe del informe
@@ -77,16 +74,6 @@ export function openReport(html, opts) {
   iframe.style.cssText = "flex:1;width:100%;border:none;background:#fff";
   iframe.setAttribute("title", titulo);
 
-  bPrint.addEventListener("click", function(){
-    try {
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
-    } catch (err) {
-      // fallback: si el print del iframe falla, abrir en pestaña como antes
-      const w = window.open("", "_blank");
-      if (w) { w.document.write(html); w.document.close(); w.print(); }
-    }
-  });
 
   box.appendChild(bar);
   box.appendChild(iframe);
