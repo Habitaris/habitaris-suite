@@ -16,6 +16,8 @@ const fmt = n => n == null || isNaN(n) ? "$0" : "$" + Math.round(n).toLocaleStri
 // Genera { fileName, html } para una nómina o justificante de anticipo.
 // tipo: "anticipo" | "nomina"
 export function buildNominaHtml({ selN, calc, anio, mes, tipo, refBancaria }) {
+  const _diasIncapHtml = Object.values(selN.novDias||{}).filter(v=>v==='incapacidad').length;
+  const _auxIncapHtml = Math.round((selN.sal/30)*_diasIncapHtml*0.6667);
   const mAbr = MESES[mes].substring(0,3).toUpperCase();
   const a2 = String(anio).slice(-2);
   const ape = (selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
@@ -26,7 +28,7 @@ export function buildNominaHtml({ selN, calc, anio, mes, tipo, refBancaria }) {
   const items = [
     { c:"Salario básico", d:calc.salProp, dd:0 },
     calc.aux>0 && { c:`Aux. transporte (${calc.diasComm}d)`, d:calc.aux, dd:0 },
-    calc.bono>0 && { c:`Bono asistencia (${calc.diasAsist}d)`, d:calc.bono, dd:0 },
+    calc.bono>0 && { c:`Bono asistencia (${calc.diasAsist}d)`, d:calc.bono, dd:0 }, _diasIncapHtml>0 && {c:`Incapacidad (${_diasIncapHtml}d)`, d:_auxIncapHtml, ded:0},
     calc.totHex>0 && { c:"Horas extra", d:calc.totHex, dd:0 },
     calc.recFest>0 && { c:"Recargo festivos", d:calc.recFest, dd:0 },
     { c:"EPS (4%)", d:0, dd:calc.epsE },
