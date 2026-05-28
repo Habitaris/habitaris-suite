@@ -1450,6 +1450,16 @@ ${body}
             </div>
             <Card accent={T.green}><STit color={T.green}>✅ Devengado</STit>
               <div style={{fontSize:9,color:T.inkLight,marginBottom:8}}>{calc.dias}/30 días · Ratio: {(calc.ratio*100).toFixed(1)}%</div>
+              {((selN.diasIncap||0)>0||(selN.diasVac||0)>0||(selN.diasLicNoRem||0)>0||(selN.diasLicRem||0)>0)&&(
+                <div style={{fontSize:9,color:T.inkMid,marginBottom:8,padding:"6px 8px",background:T.accent,borderRadius:4,lineHeight:1.5}}>
+                  <strong>Novedades del mes:</strong> 30 días base
+                  {(selN.diasIncap||0)>0&&<> · 🏥 −{selN.diasIncap} incap.</>}
+                  {(selN.diasVac||0)>0&&<> · 🏖️ −{selN.diasVac} vac.</>}
+                  {(selN.diasLicNoRem||0)>0&&<> · ⚠️ −{selN.diasLicNoRem} lic. no rem.</>}
+                  {(selN.diasLicRem||0)>0&&<> · 📋 {selN.diasLicRem} lic. rem. (no reduce)</>}
+                  {" "}= <strong>{calc.dias} días de salario</strong>
+                </div>
+              )}
               <div style={{fontSize:10,fontWeight:600,color:T.inkMid,marginBottom:4}}>SALARIAL (base EPS/Pensión)</div>
               <Row lbl="Salario proporcional" val={calc.salProp}/>
               {calc.totHex>0&&<><Row lbl="Horas extra" val={calc.totHex}/>{calc.hexD>0&&<Row lbl="HE diurna ×1.25" val={calc.hexD} indent sub/>}{calc.hexN>0&&<Row lbl="HE nocturna ×1.75" val={calc.hexN} indent sub/>}{calc.hexDD>0&&<Row lbl="HE dom ×2.0" val={calc.hexDD} indent sub/>}{calc.hexDN>0&&<Row lbl="HE dom noct ×2.5" val={calc.hexDN} indent sub/>}</>}
@@ -1574,7 +1584,12 @@ ${body}
                   ["","",""],
                   ["Salario base mes",fmt(selN.sal),"Pactado en contrato"],
                   ["Salario/día",fmt(selN.sal/30),"Sal ÷ 30"],
-                  ["Días laborados",selN.dias+"/30","Calendario − novedades"],
+                  ["Días base mes","30","Mes comercial (Colombia)"],
+                  ...((selN.diasIncap||0)>0?[["— Incapacidad","−"+selN.diasIncap+"d","Reduce salario e IBC"]]:[]),
+                  ...((selN.diasVac||0)>0?[["— Vacaciones","−"+selN.diasVac+"d","Se pagan aparte (no salario ordinario)"]]:[]),
+                  ...((selN.diasLicNoRem||0)>0?[["— Licencia no remunerada","−"+selN.diasLicNoRem+"d","Reduce salario e IBC"]]:[]),
+                  ...((selN.diasLicRem||0)>0?[["— Licencia remunerada",selN.diasLicRem+"d","NO reduce salario (informativo)"]]:[]),
+                  ["Días laborados",selN.dias+"/30","30 − incapacidad − vacaciones − lic. no rem."],
                   ["Festivos (L-S)",calc.festMes+"d","No se trabaja, sí se paga salario"],
                   ["Días asistidos",calc.diasAsist+"d","Días − festivos (para aux y bono)"],
                   ["Ratio salario",((selN.dias/30)*100).toFixed(1)+"%","Días ÷ 30"],
