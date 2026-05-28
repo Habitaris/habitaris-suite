@@ -722,6 +722,7 @@ export function TabNomina(){
   // Se persiste en kv_store con clave hab:nov_adjuntos:<anio>:<mes> (mismo mecanismo que soporte de pago).
   const [novAdjuntos,setNovAdjuntos]=useState({});
   const [adjUploading,setAdjUploading]=useState(false);
+  const [adjDrag,setAdjDrag]=useState(false); // true mientras se arrastra un archivo sobre la zona de adjuntar
   // Justificantes de pago del mes. kv_store hab:soporte_pago:<anio>:<mes>.
   // Formato antiguo: objeto plano {empId,tipo,ref,archivo,data}. Formato nuevo: { "<empId>:<tipo>": {ref,archivo,data} }.
   const [soportesPago,setSoportesPago]=useState({});
@@ -2090,8 +2091,12 @@ ${body}
                       </div>
                     )}
                     {ed ? (
-                      <label style={{display:"inline-block",fontSize:11,fontWeight:600,color:T.ink,padding:"6px 12px",border:`1px dashed ${T.border}`,borderRadius:6,cursor:adjUploading?"wait":"pointer",background:"#fff"}}>
-                        {adjUploading?"Subiendo…":"+ Adjuntar archivo"}
+                      <label
+                        onDragOver={e=>{e.preventDefault();if(!adjUploading)setAdjDrag(true);}}
+                        onDragLeave={e=>{e.preventDefault();setAdjDrag(false);}}
+                        onDrop={e=>{e.preventDefault();setAdjDrag(false);if(adjUploading)return;const f=e.dataTransfer.files&&e.dataTransfer.files[0];if(f)addAdjunto(k,f);}}
+                        style={{display:"block",fontSize:11,fontWeight:600,color:adjDrag?T.green:T.inkMid,padding:"16px 12px",border:`2px dashed ${adjDrag?T.green:T.border}`,borderRadius:8,cursor:adjUploading?"wait":"pointer",background:adjDrag?T.greenBg:"#FAFAF8",textAlign:"center",transition:"all .12s"}}>
+                        {adjUploading?"⏳ Subiendo…":adjDrag?"📥 Suelta el archivo aquí":"📎 Arrastra un archivo aquí o haz clic para seleccionar"}
                         <input type="file" accept=".pdf,.jpg,.jpeg,.png" disabled={adjUploading} onChange={e=>{const f=e.target.files[0];addAdjunto(k,f);e.target.value="";}} style={{display:"none"}}/>
                       </label>
                     ) : (
