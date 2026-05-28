@@ -5,6 +5,7 @@ import { getTenantUrlsSync, getTenantIdentitySync, getLegalConstantsSync } from 
 import { downloadPDF } from "./pdfUtil.js";
 import { buildNominaHtml } from "./nominaHtml.js";
 import { BannerPagos } from "./BannerPagos.jsx";
+import { openReport } from "./reportModal.js";
 import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
 // Sprint C Capa 3 paso 7: catálogos legales desde country_configs (BD prioritaria con fallback al hardcoded 2026).
@@ -533,7 +534,7 @@ ${bodyHtml}
 <button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';document.querySelector('.np').style.display='none';html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(c){var img=c.toDataURL('image/jpeg',0.98);var pW=210,pH=(c.height*pW)/c.width;var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileName}.pdf');el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display=''})})()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div></body></html>`;
-    const w=window.open('','_blank');w.document.write(html);w.document.close();
+    openReport(html);
   };
 
   const hoy=new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"});
@@ -943,7 +944,7 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
-            const w=window.open('','_blank');w.document.write(html);w.document.close();
+            openReport(html);
           }}>📄 Reporte novedades</Btn>
           <Btn small onClick={()=>{
             const iDias=selN.impDias||{};
@@ -1044,7 +1045,7 @@ ${resumenArr.length>0?resumenArr.map(r=>`<tr class="imp"><td>${r.codigo}</td><td
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
-            const w=window.open('','_blank');w.document.write(html);w.document.close();
+            openReport(html);
           }}>📊 Reporte imputaciones</Btn>
           <Btn small onClick={()=>{
             // Sprint D: Informe de costes por OT con Fórmula A (proporcional a días imputados)
@@ -1147,9 +1148,7 @@ ${body}
 </div>
 <div class="np"><button class="btn" onclick="window.print()">🖨 Imprimir</button><button class="btn2" onclick="window.close()">Cerrar</button></div>
 </body></html>`;
-            const w=window.open('','_blank');
-            w.document.write(html);
-            w.document.close();
+            openReport(html);
           }}>📈 Costes por OT</Btn>
         </div>
 
@@ -1461,7 +1460,7 @@ ${body}
               <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
                 onClick={()=>{
                   const { html } = buildNominaHtml({ selN, calc, anio, mes, tipo:d.action, refBancaria:selN.refPago||null });
-                  const w=window.open('','_blank');w.document.write(html);w.document.close();
+                  openReport(html);
                 }}
                 onMouseEnter={e=>e.currentTarget.style.borderColor=T.ink}
                 onMouseLeave={e=>e.currentTarget.style.borderColor=T.border}>
