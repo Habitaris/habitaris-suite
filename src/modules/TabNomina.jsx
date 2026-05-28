@@ -1373,14 +1373,13 @@ ${body}
                       type="button"
                       onClick={()=>{
                         if (!ed) return;
-                        if (!confirm("Esto sobrescribirá las imputaciones manuales del mes con las del calendario base del empleado. ¿Continuar?")) return;
-                        const autoImp = aplicaBaseAEmpleado(selN);
-                        u({impDias: autoImp});
+                        if (!confirm("Esto borrará todas las imputaciones manuales del mes. Al recargar, los días se rellenarán automáticamente desde el calendario base configurado en Centros de Trabajo. ¿Continuar?")) return;
+                        u({impDias:{}});
                       }}
                       disabled={!ed}
-                      title={!ed ? "Mes ya pagado, no se puede modificar" : "Re-aplica el calendario laboral del empleado al mes actual (sobrescribe imputaciones manuales)"}
+                      title={!ed ? "Mes ya pagado, no se puede modificar" : "Vacía las imputaciones manuales del mes. Al recargar, los días se rellenan automáticamente desde el calendario base de Centros de Trabajo."}
                       style={{padding:"4px 10px",fontSize:10,fontWeight:600,border:`1px solid ${T.border}`,borderRadius:4,background:ed?"#fff":"#f5f5f5",color:ed?T.inkMid:"#999",cursor:ed?"pointer":"not-allowed",fontFamily:"'DM Sans',sans-serif"}}
-                    >🔄 Resetear desde calendario base</button>
+                    >🧹 Limpiar imputaciones manuales</button>
                   );
                 })()}
               </div>
