@@ -327,9 +327,10 @@ function AsistenciaPanel({selN, MESES, mes, anio}) {
 }
 
 /* ── NOVEDADES PANEL (sub-tab dentro del liquidador) ── */
-function NovedadesPanel({selN, anio, MESES, novHist, setNovHist, novYear, setNovYear, fmt}) {
+function NovedadesPanel({selN, anio, mes, MESES, novHist, setNovHist, novYear, setNovYear, fmt}) {
   const [loading, setLoading] = useState(true);
-  const [filtroMes, setFiltroMes] = useState("all");
+  // Por defecto muestra el mes que se está liquidando; el usuario puede cambiar a otro mes o "Todo el año".
+  const [filtroMes, setFiltroMes] = useState(String(mes));
 
   useEffect(()=>{
     setLoading(true);
@@ -411,6 +412,17 @@ function NovedadesPanel({selN, anio, MESES, novHist, setNovHist, novYear, setNov
               <option value="all">Todo el año</option>
               {MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}
             </select>
+            <button type="button" disabled={filtered.length===0} onClick={()=>{
+              const periodoLbl = filtroMes==="all" ? `Año ${novYear}` : `${MESES[parseInt(filtroMes)]} ${novYear}`;
+              const filas = filtered.map(n=>{
+                const f=novDate(n);
+                const dias = (()=>{ if(!n.fecha_inicio) return 1; const fi=new Date(n.fecha_inicio+"T12:00:00"), ff=n.fecha_fin?new Date(n.fecha_fin+"T12:00:00"):fi; return Math.max(1,Math.floor((ff-fi)/86400000)+1); })();
+                return `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${f.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short",year:"numeric"})}</td><td style="padding:6px 10px;border-bottom:1px solid #eee">${tipoIcon[n.tipo]||"📋"} ${n.tipo}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;font-family:monospace;font-size:10px">${n.fecha_inicio||""}${n.fecha_fin&&n.fecha_fin!==n.fecha_inicio?" → "+n.fecha_fin:""}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:center">${dias}</td><td style="padding:6px 10px;border-bottom:1px solid #eee">${n.motivo||"—"}</td><td style="padding:6px 10px;border-bottom:1px solid #eee">${n.estado||""}</td></tr>`;
+              }).join("");
+              const totalDias = filtered.reduce((s,n)=>{ if(!n.fecha_inicio) return s+1; const fi=new Date(n.fecha_inicio+"T12:00:00"), ff=n.fecha_fin?new Date(n.fecha_fin+"T12:00:00"):fi; return s+Math.max(1,Math.floor((ff-fi)/86400000)+1); },0);
+              const html = `<div style="font-family:'DM Sans',Arial,sans-serif;max-width:800px;margin:0 auto;padding:24px;color:#111"><h1 style="font-size:20px;margin:0 0 4px">Informe de novedades</h1><div style="font-size:13px;color:#555;margin-bottom:2px"><strong>${selN.nombre}</strong> · CC ${(selN.cc||"").replace(/\\D/g,"")||selN.cc||""}</div><div style="font-size:12px;color:#777;margin-bottom:16px">Periodo: ${periodoLbl} · ${filtered.length} novedad(es) · ${totalDias} día(s) en total</div><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="border-bottom:2px solid #111;text-align:left"><th style="padding:6px 10px">Fecha</th><th style="padding:6px 10px">Tipo</th><th style="padding:6px 10px">Periodo</th><th style="padding:6px 10px;text-align:center">Días</th><th style="padding:6px 10px">Motivo</th><th style="padding:6px 10px">Estado</th></tr></thead><tbody>${filas}</tbody></table><div style="margin-top:24px;font-size:10px;color:#999;text-align:center">Habitaris Suite · ${new Date().toLocaleDateString(getTenantDefaultsSync().locale)}</div></div>`;
+              openReport(html);
+            }} style={{padding:"4px 10px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,fontWeight:600,background:filtered.length===0?"#f5f5f5":"#fff",color:filtered.length===0?T.inkLight:T.ink,cursor:filtered.length===0?"default":"pointer",fontFamily:"'DM Sans',sans-serif"}}>📄 Informe</button>
           </div>
         </div>
 
@@ -731,8 +743,8 @@ export function TabNomina(){
     const festCount=hols.filter(h=>h.date.getMonth()===mes&&h.date.getDay()!==0).length;
     Promise.all([fetchEmps(),loadN(anio,mes)]).then(([emps,saved])=>{
       const ex=saved||[];
-      const lista=emps.map(e=>{const f=ex.find(n=>n.empId===e.id);if(f){if(f.festMes===undefined)f.festMes=festCount;if(!f.fechaFinContrato)f.fechaFinContrato=e.fecha_fin_contrato||"";if(!f.duracionMeses)f.duracionMeses=e.duracion_meses||0;if(!f.fechaIngreso)f.fechaIngreso=e.fecha_inicio||"";if(!f.tipoContrato)f.tipoContrato=e.tipo_contrato||"";if(!f.modalidadPago){f.modalidadPago=e.modalidad_pago||"quincenal";if(f.modalidadPago==="mensual"&&f.q1Pct>0)f.q1Pct=0;}return f;}
-        return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:(e.modalidad_pago||"quincenal")==="mensual"?0:0.5,modalidadPago:e.modalidad_pago||"quincenal",hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.entidadBancaria||"",cuenta:e.cuentaBancaria||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",duracionMeses:e.duracion_meses||0,fechaFinContrato:e.fecha_fin_contrato||"",auxT:e.auxilio_transporte||AUX_TR,netoRef:e.salario_neto||0,anio,mes};});
+      const lista=emps.map(e=>{const f=ex.find(n=>n.empId===e.id);if(f){if(f.festMes===undefined)f.festMes=festCount;if(!f.fechaFinContrato)f.fechaFinContrato=e.fecha_fin_contrato||"";if(!f.duracionMeses)f.duracionMeses=e.duracion_meses||0;if(!f.fechaIngreso)f.fechaIngreso=e.fecha_inicio||"";if(!f.tipoContrato)f.tipoContrato=e.tipo_contrato||"";if(!f.banco)f.banco=e.candidato_banco||"";if(!f.cuenta)f.cuenta=e.candidato_numero_cuenta||"";if(!f.tipoCuenta)f.tipoCuenta=e.candidato_tipo_cuenta||"";if(!f.modalidadPago){f.modalidadPago=e.modalidad_pago||"quincenal";if(f.modalidadPago==="mensual"&&f.q1Pct>0)f.q1Pct=0;}return f;}
+        return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:(e.modalidad_pago||"quincenal")==="mensual"?0:0.5,modalidadPago:e.modalidad_pago||"quincenal",hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.candidato_banco||"",cuenta:e.candidato_numero_cuenta||"",tipoCuenta:e.candidato_tipo_cuenta||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",duracionMeses:e.duracion_meses||0,fechaFinContrato:e.fecha_fin_contrato||"",auxT:e.auxilio_transporte||AUX_TR,netoRef:e.salario_neto||0,anio,mes};});
       setNoms(lista);setLoading(false);
     });
     // Cargar adjuntos de novedades del mes (kv_store). Aislado: si falla, queda {}.
@@ -1670,7 +1682,7 @@ ${body}
         )}
 
         {subTab==="novedades"&&(
-          <NovedadesPanel selN={selN} anio={anio} MESES={MESES} novHist={novHist} setNovHist={setNovHist} novYear={novYear} setNovYear={setNovYear} fmt={fmt}/>
+          <NovedadesPanel selN={selN} anio={anio} mes={mes} MESES={MESES} novHist={novHist} setNovHist={setNovHist} novYear={novYear} setNovYear={setNovYear} fmt={fmt}/>
         )}
 
         {subTab==="asistencia"&&(
@@ -1722,6 +1734,7 @@ ${body}
                   <Dato l="Nombre" v={selN.nombre}/>
                   <Dato l="Documento (CC)" v={(selN.cc||"").replace(/\D/g,"")||selN.cc}/>
                   <Dato l="Banco" v={selN.banco}/>
+                  <Dato l="Tipo de cuenta" v={selN.tipoCuenta}/>
                   <Dato l="Cuenta" v={selN.cuenta}/>
                 </Card>
               </div>
