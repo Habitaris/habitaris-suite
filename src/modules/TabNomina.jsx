@@ -1349,7 +1349,7 @@ ${body}
                       if(isConflicto)tooltipParts.push("⚠️ Conflicto: el empleado tiene 2+ OTs configuradas para este día. Click para resolver.");
                       else if(impInfo)tooltipParts.push("OT: "+impInfo.codigo+" — "+impInfo.nombre);
 
-                      return <div key={day} onClick={()=>{window.toast?window.toast("DEBUG dia "+day+" isRest="+isRest+" ed="+ed,"info"):console.log("DEBUG",day,isRest,ed);if(!isRest&&ed){setDayEditor({day,k,date});}}} title={tooltipParts.join(" · ")} style={{
+                      return <div key={day} onClick={()=>{if(!isRest&&ed){setDayEditor({day,k,date});}}} title={tooltipParts.join(" · ")} style={{
                         textAlign:"center",padding:"4px 2px",borderRadius:4,fontSize:11,fontWeight:isToday?800:(hol?700:400),
                         cursor:isRest||!ed?"default":"pointer",
                         background:novInfo?novInfo.color:hol?"#FDE68A":isSun?"#F5F4F1":"transparent",
@@ -1638,107 +1638,6 @@ ${body}
         {subTab==="liqfinal"&&(
           <LiqFinalPanel selN={selN} calc={calc} fmt={fmt} MESES={MESES} mes={mes} anio={anio} HAB_LOGO={HAB_LOGO}/>
         )}
-      </div>
-    );
-  }
-
-  return(
-    <div className="fade-up">
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
-        <div style={{fontSize:11,color:T.inkLight}}>Colombia 2026 · SMLMV {fmt(SMLMV)} · Aux.T {fmt(AUX_TR)}</div>
-        <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <select value={mes} onChange={e=>setMes(parseInt(e.target.value))} style={{padding:"6px 10px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif",background:"#fff"}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-          <select value={anio} onChange={e=>setAnio(parseInt(e.target.value))} style={{padding:"6px 10px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif",background:"#fff",width:80}}>{[2024,2025,2026,2027].map(y=><option key={y} value={y}>{y}</option>)}</select>
-          <Btn pri onClick={guardar} disabled={guard}>{guard?"Guardando…":"💾 Guardar"}</Btn>
-        </div>
-      </div>
-      {(()=>{const h=new Date();return h.getFullYear()===anio&&h.getMonth()===mes;})() && <BannerPagos noms={noms} />}
-      <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
-        {[["Empleados",noms.length,T.ink],["Pagadas",noms.filter(n=>n.estado==="liquidada"||n.estado==="pagada").length,T.green],["Neto total",fmt(totN),T.ink],["Total Q1",fmt(totQ1),T.blue],["Total Q2",fmt(totQ2),T.green]].map(([l,v,c])=>(
-          <div key={l} style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:6,padding:"12px 14px",boxShadow:T.shadow}}>
-            <div style={{fontSize:8,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:.6,marginBottom:2}}>{l}</div>
-            <div style={{fontSize:18,fontWeight:800,color:c,fontFamily:"'DM Mono',monospace"}}>{v}</div>
-          </div>
-        ))}
-      </div>
-      {loading?<Card style={{padding:0,overflow:"hidden"}}>
-        <div style={{padding:"10px 16px",borderBottom:`1px solid ${T.border}`,display:"flex",alignItems:"center",gap:12}}>
-          <div className="sk-bar" style={{width:140,height:14}}/>
-          <div style={{flex:1}}/>
-          <div className="sk-bar" style={{width:160,height:10}}/>
-        </div>
-        <table style={{width:"100%",borderCollapse:"collapse"}}>
-          <thead><tr style={{background:T.accent}}>
-            {["Empleado","Cargo","Salario","Bono","Días","Neto","Q1","Q2","Costo","Estado",""].map((l,i)=>(
-              <th key={i} style={{padding:"7px 12px",fontSize:9,fontWeight:700,color:T.inkLight,textAlign:"left",letterSpacing:.6,textTransform:"uppercase"}}>{l}</th>
-            ))}
-          </tr></thead>
-          <tbody>{[0,1,2].map(i=>(
-            <tr key={i} style={{borderTop:`1px solid ${T.border}`}}>
-              {[120,90,70,50,30,70,60,60,70,60,40].map((w,j)=>(
-                <td key={j} style={{padding:"10px 12px"}}>
-                  <div className="sk-bar" style={{width:w,height:11,animationDelay:(i*0.15+j*0.05)+"s"}}/>
-                </td>
-              ))}
-            </tr>
-          ))}</tbody>
-        </table>
-      </Card>:
-      noms.length===0?<Card style={{textAlign:"center",padding:40}}><div style={{fontSize:28,marginBottom:8}}>📋</div><div style={{fontSize:13,fontWeight:600,color:T.ink}}>Sin empleados vinculados</div><div style={{fontSize:11,color:T.inkLight,marginTop:4}}>Los empleados con contrato firmado aparecerán automáticamente.</div></Card>:
-      <Card style={{padding:0,overflow:"hidden"}}>
-        <div style={{padding:"10px 16px",borderBottom:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
-          <span style={{fontSize:12,fontWeight:700,whiteSpace:"nowrap"}}>Nómina {MESES[mes]} {anio}</span>
-          <input value={buscar} onChange={e=>setBuscar(e.target.value)} placeholder="🔍 Buscar empleado…" style={{flex:1,maxWidth:280,padding:"6px 12px",border:`1px solid ${T.border}`,borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif",outline:"none"}}/>
-          <span style={{fontSize:10,color:T.inkLight,whiteSpace:"nowrap"}}>Costo empresa: <strong style={{color:T.ink}}>{fmt(totC)}</strong></span>
-        </div>
-        {(()=>{
-          const getApellido=(nom)=>{const p=(nom||"").split(" ");return p.length>=3?p.slice(-2).join(" "):p.length>=2?p[p.length-1]:nom||"";};
-          const q=buscar.toLowerCase();
-          const filtered=noms.filter(n=>!q||(n.nombre||"").toLowerCase().includes(q)||(n.cc||"").includes(q)||(n.cargo||"").toLowerCase().includes(q));
-          const sorted=[...filtered].sort((a,b)=>{
-            let va,vb;
-            if(sortBy==="nombre"){va=getApellido(a.nombre);vb=getApellido(b.nombre);}
-            else if(sortBy==="cargo"){va=a.cargo||"";vb=b.cargo||"";}
-            else if(sortBy==="sal"){va=a.sal||0;vb=b.sal||0;}
-            else if(sortBy==="neto"){va=calcN(a).neto;vb=calcN(b).neto;}
-            else{va=a.nombre||"";vb=b.nombre||"";}
-            const cmp=typeof va==="number"?va-vb:String(va).localeCompare(String(vb),"es");
-            return sortDir==="asc"?cmp:-cmp;
-          });
-          const toggleSort=(col)=>{if(sortBy===col)setSortDir(d=>d==="asc"?"desc":"asc");else{setSortBy(col);setSortDir("asc");}};
-          const sortIcon=(col)=>sortBy===col?(sortDir==="asc"?"▲":"▼"):"";
-          return <>
-        <table style={{width:"100%",borderCollapse:"collapse"}}>
-          <thead><tr style={{background:T.accent}}>
-            {[{k:"nombre",l:"Empleado"},{k:"cargo",l:"Cargo"},{k:"sal",l:"Salario"},{k:"",l:"Bono"},{k:"",l:"Días"},{k:"neto",l:"Neto"},{k:"",l:"Q1"},{k:"",l:"Q2"},{k:"",l:"Costo"},{k:"",l:"Estado"},{k:"",l:""}].map(h=>(
-              <th key={h.l} onClick={h.k?()=>toggleSort(h.k):undefined} style={{padding:"7px 12px",fontSize:9,fontWeight:700,color:sortBy===h.k?T.ink:T.inkLight,textAlign:"left",letterSpacing:.6,textTransform:"uppercase",cursor:h.k?"pointer":"default",userSelect:"none"}}>{h.l} {sortIcon(h.k)}</th>
-            ))}
-          </tr></thead>
-          <tbody>{sorted.length===0?<tr><td colSpan={11} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:12}}>Sin resultados para "{buscar}"</td></tr>:sorted.map(n=>{const c=calcN(n);return(
-            <tr key={n.id} style={{borderTop:`1px solid ${T.border}`,cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.background=T.accent} onMouseLeave={e=>e.currentTarget.style.background=""}>
-              <td style={{padding:"9px 12px"}}><div style={{fontWeight:600,fontSize:12}}>{(()=>{const p=(n.nombre||"").split(" ");if(p.length>=3){const ape=p.slice(-2).join(" ");const nom=p.slice(0,-2).join(" ");return <>{ape}<span style={{fontWeight:400,color:T.inkLight}}>, {nom}</span></>;}return n.nombre;})()}</div></td>
-              <td style={{padding:"9px 12px",fontSize:11,color:T.inkLight}}>{n.cargo}</td>
-              <td style={{padding:"9px 12px",fontSize:12,fontFamily:"'DM Mono',monospace"}}>{fmt(n.sal)}</td>
-              <td style={{padding:"9px 12px",fontSize:11,color:T.inkLight,fontFamily:"'DM Mono',monospace"}}>{n.bono>0?fmt(n.bono):"—"}</td>
-              <td style={{padding:"9px 12px",fontSize:11,fontFamily:"'DM Mono',monospace"}}>{n.dias}</td>
-              <td style={{padding:"9px 12px",fontSize:12,fontWeight:700,color:T.green,fontFamily:"'DM Mono',monospace"}}>{fmt(c.neto)}</td>
-              <td style={{padding:"9px 12px",fontSize:11,color:T.blue,fontFamily:"'DM Mono',monospace"}}>{n.modalidadPago==="mensual"?"—":fmt(c.q1)}</td>
-              <td style={{padding:"9px 12px",fontSize:11,color:T.green,fontFamily:"'DM Mono',monospace"}}>{n.modalidadPago==="mensual"?"—":fmt(c.q2)}</td>
-              <td style={{padding:"9px 12px",fontSize:11,color:T.inkMid,fontFamily:"'DM Mono',monospace"}}>{fmt(c.costoT)}</td>
-              <td style={{padding:"9px 12px"}}><EstadoPills n={n}/></td>
-              <td style={{padding:"9px 12px"}}><Btn small onClick={()=>{setSel(n.id);setVista("detalle");setSubTab("nomina");}}>Ver →</Btn></td>
-            </tr>);})}</tbody>
-        </table>
-        <div style={{padding:"8px 16px",borderTop:`1px solid ${T.border}`,fontSize:10,color:T.inkLight}}>
-          {sorted.length} de {noms.length} empleado(s){buscar?" · filtrado por \""+buscar+"\"":""}  · Ordenado por {sortBy==="nombre"?"apellido":sortBy} {sortDir==="asc"?"A→Z":"Z→A"}
-        </div>
-        </>;})()}
-      </Card>}
-      <div style={{marginTop:12,padding:"10px 14px",background:T.accent,borderRadius:4,fontSize:9,color:T.inkLight,display:"flex",gap:20}}>
-        <span>CST Art. 127-128 · Ley 100/93 · Art. 114-1 ET</span>
-        <span>Q1 = anticipo fijo · Q2 = ajuste real · Bono Art.128 = NO salarial</span>
-      </div>
-
       {/* Sprint UX-1: Modal contextual al clicar día del calendario */}
       {dayEditor && (() => {
         const {day,k,date} = dayEditor;
@@ -1881,6 +1780,107 @@ ${body}
           </div>
         );
       })()}
+      </div>
+    );
+  }
+
+  return(
+    <div className="fade-up">
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+        <div style={{fontSize:11,color:T.inkLight}}>Colombia 2026 · SMLMV {fmt(SMLMV)} · Aux.T {fmt(AUX_TR)}</div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <select value={mes} onChange={e=>setMes(parseInt(e.target.value))} style={{padding:"6px 10px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif",background:"#fff"}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+          <select value={anio} onChange={e=>setAnio(parseInt(e.target.value))} style={{padding:"6px 10px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif",background:"#fff",width:80}}>{[2024,2025,2026,2027].map(y=><option key={y} value={y}>{y}</option>)}</select>
+          <Btn pri onClick={guardar} disabled={guard}>{guard?"Guardando…":"💾 Guardar"}</Btn>
+        </div>
+      </div>
+      {(()=>{const h=new Date();return h.getFullYear()===anio&&h.getMonth()===mes;})() && <BannerPagos noms={noms} />}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
+        {[["Empleados",noms.length,T.ink],["Pagadas",noms.filter(n=>n.estado==="liquidada"||n.estado==="pagada").length,T.green],["Neto total",fmt(totN),T.ink],["Total Q1",fmt(totQ1),T.blue],["Total Q2",fmt(totQ2),T.green]].map(([l,v,c])=>(
+          <div key={l} style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:6,padding:"12px 14px",boxShadow:T.shadow}}>
+            <div style={{fontSize:8,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:.6,marginBottom:2}}>{l}</div>
+            <div style={{fontSize:18,fontWeight:800,color:c,fontFamily:"'DM Mono',monospace"}}>{v}</div>
+          </div>
+        ))}
+      </div>
+      {loading?<Card style={{padding:0,overflow:"hidden"}}>
+        <div style={{padding:"10px 16px",borderBottom:`1px solid ${T.border}`,display:"flex",alignItems:"center",gap:12}}>
+          <div className="sk-bar" style={{width:140,height:14}}/>
+          <div style={{flex:1}}/>
+          <div className="sk-bar" style={{width:160,height:10}}/>
+        </div>
+        <table style={{width:"100%",borderCollapse:"collapse"}}>
+          <thead><tr style={{background:T.accent}}>
+            {["Empleado","Cargo","Salario","Bono","Días","Neto","Q1","Q2","Costo","Estado",""].map((l,i)=>(
+              <th key={i} style={{padding:"7px 12px",fontSize:9,fontWeight:700,color:T.inkLight,textAlign:"left",letterSpacing:.6,textTransform:"uppercase"}}>{l}</th>
+            ))}
+          </tr></thead>
+          <tbody>{[0,1,2].map(i=>(
+            <tr key={i} style={{borderTop:`1px solid ${T.border}`}}>
+              {[120,90,70,50,30,70,60,60,70,60,40].map((w,j)=>(
+                <td key={j} style={{padding:"10px 12px"}}>
+                  <div className="sk-bar" style={{width:w,height:11,animationDelay:(i*0.15+j*0.05)+"s"}}/>
+                </td>
+              ))}
+            </tr>
+          ))}</tbody>
+        </table>
+      </Card>:
+      noms.length===0?<Card style={{textAlign:"center",padding:40}}><div style={{fontSize:28,marginBottom:8}}>📋</div><div style={{fontSize:13,fontWeight:600,color:T.ink}}>Sin empleados vinculados</div><div style={{fontSize:11,color:T.inkLight,marginTop:4}}>Los empleados con contrato firmado aparecerán automáticamente.</div></Card>:
+      <Card style={{padding:0,overflow:"hidden"}}>
+        <div style={{padding:"10px 16px",borderBottom:`1px solid ${T.border}`,display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}>
+          <span style={{fontSize:12,fontWeight:700,whiteSpace:"nowrap"}}>Nómina {MESES[mes]} {anio}</span>
+          <input value={buscar} onChange={e=>setBuscar(e.target.value)} placeholder="🔍 Buscar empleado…" style={{flex:1,maxWidth:280,padding:"6px 12px",border:`1px solid ${T.border}`,borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif",outline:"none"}}/>
+          <span style={{fontSize:10,color:T.inkLight,whiteSpace:"nowrap"}}>Costo empresa: <strong style={{color:T.ink}}>{fmt(totC)}</strong></span>
+        </div>
+        {(()=>{
+          const getApellido=(nom)=>{const p=(nom||"").split(" ");return p.length>=3?p.slice(-2).join(" "):p.length>=2?p[p.length-1]:nom||"";};
+          const q=buscar.toLowerCase();
+          const filtered=noms.filter(n=>!q||(n.nombre||"").toLowerCase().includes(q)||(n.cc||"").includes(q)||(n.cargo||"").toLowerCase().includes(q));
+          const sorted=[...filtered].sort((a,b)=>{
+            let va,vb;
+            if(sortBy==="nombre"){va=getApellido(a.nombre);vb=getApellido(b.nombre);}
+            else if(sortBy==="cargo"){va=a.cargo||"";vb=b.cargo||"";}
+            else if(sortBy==="sal"){va=a.sal||0;vb=b.sal||0;}
+            else if(sortBy==="neto"){va=calcN(a).neto;vb=calcN(b).neto;}
+            else{va=a.nombre||"";vb=b.nombre||"";}
+            const cmp=typeof va==="number"?va-vb:String(va).localeCompare(String(vb),"es");
+            return sortDir==="asc"?cmp:-cmp;
+          });
+          const toggleSort=(col)=>{if(sortBy===col)setSortDir(d=>d==="asc"?"desc":"asc");else{setSortBy(col);setSortDir("asc");}};
+          const sortIcon=(col)=>sortBy===col?(sortDir==="asc"?"▲":"▼"):"";
+          return <>
+        <table style={{width:"100%",borderCollapse:"collapse"}}>
+          <thead><tr style={{background:T.accent}}>
+            {[{k:"nombre",l:"Empleado"},{k:"cargo",l:"Cargo"},{k:"sal",l:"Salario"},{k:"",l:"Bono"},{k:"",l:"Días"},{k:"neto",l:"Neto"},{k:"",l:"Q1"},{k:"",l:"Q2"},{k:"",l:"Costo"},{k:"",l:"Estado"},{k:"",l:""}].map(h=>(
+              <th key={h.l} onClick={h.k?()=>toggleSort(h.k):undefined} style={{padding:"7px 12px",fontSize:9,fontWeight:700,color:sortBy===h.k?T.ink:T.inkLight,textAlign:"left",letterSpacing:.6,textTransform:"uppercase",cursor:h.k?"pointer":"default",userSelect:"none"}}>{h.l} {sortIcon(h.k)}</th>
+            ))}
+          </tr></thead>
+          <tbody>{sorted.length===0?<tr><td colSpan={11} style={{padding:24,textAlign:"center",color:T.inkLight,fontSize:12}}>Sin resultados para "{buscar}"</td></tr>:sorted.map(n=>{const c=calcN(n);return(
+            <tr key={n.id} style={{borderTop:`1px solid ${T.border}`,cursor:"pointer"}} onMouseEnter={e=>e.currentTarget.style.background=T.accent} onMouseLeave={e=>e.currentTarget.style.background=""}>
+              <td style={{padding:"9px 12px"}}><div style={{fontWeight:600,fontSize:12}}>{(()=>{const p=(n.nombre||"").split(" ");if(p.length>=3){const ape=p.slice(-2).join(" ");const nom=p.slice(0,-2).join(" ");return <>{ape}<span style={{fontWeight:400,color:T.inkLight}}>, {nom}</span></>;}return n.nombre;})()}</div></td>
+              <td style={{padding:"9px 12px",fontSize:11,color:T.inkLight}}>{n.cargo}</td>
+              <td style={{padding:"9px 12px",fontSize:12,fontFamily:"'DM Mono',monospace"}}>{fmt(n.sal)}</td>
+              <td style={{padding:"9px 12px",fontSize:11,color:T.inkLight,fontFamily:"'DM Mono',monospace"}}>{n.bono>0?fmt(n.bono):"—"}</td>
+              <td style={{padding:"9px 12px",fontSize:11,fontFamily:"'DM Mono',monospace"}}>{n.dias}</td>
+              <td style={{padding:"9px 12px",fontSize:12,fontWeight:700,color:T.green,fontFamily:"'DM Mono',monospace"}}>{fmt(c.neto)}</td>
+              <td style={{padding:"9px 12px",fontSize:11,color:T.blue,fontFamily:"'DM Mono',monospace"}}>{n.modalidadPago==="mensual"?"—":fmt(c.q1)}</td>
+              <td style={{padding:"9px 12px",fontSize:11,color:T.green,fontFamily:"'DM Mono',monospace"}}>{n.modalidadPago==="mensual"?"—":fmt(c.q2)}</td>
+              <td style={{padding:"9px 12px",fontSize:11,color:T.inkMid,fontFamily:"'DM Mono',monospace"}}>{fmt(c.costoT)}</td>
+              <td style={{padding:"9px 12px"}}><EstadoPills n={n}/></td>
+              <td style={{padding:"9px 12px"}}><Btn small onClick={()=>{setSel(n.id);setVista("detalle");setSubTab("nomina");}}>Ver →</Btn></td>
+            </tr>);})}</tbody>
+        </table>
+        <div style={{padding:"8px 16px",borderTop:`1px solid ${T.border}`,fontSize:10,color:T.inkLight}}>
+          {sorted.length} de {noms.length} empleado(s){buscar?" · filtrado por \""+buscar+"\"":""}  · Ordenado por {sortBy==="nombre"?"apellido":sortBy} {sortDir==="asc"?"A→Z":"Z→A"}
+        </div>
+        </>;})()}
+      </Card>}
+      <div style={{marginTop:12,padding:"10px 14px",background:T.accent,borderRadius:4,fontSize:9,color:T.inkLight,display:"flex",gap:20}}>
+        <span>CST Art. 127-128 · Ley 100/93 · Art. 114-1 ET</span>
+        <span>Q1 = anticipo fijo · Q2 = ajuste real · Bono Art.128 = NO salarial</span>
+      </div>
+
     </div>
   );
 }
