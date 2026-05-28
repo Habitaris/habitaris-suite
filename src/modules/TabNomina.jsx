@@ -611,7 +611,7 @@ ${bodyHtml}
             ))}
             <div style={{marginTop:10}}>
               <div style={{fontSize:9,fontWeight:700,color:T.inkLight,letterSpacing:.8,textTransform:"uppercase",marginBottom:3}}>Fecha de salida</div>
-              <input type="date" value={fechaSalida} onChange={e=>setFechaSalida(e.target.value)} style={{width:"100%",padding:"6px 10px",border:`1px solid ${T.border}`,borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/>
+              <input type="date" value={fechaSalida} onChange={e=>{setFechaSalida(e.target.value);e.target.blur();}} style={{width:"100%",padding:"6px 10px",border:`1px solid ${T.border}`,borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif"}}/>
             </div>
           </Card>
 
@@ -1969,6 +1969,14 @@ ${body}
             u({impDias:iCur,novDias:nCur,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem});
             const tipoMap={incapacidad:"incapacidad",vacaciones:"vacaciones",licencia:"licencia_remunerada",licNoRem:"licencia_no_remunerada",ausencia:"ausencia"};
             fetch("/api/novelties",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,fecha_inicio:k,tipo:tipoMap[currentNov]||currentNov})}).catch(()=>{});
+            // El adjunto va con la novedad: al limpiar la novedad, borrar también su archivo de este día.
+            const kk=selN.empId+":"+k;
+            if(novAdjuntos[kk]){
+              const nuevoAdj={...novAdjuntos};
+              delete nuevoAdj[kk];
+              setNovAdjuntos(nuevoAdj);
+              saveAdjuntos(nuevoAdj).catch(()=>{});
+            }
           } else {
             u({impDias:iCur});
           }
@@ -2032,11 +2040,11 @@ ${body}
                   <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,padding:"8px 10px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:6,flexWrap:"wrap"}}>
                     <div style={{display:"flex",alignItems:"center",gap:5}}>
                       <span style={{fontSize:10,color:T.inkLight}}>Desde:</span>
-                      <input type="date" value={rangoInicio||k} onChange={e=>setRangoInicio(e.target.value)} style={{fontSize:11,padding:"3px 6px",border:`1px solid ${T.border}`,borderRadius:4,fontFamily:"'DM Sans',sans-serif"}}/>
+                      <input type="date" value={rangoInicio||k} onChange={e=>{setRangoInicio(e.target.value);e.target.blur();}} style={{fontSize:11,padding:"3px 6px",border:`1px solid ${T.border}`,borderRadius:4,fontFamily:"'DM Sans',sans-serif"}}/>
                     </div>
                     <div style={{display:"flex",alignItems:"center",gap:5}}>
                       <span style={{fontSize:10,color:T.inkLight}}>Hasta:</span>
-                      <input type="date" value={rangoFin} min={rangoInicio||k} onChange={e=>setRangoFin(e.target.value)} style={{fontSize:11,padding:"3px 6px",border:`1px solid ${T.border}`,borderRadius:4,fontFamily:"'DM Sans',sans-serif"}}/>
+                      <input type="date" value={rangoFin} min={rangoInicio||k} onChange={e=>{setRangoFin(e.target.value);e.target.blur();}} style={{fontSize:11,padding:"3px 6px",border:`1px solid ${T.border}`,borderRadius:4,fontFamily:"'DM Sans',sans-serif"}}/>
                     </div>
                   </div>
                 )}
