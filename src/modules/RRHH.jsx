@@ -1737,6 +1737,12 @@ function TabCentros() {
                       <input type="time" value={calForm.cal.salida} onChange={e=>setCalForm({...calForm,cal:{...calForm.cal,salida:e.target.value}})} style={{width:"100%",padding:"6px 10px",fontSize:11,border:"1px solid #E5E3DE",borderRadius:4,fontFamily:"'DM Sans',sans-serif"}}/>
                     </div>
                   </div>
+                  <div style={{marginTop:10,padding:"8px 10px",background:"#f9fafb",borderRadius:4,border:"1px solid #e5e7eb"}}>
+                    <label style={{display:"flex",alignItems:"center",gap:8,fontSize:11,cursor:"pointer",userSelect:"none"}}>
+                      <input type="checkbox" checked={!!calForm.cal.incluye_almuerzo} onChange={e=>setCalForm({...calForm,cal:{...calForm.cal,incluye_almuerzo:e.target.checked}})}/>
+                      <span><b>Incluye 1 hora de almuerzo</b> (no pagado). Las 8h del horario se cuentan como 7h efectivas.</span>
+                    </label>
+                  </div>
                   {/* Empleados asignados a este calendario (solo los que están en el centro) */}
                   <div style={{marginBottom:10}}>
                     <div style={{fontSize:10,color:"#666",marginBottom:3,fontWeight:600}}>Empleados que siguen este calendario</div>
