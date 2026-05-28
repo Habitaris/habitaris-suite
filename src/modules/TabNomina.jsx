@@ -1300,7 +1300,7 @@ ${body}
           ))}
         </div>
         <div style={{display:"flex",gap:0,marginBottom:14,borderBottom:`1px solid ${T.border}`}}>
-          {[{id:"nomina",lbl:"💰 Nómina"},{id:"novedades",lbl:"📋 Novedades"},{id:"asistencia",lbl:"📍 Asistencia"},{id:"descargables",lbl:"📊 Informes"},{id:"liqfinal",lbl:"🚪 Liquidación Final"}].map(t=>(
+          {[{id:"nomina",lbl:"💰 Nómina"},{id:"novedades",lbl:"📋 Novedades"},{id:"asistencia",lbl:"📍 Asistencia"},{id:"ficha",lbl:"👤 Ficha"},{id:"descargables",lbl:"📊 Informes"},{id:"liqfinal",lbl:"🚪 Liquidación Final"}].map(t=>(
             <button key={t.id} onClick={()=>setSubTab(t.id)} style={{padding:"8px 16px",fontSize:11,fontWeight:subTab===t.id?700:400,border:"none",borderBottom:subTab===t.id?`2px solid ${T.ink}`:"2px solid transparent",background:"transparent",color:subTab===t.id?T.ink:T.inkLight,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{t.lbl}</button>
           ))}
         </div>
@@ -1676,6 +1676,58 @@ ${body}
         {subTab==="asistencia"&&(
           <AsistenciaPanel selN={selN} MESES={MESES} mes={mes} anio={anio}/>
         )}
+
+        {subTab==="ficha"&&(()=>{
+          // Ficha de consulta (solo lectura). La edición vive en Contratación/Personal (fuente de verdad).
+          const Dato=({l,v})=>(
+            <div style={{display:"flex",justifyContent:"space-between",gap:12,padding:"7px 0",borderBottom:`1px solid ${T.border}`,fontSize:12}}>
+              <span style={{color:T.inkMid}}>{l}</span>
+              <span style={{fontWeight:600,color:T.ink,textAlign:"right"}}>{v||"—"}</span>
+            </div>
+          );
+          const fechaFmt=(s)=>s?new Date(s+"T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"}):"—";
+          const arlLbl=ARL_OPTS[selN.arl||0]?`${ARL_OPTS[selN.arl||0].lbl} (${fPct(ARL_OPTS[selN.arl||0].t)})`:"—";
+          return (
+            <div>
+              <div style={{fontSize:11,color:T.inkLight,marginBottom:12,padding:"8px 12px",background:T.amberBg,border:`1px solid #FDE68A`,borderRadius:6}}>
+                ℹ️ Ficha de consulta. Para modificar estos datos ve a <strong>Contratación</strong> o <strong>Personal</strong> (módulos donde se editan).
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+                <Card accent={T.ink}>
+                  <STit>📄 Contrato</STit>
+                  <Dato l="Tipo de contrato" v={selN.tipoContrato}/>
+                  <Dato l="Modalidad de pago" v={selN.modalidadPago==="mensual"?"Mensual":"Quincenal"}/>
+                  <Dato l="Fecha de ingreso" v={fechaFmt(selN.fechaIngreso)}/>
+                  <Dato l="Fecha fin de contrato" v={selN.fechaFinContrato?fechaFmt(selN.fechaFinContrato):"Indefinido / sin fecha"}/>
+                  {(selN.duracionMeses||0)>0&&<Dato l="Duración pactada" v={selN.duracionMeses+" meses"}/>}
+                  <Dato l="Estado nómina (mes)" v={selN.estado}/>
+                </Card>
+                <Card accent={T.green}>
+                  <STit color={T.green}>💰 Condiciones salariales</STit>
+                  <Dato l="Cargo" v={selN.cargo}/>
+                  <Dato l="Salario base" v={fmt(selN.sal)}/>
+                  {(selN.bono||0)>0&&<Dato l={(selN.bonoConcepto||"Bono")+(selN.bonoPrest?" (salarial)":" (no salarial)")} v={fmt(selN.bono)}/>}
+                  <Dato l="Auxilio de transporte" v={fmt(selN.auxT)}/>
+                  {(selN.netoRef||0)>0&&<Dato l="Neto de referencia" v={fmt(selN.netoRef)}/>}
+                </Card>
+                <Card accent={T.blue}>
+                  <STit color={T.blue}>🏥 Afiliaciones</STit>
+                  <Dato l="Régimen salud" v={selN.reg==="subsidiado"?"Subsidiado":"Contributivo"}/>
+                  <Dato l="EPS" v={selN.eps}/>
+                  <Dato l="Fondo de pensión" v={selN.pen}/>
+                  <Dato l="Nivel ARL" v={arlLbl}/>
+                </Card>
+                <Card accent={T.purple}>
+                  <STit color={T.purple}>🏦 Datos personales y bancarios</STit>
+                  <Dato l="Nombre" v={selN.nombre}/>
+                  <Dato l="Documento (CC)" v={(selN.cc||"").replace(/\D/g,"")||selN.cc}/>
+                  <Dato l="Banco" v={selN.banco}/>
+                  <Dato l="Cuenta" v={selN.cuenta}/>
+                </Card>
+              </div>
+            </div>
+          );
+        })()}
 
         {subTab==="nomina"&&(
           <div style={{borderTop:`2px solid ${T.border}`,marginTop:20,paddingTop:16}}>
