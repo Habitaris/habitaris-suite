@@ -1349,7 +1349,7 @@ ${body}
                       if(isConflicto)tooltipParts.push("⚠️ Conflicto: el empleado tiene 2+ OTs configuradas para este día. Click para resolver.");
                       else if(impInfo)tooltipParts.push("OT: "+impInfo.codigo+" — "+impInfo.nombre);
 
-                      return <div key={day} onClick={()=>{if(!isRest&&ed){setDayEditor({day,k,date});}}} title={tooltipParts.join(" · ")} style={{
+                      return <div key={day} onClick={()=>{window.toast?window.toast("DEBUG dia "+day+" isRest="+isRest+" ed="+ed,"info"):console.log("DEBUG",day,isRest,ed);if(!isRest&&ed){setDayEditor({day,k,date});}}} title={tooltipParts.join(" · ")} style={{
                         textAlign:"center",padding:"4px 2px",borderRadius:4,fontSize:11,fontWeight:isToday?800:(hol?700:400),
                         cursor:isRest||!ed?"default":"pointer",
                         background:novInfo?novInfo.color:hol?"#FDE68A":isSun?"#F5F4F1":"transparent",
