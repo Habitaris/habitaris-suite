@@ -831,27 +831,7 @@ export function TabNomina(){
       const { html } = buildNominaHtml({ selN, calc, anio, mes, tipo, refBancaria });
       return fetch("/api/hiring",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"pub_nomina",employee_id:selN.empId,anio,mes,tipo,nombre_mes:MESES[mes],devengado:calc.dev,deducciones:calc.totD,neto:calc.neto,liquido:liq,modalidad:selN.modalidadPago||"quincenal",html,ref:refBancaria||null,soporte_name:soporteName||null})});
     };
-    return(
-      <div className="fade-up" style={{maxWidth:1050,margin:"0 auto"}}>
-        {/* FILA 1: acciones primarias (Volver, nombre/cargo, Guardar, Pagar, Ref pago, EstadoPills) */}
-        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8,flexWrap:"wrap"}}>
-          <Btn onClick={()=>{setVista("lista");setSubTab("nomina");}}>← Volver</Btn>
-          <div style={{flex:1,minWidth:240}}>
-            <div style={{fontSize:16,fontWeight:700,lineHeight:1.2}}>{selN.nombre}</div>
-            <div style={{fontSize:11,color:T.inkLight,marginTop:2}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio} · <span style={{fontWeight:600,color:selN.modalidadPago==="mensual"?T.ink:T.blue}}>{selN.modalidadPago==="mensual"?"Pago mensual":"Pago quincenal"}</span></div>
-          </div>
-          <EstadoPills n={selN}/>
-          <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
-          {isQ&&selN.estado==="borrador"&&<Btn small disabled={periodoQ1.count > 0} onClick={()=>{if(periodoQ1.count > 0){alert("⚠️ Quedan "+periodoQ1.count+" día(s) pendientes en la primera quincena (1-15). Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"q1",ref:"",soporte:null});}}>💵 Pagar Q1 (anticipo)</Btn>}
-          {isQ&&selN.estado==="q1_pagado"&&<Btn pri small disabled={periodoQ2.count > 0} onClick={()=>{if(periodoQ2.count > 0){alert("⚠️ Quedan "+periodoQ2.count+" día(s) pendientes en la segunda quincena. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:"",soporte:null});}}>💵 Pagar Q2 (liquidar)</Btn>}
-          {!isQ&&selN.estado==="borrador"&&<Btn pri small disabled={periodoMes.count > 0} onClick={()=>{if(periodoMes.count > 0){alert("⚠️ Quedan "+periodoMes.count+" día(s) pendientes en el mes. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:"",soporte:null});}}>💵 Pagar nómina</Btn>}
-          {(selN.estado==="q1_pagado"||selN.estado==="liquidada"||selN.estado==="pagada")&&selN.refPago&&<span style={{fontSize:9,color:T.inkLight,padding:"4px 8px",background:T.accent,borderRadius:4}}>Ref: {selN.refPago}</span>}
-        </div>
-        {/* FILA 2: reportes (Link empleados, Novedades, Imputaciones, Costes) */}
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:16,paddingTop:8,borderTop:`1px dashed ${T.border}`,flexWrap:"wrap"}}>
-          <span style={{fontSize:10,fontWeight:600,color:T.inkLight,textTransform:"uppercase",letterSpacing:"0.05em",marginRight:4}}>📊 Reportes:</span>
-          <Btn small onClick={()=>{(()=>{const u=getTenantUrlsSync();const id=getTenantIdentitySync();window.open("https://wa.me/?text="+encodeURIComponent(id.displayName+"\n\n👤 Portal del empleado:\n"+u.portalEmpleado+"\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");})();}}>💬 Link empleados</Btn>
-          <Btn small onClick={()=>{
+    const genNovedadesHtml = () => {
             const nDias=selN.novDias||{};
             const novList=Object.entries(nDias).sort().map(([k,v])=>{const d=new Date(k+"T12:00:00");const info=NOV_TIPOS.find(n=>n.id===v);return{fecha:d.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"}),tipo:info?.label||v};});
             const festList=festivosMes.map(h=>({fecha:h.date.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"}),name:h.name}));
@@ -944,9 +924,9 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
-            openReport(html);
-          }}>📄 Reporte novedades</Btn>
-          <Btn small onClick={()=>{
+      return html;
+    };
+    const genImputacionesHtml = () => {
             const iDias=selN.impDias||{};
             // Resolver impInfo (codigo + nombre) por cada día imputado.
             // Si la OT no se encuentra en BD (centros), mostrar id raw.
@@ -1045,9 +1025,9 @@ ${resumenArr.length>0?resumenArr.map(r=>`<tr class="imp"><td>${r.codigo}</td><td
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
-            openReport(html);
-          }}>📊 Reporte imputaciones</Btn>
-          <Btn small onClick={()=>{
+      return html;
+    };
+    const genCostesHtml = () => {
             // Sprint D: Informe de costes por OT con Fórmula A (proporcional a días imputados)
             // Por cada empleado: repartir calcN(n).costoT entre las OTs según días imputados.
             // Domingos, festivos y novedades quedan absorbidos proporcionalmente.
@@ -1148,8 +1128,24 @@ ${body}
 </div>
 <div class="np"><button class="btn" onclick="window.print()">🖨 Imprimir</button><button class="btn2" onclick="window.close()">Cerrar</button></div>
 </body></html>`;
-            openReport(html);
-          }}>📈 Costes por OT</Btn>
+      return html;
+    };
+    return(
+      <div className="fade-up" style={{maxWidth:1050,margin:"0 auto"}}>
+        {/* FILA 1: acciones primarias (Volver, nombre/cargo, Guardar, Pagar, Ref pago, EstadoPills) */}
+        <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8,flexWrap:"wrap"}}>
+          <Btn onClick={()=>{setVista("lista");setSubTab("nomina");}}>← Volver</Btn>
+          <div style={{flex:1,minWidth:240}}>
+            <div style={{fontSize:16,fontWeight:700,lineHeight:1.2}}>{selN.nombre}</div>
+            <div style={{fontSize:11,color:T.inkLight,marginTop:2}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio} · <span style={{fontWeight:600,color:selN.modalidadPago==="mensual"?T.ink:T.blue}}>{selN.modalidadPago==="mensual"?"Pago mensual":"Pago quincenal"}</span></div>
+          </div>
+          <EstadoPills n={selN}/>
+          <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
+          {isQ&&selN.estado==="borrador"&&<Btn small disabled={periodoQ1.count > 0} onClick={()=>{if(periodoQ1.count > 0){alert("⚠️ Quedan "+periodoQ1.count+" día(s) pendientes en la primera quincena (1-15). Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"q1",ref:"",soporte:null});}}>💵 Pagar Q1 (anticipo)</Btn>}
+          {isQ&&selN.estado==="q1_pagado"&&<Btn pri small disabled={periodoQ2.count > 0} onClick={()=>{if(periodoQ2.count > 0){alert("⚠️ Quedan "+periodoQ2.count+" día(s) pendientes en la segunda quincena. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:"",soporte:null});}}>💵 Pagar Q2 (liquidar)</Btn>}
+          {!isQ&&selN.estado==="borrador"&&<Btn pri small disabled={periodoMes.count > 0} onClick={()=>{if(periodoMes.count > 0){alert("⚠️ Quedan "+periodoMes.count+" día(s) pendientes en el mes. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:"",soporte:null});}}>💵 Pagar nómina</Btn>}
+          {(selN.estado==="q1_pagado"||selN.estado==="liquidada"||selN.estado==="pagada")&&selN.refPago&&<span style={{fontSize:9,color:T.inkLight,padding:"4px 8px",background:T.accent,borderRadius:4}}>Ref: {selN.refPago}</span>}
+          <Btn small onClick={()=>{(()=>{const u=getTenantUrlsSync();const id=getTenantIdentitySync();window.open("https://wa.me/?text="+encodeURIComponent(id.displayName+"\n\n👤 Portal del empleado:\n"+u.portalEmpleado+"\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");})();}}>💬 Link empleados</Btn>
         </div>
 
         {/* Payment form */}
@@ -1211,7 +1207,7 @@ ${body}
           ))}
         </div>
         <div style={{display:"flex",gap:0,marginBottom:14,borderBottom:`1px solid ${T.border}`}}>
-          {[{id:"nomina",lbl:"💰 Nómina"},{id:"novedades",lbl:"📋 Novedades"},{id:"asistencia",lbl:"📍 Asistencia"},{id:"descargables",lbl:"📥 Descargables"},{id:"liqfinal",lbl:"🚪 Liquidación Final"}].map(t=>(
+          {[{id:"nomina",lbl:"💰 Nómina"},{id:"novedades",lbl:"📋 Novedades"},{id:"asistencia",lbl:"📍 Asistencia"},{id:"descargables",lbl:"📊 Informes"},{id:"liqfinal",lbl:"🚪 Liquidación Final"}].map(t=>(
             <button key={t.id} onClick={()=>setSubTab(t.id)} style={{padding:"8px 16px",fontSize:11,fontWeight:subTab===t.id?700:400,border:"none",borderBottom:subTab===t.id?`2px solid ${T.ink}`:"2px solid transparent",background:"transparent",color:subTab===t.id?T.ink:T.inkLight,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{t.lbl}</button>
           ))}
         </div>
@@ -1449,17 +1445,20 @@ ${body}
 
         {subTab==="descargables"&&(
           <Card accent={T.ink}>
-            <STit>📥 Documentos</STit>
+            <STit>📊 Informes y documentos</STit>
             <div style={{fontSize:11,color:T.inkLight,marginBottom:14}}>{selN.nombre} — {MESES[mes]} {anio}</div>
             {[
               ...(selN.modalidadPago!=="mensual"?[
                 {icon:"📋",label:"Justificante de anticipo",desc:`Anticipo ${fmt(calc.q1)} · 15 de ${MESES[mes]}`,action:"anticipo"},
               ]:[]),
               {icon:"📄",label:"Nómina",desc:`Devengado ${fmt(calc.dev)} · Deducciones ${fmt(calc.totD)} · Neto ${fmt(calc.neto)}`,action:"nomina"},
+              {icon:"📄",label:"Reporte de novedades",desc:`Festivos, incapacidades, licencias e impacto en nómina`,gen:genNovedadesHtml},
+              {icon:"📊",label:"Reporte de imputaciones",desc:`Días imputados por orden de trabajo (OT)`,gen:genImputacionesHtml},
+              {icon:"📈",label:"Costes por OT",desc:`Reparto de coste empresa entre órdenes de trabajo`,gen:genCostesHtml},
             ].map((d,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
                 onClick={()=>{
-                  const { html } = buildNominaHtml({ selN, calc, anio, mes, tipo:d.action, refBancaria:selN.refPago||null });
+                  const html = d.gen ? d.gen() : buildNominaHtml({ selN, calc, anio, mes, tipo:d.action, refBancaria:selN.refPago||null }).html;
                   openReport(html);
                 }}
                 onMouseEnter={e=>e.currentTarget.style.borderColor=T.ink}
