@@ -725,6 +725,10 @@ export function TabNomina(){
   // Justificantes de pago del mes. kv_store hab:soporte_pago:<anio>:<mes>.
   // Formato antiguo: objeto plano {empId,tipo,ref,archivo,data}. Formato nuevo: { "<empId>:<tipo>": {ref,archivo,data} }.
   const [soportesPago,setSoportesPago]=useState({});
+  // Fichaje habilitado en días de descanso (domingo/festivo). kv_store hab:fichaje_habilitado:<anio>:<mes>.
+  // Estructura { "<empId>:<fecha>": true }. El admin lo activa desde el calendario para que el
+  // trabajador pueda fichar ese día de descanso desde su portal (vía administrativos, opción 2).
+  const [fichajeHab,setFichajeHab]=useState({});
   const [rangoFin,setRangoFin]=useState(""); // fecha fin opcional al registrar novedad en rango
   // Centros de Trabajo (OTs) cargados desde BD. Cada centro: {id, codigo, nombre, activo, empleados:[uuid]}.
   // Las OTs disponibles para imputar a un empleado se filtran por activo=true AND selN.empId IN empleados.
@@ -761,6 +765,10 @@ export function TabNomina(){
         setSoportesPago(raw);
       }
     }).catch(()=>setSoportesPago({}));
+    // Cargar fichajes habilitados en días de descanso del mes.
+    fetch("/api/hiring?kv=fichaje_habilitado&anio="+anio+"&mes="+mes).then(r=>r.json()).then(d=>{
+      setFichajeHab(d.ok && d.data && !Array.isArray(d.data) ? d.data : {});
+    }).catch(()=>setFichajeHab({}));
   },[anio,mes]);
 
 
@@ -928,6 +936,18 @@ export function TabNomina(){
       if(arr.length) nuevo[kk]=arr; else delete nuevo[kk];
       setNovAdjuntos(nuevo);
       saveAdjuntos(nuevo).catch(()=>window.toast("Error al borrar adjunto","error"));
+    };
+    // Habilitar/deshabilitar el fichaje del trabajador en un día de descanso (domingo/festivo).
+    // Guarda en kv_store hab:fichaje_habilitado:<anio>:<mes> indexado por empId:fecha.
+    const toggleFichaje = (fechaKey)=>{
+      const kk=selN.empId+":"+fechaKey;
+      const nuevo={...fichajeHab};
+      const activando=!nuevo[kk];
+      if(activando) nuevo[kk]=true; else delete nuevo[kk];
+      setFichajeHab(nuevo);
+      fetch("/api/hiring?kv=fichaje_habilitado&anio="+anio+"&mes="+mes,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:nuevo})})
+        .then(()=>window.toast(activando?"Fichaje habilitado para este día":"Fichaje deshabilitado","success"))
+        .catch(()=>window.toast("Error al guardar","error"));
     };
     const genNovedadesHtml = () => {
             const nDias=selN.novDias||{};
@@ -1444,15 +1464,15 @@ ${body}
                       const isToday=sameDay(date,new Date());
 
                       const tooltipParts=[];
-                      if(hol)tooltipParts.push("🔶 "+hol.name+" — Descanso remunerado");
+                      if(hol)tooltipParts.push("🔶 "+hol.name+" — Descanso remunerado. Click si se trabajó.");
                       else if(isSun&&!nov&&!imp)tooltipParts.push("Domingo — descanso. Click para imputar si trabajó.");
                       if(novInfo)tooltipParts.push(novInfo.label);
                       if(isConflicto)tooltipParts.push("⚠️ Conflicto: el empleado tiene 2+ OTs configuradas para este día. Click para resolver.");
                       else if(impInfo)tooltipParts.push("OT: "+impInfo.codigo+" — "+impInfo.nombre);
 
-                      return <div key={day} onClick={()=>{if(!hol&&ed){setRangoFin("");setDayEditor({day,k,date});}}} title={tooltipParts.join(" · ")} style={{
+                      return <div key={day} onClick={()=>{if(ed){setRangoFin("");setDayEditor({day,k,date});}}} title={tooltipParts.join(" · ")} style={{
                         textAlign:"center",padding:"4px 2px",borderRadius:4,fontSize:11,fontWeight:isToday?800:(hol?700:400),
-                        cursor:hol||!ed?"default":"pointer",
+                        cursor:!ed?"default":"pointer",
                         background:novInfo?novInfo.color:hol?"#FDE68A":isSun?"#F5F4F1":"transparent",
                         color:hol?"#999":isToday?"#1E6B42":(isSun&&!nov&&!imp?"#999":"#111"),
                         border:isToday?`2px solid #1E6B42`:"2px solid transparent",
@@ -1875,6 +1895,11 @@ ${body}
         const currentNov = nDias[k] || null;
         const currentImp = iDias[k] || null;
         const isConflict = currentImp === "__conflicto__";
+        // ¿Es día de descanso? (domingo o festivo) → se puede habilitar fichaje manual
+        const esDomingo = date.getDay()===0;
+        const esFestivo = holidays.some(h=>sameDay(h.date,date));
+        const esDescanso = esDomingo || esFestivo;
+        const fichajeActivo = !!fichajeHab[selN.empId+":"+k];
         const centrosEmp = centros.filter(c=>c.activo && Array.isArray(c.empleados) && c.empleados.includes(selN.empId));
         const fechaLabel = date.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"long",day:"numeric",month:"long",year:"numeric"});
         const novOpts = NOV_TIPOS.filter(n=>n.id!=="normal");
@@ -2046,6 +2071,23 @@ ${body}
                   </div>
                 );
               })()}
+
+              {/* SECCIÓN 4: Habilitar fichaje en día de descanso (solo domingos/festivos) */}
+              {esDescanso && (
+                <div style={{marginBottom:18,padding:"12px 14px",background:fichajeActivo?"#F0FDF4":"#FAFAF8",border:`1px solid ${fichajeActivo?"#BBF7D0":T.border}`,borderRadius:8}}>
+                  <div style={{fontSize:11,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:"0.05em",marginBottom:8}}>🕐 Trabajo en {esFestivo?"festivo":"domingo"}</div>
+                  <div style={{fontSize:11,color:T.inkMid,marginBottom:10,lineHeight:1.5}}>
+                    Este día es de descanso. Puedes <strong>imputarlo tú directamente</strong> arriba (OT o novedad), o <strong>habilitar el fichaje</strong> para que {selN.nombre.split(" ")[0]} registre su asistencia desde su portal.
+                  </div>
+                  {ed ? (
+                    <button onClick={()=>toggleFichaje(k)} style={{padding:"8px 14px",fontSize:11,fontWeight:600,border:`1px solid ${fichajeActivo?T.green:T.border}`,borderRadius:6,background:fichajeActivo?T.green:"#fff",color:fichajeActivo?"#fff":T.ink,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>
+                      {fichajeActivo?"✓ Fichaje habilitado — clic para quitar":"+ Habilitar fichaje este día"}
+                    </button>
+                  ) : (
+                    <div style={{fontSize:10,color:fichajeActivo?T.green:T.inkLight,fontWeight:600}}>{fichajeActivo?"✓ Fichaje habilitado":"Fichaje no habilitado · mes liquidado (solo lectura)"}</div>
+                  )}
+                </div>
+              )}
 
               {/* Acciones inferiores */}
               <div style={{display:"flex",gap:8,paddingTop:12,borderTop:`1px solid ${T.border}`}}>
