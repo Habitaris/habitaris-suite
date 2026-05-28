@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { HAB_LOGO } from "./habLogo.js";
 import { getTenantUrlsSync, getTenantIdentitySync, getLegalConstantsSync } from "../core/configHelpers.js";
 import { downloadPDF } from "./pdfUtil.js";
@@ -1705,7 +1706,7 @@ ${body}
           setDayEditor(null);
         };
 
-        return (
+        return createPortal((
           <div style={{position:"fixed",inset:0,zIndex:1000,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",padding:20}} onClick={()=>setDayEditor(null)}>
             <div onClick={e=>e.stopPropagation()} style={{maxWidth:560,width:"100%",maxHeight:"90vh",overflowY:"auto",background:"#fff",borderRadius:12,padding:24,boxShadow:"0 8px 30px rgba(0,0,0,.2)"}}>
               {/* Header */}
@@ -1778,7 +1779,7 @@ ${body}
               </div>
             </div>
           </div>
-        );
+        ), document.body);
       })()}
       </div>
     );
