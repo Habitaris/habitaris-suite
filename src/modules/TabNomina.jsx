@@ -331,16 +331,20 @@ function NovedadesPanel({selN, anio, MESES, novHist, setNovHist, novYear, setNov
   },0);
   const vacDisp = Math.max(0, Math.round((vacGanados-vacTomados)*10)/10);
 
-  // Filter by year and month
+  // Filter by year and month — se usa fecha_inicio (cuándo OCURRE la novedad),
+  // no created_at (cuándo se registró el dato). Parseo con T12:00:00 para evitar
+  // desfase de timezone (Bogotá -5) que movería la fecha al día anterior.
+  const novDate = n => new Date((n.fecha_inicio||n.created_at||"").slice(0,10)+"T12:00:00");
   const filtered = novHist.filter(n=>{
-    const d = new Date(n.created_at||n.fecha_inicio||"");
+    const d = novDate(n);
+    if(isNaN(d)) return false;
     if(d.getFullYear()!==novYear) return false;
     if(filtroMes!=="all" && d.getMonth()!==parseInt(filtroMes)) return false;
     return true;
-  }).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
+  }).sort((a,b)=>novDate(b)-novDate(a));
 
-  // Group by year for all-years view
-  const years = [...new Set(novHist.map(n=>new Date(n.created_at||n.fecha_inicio||"").getFullYear()))].sort((a,b)=>b-a);
+  // Group by year for all-years view — también por fecha_inicio
+  const years = [...new Set(novHist.map(n=>novDate(n).getFullYear()).filter(y=>!isNaN(y)))].sort((a,b)=>b-a);
   if(years.indexOf(novYear)===-1 && years.length) years.unshift(novYear);
   if(years.indexOf(hoy.getFullYear())===-1) years.unshift(hoy.getFullYear());
 
@@ -407,7 +411,7 @@ function NovedadesPanel({selN, anio, MESES, novHist, setNovHist, novYear, setNov
             <tbody>
               {filtered.map((n,i)=>(
                 <tr key={i} style={{borderBottom:`1px solid ${T.border}`}}>
-                  <td style={{padding:"5px 8px",fontWeight:600}}>{new Date(n.created_at).toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short"})}</td>
+                  <td style={{padding:"5px 8px",fontWeight:600}}>{novDate(n).toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short"})}</td>
                   <td style={{padding:"5px 8px"}}>{tipoIcon[n.tipo]||"📋"} {n.tipo}</td>
                   <td style={{padding:"5px 8px",fontFamily:"'DM Mono',monospace",fontSize:10}}>{n.fecha_inicio||""}{n.fecha_fin?" → "+n.fecha_fin:""}</td>
                   <td style={{padding:"5px 8px",color:T.inkMid,maxWidth:200,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{n.motivo||"—"}</td>
