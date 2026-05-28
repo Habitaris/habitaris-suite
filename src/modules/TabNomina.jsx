@@ -292,7 +292,7 @@ function AsistenciaPanel({selN, MESES, mes, anio}) {
                     <td style={{padding:"6px 10px"}}>
                       {entrada?.foto_url ? (
                         <img src={entrada.foto_url} alt="foto" style={{width:32,height:32,borderRadius:4,objectFit:"cover",cursor:"pointer",border:`1px solid ${T.border}`}}
-                          onClick={()=>{const w=window.open();w.document.write(`<img src="${entrada.foto_url}" style="max-width:100%"/>`);}}/>
+                          onClick={()=>{openReport(`<img src="${entrada.foto_url}" style="max-width:100%"/>`);}}/>
                       ) : <span style={{color:T.inkLight,fontSize:11}}>–</span>}
                     </td>
                   </tr>
