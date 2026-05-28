@@ -686,6 +686,10 @@ export function TabNomina(){
   const [modoCal,setModoCal]=useState("novedad"); // "novedad" | "imputacion" (mantenido por compatibilidad, ya no se usa en UI)
   // Sprint UX-1: modal contextual al clicar día. null = cerrado, {day, k} = abierto sobre ese día
   const [dayEditor,setDayEditor]=useState(null);
+  // Adjuntos de novedades del mes en curso: objeto { "<empId>:<fechaKey>": [{name,size,data}] }.
+  // Se persiste en kv_store con clave hab:nov_adjuntos:<anio>:<mes> (mismo mecanismo que soporte de pago).
+  const [novAdjuntos,setNovAdjuntos]=useState({});
+  const [adjUploading,setAdjUploading]=useState(false);
   // Centros de Trabajo (OTs) cargados desde BD. Cada centro: {id, codigo, nombre, activo, empleados:[uuid]}.
   // Las OTs disponibles para imputar a un empleado se filtran por activo=true AND selN.empId IN empleados.
   const [centros,setCentros]=useState([]);
@@ -707,6 +711,10 @@ export function TabNomina(){
         return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:(e.modalidad_pago||"quincenal")==="mensual"?0:0.5,modalidadPago:e.modalidad_pago||"quincenal",hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.entidadBancaria||"",cuenta:e.cuentaBancaria||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",duracionMeses:e.duracion_meses||0,fechaFinContrato:e.fecha_fin_contrato||"",auxT:e.auxilio_transporte||AUX_TR,netoRef:e.salario_neto||0,anio,mes};});
       setNoms(lista);setLoading(false);
     });
+    // Cargar adjuntos de novedades del mes (kv_store). Aislado: si falla, queda {}.
+    fetch("/api/hiring?kv=nov_adjuntos&anio="+anio+"&mes="+mes).then(r=>r.json()).then(d=>{
+      setNovAdjuntos(d.ok && d.data && !Array.isArray(d.data) ? d.data : {});
+    }).catch(()=>setNovAdjuntos({}));
   },[anio,mes]);
 
 
@@ -834,6 +842,35 @@ export function TabNomina(){
     const pubNomina=(tipo,liq,refBancaria,soporteName)=>{
       const { html } = buildNominaHtml({ selN, calc, anio, mes, tipo, refBancaria });
       return fetch("/api/hiring",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"pub_nomina",employee_id:selN.empId,anio,mes,tipo,nombre_mes:MESES[mes],devengado:calc.dev,deducciones:calc.totD,neto:calc.neto,liquido:liq,modalidad:selN.modalidadPago||"quincenal",html,ref:refBancaria||null,soporte_name:soporteName||null})});
+    };
+    // ── Adjuntos de novedades ──
+    // Clave por empleado+día dentro del objeto novAdjuntos (que es del mes en curso).
+    const adjKey = (fechaKey)=>selN.empId+":"+fechaKey;
+    // Persistir todo el objeto novAdjuntos del mes en kv_store.
+    const saveAdjuntos = (obj)=>fetch("/api/hiring?kv=nov_adjuntos&anio="+anio+"&mes="+mes,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:obj})});
+    // Añadir un archivo al día indicado (varios permitidos).
+    const addAdjunto = (fechaKey,file)=>{
+      if(!file) return;
+      if(file.size>=5*1024*1024){window.toast("Archivo demasiado grande · Máximo 5MB","error");return;}
+      setAdjUploading(true);
+      const r=new FileReader();
+      r.onload=()=>{
+        const kk=adjKey(fechaKey);
+        const prev=novAdjuntos[kk]||[];
+        const nuevo={...novAdjuntos,[kk]:[...prev,{name:file.name,size:file.size,data:r.result}]};
+        setNovAdjuntos(nuevo);
+        saveAdjuntos(nuevo).then(()=>{setAdjUploading(false);window.toast("Archivo adjuntado","success");}).catch(()=>{setAdjUploading(false);window.toast("Error al guardar adjunto","error");});
+      };
+      r.readAsDataURL(file);
+    };
+    // Borrar un archivo (por índice) del día indicado.
+    const delAdjunto = (fechaKey,idx)=>{
+      const kk=adjKey(fechaKey);
+      const arr=(novAdjuntos[kk]||[]).filter((_,i)=>i!==idx);
+      const nuevo={...novAdjuntos};
+      if(arr.length) nuevo[kk]=arr; else delete nuevo[kk];
+      setNovAdjuntos(nuevo);
+      saveAdjuntos(nuevo).catch(()=>window.toast("Error al borrar adjunto","error"));
     };
     const genNovedadesHtml = () => {
             const nDias=selN.novDias||{};
@@ -1686,7 +1723,7 @@ ${body}
           u({novDias:cur,impDias:iCur,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem});
           const tipoMap={incapacidad:"incapacidad",vacaciones:"vacaciones",licencia:"licencia_remunerada",licNoRem:"licencia_no_remunerada",ausencia:"ausencia"};
           fetch("/api/novelties",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,employee_nombre:selN.nombre,tipo:tipoMap[tipoNov]||tipoNov,fecha_inicio:k,fecha_fin:k,motivo:"Registrado por RRHH",source:"rrhh"})}).catch(()=>{});
-          setDayEditor(null);
+          // No cerramos el modal: el usuario puede adjuntar archivos a la novedad recién creada.
         };
 
         // Aplicar acción: limpiar día
@@ -1767,6 +1804,38 @@ ${body}
                   })}
                 </div>
               </div>
+
+              {/* SECCIÓN 3: Adjuntos de la novedad (solo si hay novedad activa) */}
+              {currentNov && (()=>{
+                const arr = novAdjuntos[selN.empId+":"+k] || [];
+                return (
+                  <div style={{marginBottom:18,padding:"12px 14px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8}}>
+                    <div style={{fontSize:11,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:"0.05em",marginBottom:8}}>📎 Adjuntos {arr.length>0&&<span style={{color:T.green}}>({arr.length})</span>}</div>
+                    {arr.length>0 && (
+                      <div style={{display:"flex",flexDirection:"column",gap:4,marginBottom:8}}>
+                        {arr.map((f,i)=>(
+                          <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 8px",background:"#fff",border:`1px solid ${T.border}`,borderRadius:5,fontSize:11}}>
+                            <span style={{flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>📄 {f.name}</span>
+                            <span style={{fontSize:9,color:T.inkLight}}>{(f.size/1024).toFixed(0)} KB</span>
+                            <a href={f.data} target="_blank" rel="noopener noreferrer" style={{fontSize:10,fontWeight:600,color:T.blue,textDecoration:"none"}}>👁 Ver</a>
+                            <a href={f.data} download={f.name} style={{fontSize:10,fontWeight:600,color:T.ink,textDecoration:"none"}}>⬇ Descargar</a>
+                            {ed && <button onClick={()=>delAdjunto(k,i)} style={{fontSize:10,fontWeight:600,color:"#dc2626",border:"none",background:"none",cursor:"pointer"}}>✕</button>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {ed ? (
+                      <label style={{display:"inline-block",fontSize:11,fontWeight:600,color:T.ink,padding:"6px 12px",border:`1px dashed ${T.border}`,borderRadius:6,cursor:adjUploading?"wait":"pointer",background:"#fff"}}>
+                        {adjUploading?"Subiendo…":"+ Adjuntar archivo"}
+                        <input type="file" accept=".pdf,.jpg,.jpeg,.png" disabled={adjUploading} onChange={e=>{const f=e.target.files[0];addAdjunto(k,f);e.target.value="";}} style={{display:"none"}}/>
+                      </label>
+                    ) : (
+                      arr.length===0 && <div style={{fontSize:10,color:T.inkLight}}>Sin adjuntos · mes ya liquidado (solo lectura)</div>
+                    )}
+                    <div style={{fontSize:9,color:T.inkLight,marginTop:6}}>PDF o imagen · máx. 5MB · varios permitidos</div>
+                  </div>
+                );
+              })()}
 
               {/* Acciones inferiores */}
               <div style={{display:"flex",gap:8,paddingTop:12,borderTop:`1px solid ${T.border}`}}>
