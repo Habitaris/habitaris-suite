@@ -113,7 +113,7 @@ async function loadN(a,m){try{const r=await fetch("/api/hiring?kv=nomina&anio="+
 async function saveN(a,m,data){await fetch("/api/hiring?kv=nomina&anio="+a+"&mes="+m,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data})});}
 
 function calcN(n) {
-  const dias=n.dias||30, ratio=dias/30, sal=n.sal||0;
+  const dias=n.dias||30, ratio=dias/30, diasIBC=dias+(n.diasIncap||0)+(n.diasVac||0)+(n.diasLicRem||0), ratioIBC=diasIBC/30, sal=n.sal||0;
   const festMes=n.festMes||0;
   const licRem=n.diasLicRem||0;
   // Días que se transportó = días laborados - licencias rem (festivos SÍ incluidos — Concepto 219821/2020)
@@ -130,7 +130,7 @@ function calcN(n) {
   const hexD=(n.hexD||0)*vH*1.25, hexN=(n.hexN||0)*vH*1.75, hexDD=(n.hexDD||0)*vH*2, hexDN=(n.hexDN||0)*vH*2.5;
   const totHex=hexD+hexN+hexDD+hexDN, recFest=(n.festLab||0)*vH*8*0.75;
   // Salario siempre sobre 30 días (incluye festivos y domingos)
-  const salProp=sal*ratio, ibc=Math.max(salProp+totHex+recFest, SMLMV*ratio);
+  const salProp=sal*ratio, salPropIBC=sal*ratioIBC, ibc=Math.max(salPropIBC+totHex+recFest, SMLMV*ratio);
   const dev=salProp+totHex+recFest+aux+bono+(n.otrosIng||0);
   const eSub=n.reg==="subsidiado", epsE=eSub?0:ibc*0.04, penE=ibc*0.04;
   const rteF=(ibc/UVT)>95?((ibc/UVT)-95)*UVT*0.19:0;
