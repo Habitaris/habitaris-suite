@@ -873,6 +873,17 @@ export function TabNomina(){
     const ed=selN.estado==="borrador"||selN.estado==="q1_pagado";
     const isQ=selN.modalidadPago!=="mensual";
     const u=(f)=>upd(selN.id,f);
+    // ── Referencia de pago automática ──
+    // Patrón: NOM <MES><AA> <ANT|Q2> - <APELLIDOS>. Punto único editable para cambiar la lógica.
+    // tipoForm: "q1" (anticipo) | "nomina" (Q2 si quincenal, mes completo si mensual).
+    const sugerirRef=(tipoForm)=>{
+      const mesAbr=MESES[mes].substring(0,3).toUpperCase();
+      const aa=String(anio).slice(-2);
+      // Apellidos = últimas 2 palabras del nombre, en mayúsculas, unidas por guion
+      const apellidos=(selN.nombre||"").trim().split(/\s+/).slice(-2).join("-").toUpperCase();
+      const sufijo=tipoForm==="q1"?"ANT":(isQ?"Q2":"");
+      return `NOM ${mesAbr}${aa}${sufijo?" "+sufijo:""} - ${apellidos}`;
+    };
     const pubNomina=(tipo,liq,refBancaria,soporteName)=>{
       const { html } = buildNominaHtml({ selN, calc, anio, mes, tipo, refBancaria });
       return fetch("/api/hiring",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"pub_nomina",employee_id:selN.empId,anio,mes,tipo,nombre_mes:MESES[mes],devengado:calc.dev,deducciones:calc.totD,neto:calc.neto,liquido:liq,modalidad:selN.modalidadPago||"quincenal",html,ref:refBancaria||null,soporte_name:soporteName||null})});
@@ -1216,10 +1227,10 @@ ${body}
           </div>
           <EstadoPills n={selN}/>
           <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
-          {isQ&&selN.estado==="borrador"&&<Btn small disabled={periodoQ1.count > 0} onClick={()=>{if(periodoQ1.count > 0){alert("⚠️ Quedan "+periodoQ1.count+" día(s) pendientes en la primera quincena (1-15). Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"q1",ref:"",soporte:null});}}>💵 Pagar Q1 (anticipo)</Btn>}
-          {isQ&&selN.estado==="q1_pagado"&&<Btn pri small disabled={periodoQ2.count > 0} onClick={()=>{if(periodoQ2.count > 0){alert("⚠️ Quedan "+periodoQ2.count+" día(s) pendientes en la segunda quincena. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:"",soporte:null});}}>💵 Pagar Q2 (liquidar)</Btn>}
-          {!isQ&&selN.estado==="borrador"&&<Btn pri small disabled={periodoMes.count > 0} onClick={()=>{if(periodoMes.count > 0){alert("⚠️ Quedan "+periodoMes.count+" día(s) pendientes en el mes. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:"",soporte:null});}}>💵 Pagar nómina</Btn>}
-          {(selN.estado==="q1_pagado"||selN.estado==="liquidada"||selN.estado==="pagada")&&selN.refPago&&<span style={{fontSize:9,color:T.inkLight,padding:"4px 8px",background:T.accent,borderRadius:4}}>Ref: {selN.refPago}</span>}
+          {isQ&&selN.estado==="borrador"&&<Btn small disabled={periodoQ1.count > 0} onClick={()=>{if(periodoQ1.count > 0){alert("⚠️ Quedan "+periodoQ1.count+" día(s) pendientes en la primera quincena (1-15). Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"q1",ref:sugerirRef("q1"),soporte:null});}}>💵 Pagar Q1 (anticipo)</Btn>}
+          {isQ&&selN.estado==="q1_pagado"&&<Btn pri small disabled={periodoQ2.count > 0} onClick={()=>{if(periodoQ2.count > 0){alert("⚠️ Quedan "+periodoQ2.count+" día(s) pendientes en la segunda quincena. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:sugerirRef("nomina"),soporte:null});}}>💵 Pagar Q2 (liquidar)</Btn>}
+          {!isQ&&selN.estado==="borrador"&&<Btn pri small disabled={periodoMes.count > 0} onClick={()=>{if(periodoMes.count > 0){alert("⚠️ Quedan "+periodoMes.count+" día(s) pendientes en el mes. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:sugerirRef("nomina"),soporte:null});}}>💵 Pagar nómina</Btn>}
+          {(selN.estado==="q1_pagado"||selN.estado==="liquidada"||selN.estado==="pagada")&&selN.refPago&&<span style={{fontSize:9,color:T.inkLight,padding:"4px 8px",background:T.accent,borderRadius:4,display:"inline-flex",alignItems:"center",gap:6}}>Ref: {selN.refPago}<button type="button" title="Copiar referencia" onClick={()=>{navigator.clipboard.writeText(selN.refPago).then(()=>window.toast("Referencia copiada","success")).catch(()=>window.toast("No se pudo copiar","error"));}} style={{border:"none",background:"none",cursor:"pointer",fontSize:11,padding:0,lineHeight:1}}>📋</button></span>}
           <Btn small onClick={()=>{(()=>{const u=getTenantUrlsSync();const id=getTenantIdentitySync();window.open("https://wa.me/?text="+encodeURIComponent(id.displayName+"\n\n👤 Portal del empleado:\n"+u.portalEmpleado+"\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");})();}}>💬 Link empleados</Btn>
         </div>
 
@@ -1233,7 +1244,11 @@ ${body}
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
               <div>
                 <label style={{fontSize:10,fontWeight:600,color:T.inkMid,display:"block",marginBottom:4}}>Referencia bancaria *</label>
-                <input value={pagoForm.ref} onChange={e=>setPagoForm({...pagoForm,ref:e.target.value})} placeholder="Ej: TRF-2026-0420-001" style={{width:"100%",padding:"8px 12px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:12,fontFamily:"'DM Mono',monospace"}}/>
+                <div style={{display:"flex",gap:6}}>
+                  <input value={pagoForm.ref} onChange={e=>setPagoForm({...pagoForm,ref:e.target.value})} placeholder="Ej: NOM MAY26 ANT - APELLIDOS" style={{flex:1,padding:"8px 12px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:12,fontFamily:"'DM Mono',monospace"}}/>
+                  <button type="button" title="Copiar referencia" onClick={()=>{navigator.clipboard.writeText(pagoForm.ref).then(()=>window.toast("Referencia copiada","success")).catch(()=>window.toast("No se pudo copiar","error"));}} style={{padding:"0 10px",border:`1px solid ${T.border}`,borderRadius:4,background:"#fff",cursor:"pointer",fontSize:13}}>📋</button>
+                  <button type="button" title="Regenerar referencia sugerida" onClick={()=>setPagoForm({...pagoForm,ref:sugerirRef(pagoForm.tipo)})} style={{padding:"0 10px",border:`1px solid ${T.border}`,borderRadius:4,background:"#fff",cursor:"pointer",fontSize:13}}>↻</button>
+                </div>
               </div>
               <div>
                 <label style={{fontSize:10,fontWeight:600,color:T.inkMid,display:"block",marginBottom:4}}>Soporte de pago (opcional)</label>
