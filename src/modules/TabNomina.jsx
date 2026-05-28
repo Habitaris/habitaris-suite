@@ -1374,7 +1374,7 @@ ${body}
                       onClick={()=>{
                         if (!ed) return;
                         if (!confirm("Esto borrará todas las imputaciones manuales del mes. Al recargar, los días se rellenarán automáticamente desde el calendario base configurado en Centros de Trabajo. ¿Continuar?")) return;
-                        u({impDias:{}});
+                        (async()=>{try{const rn=await fetch(`/api/hiring?kv=nomina&anio=${anio}&mes=${mes}`);const dn=await rn.json();const arr=dn.data||[];const idx=arr.findIndex(n=>n.empId===selN.empId);if(idx<0)throw new Error("emp");arr[idx].impDias={};const rs=await fetch(`/api/hiring?kv=nomina&anio=${anio}&mes=${mes}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:arr})});const sd=await rs.json();if(!sd.ok)throw new Error("save");window.toast&&window.toast("Imputaciones limpiadas, recargando...","success");setTimeout(()=>location.reload(),600);}catch(e){window.toast&&window.toast("Error al limpiar imputaciones","error");}})();
                       }}
                       disabled={!ed}
                       title={!ed ? "Mes ya pagado, no se puede modificar" : "Vacía las imputaciones manuales del mes. Al recargar, los días se rellenan automáticamente desde el calendario base de Centros de Trabajo."}
