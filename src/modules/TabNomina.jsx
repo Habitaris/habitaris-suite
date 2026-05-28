@@ -89,6 +89,26 @@ function colorForOT(otId){
 const uid = () => Math.random().toString(36).slice(2, 10);
 const fmt = n => n == null || isNaN(n) ? "$0" : "$" + Math.round(n).toLocaleString(getTenantDefaultsSync().locale);
 const fPct = n => (n * 100).toFixed(2) + "%";
+// Abre un archivo (data URI base64) en una pestaña nueva. Los navegadores bloquean abrir
+// data: URIs grandes directamente con target=_blank (política anti-phishing), así que lo
+// convertimos a un Blob URL, que sí se permite. Funciona para PDF e imágenes de cualquier tamaño.
+const verArchivo = (dataUri) => {
+  try {
+    if (!dataUri) return;
+    if (!dataUri.startsWith("data:")) { window.open(dataUri, "_blank"); return; }
+    const [meta, b64] = dataUri.split(",");
+    const mime = (meta.match(/data:([^;]+)/) || [])[1] || "application/octet-stream";
+    const bin = atob(b64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+    window.open(url, "_blank");
+    // Liberar el objeto URL tras un tiempo prudencial (la pestaña ya lo cargó)
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (e) {
+    window.toast && window.toast("No se pudo abrir el archivo", "error");
+  }
+};
 
 async function fetchEmps(){try{
   const estados=["firmado","afiliaciones","completado"];
@@ -1557,11 +1577,44 @@ ${body}
                         <div style={{fontSize:10,color:T.inkLight,marginTop:1}}>{t.sop.archivo}{t.sop.ref?` · Ref: ${t.sop.ref}`:""}</div>
                       </div>
                       <div style={{display:"flex",gap:6}}>
-                        <a href={t.sop.data} target="_blank" rel="noopener noreferrer" style={{fontSize:11,fontWeight:600,color:T.blue,textDecoration:"none",background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px"}}>👁 Ver</a>
+                        <button onClick={()=>verArchivo(t.sop.data)} style={{fontSize:11,fontWeight:600,color:T.blue,background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>👁 Ver</button>
                         <a href={t.sop.data} download={t.sop.archivo} style={{fontSize:11,fontWeight:600,color:T.ink,textDecoration:"none",background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px"}}>⬇ Descargar</a>
                       </div>
                     </div>
                   ))}
+                </div>
+              );
+            })()}
+            {/* Adjuntos de novedades del mes (todos los archivos subidos a novedades de este empleado) */}
+            {(()=>{
+              const prefijo = selN.empId+":";
+              const entradas = Object.entries(novAdjuntos)
+                .filter(([k,arr])=>k.startsWith(prefijo) && Array.isArray(arr) && arr.length>0)
+                .map(([k,arr])=>({fecha:k.slice(prefijo.length), arr}))
+                .sort((a,b)=>a.fecha.localeCompare(b.fecha));
+              if(entradas.length===0) return null;
+              const totalArch = entradas.reduce((s,e)=>s+e.arr.length,0);
+              return (
+                <div style={{marginTop:18,paddingTop:14,borderTop:`1px solid ${T.border}`}}>
+                  <div style={{fontSize:11,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:"0.05em",marginBottom:10}}>📎 Adjuntos de novedades <span style={{color:T.green}}>({totalArch})</span></div>
+                  {entradas.map((e,ei)=>{
+                    const tipoNov = (selN.novDias||{})[e.fecha];
+                    const info = tipoNov ? NOV_TIPOS.find(n=>n.id===tipoNov) : null;
+                    const fechaLbl = new Date(e.fecha+"T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short",year:"numeric"});
+                    return e.arr.map((f,fi)=>(
+                      <div key={ei+"-"+fi} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8}}>
+                        <div style={{fontSize:20,width:32,textAlign:"center"}}>{info?.icon||"📎"}</div>
+                        <div style={{flex:1}}>
+                          <div style={{fontSize:13,fontWeight:700,color:T.ink}}>{f.name}</div>
+                          <div style={{fontSize:10,color:T.inkLight,marginTop:1}}>{info?.label||"Novedad"} · {fechaLbl} · {(f.size/1024).toFixed(0)} KB</div>
+                        </div>
+                        <div style={{display:"flex",gap:6}}>
+                          <button onClick={()=>verArchivo(f.data)} style={{fontSize:11,fontWeight:600,color:T.blue,background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>👁 Ver</button>
+                          <a href={f.data} download={f.name} style={{fontSize:11,fontWeight:600,color:T.ink,textDecoration:"none",background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px"}}>⬇ Descargar</a>
+                        </div>
+                      </div>
+                    ));
+                  })}
                 </div>
               );
             })()}
@@ -1894,7 +1947,7 @@ ${body}
                           <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 8px",background:"#fff",border:`1px solid ${T.border}`,borderRadius:5,fontSize:11}}>
                             <span style={{flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>📄 {f.name}</span>
                             <span style={{fontSize:9,color:T.inkLight}}>{(f.size/1024).toFixed(0)} KB</span>
-                            <a href={f.data} target="_blank" rel="noopener noreferrer" style={{fontSize:10,fontWeight:600,color:T.blue,textDecoration:"none"}}>👁 Ver</a>
+                            <button onClick={()=>verArchivo(f.data)} style={{fontSize:10,fontWeight:600,color:T.blue,background:"none",border:"none",cursor:"pointer",fontFamily:"'DM Sans',sans-serif",padding:0}}>👁 Ver</button>
                             <a href={f.data} download={f.name} style={{fontSize:10,fontWeight:600,color:T.ink,textDecoration:"none"}}>⬇ Descargar</a>
                             {ed && <button onClick={()=>delAdjunto(k,i)} style={{fontSize:10,fontWeight:600,color:"#dc2626",border:"none",background:"none",cursor:"pointer"}}>✕</button>}
                           </div>
