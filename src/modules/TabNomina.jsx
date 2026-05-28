@@ -1371,7 +1371,6 @@ ${body}
                       const dow=date.getDay(); // 0=Sun
                       const isSun=dow===0;
                       const hol=holidays.find(h=>sameDay(h.date,date));
-                      const isRest=isSun||!!hol; // Festivos = descanso remunerado
                       const nov=nDias[k];
                       const novInfo=nov?NOV_TIPOS.find(n=>n.id===nov):null;
                       const imp=iDias[k];
@@ -1382,17 +1381,18 @@ ${body}
 
                       const tooltipParts=[];
                       if(hol)tooltipParts.push("🔶 "+hol.name+" — Descanso remunerado");
+                      else if(isSun&&!nov&&!imp)tooltipParts.push("Domingo — descanso. Click para imputar si trabajó.");
                       if(novInfo)tooltipParts.push(novInfo.label);
                       if(isConflicto)tooltipParts.push("⚠️ Conflicto: el empleado tiene 2+ OTs configuradas para este día. Click para resolver.");
                       else if(impInfo)tooltipParts.push("OT: "+impInfo.codigo+" — "+impInfo.nombre);
 
-                      return <div key={day} onClick={()=>{if(!isRest&&ed){setDayEditor({day,k,date});}}} title={tooltipParts.join(" · ")} style={{
+                      return <div key={day} onClick={()=>{if(!hol&&ed){setDayEditor({day,k,date});}}} title={tooltipParts.join(" · ")} style={{
                         textAlign:"center",padding:"4px 2px",borderRadius:4,fontSize:11,fontWeight:isToday?800:(hol?700:400),
-                        cursor:isRest||!ed?"default":"pointer",
+                        cursor:hol||!ed?"default":"pointer",
                         background:novInfo?novInfo.color:hol?"#FDE68A":isSun?"#F5F4F1":"transparent",
-                        color:isRest?"#999":isToday?"#1E6B42":"#111",
+                        color:hol?"#999":isToday?"#1E6B42":(isSun&&!nov&&!imp?"#999":"#111"),
                         border:isToday?`2px solid #1E6B42`:"2px solid transparent",
-                        position:"relative",opacity:isSun?0.4:1
+                        position:"relative",opacity:isSun&&!nov&&!imp?0.55:1
                       }}>
                         {day}
                         {hol&&<div style={{fontSize:6,color:"#D97706",lineHeight:1,marginTop:1}}>🔶</div>}
