@@ -113,6 +113,33 @@ async function loadEmpMaestro(){try{const r=await fetch("/api/hiring?kv=rrhh:emp
 async function loadN(a,m){try{const r=await fetch("/api/hiring?kv=nomina&anio="+a+"&mes="+m);const d=await r.json();return d.ok?d.data:[];}catch{return[];}}
 async function saveN(a,m,data){await fetch("/api/hiring?kv=nomina&anio="+a+"&mes="+m,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data})});}
 
+// Calcula las horas mensuales reales del empleado segun los calendarios de los centros donde esta asignado,
+// descontando 1h de almuerzo en los calendarios marcados como incluye_almuerzo:true.
+// Si no hay centros configurados para el empleado o faltan datos, devuelve 240h (legacy: 8h x 30d).
+function calcHorasMesEmp(empId, anio, mes, centros){
+  if(!empId || !Array.isArray(centros) || centros.length === 0) return 240;
+  const diasSemMap = ["D","L","M","X","J","V","S"]; // 0=Domingo, 1=Lunes, ...
+  const diasEnMes = new Date(anio, mes+1, 0).getDate();
+  let totalHoras = 0;
+  let algunCal = false;
+  for(let d=1; d<=diasEnMes; d++){
+    const fecha = new Date(anio, mes, d);
+    const diaSemana = diasSemMap[fecha.getDay()];
+    for(const centro of centros){
+      for(const cal of (centro.calendarios||[])){
+        if(!Array.isArray(cal.empleados) || !cal.empleados.includes(empId)) continue;
+        if(!Array.isArray(cal.dias) || !cal.dias.includes(diaSemana)) continue;
+        algunCal = true;
+        const eH = parseInt((cal.entrada||"00:00").split(":")[0]) || 0;
+        const sH = parseInt((cal.salida||"00:00").split(":")[0]) || 0;
+        const almuerzo = cal.incluye_almuerzo ? 1 : 0;
+        totalHoras += Math.max(0, sH - eH - almuerzo);
+      }
+    }
+  }
+  return algunCal && totalHoras > 0 ? totalHoras : 240;
+}
+
 function calcN(n) {
   const dias=n.dias||30, ratio=dias/30, diasIBC=dias+(n.diasIncap||0)+(n.diasVac||0)+(n.diasLicRem||0), ratioIBC=diasIBC/30, sal=n.sal||0;
   const festMes=n.festMes||0;
@@ -127,7 +154,7 @@ function calcN(n) {
   const aplA=sal<=2*SMLMV, aux=aplA?AUX_TR*ratioComm:0;
   // Bono asistencia: por días asistidos (excluye festivos y lic rem)
   const bono=(n.bono||0)*ratioAsist;
-  const vH=sal/240;
+  const vH=sal/(n.horasMes||240);
   const hexD=(n.hexD||0)*vH*1.25, hexN=(n.hexN||0)*vH*1.75, hexDD=(n.hexDD||0)*vH*2, hexDN=(n.hexDN||0)*vH*2.5;
   const totHex=hexD+hexN+hexDD+hexDN, recFest=(n.festLab||0)*vH*8*0.75;
   // Salario siempre sobre 30 días (incluye festivos y domingos)
@@ -143,7 +170,7 @@ function calcN(n) {
   const totAp=epsEr+penEr+arlV+caja+icbf+sena;
   const bPr=salProp+aux, prima=bPr/12, ces=bPr/12, intC=ces*0.12/12, vac=salProp*15/360;
   const totPr=prima+ces+intC+vac, costoT=dev+totAp+totPr;
-  return {sal,salProp,bono,aux,aplA,dev,ibc,eSub,vH,totHex,hexD,hexN,hexDD,hexDN,recFest,epsE,penE,rteF,otrasDed:n.otrasDed||0,totD,neto,q1,q2,q1Pct,epsEr,penEr,arlV,caja,icbf,sena,totAp,exS,tasa,prima,ces,intC,vac,totPr,costoT,ratio,dias,festMes,diasComm,ratioComm,diasAsist,ratioAsist};
+  return {sal,salProp,bono,aux,aplA,dev,ibc,eSub,vH,totHex,hexD,hexN,hexDD,hexDN,recFest,epsE,penE,rteF,otrasDed:n.otrasDed||0,totD,neto,q1,q2,q1Pct,epsEr,penEr,arlV,caja,icbf,sena,totAp,exS,tasa,prima,ces,intC,vac,totPr,costoT,ratio,dias,festMes,diasComm,ratioComm,diasAsist,ratioAsist,horasMes:n.horasMes||240};
 }
 
 const T={bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#666",inkLight:"#999",inkXLight:"#CCC",border:"#E5E3DE",accent:"#F5F5F3",green:"#16A34A",greenBg:"#F0FDF4",red:"#DC2626",redBg:"#FEF2F2",blue:"#2563EB",blueBg:"#EFF6FF",amber:"#D97706",amberBg:"#FFFBEB",purple:"#7C3AED",purpleBg:"#F5F3FF",shadow:"0 1px 3px rgba(0,0,0,.06)"};
@@ -850,7 +877,7 @@ export function TabNomina(){
   },[]);
 
   const selN=useMemo(()=>noms.find(n=>n.id===sel),[noms,sel]);
-  const calc=useMemo(()=>selN?calcN(selN):null,[selN]);
+  const calc=useMemo(()=>selN?calcN({...selN,horasMes:calcHorasMesEmp(selN.empId,anio,mes,centros)}):null,[selN,anio,mes,centros]);
   const upd=(id,f)=>setNoms(p=>p.map(n=>n.id===id?{...n,...f}:n));
   const guardar=async()=>{setGuard(true);await saveN(anio,mes,noms);setGuard(false);};
   const totN=noms.reduce((s,n)=>s+calcN(n).neto,0);
@@ -1690,7 +1717,7 @@ ${body}
                 <div style={{fontSize:9,color:T.inkLight}}>Factor prestacional</div>
                 <div style={{fontSize:20,fontWeight:800,fontFamily:"'DM Mono',monospace"}}>{calc.salProp>0?(calc.costoT/calc.salProp).toFixed(3):"—"}×</div>
               </div>
-              <div style={{marginTop:8,fontSize:10,color:T.inkMid}}>Costo/hora (240h): <strong style={{fontFamily:"'DM Mono',monospace"}}>{fmt(calc.costoT/240)}</strong></div>
+              <div style={{marginTop:8,fontSize:10,color:T.inkMid}}>Costo/hora ({calc.horasMes}h): <strong style={{fontFamily:"'DM Mono',monospace"}}>{fmt(calc.costoT/calc.horasMes)}</strong></div>
             </Card>
           </div>
           </div>
@@ -1865,7 +1892,7 @@ ${body}
                   ["","",""],
                   ["COSTO TOTAL EMPRESA",fmt(calc.costoT),"Devengado + Aportes + Provisiones"],
                   ["Factor prestacional",calc.salProp>0?(calc.costoT/calc.salProp).toFixed(3)+"×":"—","Costo ÷ Sal.prop"],
-                  ["Costo/hora (240h/mes)",fmt(calc.costoT/240),"Costo ÷ 240"],
+                  [`Costo/hora (${calc.horasMes}h/mes)`,fmt(calc.costoT/calc.horasMes),`Costo ÷ ${calc.horasMes}`],
                 ].map(([l,v,f],i)=>l===""?<tr key={i}><td colSpan={3} style={{borderBottom:`1px solid ${T.border}`,height:8}}/></tr>:
                   <tr key={i} style={{background:l.includes("NETO")?"#E8F4EE":l.includes("COSTO TOTAL")?"#F5F4F1":"transparent"}}><td style={{padding:"4px 6px",color:l.includes("NETO")||l.includes("COSTO")?T.ink:T.inkMid,fontWeight:l.includes("=")||l.includes("COSTO")?700:400}}>{l}</td><td style={{padding:"4px 8px",fontWeight:l.includes("=")||l.includes("COSTO")?800:600,fontFamily:"'DM Mono',monospace",textAlign:"right",color:l.includes("NETO")?T.green:l.includes("COSTO")?T.ink:T.ink,fontSize:l.includes("NETO")||l.includes("COSTO")?14:12}}>{v}</td><td style={{padding:"4px 0",fontSize:9,color:T.inkLight,fontStyle:"italic"}}>{f}</td></tr>
                 )}
