@@ -16,7 +16,7 @@ export default async function handler(req,res){
       // KV store operations (nomina)
       var kv=req.query.kv||"";
       if(kv){
-        var kvKey="hab:"+kv+":"+(req.query.anio||"2026")+":"+(req.query.mes||"0");
+        var kvKey=req.query.flat?"hab:"+kv:"hab:"+kv+":"+(req.query.anio||"2026")+":"+(req.query.mes||"0");
         var rk=await fetch(SB_URL+"/rest/v1/kv_store?key=eq."+kvKey+"&select=value",{headers:sbH()});
         var dk=await rk.json();
         if(Array.isArray(dk)&&dk.length>0&&dk[0].value)return res.json({ok:true,data:JSON.parse(dk[0].value)});
@@ -59,7 +59,7 @@ export default async function handler(req,res){
 
       // KV store save (nomina)
       if(req.query.kv){
-        var kvKey="hab:"+req.query.kv+":"+(req.query.anio||"2026")+":"+(req.query.mes||"0");
+        var kvKey=req.query.flat?"hab:"+req.query.kv:"hab:"+req.query.kv+":"+(req.query.anio||"2026")+":"+(req.query.mes||"0");
         var val=JSON.stringify(b.data);
         // Try PATCH first
         var rp=await fetch(SB_URL+"/rest/v1/kv_store?key=eq."+kvKey,{method:"PATCH",headers:{...sbH(),Prefer:"return=minimal"},body:JSON.stringify({value:val})});
