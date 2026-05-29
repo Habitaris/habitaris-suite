@@ -4405,6 +4405,39 @@ function TabPersonal() {
   const [loading, setLoading] = useState(true);
   const [selEmp, setSelEmp] = useState(null);
   const [buscar, setBuscar] = useState("");
+  const [maestro, setMaestro] = useState([]);
+  const [editForm, setEditForm] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  const loadMaestro = async () => {
+    try {
+      const r = await fetch("/api/hiring?kv=rrhh:empleados&flat=1");
+      const d = await r.json();
+      const lista = Array.isArray(d?.value) ? d.value : (d?.value ? JSON.parse(d.value) : []);
+      setMaestro(lista);
+    } catch(e) { console.error(e); setMaestro([]); }
+  };
+
+  const saveEmp = async () => {
+    if(!editForm) return;
+    setSaving(true);
+    try {
+      const lista = [...(maestro||[])];
+      const idx = lista.findIndex(m => m.empId === editForm.empId);
+      const ahora = new Date().toISOString();
+      if(idx >= 0) lista[idx] = {...lista[idx], ...editForm, updatedAt: ahora};
+      else lista.push({...editForm, createdAt: ahora, updatedAt: ahora});
+      const r = await fetch("/api/hiring?kv=rrhh:empleados&flat=1", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({data: lista})
+      });
+      if(!r.ok) throw new Error("HTTP "+r.status);
+      setMaestro(lista);
+      setEditForm(null);
+    } catch(e) { console.error(e); alert("No se pudo guardar: "+e.message); }
+    setSaving(false);
+  };
 
 
   const loadEmpleados = async () => {
@@ -4422,7 +4455,7 @@ function TabPersonal() {
     setLoading(false);
   };
 
-  useEffect(() => { loadEmpleados(); }, []);
+  useEffect(() => { loadEmpleados(); loadMaestro(); }, []);
 
 
   const fmtMoney = (n) => n ? new Intl.NumberFormat(getTenantDefaultsSync().locale,{style:"currency",currency:getTenantDefaultsSync().currency,maximumFractionDigits:0}).format(n) : "$0";
@@ -4590,7 +4623,14 @@ function TabPersonal() {
                       <button onClick={()=>openCond("empleador")} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #2563EB",borderRadius:6,background:"#EFF6FF",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#2563EB"}}>💼 Condiciones empleador</button>
                     </>;
                   })()}
-                  {emp.entidadBancaria && <span style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:C.bg,color:C.ink}}>🏦 {emp.entidadBancaria} · {emp.tipoCuenta||""} · {emp.cuentaBancaria||""}</span>}
+                  {(()=>{
+                    const m = (maestro||[]).find(x => x.empId === emp.id) || {};
+                    const tieneBanco = m.banco || m.cuenta;
+                    return <>
+                      {tieneBanco && <span style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:C.bg,color:C.ink}}>🏦 {m.banco||""} · {m.tipoCuenta||""} · {m.cuenta||""}</span>}
+                      <button onClick={(ev)=>{ev.stopPropagation();setEditForm({empId:emp.id,nombre:m.nombre||emp.candidato_nombre||"",banco:m.banco||"",cuenta:m.cuenta||"",tipoCuenta:m.tipoCuenta||"",telefono:m.telefono||emp.candidato_celular||"",email:m.email||emp.candidato_email||"",direccion:m.direccion||emp.candidato_direccion||"",eps:m.eps||emp.candidato_eps||"",pen:m.pen||emp.candidato_pension||""});}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #B45309",borderRadius:6,background:"#FFFBEB",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#B45309"}}>✏️ Editar datos bancarios</button>
+                    </>;
+                  })()}
                   {[true,false].map(conSal=>(
                     <button key={conSal?"con":"sin"} onClick={()=>{
                       const ape=(emp.candidato_nombre||"").split(" ").slice(-2).join("-").toUpperCase();
@@ -4617,6 +4657,75 @@ function TabPersonal() {
           </Card>
         );
       })}
+
+      {editForm && (
+        <div onClick={()=>!saving && setEditForm(null)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999,padding:20}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:"#fff",borderRadius:10,padding:24,width:"100%",maxWidth:560,maxHeight:"90vh",overflowY:"auto",boxShadow:"0 10px 40px rgba(0,0,0,.3)"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:18,paddingBottom:12,borderBottom:"1px solid "+C.border}}>
+              <div>
+                <div style={{fontSize:16,fontWeight:700,color:C.ink}}>Editar datos del empleado</div>
+                <div style={{fontSize:11,color:C.inkLight,marginTop:2}}>{editForm.nombre}</div>
+              </div>
+              <button onClick={()=>!saving && setEditForm(null)} style={{border:"none",background:"transparent",fontSize:22,color:C.inkLight,cursor:"pointer",padding:4,lineHeight:1}}>×</button>
+            </div>
+
+            <div style={{fontSize:11,fontWeight:700,color:C.inkLight,letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Datos bancarios</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+              <div>
+                <label style={{fontSize:10,fontWeight:600,color:C.inkMid,display:"block",marginBottom:3}}>Banco</label>
+                <input value={editForm.banco} onChange={e=>setEditForm({...editForm,banco:e.target.value})} placeholder="DaviPlata, Bancolombia..." style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.border,borderRadius:6,fontSize:12,fontFamily:"DM Sans,sans-serif"}}/>
+              </div>
+              <div>
+                <label style={{fontSize:10,fontWeight:600,color:C.inkMid,display:"block",marginBottom:3}}>Tipo de cuenta</label>
+                <select value={editForm.tipoCuenta} onChange={e=>setEditForm({...editForm,tipoCuenta:e.target.value})} style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.border,borderRadius:6,fontSize:12,fontFamily:"DM Sans,sans-serif",background:"#fff"}}>
+                  <option value="">—</option>
+                  <option value="Ahorros">Ahorros</option>
+                  <option value="Corriente">Corriente</option>
+                  <option value="Depósito">Depósito</option>
+                  <option value="Nómina">Nómina</option>
+                </select>
+              </div>
+              <div style={{gridColumn:"1 / -1"}}>
+                <label style={{fontSize:10,fontWeight:600,color:C.inkMid,display:"block",marginBottom:3}}>Número de cuenta o teléfono (si es Depósito)</label>
+                <input value={editForm.cuenta} onChange={e=>setEditForm({...editForm,cuenta:e.target.value})} placeholder="Número de cuenta o teléfono" style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.border,borderRadius:6,fontSize:12,fontFamily:"DM Sans,sans-serif"}}/>
+              </div>
+            </div>
+
+            <div style={{fontSize:11,fontWeight:700,color:C.inkLight,letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Contacto</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:14}}>
+              <div>
+                <label style={{fontSize:10,fontWeight:600,color:C.inkMid,display:"block",marginBottom:3}}>Teléfono</label>
+                <input value={editForm.telefono} onChange={e=>setEditForm({...editForm,telefono:e.target.value})} placeholder="+57 300 000 0000" style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.border,borderRadius:6,fontSize:12,fontFamily:"DM Sans,sans-serif"}}/>
+              </div>
+              <div>
+                <label style={{fontSize:10,fontWeight:600,color:C.inkMid,display:"block",marginBottom:3}}>Email</label>
+                <input value={editForm.email} onChange={e=>setEditForm({...editForm,email:e.target.value})} placeholder="correo@dominio.com" style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.border,borderRadius:6,fontSize:12,fontFamily:"DM Sans,sans-serif"}}/>
+              </div>
+              <div style={{gridColumn:"1 / -1"}}>
+                <label style={{fontSize:10,fontWeight:600,color:C.inkMid,display:"block",marginBottom:3}}>Dirección</label>
+                <input value={editForm.direccion} onChange={e=>setEditForm({...editForm,direccion:e.target.value})} placeholder="Calle 00 #00-00, Ciudad" style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.border,borderRadius:6,fontSize:12,fontFamily:"DM Sans,sans-serif"}}/>
+              </div>
+            </div>
+
+            <div style={{fontSize:11,fontWeight:700,color:C.inkLight,letterSpacing:1,textTransform:"uppercase",marginBottom:8}}>Seguridad social</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:18}}>
+              <div>
+                <label style={{fontSize:10,fontWeight:600,color:C.inkMid,display:"block",marginBottom:3}}>EPS</label>
+                <input value={editForm.eps} onChange={e=>setEditForm({...editForm,eps:e.target.value})} placeholder="Sanitas, Sura, Nueva EPS..." style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.border,borderRadius:6,fontSize:12,fontFamily:"DM Sans,sans-serif"}}/>
+              </div>
+              <div>
+                <label style={{fontSize:10,fontWeight:600,color:C.inkMid,display:"block",marginBottom:3}}>Fondo de Pensión</label>
+                <input value={editForm.pen} onChange={e=>setEditForm({...editForm,pen:e.target.value})} placeholder="Porvenir, Colpensiones..." style={{width:"100%",padding:"7px 10px",border:"1px solid "+C.border,borderRadius:6,fontSize:12,fontFamily:"DM Sans,sans-serif"}}/>
+              </div>
+            </div>
+
+            <div style={{display:"flex",justifyContent:"flex-end",gap:8,paddingTop:14,borderTop:"1px solid "+C.border}}>
+              <button onClick={()=>!saving && setEditForm(null)} disabled={saving} style={{padding:"8px 16px",fontSize:12,fontWeight:600,border:"1px solid "+C.border,borderRadius:6,background:"#fff",cursor:saving?"not-allowed":"pointer",fontFamily:"DM Sans,sans-serif",color:C.inkMid,opacity:saving?0.5:1}}>Cancelar</button>
+              <button onClick={saveEmp} disabled={saving} style={{padding:"8px 18px",fontSize:12,fontWeight:700,border:"none",borderRadius:6,background:"#1E6B42",cursor:saving?"not-allowed":"pointer",fontFamily:"DM Sans,sans-serif",color:"#fff",opacity:saving?0.6:1}}>{saving?"Guardando...":"💾 Guardar"}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
