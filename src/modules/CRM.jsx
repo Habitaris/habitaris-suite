@@ -9855,7 +9855,7 @@ function TEnt({ d, set, r }) {
     if(d.ubicacion) html += `<div><strong>Ubicación:</strong> ${d.ubicacion}</div>`;
     html += `<div><strong>Fecha:</strong> ${fechaDoc}</div>`;
     html += `<div><strong>Vigencia:</strong> 30 días calendario</div></div>`;
-    html += `<div class="cover-footer"><p>Habitaris S.A.S · NIT ${getActiveCompanyLegalDataSync().taxId} · Bogotá D.C.</p><p>Documento confidencial · Uso exclusivo del destinatario</p></div>`;
+    html += `<div class="cover-footer"><p>${getActiveCompanyLegalDataSync().legalName} · NIT ${getActiveCompanyLegalDataSync().taxId} · Bogotá D.C.</p><p>Documento confidencial · Uso exclusivo del destinatario</p></div>`;
     html += `</div>`;
 
     // ── TABLE OF CONTENTS ──
@@ -9975,15 +9975,15 @@ function TEnt({ d, set, r }) {
     html += `<div class="section-title"><span class="section-num">${secNum}.</span>Firma de aceptación</div>`;
     html += `<div style="font-size:11px;line-height:1.8;color:#333;margin:16px 0 30px">`;
     html += `Con la firma del presente documento, el Cliente acepta los términos y condiciones descritos en esta propuesta, `;
-    html += `y autoriza a Habitaris S.A.S. a proceder con la ejecución del servicio de acuerdo al alcance, presupuesto y plazos aquí establecidos.</div>`;
+    html += `y autoriza a ${getActiveCompanyLegalDataSync().legalName} a proceder con la ejecución del servicio de acuerdo al alcance, presupuesto y plazos aquí establecidos.</div>`;
 
     html += `<div class="sign-block">`;
-    html += `<div class="sign-box"><div class="name">${representante}</div><div class="role">${cargo}</div><div style="font-size:8px;color:#888;margin-top:2px">Habitaris S.A.S. · NIT ${getActiveCompanyLegalDataSync().taxId}</div></div>`;
+    html += `<div class="sign-box"><div class="name">${representante}</div><div class="role">${cargo}</div><div style="font-size:8px;color:#888;margin-top:2px">${getActiveCompanyLegalDataSync().legalName} · NIT ${getActiveCompanyLegalDataSync().taxId}</div></div>`;
     html += `<div class="sign-box"><div class="name">${clienteNombre || "________________________"}</div><div class="role">Cliente</div><div style="font-size:8px;color:#888;margin-top:2px">Firma y fecha de aceptación</div></div>`;
     html += `</div>`;
 
     html += `<div style="margin-top:40px;padding:14px;background:#F5F4F1;border-radius:4px;font-size:9px;color:#666;text-align:center">`;
-    html += `Habitaris S.A.S. · NIT ${getActiveCompanyLegalDataSync().taxId} · Bogotá D.C., Colombia<br/>`;
+    html += `${getActiveCompanyLegalDataSync().legalName} · NIT ${getActiveCompanyLegalDataSync().taxId} · Bogotá D.C., Colombia<br/>`;
     { const c = getTenantContactSync(); const u = getTenantUrlsSync(); html += `${c.primaryEmail} · ${c.primaryPhone} · ${u.publicWebsite.replace(/^https?:\/\//,"")}</div>`; }
     html += `</div>`;
 
@@ -10226,7 +10226,7 @@ function TEnt({ d, set, r }) {
           <div><strong>Fecha:</strong> {fechaDoc}</div>
         </div>
         <div style={{ marginTop:"auto", paddingTop:60, borderTop:"1pt solid #DDD", width:"100%", textAlign:"center" }}>
-          <div style={{ fontSize:9, color:"#999", letterSpacing:1 }}>Habitaris S.A.S · NIT ${getActiveCompanyLegalDataSync().taxId} · Bogotá D.C.</div>
+          <div style={{ fontSize:9, color:"#999", letterSpacing:1 }}>{`${getActiveCompanyLegalDataSync().legalName} · NIT ${getActiveCompanyLegalDataSync().taxId} · Bogotá D.C.`}</div>
           <div style={{ fontSize:8, color:"#BBB", marginTop:4 }}>Documento confidencial · Uso exclusivo del destinatario</div>
         </div>
       </div>
@@ -10864,7 +10864,7 @@ function TEnt({ d, set, r }) {
               <div style={{ border:`1px solid ${C.border}`, borderRadius:4, padding:"10px 12px", background:"#F5F4F1" }}>
                 <div style={{ fontWeight:700, fontSize:13 }}>{representante}</div>
                 <div style={{ fontSize:11, color:C.inkMid }}>{cargo}</div>
-                <div style={{ fontSize:10, color:C.inkLight, marginTop:4 }}>Habitaris S.A.S · NIT ${getActiveCompanyLegalDataSync().taxId}</div>
+                <div style={{ fontSize:10, color:C.inkLight, marginTop:4 }}>{`${getActiveCompanyLegalDataSync().legalName} · NIT ${getActiveCompanyLegalDataSync().taxId}`}</div>
               </div>
               {getText("elaboradoPor","") && (
                 <div style={{ marginTop:8 }}>
@@ -10904,7 +10904,7 @@ function TEnt({ d, set, r }) {
               const email = d.emailCliente || prompt("Email del cliente:");
               if (email) {
                 const subject = encodeURIComponent(`${titulo} — ${d.proyecto||"Habitaris"}`);
-                const body = encodeURIComponent(`Estimado/a ${clienteNombre},\n\nAdjuntamos la propuesta para ${d.proyecto||"el proyecto"} por un valor de ${fmt(r.PVP_IVA)} (IVA incluido).\n\nQuedamos atentos a sus comentarios.\n\nCordialmente,\n${representante}\n${cargo}\nHabitaris S.A.S`);
+                const body = encodeURIComponent(`Estimado/a ${clienteNombre},\n\nAdjuntamos la propuesta para ${d.proyecto||"el proyecto"} por un valor de ${fmt(r.PVP_IVA)} (IVA incluido).\n\nQuedamos atentos a sus comentarios.\n\nCordialmente,\n${representante}\n${cargo}\n${getActiveCompanyLegalDataSync().legalName}`);
                 window.open(`mailto:${email}?subject=${subject}&body=${body}`);
               }
             }}

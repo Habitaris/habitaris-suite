@@ -182,7 +182,7 @@ h1{font-size:14pt;text-align:center;margin:14px 0 4px;clear:both}
 <div id="content">
   <div class="hdr">
     <div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div>
-    <div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div>
+    <div class="r"><div style="font-weight:600;color:#111">${getActiveCompanyLegalDataSync().legalName}</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div>
   </div>
   <h1>${form?.nombre || resp.formularioNombre || "Respuesta"}</h1>
   <div class="subtitle">${fechaTxt}</div>
@@ -321,7 +321,7 @@ export default function RespuestaModal({ open, resp, form, onClose, onProcesar, 
           <img src={HAB_LOGO} alt="Habitaris" style={{ height: 30, objectFit: "contain" }} />
           <div style={{ textAlign: "right", fontSize: 9, color: C.inkMid }}>
             <div style={{ fontWeight: 700, color: C.ink, fontSize: 11 }}>Habitaris S.A.S</div>
-            <div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div>
+            <div>{`NIT: ${getActiveCompanyLegalDataSync().taxId}`}</div>
           </div>
         </div>
 
