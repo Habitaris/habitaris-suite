@@ -1410,6 +1410,60 @@ ${body}
                     >🧹 Limpiar imputaciones manuales</button>
                   );
                 })()}
+                {(()=>{
+                  return (
+                    <button
+                      type="button"
+                      onClick={()=>{
+                        if (!ed) return;
+                        if (!confirm("⚠️ Vas a borrar TODO el mes para "+selN.nombre+":\n\n• Imputaciones de OT (días asignados a centros)\n• Novedades (vacaciones, incapacidades, licencias, ausencias)\n• Horas extras y festivos laborados\n• Otros ingresos y deducciones\n\nEsta acción NO se puede deshacer. ¿Continuar?")) return;
+                        if (!confirm("¿Estás 100% seguro? Esto es IRREVERSIBLE para "+selN.nombre+" en "+["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"][mes]+" "+anio+".")) return;
+                        (async()=>{
+                          try{
+                            setGuard(true);
+                            const rn=await fetch(`/api/hiring?kv=nomina&anio=${anio}&mes=${mes}`);
+                            const dn=await rn.json();
+                            const arr=dn.data||[];
+                            const idx=arr.findIndex(n=>n.empId===selN.empId);
+                            if(idx<0){setGuard(false);throw new Error("emp no encontrado");}
+                            arr[idx]={
+                              ...arr[idx],
+                              impDias:{},
+                              novDias:{},
+                              hexD:0, hexN:0, hexDD:0, hexDN:0, festLab:0,
+                              diasIncap:0, diasLicRem:0, diasLicNoRem:0, diasVac:0,
+                              otrosIng:0, otrasDed:0,
+                              nov:""
+                            };
+                            const rs=await fetch(`/api/hiring?kv=nomina&anio=${anio}&mes=${mes}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:arr})});
+                            const sd=await rs.json();
+                            if(!sd.ok){setGuard(false);throw new Error("save fallo");}
+                            // Limpiar adjuntos del empleado en hab:nov_adjuntos del mes
+                            try{
+                              const ra=await fetch(`/api/hiring?kv=nov_adjuntos&anio=${anio}&mes=${mes}`);
+                              const da=await ra.json();
+                              const adj=da.data||{};
+                              if(adj[selN.empId]){
+                                delete adj[selN.empId];
+                                await fetch(`/api/hiring?kv=nov_adjuntos&anio=${anio}&mes=${mes}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:adj})});
+                              }
+                            }catch(_){/* adjuntos opcionales, ignorar */}
+                            setNoms(arr);
+                            setGuard(false);
+                            window.toast&&window.toast("✓ Mes borrado completamente para "+selN.nombre,"success");
+                          }catch(e){
+                            setGuard(false);
+                            console.error("Borrar mes error:",e);
+                            window.toast&&window.toast("Error al borrar el mes: "+(e.message||"desconocido"),"error");
+                          }
+                        })();
+                      }}
+                      disabled={!ed}
+                      title={!ed ? "Mes ya pagado, no se puede modificar" : "Borra TODAS las imputaciones, novedades, horas extras y adjuntos del empleado en este mes. Acción irreversible."}
+                      style={{padding:"4px 10px",fontSize:10,fontWeight:600,border:`1px solid ${ed?"#dc2626":T.border}`,borderRadius:4,background:ed?"#fff":"#f5f5f5",color:ed?"#dc2626":"#999",cursor:ed?"pointer":"not-allowed",fontFamily:"'DM Sans',sans-serif"}}
+                    >🗑 Borrar TODO del mes</button>
+                  );
+                })()}
               </div>
               <div style={{display:"flex",gap:6,marginBottom:8,alignItems:"center",padding:"6px 10px",background:"#F9F8F4",borderRadius:4,border:`1px dashed ${T.border}`}}>
                 <span style={{fontSize:10,color:T.inkLight}}>💡 <strong>Haz click en cualquier día</strong> para imputar OT, registrar novedad o limpiar.</span>
