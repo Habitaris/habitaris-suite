@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { HAB_LOGO } from "./habLogo.js";
 import { downloadPDF } from "./pdfUtil.js";
-import { getTenantDefaultsSync, getLegalConstantsSync } from "../core/configHelpers.js";
+import {  getTenantDefaultsSync, getLegalConstantsSync, getActiveCompanyLegalDataSync } from "../core/configHelpers.js";
 
 // Sprint C Capa 3 paso 7: catálogos legales desde country_configs (BD prioritaria con fallback al hardcoded 2026).
 // Si en BD se cambia el SMLMV, hay que recargar la página para que estos valores se actualicen (constantes evaluadas al cargar el módulo).
@@ -130,10 +130,10 @@ h1{font-size:13pt;text-align:center;margin:20px 0 16px}
 .sig{margin-top:50px;width:50%}.sig div{border-top:1px solid #111;padding-top:6px;font-size:9pt}
 .foot{font-size:6.5pt;color:#999;text-align:center;margin-top:30px;clear:both}
 </style>
-<div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>
+<div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
 <h1>CERTIFICACIÓN LABORAL</h1>
 <div class="body">
-<p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, identificada con NIT 901.922.136-8, certifica que:</p>
+<p>El suscrito representante legal de <b>HABITARIS S.A.S</b>, identificada con NIT ${getActiveCompanyLegalDataSync().taxId}, certifica que:</p>
 <br/>
 <p><b>${emp.candidato_nombre||""}</b>, identificado(a) con ${emp.tipo_documento||"C.C."} No. <b>${emp.candidato_cc||""}</b>, ${emp.fecha_inicio?"labora":"laboró"} en esta empresa desde el <b>${emp.fecha_inicio ? new Date(emp.fecha_inicio+"T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"}) : "—"}</b>, desempeñando el cargo de <b>${emp.cargo||""}</b> en el área <b>${emp.area||"Administrativa"}</b>.</p>
 <br/>
@@ -142,7 +142,7 @@ ${conSalario ? `<p>El trabajador devenga un salario mensual de <b>${fmt(emp.sala
 <br/><br/>
 </div>
 <div class="sig">
-<div><br/><b>Representante Legal</b><br/>Habitaris S.A.S<br/>NIT: 901.922.136-8</div>
+<div><br/><b>Representante Legal</b><br/>Habitaris S.A.S<br/>NIT: ${getActiveCompanyLegalDataSync().taxId}</div>
 </div>
 <div class="foot">Habitaris Suite · ${hoy} · CERT-${(emp.candidato_cc||"").slice(-4)}</div>`;
 }
@@ -165,7 +165,7 @@ td{padding:4px 8px;border-bottom:1px solid #ddd}.r{text-align:right;font-family:
 .sig{margin-top:40px;overflow:hidden}.sig div{float:left;width:48%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:6px}.sig div:last-child{float:right}
 .foot{font-size:6.5pt;color:#999;text-align:center;margin-top:20px;clear:both}
 </style>
-<div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>
+<div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
 <h1>CARTA DE TERMINACIÓN DE CONTRATO</h1>
 <div class="body">
 <p>Bogotá D.C., ${hoy}</p><br/>
@@ -184,7 +184,7 @@ ${liq.items.map(i=>"<tr><td>"+i.concepto+"</td><td class='r'>"+fmt(i.valor)+"</t
 <tr class="tot"><td>TOTAL A PAGAR</td><td class="r">${fmt(liq.total)}</td><td></td></tr>
 </tbody></table>
 <div class="body"><p>El valor total de la liquidación será consignado en la cuenta registrada del trabajador.</p></div>
-<div class="sig"><div>Empleador<br/><b>Habitaris S.A.S</b><br/>NIT: 901.922.136-8</div><div>Trabajador<br/><b>${emp.candidato_nombre}</b><br/>${emp.tipo_documento||"C.C."} ${emp.candidato_cc}</div></div>
+<div class="sig"><div>Empleador<br/><b>Habitaris S.A.S</b><br/>NIT: ${getActiveCompanyLegalDataSync().taxId}</div><div>Trabajador<br/><b>${emp.candidato_nombre}</b><br/>${emp.tipo_documento||"C.C."} ${emp.candidato_cc}</div></div>
 <div class="foot">Habitaris Suite · ${hoy} · LIQ-${(emp.candidato_cc||"").slice(-4)}</div>`;
 }
 
@@ -201,10 +201,10 @@ h1{font-size:13pt;text-align:center;margin:20px 0 16px}
 .sig{margin-top:50px;overflow:hidden}.sig div{float:left;width:48%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:6px}.sig div:last-child{float:right}
 .foot{font-size:6.5pt;color:#999;text-align:center;margin-top:20px;clear:both}
 </style>
-<div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: 901.922.136-8</div></div></div>
+<div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">Habitaris S.A.S</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
 <h1>PAZ Y SALVO</h1>
 <div class="body">
-<p><b>HABITARIS S.A.S</b>, NIT 901.922.136-8, certifica que el(la) señor(a) <b>${emp.candidato_nombre}</b>, identificado(a) con ${emp.tipo_documento||"C.C."} No. <b>${emp.candidato_cc}</b>, quien laboró en el cargo de <b>${emp.cargo}</b> desde el ${liq.fechaIni.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})} hasta el ${liq.fechaFin.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}, se encuentra a <b>PAZ Y SALVO</b> con la empresa por los siguientes conceptos:</p>
+<p><b>HABITARIS S.A.S</b>, NIT ${getActiveCompanyLegalDataSync().taxId}, certifica que el(la) señor(a) <b>${emp.candidato_nombre}</b>, identificado(a) con ${emp.tipo_documento||"C.C."} No. <b>${emp.candidato_cc}</b>, quien laboró en el cargo de <b>${emp.cargo}</b> desde el ${liq.fechaIni.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})} hasta el ${liq.fechaFin.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}, se encuentra a <b>PAZ Y SALVO</b> con la empresa por los siguientes conceptos:</p>
 </div>
 <div class="checks">
 <p>☑ Salarios y prestaciones sociales</p>
@@ -218,7 +218,7 @@ h1{font-size:13pt;text-align:center;margin:20px 0 16px}
 <div class="body">
 <p>Se expide el presente paz y salvo en Bogotá D.C., a los ${hoy}.</p>
 </div>
-<div class="sig"><div>Empleador<br/><b>Habitaris S.A.S</b><br/>NIT: 901.922.136-8</div><div>Trabajador<br/><b>${emp.candidato_nombre}</b><br/>${emp.tipo_documento||"C.C."} ${emp.candidato_cc}</div></div>
+<div class="sig"><div>Empleador<br/><b>Habitaris S.A.S</b><br/>NIT: ${getActiveCompanyLegalDataSync().taxId}</div><div>Trabajador<br/><b>${emp.candidato_nombre}</b><br/>${emp.tipo_documento||"C.C."} ${emp.candidato_cc}</div></div>
 <div class="foot">Habitaris Suite · ${hoy} · PYS-${(emp.candidato_cc||"").slice(-4)}</div>`;
 }
 

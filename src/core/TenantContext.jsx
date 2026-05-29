@@ -245,7 +245,15 @@ export function TenantProvider({ children }) {
         completed = true;
         const _tenantConfigData = (configData && configData.config) || null;
         // Sprint C Capa 3: poblar cache global para uso en funciones planas (emails, PDFs).
-        try { setTenantConfigCache(_tenantConfigData); } catch (_) {}
+        // Incluimos companies + paisActivo bajo claves con prefijo "_" para que
+        // getActiveCompanyLegalDataSync pueda devolver NIT, legal_name, domicilio
+        // de la company activa segun el pais.
+        const _cacheData = {
+          ..._tenantConfigData,
+          _companies: companies,
+          _paisActivo: paisActivo,
+        };
+        try { setTenantConfigCache(_cacheData); } catch (_) {}
         setState({
           loading: false,
           tenant: tenantData,

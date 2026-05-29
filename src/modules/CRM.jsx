@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 
 import FormulariosDelModulo from "./form/FormulariosDelModulo.jsx";
-import { getTenantDefaultsSync } from "../core/configHelpers.js";
+import {  getTenantDefaultsSync, getActiveCompanyLegalDataSync } from "../core/configHelpers.js";
 /* ─── CLOUD STORE (Supabase multi-tenant) ──────────────────── */
 import { store } from "../core/store.js";
 import { useTenantBranding } from "../core/configHelpers.js";
@@ -9855,7 +9855,7 @@ function TEnt({ d, set, r }) {
     if(d.ubicacion) html += `<div><strong>Ubicación:</strong> ${d.ubicacion}</div>`;
     html += `<div><strong>Fecha:</strong> ${fechaDoc}</div>`;
     html += `<div><strong>Vigencia:</strong> 30 días calendario</div></div>`;
-    html += `<div class="cover-footer"><p>Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C.</p><p>Documento confidencial · Uso exclusivo del destinatario</p></div>`;
+    html += `<div class="cover-footer"><p>Habitaris S.A.S · NIT ${getActiveCompanyLegalDataSync().taxId} · Bogotá D.C.</p><p>Documento confidencial · Uso exclusivo del destinatario</p></div>`;
     html += `</div>`;
 
     // ── TABLE OF CONTENTS ──
@@ -9978,12 +9978,12 @@ function TEnt({ d, set, r }) {
     html += `y autoriza a Habitaris S.A.S. a proceder con la ejecución del servicio de acuerdo al alcance, presupuesto y plazos aquí establecidos.</div>`;
 
     html += `<div class="sign-block">`;
-    html += `<div class="sign-box"><div class="name">${representante}</div><div class="role">${cargo}</div><div style="font-size:8px;color:#888;margin-top:2px">Habitaris S.A.S. · NIT 901.922.136-8</div></div>`;
+    html += `<div class="sign-box"><div class="name">${representante}</div><div class="role">${cargo}</div><div style="font-size:8px;color:#888;margin-top:2px">Habitaris S.A.S. · NIT ${getActiveCompanyLegalDataSync().taxId}</div></div>`;
     html += `<div class="sign-box"><div class="name">${clienteNombre || "________________________"}</div><div class="role">Cliente</div><div style="font-size:8px;color:#888;margin-top:2px">Firma y fecha de aceptación</div></div>`;
     html += `</div>`;
 
     html += `<div style="margin-top:40px;padding:14px;background:#F5F4F1;border-radius:4px;font-size:9px;color:#666;text-align:center">`;
-    html += `Habitaris S.A.S. · NIT 901.922.136-8 · Bogotá D.C., Colombia<br/>`;
+    html += `Habitaris S.A.S. · NIT ${getActiveCompanyLegalDataSync().taxId} · Bogotá D.C., Colombia<br/>`;
     { const c = getTenantContactSync(); const u = getTenantUrlsSync(); html += `${c.primaryEmail} · ${c.primaryPhone} · ${u.publicWebsite.replace(/^https?:\/\//,"")}</div>`; }
     html += `</div>`;
 
@@ -10226,7 +10226,7 @@ function TEnt({ d, set, r }) {
           <div><strong>Fecha:</strong> {fechaDoc}</div>
         </div>
         <div style={{ marginTop:"auto", paddingTop:60, borderTop:"1pt solid #DDD", width:"100%", textAlign:"center" }}>
-          <div style={{ fontSize:9, color:"#999", letterSpacing:1 }}>Habitaris S.A.S · NIT 901.922.136-8 · Bogotá D.C.</div>
+          <div style={{ fontSize:9, color:"#999", letterSpacing:1 }}>Habitaris S.A.S · NIT ${getActiveCompanyLegalDataSync().taxId} · Bogotá D.C.</div>
           <div style={{ fontSize:8, color:"#BBB", marginTop:4 }}>Documento confidencial · Uso exclusivo del destinatario</div>
         </div>
       </div>
@@ -10864,7 +10864,7 @@ function TEnt({ d, set, r }) {
               <div style={{ border:`1px solid ${C.border}`, borderRadius:4, padding:"10px 12px", background:"#F5F4F1" }}>
                 <div style={{ fontWeight:700, fontSize:13 }}>{representante}</div>
                 <div style={{ fontSize:11, color:C.inkMid }}>{cargo}</div>
-                <div style={{ fontSize:10, color:C.inkLight, marginTop:4 }}>Habitaris S.A.S · NIT 901.922.136-8</div>
+                <div style={{ fontSize:10, color:C.inkLight, marginTop:4 }}>Habitaris S.A.S · NIT ${getActiveCompanyLegalDataSync().taxId}</div>
               </div>
               {getText("elaboradoPor","") && (
                 <div style={{ marginTop:8 }}>

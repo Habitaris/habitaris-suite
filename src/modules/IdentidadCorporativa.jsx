@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { getConfig } from "./Configuracion.jsx";
 import { store } from "../core/store.js";
-import { getTenantDefaultsSync } from "../core/configHelpers.js";
+import {  getTenantDefaultsSync, getActiveCompanyLegalDataSync } from "../core/configHelpers.js";
 import {
   getTenantBrandingSync,
   getTenantIdentitySync,
@@ -545,7 +545,7 @@ export default function IdentidadCorporativa() {
   };
   const brand = useMemo(() => ({
     nombre: cfg.empresa?.nombre || "Habitaris",
-    nit: cfg.empresa?.nit || "901.922.136-8",
+    nit: cfg.empresa?.nit || getActiveCompanyLegalDataSync().taxId,
     direccion: cfg.empresa?.direccion || "Bogotá D.C., Colombia",
     telefono: cfg.empresa?.telefono || "+57 350 566 1545",
     email: cfg.empresa?.email || getTenantContactSync().primaryEmail,

@@ -648,6 +648,32 @@ export function getTenantLegalRepresentativeSync() {
 }
 
 /**
+ * getActiveCompanyLegalDataSync: devuelve datos legales de la company activa
+ * para uso en plantillas legales (contratos, certificaciones, liquidaciones).
+ * 
+ * La company activa se determina por el pais activo del tenant. Si no hay
+ * companies en cache (estado pre-carga), devuelve placeholders vacios para
+ * evitar mostrar datos incorrectos.
+ *
+ * Requiere que TenantContext haya llamado a setTenantConfigCache con
+ * _companies y _paisActivo (Sprint C Capa 3 paso 5).
+ */
+export function getActiveCompanyLegalDataSync() {
+  const c = _tenantConfigCache || {};
+  const companies = c._companies || [];
+  const paisActivo = c._paisActivo || getTenantDefaultsSync().country;
+  const company = companies.find(co => co.pais === paisActivo) || companies[0] || {};
+  return {
+    legalName: company.legal_name || "",
+    taxId:     company.tax_id     || "",
+    pais:      company.pais       || paisActivo || "CO",
+    divisa:    company.divisa     || "COP",
+    domicilio: company.domicilio_legal || {},
+    phone:     company.phone      || "",
+  };
+}
+
+/**
  * Catálogos legales por país (SMLMV, AUX_TRANSPORTE, UVT, horas mensuales).
  *
  * Lee del cache de country_configs (poblado por useCountryConfig al primer

@@ -2,7 +2,7 @@ import React, { useState, Suspense, useMemo } from 'react'
 import { store } from "./core/store.js";
 import { tenant } from "./core/tenant.js";
 import { useTenant } from "./core/TenantContext.jsx";
-import { useTenantBranding, useTenantIdentity } from "./core/configHelpers.js";
+import {  useTenantBranding, useTenantIdentity, getActiveCompanyLegalDataSync } from "./core/configHelpers.js";
 import { ToastContainer } from "./core/Toast.jsx";
 
 import CRM  from './modules/CRM.jsx'
@@ -268,7 +268,7 @@ function Home({ onSelect, lang, setLang, onLogout }) {
           ))}
         </div>
         <p style={{ ...F, marginTop:40, fontSize:11, color:"#AAA", textAlign:"center" }}>
-          v1.0 · {brand.empresa?.razonSocial||"Habitaris S.A.S"} · NIT {brand.empresa?.nit||"901.922.136-8"} · {brand.empresa?.domicilio||"Bogotá D.C."}
+          v1.0 · {brand.empresa?.razonSocial||"Habitaris S.A.S"} · NIT {brand.empresa?.nit||getActiveCompanyLegalDataSync().taxId} · {brand.empresa?.domicilio||"Bogotá D.C."}
         </p>
       </div>
     </div>
