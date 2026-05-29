@@ -6,7 +6,7 @@
  * Capa de abstracción para datos persistentes.
  * 
  * MODO ACTUAL:  window.storage (Anthropic / desarrollo local)
- * MODO FUTURO:  Supabase (producción en suite.habitaris.com)
+ * MODO FUTURO:  Supabase (producción en suite.habitaris.es)
  * 
  * Para migrar a Supabase, solo se reemplaza este archivo.
  * El resto de la app NO cambia.
@@ -83,7 +83,7 @@ export const USUARIOS_INTERNOS = [
     id: "david",
     nombre: "David Parra Galera",
     cargo: "Director Ejecutivo y de Producción",
-    email: "david@habitaris.com",
+    email: "david@habitaris.es",
     rol: "admin",
     puedeAprobar: true,
     puedeFirmar: true,
@@ -92,7 +92,7 @@ export const USUARIOS_INTERNOS = [
     id: "ana",
     nombre: "Ana María Díaz Buitrago",
     cargo: "Directora Creativa y de Diseño",
-    email: "ana@habitaris.com",
+    email: "ana@habitaris.es",
     rol: "admin",
     puedeAprobar: true,
     puedeFirmar: true,
