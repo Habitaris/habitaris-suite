@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { store } from "../core/store.js";
 
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 import {
   CheckCircle, XCircle, Clock, Send, RotateCcw, AlertTriangle,
   Check, X, ChevronDown, ChevronRight, FileText, Search, Filter,
@@ -41,14 +42,14 @@ const now = () => new Date().toISOString();
 const fmtDate = (iso) => {
   if (!iso) return "—";
   const d = new Date(iso);
-  return d.toLocaleDateString("es-CO", { day:"2-digit", month:"short", year:"numeric" });
+  return d.toLocaleDateString(getTenantDefaultsSync().locale, { day:"2-digit", month:"short", year:"numeric" });
 };
 const fmtTime = (iso) => {
   if (!iso) return "";
   const d = new Date(iso);
-  return d.toLocaleTimeString("es-CO", { hour:"2-digit", minute:"2-digit" });
+  return d.toLocaleTimeString(getTenantDefaultsSync().locale, { hour:"2-digit", minute:"2-digit" });
 };
-const fmtM = (n) => n ? new Intl.NumberFormat("es-CO", { maximumFractionDigits: 0 }).format(n) : "—";
+const fmtM = (n) => n ? new Intl.NumberFormat(getTenantDefaultsSync().locale, { maximumFractionDigits: 0 }).format(n) : "—";
 const ago = (iso) => {
   if (!iso) return "";
   const ms = Date.now() - new Date(iso).getTime();

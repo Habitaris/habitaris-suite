@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { getConfig } from "./Configuracion.jsx";
 import { store } from "../core/store.js";
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 import {
   getTenantBrandingSync,
   getTenantIdentitySync,
@@ -125,7 +126,7 @@ function CarnetClassic({ emp, brand, side }) {
           <div style={{ fontSize:8, color:C.inkLight, textAlign:"center", lineHeight:1.5 }}>
             {emp.tipoDoc}: {emp.documento}<br/>
             RH: {emp.rh} · EPS: {emp.eps} · ARL: {emp.arl}<br/>
-            Ingreso: {new Date(emp.fechaIngreso).toLocaleDateString("es-CO")}
+            Ingreso: {new Date(emp.fechaIngreso).toLocaleDateString(getTenantDefaultsSync().locale)}
           </div>
           <div style={{ fontSize:7, color:C.inkLight, marginTop:8 }}>
             En caso de emergencia contactar al {brand.telefono}
@@ -266,7 +267,7 @@ function CarnetObra({ emp, brand, side }) {
             <b>EPS:</b><span>{emp.eps}</span>
             <b>ARL:</b><span>{emp.arl}</span>
             <b>Doc:</b><span>{emp.tipoDoc} {emp.documento}</span>
-            <b>Ingreso:</b><span>{new Date(emp.fechaIngreso).toLocaleDateString("es-CO")}</span>
+            <b>Ingreso:</b><span>{new Date(emp.fechaIngreso).toLocaleDateString(getTenantDefaultsSync().locale)}</span>
           </div>
           <div style={{ marginTop:8, padding:"6px 10px", background:"#FFF3F3", borderRadius:4, border:"1px solid #B91C1C33" }}>
             <div style={{ fontSize:8, fontWeight:700, color:"#B91C1C" }}>Contacto de emergencia empresa:</div>

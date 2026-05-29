@@ -7,6 +7,7 @@
 import { store } from "../core/store.js";
 import { getConfig } from "../modules/Configuracion.jsx";
 
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 // ─── PLANTILLAS DE EMAIL ──────────────────────────────────────
 
 const PLANTILLAS = {
@@ -169,7 +170,7 @@ export async function sendEmail(tipo, params = {}) {
 
     const vars = {
       empresa: brand.empresa,
-      fecha: new Date().toLocaleDateString("es-CO", {
+      fecha: new Date().toLocaleDateString(getTenantDefaultsSync().locale, {
         day: "2-digit", month: "short", year: "numeric",
         hour: "2-digit", minute: "2-digit", hour12: false,
       }),

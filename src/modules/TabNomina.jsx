@@ -1192,7 +1192,7 @@ ${resumenArr.length>0?resumenArr.map(r=>`<tr class="imp"><td>${r.codigo}</td><td
                 acumOT[otId].empleados.push({empId:n.empId,nombre:n.nombre,cargo:n.cargo,dias:dias,coste:costePorOT,costoTotal:costoTotal});
               });
             });
-            const fmtCurr=v=>new Intl.NumberFormat("es-CO",{style:"currency",currency:"COP",maximumFractionDigits:0}).format(v);
+            const fmtCurr=v=>new Intl.NumberFormat(getTenantDefaultsSync().locale,{style:"currency",currency:"COP",maximumFractionDigits:0}).format(v);
             const otsArr=Object.entries(acumOT).map(([id,info])=>({id:id,info:info,centro:centros.find(c=>c.id===id)})).sort((a,b)=>b.info.coste-a.info.coste);
             const totalCostes=otsArr.reduce((s,x)=>s+x.info.coste,0);
             const empUnicos=new Set();

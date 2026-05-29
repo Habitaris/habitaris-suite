@@ -31,6 +31,7 @@ import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { sb } from "../core/supabase.js";
 import { useTenant } from "../core/TenantContext.jsx";
 
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 const C = {
   bg: "#F0EEE9",
   card: "#FFFFFF",
@@ -57,7 +58,7 @@ const TABS = [
 ];
 
 const LOCALES = [
-  { code: "es-CO", label: "Español (Colombia)" },
+  { code: getTenantDefaultsSync().locale, label: "Español (Colombia)" },
   { code: "es-ES", label: "Español (España)" },
   { code: "es-MX", label: "Español (México)" },
   { code: "es-AR", label: "Español (Argentina)" },
@@ -254,7 +255,7 @@ function SaveBar({ saving, savedAt, error, onSave }) {
       </Btn>
       {savedAt && !saving && (
         <span style={{ ...F, fontSize: 12, color: C.success, fontWeight: 600 }}>
-          ✓ Guardado a las {savedAt.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
+          ✓ Guardado a las {savedAt.toLocaleTimeString(getTenantDefaultsSync().locale, { hour: "2-digit", minute: "2-digit" })}
         </span>
       )}
       {error && (
@@ -317,7 +318,7 @@ function TabIdentidad({ tenant, tenantConfig, onSaved }) {
     legal_name:   id.legal_name   || tenant?.legal_name   || "",
     tagline:      id.tagline      || "",
     country:      def.country     || cfg.country_default  || "CO",
-    locale:       def.locale      || cfg.language_default || "es-CO",
+    locale:       def.locale      || cfg.language_default || getTenantDefaultsSync().locale,
     currency:     def.currency    || cfg.currency_default || "COP",
     timezone:     def.timezone    || cfg.timezone_default || "America/Bogota",
   });
@@ -901,7 +902,7 @@ function CountryLegalConstantsEditor({ pais }) {
   };
 
   // ─── helpers de presentación ───
-  const fmtMoney = (n) => (typeof n === "number" ? n.toLocaleString("es-CO") : (n || "—"));
+  const fmtMoney = (n) => (typeof n === "number" ? n.toLocaleString(getTenantDefaultsSync().locale) : (n || "—"));
   const computeDiff = (current, previous) => {
     if (!current || !previous || previous === 0) return null;
     const pct = ((current - previous) / previous) * 100;
@@ -1372,7 +1373,7 @@ function CountryExchangeRatesEditor({ pais }) {
     window.toast("Tasas de cambio guardadas", "success");
   };
 
-  const fmtNum = (n) => (typeof n === "number" ? n.toLocaleString("es-CO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (n || "—"));
+  const fmtNum = (n) => (typeof n === "number" ? n.toLocaleString(getTenantDefaultsSync().locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (n || "—"));
 
   return (
     <div style={{ borderTop: `1px solid ${C.bg}`, padding: "10px 18px", background: "#FAFAFA" }}>

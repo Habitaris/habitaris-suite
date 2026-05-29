@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { store } from "../core/store.js";
 
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 import {
   ClipboardCheck, Plus, Trash2, Check, X, Search, AlertTriangle, CheckCircle,
   Clock, Eye, FileText, ChevronRight, ChevronDown, Camera, Star, BarChart2,
@@ -35,7 +36,7 @@ const T = {
 const uid = () => Math.random().toString(36).slice(2, 9);
 const today = () => new Date().toISOString().split("T")[0];
 const now = () => new Date().toISOString();
-const fmtD = (d) => d ? new Date(d+"T12:00:00").toLocaleDateString("es-CO",{day:"2-digit",month:"short",year:"numeric"}) : "—";
+const fmtD = (d) => d ? new Date(d+"T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale,{day:"2-digit",month:"short",year:"numeric"}) : "—";
 const ago = (iso) => { if(!iso) return ""; const ms=Date.now()-new Date(iso).getTime(); const h=Math.floor(ms/3600000); if(h<1) return "hace momentos"; if(h<24) return `hace ${h}h`; return `hace ${Math.floor(h/24)}d`; };
 const pct = (n) => Math.min(100, Math.max(0, Math.round(n||0)));
 

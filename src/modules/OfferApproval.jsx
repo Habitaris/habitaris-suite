@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { getPortal, respondPortal } from "./offerPortal.js";
 
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 const C = { ink:"#111",inkMid:"#444",inkLight:"#888",inkXLight:"#C8C5BE",bg:"#F5F4F1",surface:"#FFFFFF",border:"#E0E0E0",green:"#111111",greenBg:"#E8F4EE",greenLight:"#D4EDDF",red:"#B91C1C",redBg:"#FAE8E8",amber:"#8C6A00",amberBg:"#FFF8EE",blue:"#3B3B3B",blueBg:"#F0F0F0",shadow:"0 1px 4px rgba(0,0,0,.06), 0 8px 32px rgba(0,0,0,.08)" };
 const F = { fontFamily:"'DM Sans',sans-serif" };
-const fmtMoney = (n,d="COP") => { if(!n&&n!==0) return "—"; return new Intl.NumberFormat("es-CO",{style:"currency",currency:d,minimumFractionDigits:0,maximumFractionDigits:0}).format(n); };
-const fmtDate = d => d ? new Date(d).toLocaleDateString("es-CO",{day:"2-digit",month:"long",year:"numeric"}) : "—";
+const fmtMoney = (n,d="COP") => { if(!n&&n!==0) return "—"; return new Intl.NumberFormat(getTenantDefaultsSync().locale,{style:"currency",currency:d,minimumFractionDigits:0,maximumFractionDigits:0}).format(n); };
+const fmtDate = d => d ? new Date(d).toLocaleDateString(getTenantDefaultsSync().locale,{day:"2-digit",month:"long",year:"numeric"}) : "—";
 
 function Section({title,icon,children}){return(<div style={{marginBottom:24}}><h3 style={{...F,fontSize:13,fontWeight:700,color:C.ink,margin:"0 0 12px",display:"flex",alignItems:"center",gap:8,textTransform:"uppercase",letterSpacing:.5}}><span>{icon}</span> {title}</h3><div style={{background:C.surface,borderRadius:12,padding:20,border:"1px solid "+C.border}}>{children}</div></div>);}
 function KPI({label,value,highlight}){return(<div style={{flex:1,minWidth:140,background:highlight?C.greenBg:"#FFFFFF",borderRadius:10,padding:"14px 16px",border:"1px solid "+(highlight?C.greenLight:C.border)}}><p style={{...F,margin:"0 0 4px",fontSize:9,fontWeight:600,textTransform:"uppercase",letterSpacing:1,color:C.inkLight}}>{label}</p><p style={{...F,margin:0,fontSize:18,fontWeight:700,color:highlight?C.green:C.ink}}>{value}</p></div>);}

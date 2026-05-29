@@ -3,6 +3,7 @@ import { store } from "../core/store.js";
 
 import { Zap, Hammer, Building2, Package, ArrowLeftRight, Plus, Trash2, Download, AlertTriangle, CheckCircle, Info, Sun, ChevronRight, ChevronDown, TrendingUp } from "lucide-react";
 
+import { getTenantDefaultsSync } from "../core/configHelpers.js";
 /* ─── TOKENS ─────────────────────────────────────────────────────────── */
 const T = {
   bg:"#F5F4F1", surface:"#FFFFFF", ink:"#111111", inkMid:"#555555",
@@ -102,8 +103,8 @@ function calcIcc(L, seccion, material, red, pais, Icc_barra_kA) {
 }
 
 /* ─── ATOMS ──────────────────────────────────────────────────────────── */
-const fmt = n => isNaN(n)||n==null?"—":Number(n).toLocaleString("es-CO",{maximumFractionDigits:2});
-const fmtM = n => isNaN(n)||n==null?"—":"$ "+Number(n).toLocaleString("es-CO",{minimumFractionDigits:0,maximumFractionDigits:0});
+const fmt = n => isNaN(n)||n==null?"—":Number(n).toLocaleString(getTenantDefaultsSync().locale,{maximumFractionDigits:2});
+const fmtM = n => isNaN(n)||n==null?"—":"$ "+Number(n).toLocaleString(getTenantDefaultsSync().locale,{minimumFractionDigits:0,maximumFractionDigits:0});
 
 const Inp = ({label,value,onChange,unit,type="number",placeholder="",step,min}) => (
   <div style={{marginBottom:10}}>
