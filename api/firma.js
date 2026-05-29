@@ -43,7 +43,7 @@ async function sendOTPEmail(email, name, otp, docTitle) {
       method: "POST",
       headers: { "Authorization": "Bearer " + RESEND_KEY, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: "Habitaris Suite <comercial@habitaris.co>",
+        from: "Habitaris Suite <comercial@habitaris.es>",
         to: [email],
         subject: "Codigo de verificacion — " + docTitle,
         html: html
@@ -146,7 +146,7 @@ export default async function handler(req, res) {
             method: "POST", headers: sbH(), body: JSON.stringify(rec)
           });
           var d6 = await r6.json();
-          results.push({ token: tk2, signer: s.name, email: s.email, link: "https://suite.habitaris.co/firmar?token=" + tk2 });
+          results.push({ token: tk2, signer: s.name, email: s.email, link: "https://suite.habitaris.es/firmar?token=" + tk2 });
         }
         return res.status(200).json({ ok: true, data: results });
       }
@@ -177,7 +177,7 @@ export default async function handler(req, res) {
           user_agent: body.user_agent || "",
           geo_lat: body.lat || null, geo_lng: body.lng || null,
           certificate_code: certCode,
-          verification_url: "https://suite.habitaris.co/verificar?cert=" + certCode,
+          verification_url: "https://suite.habitaris.es/verificar?cert=" + certCode,
         };
 
         var r8 = await fetch(SB_URL + "/rest/v1/signature_certificates", {
@@ -193,7 +193,7 @@ export default async function handler(req, res) {
 
         return res.status(200).json({
           ok: true, certificate_code: certCode,
-          verification_url: "https://suite.habitaris.co/verificar?cert=" + certCode,
+          verification_url: "https://suite.habitaris.es/verificar?cert=" + certCode,
           signed_at: new Date().toISOString()
         });
       }

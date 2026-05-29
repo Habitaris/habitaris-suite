@@ -17,7 +17,7 @@ const DEFAULT_CONFIG = {
     eslogan: "Diseño · Interiorismo · Arquitectura",
     domicilio: "Bogotá D.C.",
     telefono: "+57 350 5661545",
-    web: "habitaris.co",
+    web: "habitaris.es",
   },
   correo: {
     emailPrincipal: "comercial@habitaris.es",
@@ -137,7 +137,7 @@ const FIELDS = {
     { key:"eslogan",      label:"Eslogan / Subtítulo",    placeholder:"Diseño · Interiorismo · Arquitectura" },
     { key:"domicilio",    label:"Domicilio",              placeholder:"Bogotá D.C." },
     { key:"telefono",     label:"Teléfono principal",     placeholder:"+57 350 5661545" },
-    { key:"web",          label:"Sitio web / dominio",    placeholder:"habitaris.co" },
+    { key:"web",          label:"Sitio web / dominio",    placeholder:"habitaris.es" },
   ],
   correo: [
     { key:"emailPrincipal",    label:"Email principal (remitente)",  placeholder:"comercial@habitaris.es" },

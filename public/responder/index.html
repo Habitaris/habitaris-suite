@@ -52,7 +52,7 @@
     <h2>Respuesta enviada</h2>
     <p style="color:#888;font-size:13px">Hemos notificado al equipo de Habitaris. Gracias.</p>
   </div>
-  <div class="foot"><p>Habitaris · Bogotá D.C. · comercial@habitaris.co</p></div>
+  <div class="foot"><p>Habitaris · Bogotá D.C. · comercial@habitaris.es</p></div>
 </div>
 <script>
   var params = new URLSearchParams(window.location.search);
@@ -60,7 +60,7 @@
   var meetingDate = params.get("fecha") || "";
   var meetingHour = params.get("hora") || "";
   var fromEmail = params.get("email") || "";
-  var creadorEmail = params.get("creador") || "comercial@habitaris.co";
+  var creadorEmail = params.get("creador") || "comercial@habitaris.es";
   var selectedAction = "";
 
   document.getElementById("meetingInfo").textContent = meetingSubject + (meetingDate ? " · " + meetingDate : "") + (meetingHour ? " " + meetingHour : "");

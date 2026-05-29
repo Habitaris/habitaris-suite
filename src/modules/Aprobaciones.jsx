@@ -147,10 +147,10 @@ export default function HabitarisAprobaciones({ pais = "CO" }) {
   const [aprobaciones, saveAprobaciones, loadedA] = useStore("hab:aprobaciones:items", []);
   const [config, saveConfig, loadedC] = useStore("hab:aprobaciones:config", {
     usuarios: [
-      { id:"david", nombre:"David Parra Galera", cargo:"Director Ejecutivo", email:"david@habitaris.co", nivel:1, avatar:"👤" },
-      { id:"ana",   nombre:"Ana María Díaz Buitrago", cargo:"Directora Creativa", email:"ana@habitaris.co", nivel:1, avatar:"👩" },
-      { id:"residente", nombre:"Residente de obra", cargo:"Residente", email:"residente@habitaris.co", nivel:2, avatar:"👷" },
-      { id:"admin", nombre:"Coordinador Administrativo", cargo:"Admin", email:"admin@habitaris.co", nivel:3, avatar:"📋" },
+      { id:"david", nombre:"David Parra Galera", cargo:"Director Ejecutivo", email:"david@habitaris.es", nivel:1, avatar:"👤" },
+      { id:"ana",   nombre:"Ana María Díaz Buitrago", cargo:"Directora Creativa", email:"ana@habitaris.es", nivel:1, avatar:"👩" },
+      { id:"residente", nombre:"Residente de obra", cargo:"Residente", email:"residente@habitaris.es", nivel:2, avatar:"👷" },
+      { id:"admin", nombre:"Coordinador Administrativo", cargo:"Admin", email:"admin@habitaris.es", nivel:3, avatar:"📋" },
     ],
     cadenas: {
       ofertas:      { aprobadores:["david","ana"], umbral:0, umbralAlto:50000000, aprobadorAlto:"david" },
@@ -884,7 +884,7 @@ function TabConfig({ config, saveConfig }) {
             {[
               ["nombre","Nombre completo","Ej: Carlos Rodríguez"],
               ["cargo","Cargo","Ej: Residente de obra"],
-              ["email","Email","carlos@habitaris.co"],
+              ["email","Email","carlos@habitaris.es"],
             ].map(([k,lbl,ph]) => (
               <div key={k} style={{ marginBottom:8 }}>
                 <label style={{ display:"block", fontSize:9, fontWeight:700, color:T.inkLight, textTransform:"uppercase", marginBottom:3 }}>{lbl}</label>

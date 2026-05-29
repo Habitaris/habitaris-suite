@@ -526,7 +526,7 @@ function TabConfig() {
           <div style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",background:T.greenBg,borderRadius:4,border:`1px solid ${T.green}22`}}>
             <CheckCircle size={14} color={T.green}/>
             <span style={{fontSize:12,fontWeight:600,color:T.green}}>Resend</span>
-            <span style={{fontSize:10,color:T.inkMid}}>— Dominio habitaris.co verificado (SPF + DKIM + DMARC)</span>
+            <span style={{fontSize:10,color:T.inkMid}}>— Dominio habitaris.es verificado (SPF + DKIM + DMARC)</span>
           </div>
         </div>
 
@@ -552,15 +552,15 @@ function TabConfig() {
               <h3 style={{margin:"0 0 16px",fontSize:16,fontWeight:700}}>📬 Remitente por módulo</h3>
               <p style={{fontSize:12,color:"#888",margin:"0 0 16px"}}>Configura un correo remitente diferente para cada módulo. Si está vacío, se usa el general ({cfg?.correo?.emailPrincipal || getTenantContactSync().primaryEmail}).</p>
               <div style={{fontSize:11,color:"#8C6A00",background:"#FFF8E1",padding:"8px 12px",borderRadius:6,marginBottom:16}}>
-                ⚠️ Solo correos @habitaris.co (dominio verificado en Resend)
+                ⚠️ Solo correos @habitaris.es (dominio verificado en Resend)
               </div>
               {[
                 {id:"formularios",label:"Formularios",icon:"📋",placeholder:"comercial@habitaris.es"},
                 {id:"crm",label:"CRM",icon:"👥",placeholder:"comercial@habitaris.es"},
                 {id:"ofertas",label:"Ofertas",icon:"📄",placeholder:"comercial@habitaris.es"},
-                {id:"rrhh",label:"RRHH",icon:"🧑‍💼",placeholder:"rrhh@habitaris.co"},
-                {id:"contabilidad",label:"Contabilidad",icon:"💰",placeholder:"contabilidad@habitaris.co"},
-                {id:"proyectos",label:"Proyectos",icon:"📐",placeholder:"proyectos@habitaris.co"},
+                {id:"rrhh",label:"RRHH",icon:"🧑‍💼",placeholder:"rrhh@habitaris.es"},
+                {id:"contabilidad",label:"Contabilidad",icon:"💰",placeholder:"contabilidad@habitaris.es"},
+                {id:"proyectos",label:"Proyectos",icon:"📐",placeholder:"proyectos@habitaris.es"},
               ].map(m => (
                 <div key={m.id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,paddingBottom:10,borderBottom:"1px solid #f0f0f0"}}>
                   <span style={{fontSize:16,width:24}}>{m.icon}</span>

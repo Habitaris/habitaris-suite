@@ -39,7 +39,7 @@ export default async function handler(req,res){
       var rec={hiring_id:b.hiring_id,tipo:b.tipo,aprobador_nombre:b.aprobador_nombre||"",aprobador_email:b.aprobador_email||"",token:tk};
       var r5=await fetch(SB_URL+"/rest/v1/approvals",{method:"POST",headers:sbH(),body:JSON.stringify(rec)});
       var d5=await r5.json();
-      return res.status(200).json({ok:true,data:d5[0]||d5,link:"https://suite.habitaris.co/aprobar?token="+tk});
+      return res.status(200).json({ok:true,data:d5[0]||d5,link:"https://suite.habitaris.es/aprobar?token="+tk});
     }
     if(req.method==="PATCH"){
       var b=req.body||{};

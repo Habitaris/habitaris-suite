@@ -89,12 +89,12 @@ function getBrand() {
 
 /* ─────── SAMPLE EMPLOYEES ─────── */
 const SAMPLE_EMPLOYEES = [
-  { id:"e1", nombre:"Ana García Ruiz", cargo:"Diseñadora de Interiores", departamento:"Diseño", email:"ana@habitaris.co", telefono:"+57 310 555 1234", foto:null, fechaIngreso:"2023-03-15", tipoDoc:"CC", documento:"1.020.456.789", rh:"O+", eps:"Sura", arl:"Sura" },
-  { id:"e2", nombre:"Carlos López Mejía", cargo:"Arquitecto Senior", departamento:"Arquitectura", email:"carlos@habitaris.co", telefono:"+57 311 555 5678", foto:null, fechaIngreso:"2022-08-01", tipoDoc:"CC", documento:"80.456.123", rh:"A+", eps:"Compensar", arl:"Sura" },
-  { id:"e3", nombre:"María Rodríguez Peña", cargo:"Directora de Obra", departamento:"Obra", email:"maria@habitaris.co", telefono:"+57 320 555 9012", foto:null, fechaIngreso:"2023-01-10", tipoDoc:"CC", documento:"52.789.456", rh:"B+", eps:"Sanitas", arl:"Positiva" },
-  { id:"e4", nombre:"Pedro Martínez Torres", cargo:"Instalador Técnico", departamento:"Obra", email:"pedro@habitaris.co", telefono:"+57 300 555 3456", foto:null, fechaIngreso:"2024-02-20", tipoDoc:"CC", documento:"1.098.765.432", rh:"O-", eps:"Nueva EPS", arl:"Positiva" },
-  { id:"e5", nombre:"Laura Sánchez Díaz", cargo:"Gerente General", departamento:"Dirección", email:"laura@habitaris.co", telefono:"+57 315 555 7890", foto:null, fechaIngreso:"2022-01-01", tipoDoc:"CC", documento:"35.123.789", rh:"AB+", eps:"Sura", arl:"Sura" },
-  { id:"e6", nombre:"David Torres Vargas", cargo:"Asesor Comercial", departamento:"Comercial", email:"david@habitaris.co", telefono:"+57 318 555 2345", foto:null, fechaIngreso:"2024-06-01", tipoDoc:"CC", documento:"1.015.432.876", rh:"A-", eps:"Compensar", arl:"Sura" },
+  { id:"e1", nombre:"Ana García Ruiz", cargo:"Diseñadora de Interiores", departamento:"Diseño", email:"ana@habitaris.es", telefono:"+57 310 555 1234", foto:null, fechaIngreso:"2023-03-15", tipoDoc:"CC", documento:"1.020.456.789", rh:"O+", eps:"Sura", arl:"Sura" },
+  { id:"e2", nombre:"Carlos López Mejía", cargo:"Arquitecto Senior", departamento:"Arquitectura", email:"carlos@habitaris.es", telefono:"+57 311 555 5678", foto:null, fechaIngreso:"2022-08-01", tipoDoc:"CC", documento:"80.456.123", rh:"A+", eps:"Compensar", arl:"Sura" },
+  { id:"e3", nombre:"María Rodríguez Peña", cargo:"Directora de Obra", departamento:"Obra", email:"maria@habitaris.es", telefono:"+57 320 555 9012", foto:null, fechaIngreso:"2023-01-10", tipoDoc:"CC", documento:"52.789.456", rh:"B+", eps:"Sanitas", arl:"Positiva" },
+  { id:"e4", nombre:"Pedro Martínez Torres", cargo:"Instalador Técnico", departamento:"Obra", email:"pedro@habitaris.es", telefono:"+57 300 555 3456", foto:null, fechaIngreso:"2024-02-20", tipoDoc:"CC", documento:"1.098.765.432", rh:"O-", eps:"Nueva EPS", arl:"Positiva" },
+  { id:"e5", nombre:"Laura Sánchez Díaz", cargo:"Gerente General", departamento:"Dirección", email:"laura@habitaris.es", telefono:"+57 315 555 7890", foto:null, fechaIngreso:"2022-01-01", tipoDoc:"CC", documento:"35.123.789", rh:"AB+", eps:"Sura", arl:"Sura" },
+  { id:"e6", nombre:"David Torres Vargas", cargo:"Asesor Comercial", departamento:"Comercial", email:"david@habitaris.es", telefono:"+57 318 555 2345", foto:null, fechaIngreso:"2024-06-01", tipoDoc:"CC", documento:"1.015.432.876", rh:"A-", eps:"Compensar", arl:"Sura" },
 ]
 
 /* ─────── CARD TEMPLATES ─────── */

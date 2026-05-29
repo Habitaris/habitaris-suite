@@ -143,8 +143,8 @@ export default async function handler(req,res){
       var created=d6[0]||d6;
       return res.status(200).json({ok:true,data:created,
         links:{
-          propuesta:"https://suite.habitaris.co/propuesta?token="+rec.token_propuesta,
-          datos:"https://suite.habitaris.co/contratacion?token="+rec.token_datos
+          propuesta:"https://suite.habitaris.es/propuesta?token="+rec.token_propuesta,
+          datos:"https://suite.habitaris.es/contratacion?token="+rec.token_datos
         }
       });
     }

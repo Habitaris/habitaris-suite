@@ -739,7 +739,7 @@ export default function FormularioPublico() {
     // EMAIL PUNTUAL DE 'NUEVA RESPUESTA' — DESACTIVADO 29/04/2026
     // ════════════════════════════════════════════════════════════════
     // Razón: el destinatario era marca.adminEmail con fallback hardcoded
-    // a "comercial@habitaris.co" (buzón muerto desde la migración a .es).
+    // a "comercial@habitaris.es" (buzón muerto desde la migración a .es).
     // Aunque se cambiara a .es, la decisión de producto (David, 29/04) es
     // sustituir todos los emails puntuales por DIGESTS programados desde
     // el módulo Comunicaciones:

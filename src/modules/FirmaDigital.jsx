@@ -200,7 +200,7 @@ const SAMPLE_DOCS = [
     descripcion:"Contrato de prestación de servicios de diseño interior para apartamento en Rosales, Bogotá.",
     cliente:"María Fernanda Gómez", proyecto:"Apto 502 Rosales", valor:"$45.000.000 COP",
     firmantes:[
-      { id:"f1", nombre:"Laura Sánchez Díaz", rol:"Representante Legal", email:"laura@habitaris.co", estado:"pendiente", firma:null, fechaFirma:null },
+      { id:"f1", nombre:"Laura Sánchez Díaz", rol:"Representante Legal", email:"laura@habitaris.es", estado:"pendiente", firma:null, fechaFirma:null },
       { id:"f2", nombre:"María Fernanda Gómez", rol:"Cliente", email:"mfgomez@email.com", estado:"pendiente", firma:null, fechaFirma:null },
     ],
     estado:"pendiente", fechaCreacion:"2026-02-20T10:00:00Z", fechaLimite:"2026-03-05",
@@ -209,9 +209,9 @@ const SAMPLE_DOCS = [
     descripcion:"Acta de inicio de obras de remodelación integral.",
     cliente:"Andrés Mejía Ruiz", proyecto:"Casa Chicó Norte", valor:"$120.000.000 COP",
     firmantes:[
-      { id:"f3", nombre:"Carlos López Mejía", rol:"Director de Proyecto", email:"carlos@habitaris.co", estado:"firmado", firma:{ imagen:"data:image/png;base64,demo1", fecha:"2026-02-18T14:30:00Z" }, fechaFirma:"2026-02-18T14:30:00Z" },
+      { id:"f3", nombre:"Carlos López Mejía", rol:"Director de Proyecto", email:"carlos@habitaris.es", estado:"firmado", firma:{ imagen:"data:image/png;base64,demo1", fecha:"2026-02-18T14:30:00Z" }, fechaFirma:"2026-02-18T14:30:00Z" },
       { id:"f4", nombre:"Andrés Mejía Ruiz", rol:"Propietario", email:"amejia@email.com", estado:"pendiente", firma:null, fechaFirma:null },
-      { id:"f5", nombre:"María Rodríguez Peña", rol:"Directora de Obra", email:"maria@habitaris.co", estado:"firmado", firma:{ imagen:"data:image/png;base64,demo2", fecha:"2026-02-18T15:00:00Z" }, fechaFirma:"2026-02-18T15:00:00Z" },
+      { id:"f5", nombre:"María Rodríguez Peña", rol:"Directora de Obra", email:"maria@habitaris.es", estado:"firmado", firma:{ imagen:"data:image/png;base64,demo2", fecha:"2026-02-18T15:00:00Z" }, fechaFirma:"2026-02-18T15:00:00Z" },
     ],
     estado:"parcial", fechaCreacion:"2026-02-18T09:00:00Z", fechaLimite:"2026-02-28",
     auditoria:[
@@ -223,7 +223,7 @@ const SAMPLE_DOCS = [
     descripcion:"Acta de conformidad y recepción final de obra de adecuación de oficina.",
     cliente:"TechStar S.A.S", proyecto:"Oficina 301 WTC", valor:"$85.000.000 COP",
     firmantes:[
-      { id:"f6", nombre:"Laura Sánchez Díaz", rol:"Gerente General", email:"laura@habitaris.co", estado:"firmado", firma:{ imagen:"data:image/png;base64,demo3", fecha:"2026-02-10T11:00:00Z" }, fechaFirma:"2026-02-10T11:00:00Z" },
+      { id:"f6", nombre:"Laura Sánchez Díaz", rol:"Gerente General", email:"laura@habitaris.es", estado:"firmado", firma:{ imagen:"data:image/png;base64,demo3", fecha:"2026-02-10T11:00:00Z" }, fechaFirma:"2026-02-10T11:00:00Z" },
       { id:"f7", nombre:"Roberto Acosta", rol:"Rep. Legal TechStar", email:"racosta@techstar.co", estado:"firmado", firma:{ imagen:"data:image/png;base64,demo4", fecha:"2026-02-10T16:00:00Z" }, fechaFirma:"2026-02-10T16:00:00Z" },
     ],
     estado:"completado", fechaCreacion:"2026-02-10T08:00:00Z", fechaLimite:"2026-02-15",
