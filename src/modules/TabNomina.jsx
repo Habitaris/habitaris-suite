@@ -1130,33 +1130,39 @@ ${(selN.otrasDed||0)>0?`<tr><td>Otras deducciones</td><td></td><td style="font-f
 
             // Para un rango de dias (Q1, Q2 o mes completo), devuelve {otId: dias}
             // incluyendo: imputaciones manuales + festivos del periodo + dias de novedad
+            // Devuelve {otId: {trab, fest, nov, total}} para que la tabla muestre el desglose
             const diasPorOTExtendido = (incluyeDia) => {
               const out = {};
-              const vistos = new Set(); // evitar doble conteo
-              // 1) Imputaciones manuales (prevalecen sobre calendario base)
+              const vistos = new Set();
+              const bump = (otId, tipo) => {
+                if (!out[otId]) out[otId] = {trab:0, fest:0, nov:0, total:0};
+                out[otId][tipo]++;
+                out[otId].total++;
+              };
+              // 1) Imputaciones manuales = dias trabajados
               Object.entries(iDias).forEach(([k, otId]) => {
                 if (!otId || otId === "__conflicto__") return;
                 const dia = parseInt(k.split("-")[2], 10);
                 if (!incluyeDia(dia)) return;
-                out[otId] = (out[otId] || 0) + 1;
+                bump(otId, "trab");
                 vistos.add(k);
               });
-              // 2) Festivos del periodo - asignar a centro base si no imputado manualmente
+              // 2) Festivos del periodo - centro base
               (festivosMes || []).forEach(h => {
                 const k = fechaAStr(h.date);
                 if (vistos.has(k)) return;
                 if (!incluyeDia(h.date.getDate())) return;
                 const cId = centroBaseParaFecha(k);
-                if (cId) { out[cId] = (out[cId] || 0) + 1; vistos.add(k); }
+                if (cId) { bump(cId, "fest"); vistos.add(k); }
               });
-              // 3) Dias de novedad (incap, vac, licencia) - asignar a centro base
+              // 3) Novedades - centro base
               Object.entries(nDias).forEach(([k, tipoNov]) => {
                 if (vistos.has(k)) return;
                 if (tipoNov === "normal") return;
                 const dia = parseInt(k.split("-")[2], 10);
                 if (!incluyeDia(dia)) return;
                 const cId = centroBaseParaFecha(k);
-                if (cId) { out[cId] = (out[cId] || 0) + 1; vistos.add(k); }
+                if (cId) { bump(cId, "nov"); vistos.add(k); }
               });
               return out;
             };
@@ -1165,20 +1171,22 @@ ${(selN.otrasDed||0)>0?`<tr><td>Otras deducciones</td><td></td><td style="font-f
             const diasQ1 = diasPorOTExtendido(d => d >= 1 && d <= 15);
             const diasQ2 = diasPorOTExtendido(d => d >= 16 && d <= ultDiaMes);
             const diasMes = diasPorOTExtendido(d => true);
-            const totQ1 = Object.values(diasQ1).reduce((a,b)=>a+b,0);
-            const totQ2 = Object.values(diasQ2).reduce((a,b)=>a+b,0);
-            const totMes = Object.values(diasMes).reduce((a,b)=>a+b,0);
+            const sumarTotales = (mapa) => Object.values(mapa).reduce((a,b)=>a+b.total,0);
+            const sumarPorTipo = (mapa, tipo) => Object.values(mapa).reduce((a,b)=>a+b[tipo],0);
+            const totQ1 = sumarTotales(diasQ1);
+            const totQ2 = sumarTotales(diasQ2);
+            const totMes = sumarTotales(diasMes);
 
-            // Helper: lista de OTs con codigo/nombre
             const otsConDias = (mapa, total) => {
-              return Object.entries(mapa).map(([otId, dias]) => {
+              return Object.entries(mapa).map(([otId, info]) => {
                 const c = centros.find(x => x.id === otId);
                 return {
                   id: otId,
                   codigo: c ? c.codigo : otId,
                   nombre: c ? c.nombre : "(OT no encontrada)",
-                  dias: dias,
-                  pct: total > 0 ? (dias / total) * 100 : 0
+                  trab: info.trab, fest: info.fest, nov: info.nov,
+                  dias: info.total,
+                  pct: total > 0 ? (info.total / total) * 100 : 0
                 };
               }).sort((a,b) => b.dias - a.dias);
             };
@@ -1243,12 +1251,15 @@ ${(selN.otrasDed||0)>0?`<tr><td>Otras deducciones</td><td></td><td style="font-f
               if (ots.length === 0) {
                 return `<div style="padding:8px;background:#FAFAF7;border:1px solid #eee;border-radius:4px;font-size:8pt;color:#999;font-style:italic;text-align:center;margin-bottom:6px">Sin imputaciones en este periodo</div>`;
               }
-              let h = `<table><thead><tr><th>OT</th><th>Centro / Proyecto</th><th style="text-align:right">Dias</th><th style="text-align:right">%</th><th style="text-align:right">${labelTotal}</th></tr></thead><tbody>`;
+              let h = `<table><thead><tr><th>OT</th><th>Centro / Proyecto</th><th style="text-align:right" title="Dias trabajados (imputaciones manuales)">Trab.</th><th style="text-align:right" title="Festivos asignados al centro base">Fest.</th><th style="text-align:right" title="Novedades (incap/vac/lic) al centro base">Nov.</th><th style="text-align:right">Dias</th><th style="text-align:right">%</th><th style="text-align:right">${labelTotal}</th></tr></thead><tbody>`;
               ots.forEach(o => {
                 const monto = montoTotal * (o.pct / 100);
-                h += `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right">${o.dias}</td><td style="text-align:right">${fmtPct(o.pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(monto)}</b></td></tr>`;
+                h += `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right;color:#92400E">${o.fest||""}</td><td style="text-align:right;color:#B91C1C">${o.nov||""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(monto)}</b></td></tr>`;
               });
-              h += `<tr style="background:#111;color:#fff"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right"><b>${ots.reduce((s,o)=>s+o.dias,0)}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(montoTotal)}</b></td></tr>`;
+              const tT = ots.reduce((s,o)=>s+o.trab,0);
+              const tF = ots.reduce((s,o)=>s+o.fest,0);
+              const tN = ots.reduce((s,o)=>s+o.nov,0);
+              h += `<tr style="background:#111;color:#fff"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${tT}</td><td style="text-align:right">${tF||""}</td><td style="text-align:right">${tN||""}</td><td style="text-align:right"><b>${ots.reduce((s,o)=>s+o.dias,0)}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(montoTotal)}</b></td></tr>`;
               h += `</tbody></table>`;
               return h;
             };
@@ -1327,39 +1338,53 @@ ${esQuincenal ? `<div class="kv"><div class="l">Anticipo Q1 ya pagado</div><div 
 ${tablaOTs(otsQ2, q2Total, esQuincenal ? "Coste Q2 imputado" : "Coste neto imputado")}
 
 <h2>${esQuincenal ? "3." : "2."} SEGURIDAD SOCIAL Y PRESTACIONES — a cargo de la empresa</h2>
-<h3>Aportes a seguridad social (sobre IBC ${fmtCurr(ibc)})</h3>
+
+<h3 style="background:#FEE2E2;color:#991B1B;padding:6px 8px;border-radius:3px">💵 CAJA — aportes a seguridad social y parafiscales (se pagan en PILA del mes siguiente)</h3>
 <div class="kv"><div class="l">Salud — ${fmtPct(pctSalud)} ${calc.exS?"(exonerada Art.114-1 ET)":""}</div><div class="v">${fmtCurr(segSocial.salud)}</div></div>
 <div class="kv"><div class="l">Pension — ${fmtPct(pctPension)}</div><div class="v">${fmtCurr(segSocial.pension)}</div></div>
 <div class="kv"><div class="l">ARL — ${fmtPct(pctArl)} (nivel ${selN.arl||0})</div><div class="v">${fmtCurr(segSocial.arl)}</div></div>
 <div class="kv"><div class="l">Caja de Compensacion — ${fmtPct(pctCaja)}</div><div class="v">${fmtCurr(segSocial.caja)}</div></div>
 <div class="kv"><div class="l">ICBF — ${fmtPct(pctIcbf)} ${calc.exS?"(exonerada Art.114-1 ET)":""}</div><div class="v">${fmtCurr(segSocial.icbf)}</div></div>
 <div class="kv"><div class="l">SENA — ${fmtPct(pctSena)} ${calc.exS?"(exonerada Art.114-1 ET)":""}</div><div class="v">${fmtCurr(segSocial.sena)}</div></div>
-<div class="kv subtot"><div class="l">Total seguridad social y parafiscales</div><div class="v">${fmtCurr(totSegSocial)}</div></div>
-<h3>Provisiones de prestaciones sociales</h3>
-<div class="kv"><div class="l">Prima de servicios — 8.33%</div><div class="v">${fmtCurr(prestaciones.prima)}</div></div>
-<div class="kv"><div class="l">Cesantias — 8.33%</div><div class="v">${fmtCurr(prestaciones.ces)}</div></div>
-<div class="kv"><div class="l">Intereses sobre cesantias — 1%</div><div class="v">${fmtCurr(prestaciones.intC)}</div></div>
-<div class="kv"><div class="l">Vacaciones — 4.17%</div><div class="v">${fmtCurr(prestaciones.vac)}</div></div>
-<div class="kv subtot"><div class="l">Total prestaciones</div><div class="v">${fmtCurr(totPrestaciones)}</div></div>
-<div class="kv bigtot"><div class="l">TOTAL SEGURIDAD SOCIAL + PRESTACIONES</div><div class="v">${fmtCurr(totBloque3)}</div></div>
-<h3>Distribucion por OT (segun ${totMes} dias totales imputados del mes)</h3>
-${tablaOTs(otsMes, totBloque3, "Coste imputado")}
+<div class="kv subtot"><div class="l">Total CAJA seguridad social (IBC ${fmtCurr(ibc)})</div><div class="v">${fmtCurr(totSegSocial)}</div></div>
+<h3 style="font-size:8pt;margin-top:4px;color:#666">Distribucion CAJA por OT (${totMes} dias del mes — trabajados + festivos + novedades al centro base)</h3>
+${tablaOTs(otsMes, totSegSocial, "CAJA imputada")}
+
+<h3 style="background:#FEF3C7;color:#92400E;padding:6px 8px;border-radius:3px;margin-top:14px">📊 PROVISIONES — prestaciones sociales (pago futuro segun ley o liquidacion)</h3>
+<div class="kv"><div class="l">Prima de servicios — 8.33% (pago semestral: jun/dic)</div><div class="v">${fmtCurr(prestaciones.prima)}</div></div>
+<div class="kv"><div class="l">Cesantias — 8.33% (consigna feb año siguiente)</div><div class="v">${fmtCurr(prestaciones.ces)}</div></div>
+<div class="kv"><div class="l">Intereses sobre cesantias — 1% (paga ene año siguiente)</div><div class="v">${fmtCurr(prestaciones.intC)}</div></div>
+<div class="kv"><div class="l">Vacaciones — 4.17% (cuando se disfrutan o en liquidacion)</div><div class="v">${fmtCurr(prestaciones.vac)}</div></div>
+<div class="kv subtot"><div class="l">Total PROVISIONES</div><div class="v">${fmtCurr(totPrestaciones)}</div></div>
+<h3 style="font-size:8pt;margin-top:4px;color:#666">Distribucion PROVISIONES por OT (${totMes} dias del mes — trabajados + festivos + novedades al centro base)</h3>
+${tablaOTs(otsMes, totPrestaciones, "Provision imputada")}
+
+<div class="kv bigtot"><div class="l">TOTAL SEG.SOCIAL (caja) + PRESTACIONES (provision)</div><div class="v">${fmtCurr(totBloque3)}</div></div>
 
 <h2>${esQuincenal ? "4." : "3."} RESUMEN TOTAL COSTO EMPRESA</h2>
-<div class="kv"><div class="l">${esQuincenal ? "Anticipo Q1" : "Bloque 1 (no aplica - mensual)"}</div><div class="v">${esQuincenal ? fmtCurr(q1Total) : "—"}</div></div>
-<div class="kv"><div class="l">${esQuincenal ? "Pago Q2" : "Pago mensual neto"}</div><div class="v">${fmtCurr(q2Total)}</div></div>
-<div class="kv"><div class="l">Deducciones empleado (ya descontadas, las paga la empresa al sistema)</div><div class="v">${fmtCurr(totDed)}</div></div>
-<div class="kv"><div class="l">Seguridad social + prestaciones (a cargo empresa)</div><div class="v">${fmtCurr(totBloque3)}</div></div>
-<div class="kv bigtot"><div class="l">COSTO TOTAL EMPRESA DEL MES</div><div class="v">${fmtCurr(totalCostoEmpresa)}</div></div>
-<h3>Distribucion total por OT (${totMes} dias del mes — imputados + festivos + novedades al centro base)</h3>
+
+<h3 style="background:#FEE2E2;color:#991B1B;padding:6px 8px;border-radius:3px">💵 GASTOS DE CAJA DEL PERIODO (tesoreria)</h3>
+${esQuincenal ? `<div class="kv"><div class="l">Anticipo Q1 (pagado 15 ${MESES[mes].toLowerCase()})</div><div class="v">${fmtCurr(q1Total)}</div></div>` : ''}
+<div class="kv"><div class="l">${esQuincenal ? "Pago Q2 (pagado fin de mes)" : "Pago mensual neto (fin de mes)"}</div><div class="v">${fmtCurr(q2Total)}</div></div>
+<div class="kv"><div class="l">Deducciones empleado (descontadas del salario, las paga la empresa al sistema PILA)</div><div class="v">${fmtCurr(totDed)}</div></div>
+<div class="kv"><div class="l">Aportes empresa seguridad social y parafiscales (PILA mes siguiente)</div><div class="v">${fmtCurr(totSegSocial)}</div></div>
+<div class="kv subtot"><div class="l">Total CAJA del mes</div><div class="v">${fmtCurr((esQuincenal?q1Total:0) + q2Total + totDed + totSegSocial)}</div></div>
+
+<h3 style="background:#FEF3C7;color:#92400E;padding:6px 8px;border-radius:3px;margin-top:10px">📊 PROVISIONES DEL PERIODO (pago futuro)</h3>
+<div class="kv"><div class="l">Prima + Cesantias + Intereses + Vacaciones (acumuladas)</div><div class="v">${fmtCurr(totPrestaciones)}</div></div>
+<div class="kv subtot"><div class="l">Total PROVISIONES del mes</div><div class="v">${fmtCurr(totPrestaciones)}</div></div>
+
+<div class="kv bigtot"><div class="l">COSTO TOTAL EMPRESA DEL MES (caja + provisiones)</div><div class="v">${fmtCurr(totalCostoEmpresa)}</div></div>
+
+<h3 style="font-size:8pt;margin-top:4px;color:#666">Distribucion total por OT (${totMes} dias del mes — trabajados + festivos + novedades al centro base)</h3>
 ${tablaOTs(otsMes, totalCostoEmpresa, "Costo total imputado")}
 
 <div class="notebox">
 <b>Notas para conciliacion contable:</b><br/>
-&bull; Q1 y Q2 son los desembolsos efectivos al trabajador (Q1 el 15, Q2 fin de mes).<br/>
-&bull; Seguridad social y prestaciones se reconocen como provision del mes pero se desembolsan en distinto calendario (PILA mes siguiente, prestaciones segun ley).<br/>
-&bull; Distribucion por OT incluye dias imputados + festivos + novedades. Cada festivo y dia de novedad (incapacidad, vacaciones, licencias) se asigna al centro al que le tocaba ese dia segun el calendario base del empleado.<br/>
-&bull; Las imputaciones son informativas: NO modifican el calculo de nomina. Para corregirlas en un mes pagado, usa el boton ✏️ Editar imputaciones del calendario.<br/>
+&bull; <b>💵 CAJA del mes</b> = Q1 + Q2 + deducciones del empleado (descontadas del salario, las paga la empresa al sistema PILA) + aportes empresa a seguridad social/parafiscales. Todo esto sale del banco de la empresa: salarios al empleado este mes, y PILA al mes siguiente.<br/>
+&bull; <b>📊 PROVISIONES</b> = prima, cesantias, intereses, vacaciones. NO salen del banco este mes — se acumulan como pasivo laboral y se pagan en calendarios distintos (prima semestral, cesantias feb año siguiente, intereses ene año siguiente, vacaciones cuando se disfrutan o en liquidacion).<br/>
+&bull; <b>Distribucion por OT (Logica B):</b> incluye dias trabajados + festivos + novedades. Cada festivo y dia de novedad (incapacidad, vacaciones, licencias) se asigna al centro al que le tocaba ese dia segun el calendario base del empleado. Si por algun motivo debe asignarse manualmente, usa el boton ✏️ Editar imputaciones del calendario.<br/>
+&bull; <b>Imputaciones informativas:</b> NO modifican el calculo de nomina ni el pago al empleado. Solo afectan la distribucion del costo entre centros para reportes y conciliacion contable.<br/>
 &bull; ${calc.exS ? "Aplica exoneracion Art.114-1 ET por ingresar < 10 SMLMV: salud, ICBF y SENA en cero." : "No aplica exoneracion Art.114-1 ET."}
 </div>
 
@@ -1898,7 +1923,6 @@ ${body}
               {icon:"📄",label:"Nómina",desc:`Devengado ${fmt(calc.dev)} · Deducciones ${fmt(calc.totD)} · Neto ${fmt(calc.neto)}`,action:"nomina"},
               {icon:"📄",label:"Reporte de novedades",desc:`Festivos, incapacidades, licencias e impacto en nómina`,gen:genNovedadesHtml},
               {icon:"📊",label:"Costos por imputación",desc:`Costos Q1, Q2, seg. social y total — distribuidos por OT`,gen:genImputacionesHtml},
-              {icon:"📈",label:"Costes por OT",desc:`Reparto de coste empresa entre órdenes de trabajo`,gen:genCostesHtml},
             ].map((d,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
                 onClick={()=>{
