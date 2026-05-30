@@ -738,6 +738,10 @@ export function TabNomina(){
   const [modoCal,setModoCal]=useState("novedad"); // "novedad" | "imputacion" (mantenido por compatibilidad, ya no se usa en UI)
   // Sprint UX-1: modal contextual al clicar día. null = cerrado, {day, k} = abierto sobre ese día
   const [dayEditor,setDayEditor]=useState(null);
+  // Sprint OOTT: modo edicion de imputaciones para meses ya pagados.
+  // Cuando esta activo, el calendario se vuelve clickable aunque selN.estado=="pagada".
+  // Solo deberia tocar las imputaciones de OT (informativas, no afectan calculo de nomina).
+  const [modoEditarImp,setModoEditarImp]=useState(false);
   // Adjuntos de novedades del mes en curso: objeto { "<empId>:<fechaKey>": [{name,size,data}] }.
   // Se persiste en kv_store con clave hab:nov_adjuntos:<anio>:<mes> (mismo mecanismo que soporte de pago).
   const [novAdjuntos,setNovAdjuntos]=useState({});
@@ -913,7 +917,9 @@ export function TabNomina(){
   const periodoMes = selN ? validarPeriodo(selN, 1, _lastDay) : { pendientes: [], count: 0 };
 
   if(vista==="detalle"&&selN&&calc){
-    const ed=selN.estado==="borrador"||selN.estado==="q1_pagado";
+    const esBorrador=selN.estado==="borrador"||selN.estado==="q1_pagado";
+    const ed=esBorrador||modoEditarImp;
+    const esPagada=selN.estado==="pagada"||selN.estado==="liquidada";
     const isQ=selN.modalidadPago!=="mensual";
     const u=(f)=>upd(selN.id,f);
     // ── Referencia de pago automática ──
@@ -1537,8 +1543,27 @@ ${body}
                   <div style={{fontSize:10,color:"#7F1D1D",marginTop:6,fontStyle:"italic"}}>🔴 = día laboral sin OT · ⚠️ = día con conflicto entre calendarios. Haz click en el día del calendario para resolverlo, o registra una novedad si no se trabajó.</div>
                 </div>;
               })()}
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,gap:8,flexWrap:"wrap"}}>
                 <STit>📅 Calendario {MESES[mes]} {anio}</STit>
+                {esPagada && !modoEditarImp && (
+                  <button
+                    type="button"
+                    onClick={()=>{
+                      if(!confirm("Vas a entrar en MODO EDICION DE IMPUTACIONES.\n\nSolo deberias cambiar a que OT corresponde cada dia trabajado. NO modifiques novedades ni horas extras ni nada mas - el mes ya esta pagado.\n\nLos cambios en imputaciones son informativos (afectan al informe de Costos por OT, no a la nomina pagada).\n\n¿Continuar?")) return;
+                      setModoEditarImp(true);
+                    }}
+                    style={{padding:"4px 10px",fontSize:10,fontWeight:600,border:"1px solid #1E6B42",borderRadius:4,background:"#E8F4EE",color:"#1E6B42",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}
+                    title="Reabre el calendario para corregir imputaciones de OT. No afecta el pago de nomina ya realizado."
+                  >✏️ Editar imputaciones</button>
+                )}
+                {modoEditarImp && (
+                  <button
+                    type="button"
+                    onClick={()=>{ setModoEditarImp(false); window.toast&&window.toast("Modo edicion cerrado","success"); }}
+                    style={{padding:"4px 10px",fontSize:10,fontWeight:700,border:"1px solid #92400E",borderRadius:4,background:"#FEF3C7",color:"#92400E",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}
+                    title="Cierra el modo edicion. No deshace los cambios ya hechos."
+                  >✓ Salir de modo edicion</button>
+                )}
                 {(() => {
                   // Verificar que el empleado tiene calendarios asignados en algún centro
                   const tieneCals = centros.some(c =>
@@ -1615,6 +1640,11 @@ ${body}
                   );
                 })()}
               </div>
+              {modoEditarImp && (
+                <div style={{padding:"8px 12px",marginBottom:8,background:"#FEF3C7",border:"1px solid #F59E0B",borderRadius:4,fontSize:11,color:"#92400E"}}>
+                  ⚠️ <strong>MODO EDICION DE IMPUTACIONES ACTIVO</strong> — el mes esta pagado. Solo cambia la OT de los dias trabajados (las imputaciones son informativas, no afectan el pago). NO modifiques novedades, horas extras u otros valores.
+                </div>
+              )}
               <div style={{display:"flex",gap:6,marginBottom:8,alignItems:"center",padding:"6px 10px",background:"#F9F8F4",borderRadius:4,border:`1px dashed ${T.border}`}}>
                 <span style={{fontSize:10,color:T.inkLight}}>💡 <strong>Haz click en cualquier día</strong> para imputar OT, registrar novedad o limpiar.</span>
               </div>
