@@ -1096,23 +1096,74 @@ ${(selN.otrasDed||0)>0?`<tr><td>Otras deducciones</td><td></td><td style="font-f
             const fmtCurr = v => new Intl.NumberFormat(getTenantDefaultsSync().locale,{style:"currency",currency:"COP",maximumFractionDigits:0}).format(v||0);
             const fmtPct = v => (v||0).toFixed(1) + "%";
 
-            // Clasificar dias imputados en Q1 (1-15) y Q2 (16-fin)
-            const impQ1 = {}, impQ2 = {};
-            Object.entries(iDias).forEach(([k, otId]) => {
-              if (!otId || otId === "__conflicto__") return;
-              const dia = parseInt(k.split("-")[2], 10);
-              if (dia <= 15) impQ1[k] = otId; else impQ2[k] = otId;
-            });
+            // Logica B (acordada con David, 31/05/2026): festivos y dias de novedad
+            // se asignan al CENTRO BASE segun calendario del empleado. Es mas equitativo
+            // que repartir proporcionalmente (lo importante: en Colombia casi todos los
+            // lunes son festivos por Ley Emiliani, y un centro que solo tiene lunes seria
+            // injustamente cargado con todos los festivos diluidos si se reparten
+            // proporcionalmente).
+            //
+            // Si el usuario imputa MANUALMENTE un dia festivo o de novedad (modo Editar
+            // imputaciones), esa imputacion manual prevalece sobre el calendario base.
+            const centroBaseParaFecha = (fechaStr) => {
+              const d = new Date(fechaStr + "T12:00:00");
+              const dow = d.getDay();
+              const dowMap = ["D","L","M","X","J","V","S"];
+              const diaSem = dowMap[dow];
+              for (const c of (centros||[])) {
+                if (c.activo === false) continue;
+                for (const cal of (c.calendarios||[])) {
+                  if (!Array.isArray(cal.dias)) continue;
+                  if (!cal.dias.includes(diaSem)) continue;
+                  const emps = cal.empleados || c.empleados || [];
+                  if (!emps.includes(selN.empId)) continue;
+                  if (cal.vigencia_desde && fechaStr < cal.vigencia_desde) continue;
+                  if (cal.vigencia_hasta && fechaStr > cal.vigencia_hasta) continue;
+                  return c.id;
+                }
+              }
+              return null;
+            };
+            // Convertir Date a "YYYY-MM-DD"
+            const fechaAStr = (f) => `${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,"0")}-${String(f.getDate()).padStart(2,"0")}`;
 
-            // Dias por OT en cada bloque
-            const diasPorOT = (mapa) => {
+            // Para un rango de dias (Q1, Q2 o mes completo), devuelve {otId: dias}
+            // incluyendo: imputaciones manuales + festivos del periodo + dias de novedad
+            const diasPorOTExtendido = (incluyeDia) => {
               const out = {};
-              Object.values(mapa).forEach(otId => { out[otId] = (out[otId]||0) + 1; });
+              const vistos = new Set(); // evitar doble conteo
+              // 1) Imputaciones manuales (prevalecen sobre calendario base)
+              Object.entries(iDias).forEach(([k, otId]) => {
+                if (!otId || otId === "__conflicto__") return;
+                const dia = parseInt(k.split("-")[2], 10);
+                if (!incluyeDia(dia)) return;
+                out[otId] = (out[otId] || 0) + 1;
+                vistos.add(k);
+              });
+              // 2) Festivos del periodo - asignar a centro base si no imputado manualmente
+              (festivosMes || []).forEach(h => {
+                const k = fechaAStr(h.date);
+                if (vistos.has(k)) return;
+                if (!incluyeDia(h.date.getDate())) return;
+                const cId = centroBaseParaFecha(k);
+                if (cId) { out[cId] = (out[cId] || 0) + 1; vistos.add(k); }
+              });
+              // 3) Dias de novedad (incap, vac, licencia) - asignar a centro base
+              Object.entries(nDias).forEach(([k, tipoNov]) => {
+                if (vistos.has(k)) return;
+                if (tipoNov === "normal") return;
+                const dia = parseInt(k.split("-")[2], 10);
+                if (!incluyeDia(dia)) return;
+                const cId = centroBaseParaFecha(k);
+                if (cId) { out[cId] = (out[cId] || 0) + 1; vistos.add(k); }
+              });
               return out;
             };
-            const diasQ1 = diasPorOT(impQ1);
-            const diasQ2 = diasPorOT(impQ2);
-            const diasMes = diasPorOT(iDias);
+
+            const ultDiaMes = new Date(anio, mes+1, 0).getDate();
+            const diasQ1 = diasPorOTExtendido(d => d >= 1 && d <= 15);
+            const diasQ2 = diasPorOTExtendido(d => d >= 16 && d <= ultDiaMes);
+            const diasMes = diasPorOTExtendido(d => true);
             const totQ1 = Object.values(diasQ1).reduce((a,b)=>a+b,0);
             const totQ2 = Object.values(diasQ2).reduce((a,b)=>a+b,0);
             const totMes = Object.values(diasMes).reduce((a,b)=>a+b,0);
@@ -1251,7 +1302,7 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 ${esQuincenal ? `
 <h2>1. ANTICIPO QUINCENAL (Q1) — pagado el 15 del mes</h2>
 <div class="kv"><div class="l">Anticipo Q1 (50% salario base proporcional)</div><div class="v">${fmtCurr(q1Total)}</div></div>
-<h3>Distribucion por OT (segun ${totQ1} dias imputados del 1 al 15)</h3>
+<h3>Distribucion por OT (${totQ1} dias del 1 al 15 — incluye festivos y novedades al centro base)</h3>
 ${tablaOTs(otsQ1, q1Total, "Coste Q1 imputado")}
 ` : ''}
 
@@ -1271,7 +1322,7 @@ ${(calc.otrasDed||0) > 0 ? `<div class="kv"><div class="l">Otras deducciones</di
 <div class="kv subtot"><div class="l">Total deducciones</div><div class="v">- ${fmtCurr(totDed)}</div></div>
 ${esQuincenal ? `<div class="kv"><div class="l">Anticipo Q1 ya pagado</div><div class="v">- ${fmtCurr(q1Total)}</div></div>` : ''}
 <div class="kv bigtot"><div class="l">${esQuincenal ? "PAGO Q2 (fin de mes)" : "PAGO NETO MENSUAL"}</div><div class="v">${fmtCurr(q2Total)}</div></div>
-<h3>Distribucion por OT (segun ${totQ2} dias imputados del 16 al ${new Date(anio,mes+1,0).getDate()})</h3>
+<h3>Distribucion por OT (${totQ2} dias del 16 al ${new Date(anio,mes+1,0).getDate()} — incluye festivos y novedades al centro base)</h3>
 ${tablaOTs(otsQ2, q2Total, esQuincenal ? "Coste Q2 imputado" : "Coste neto imputado")}
 
 <h2>${esQuincenal ? "3." : "2."} SEGURIDAD SOCIAL Y PRESTACIONES — a cargo de la empresa</h2>
@@ -1299,14 +1350,15 @@ ${tablaOTs(otsMes, totBloque3, "Coste imputado")}
 <div class="kv"><div class="l">Deducciones empleado (ya descontadas, las paga la empresa al sistema)</div><div class="v">${fmtCurr(totDed)}</div></div>
 <div class="kv"><div class="l">Seguridad social + prestaciones (a cargo empresa)</div><div class="v">${fmtCurr(totBloque3)}</div></div>
 <div class="kv bigtot"><div class="l">COSTO TOTAL EMPRESA DEL MES</div><div class="v">${fmtCurr(totalCostoEmpresa)}</div></div>
-<h3>Distribucion total por OT (segun ${totMes} dias del mes)</h3>
+<h3>Distribucion total por OT (${totMes} dias del mes — imputados + festivos + novedades al centro base)</h3>
 ${tablaOTs(otsMes, totalCostoEmpresa, "Costo total imputado")}
 
 <div class="notebox">
 <b>Notas para conciliacion contable:</b><br/>
 &bull; Q1 y Q2 son los desembolsos efectivos al trabajador (Q1 el 15, Q2 fin de mes).<br/>
 &bull; Seguridad social y prestaciones se reconocen como provision del mes pero se desembolsan en distinto calendario (PILA mes siguiente, prestaciones segun ley).<br/>
-&bull; La distribucion por OT es informativa: las imputaciones NO modifican el calculo de nomina.<br/>
+&bull; Distribucion por OT incluye dias imputados + festivos + novedades. Cada festivo y dia de novedad (incapacidad, vacaciones, licencias) se asigna al centro al que le tocaba ese dia segun el calendario base del empleado.<br/>
+&bull; Las imputaciones son informativas: NO modifican el calculo de nomina. Para corregirlas en un mes pagado, usa el boton ✏️ Editar imputaciones del calendario.<br/>
 &bull; ${calc.exS ? "Aplica exoneracion Art.114-1 ET por ingresar < 10 SMLMV: salud, ICBF y SENA en cero." : "No aplica exoneracion Art.114-1 ET."}
 </div>
 
