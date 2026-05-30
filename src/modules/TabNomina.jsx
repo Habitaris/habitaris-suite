@@ -974,7 +974,7 @@ export function TabNomina(){
     };
     const genNovedadesHtml = () => {
             const nDias=selN.novDias||{};
-            const novList=Object.entries(nDias).sort().map(([k,v])=>{const d=new Date(k+"T12:00:00");const info=NOV_TIPOS.find(n=>n.id===v);return{fecha:d.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"}),tipo:info?.label||v};});
+            const novList=Object.entries(nDias).sort().map(([k,v])=>{const d=new Date(k+"T12:00:00");const info=NOV_TIPOS.find(n=>n.id===v);return{fecha:d.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"}),tipo:info?.label||v,tipoId:v};});
             const festList=festivosMes.map(h=>({fecha:h.date.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"}),name:h.name}));
             const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);
             const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
@@ -1028,9 +1028,19 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 <table><thead><tr><th>Fecha</th><th>Motivo</th></tr></thead><tbody>
 ${festList.length>0?festList.map(f=>`<tr class="fest"><td>${f.fecha}</td><td>${f.name}</td></tr>`).join(""):`<tr><td colspan="2" style="color:#999;text-align:center">Sin festivos</td></tr>`}
 </tbody></table>
-<h2>Novedades registradas</h2>
-<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Observación</th></tr></thead><tbody>
-${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.tipo}</td><td></td></tr>`).join(""):`<tr><td colspan="3" style="color:#999;text-align:center">Sin novedades</td></tr>`}
+<h2>Novedades del periodo</h2>
+${novList.length>0?`<table><thead><tr><th>Fecha</th><th>Tipo</th><th style="text-align:right">Impacto</th></tr></thead><tbody>
+${novList.map(n=>{
+  const efectoIBC = n.tipoId==="licNoRem"||n.tipoId==="ausencia" ? "Reduce IBC y salario" : "No reduce IBC";
+  return `<tr class="nov"><td>${n.fecha}</td><td>${n.tipo}</td><td style="text-align:right;font-size:7.5pt;color:#666">${efectoIBC}</td></tr>`;
+}).join("")}
+</tbody></table>`:'<div style="padding:8px;background:#FAFAF7;border:1px solid #eee;border-radius:4px;font-size:8pt;color:#999;font-style:italic;text-align:center;margin-bottom:6px">Sin novedades registradas en el calendario</div>'}
+<h3 style="font-size:8.5pt;margin:8px 0 4px;color:#666;text-transform:uppercase;letter-spacing:.5px">Resumen por tipo</h3>
+<table><thead><tr><th>Tipo</th><th style="text-align:right">Dias</th><th style="text-align:right">Efecto en salario</th><th style="text-align:right">Efecto en IBC</th></tr></thead><tbody>
+<tr><td>🏥 Incapacidad EG</td><td style="text-align:right">${selN.diasIncap||0}d</td><td style="text-align:right">Mantiene salario base</td><td style="text-align:right">No reduce IBC</td></tr>
+<tr><td>🏖️ Vacaciones disfrutadas</td><td style="text-align:right">${selN.diasVac||0}d</td><td style="text-align:right">Mantiene salario base</td><td style="text-align:right">No reduce IBC</td></tr>
+<tr><td>📋 Licencia remunerada</td><td style="text-align:right">${selN.diasLicRem||0}d</td><td style="text-align:right">Mantiene salario base</td><td style="text-align:right">No reduce IBC</td></tr>
+<tr style="background:#FEF3C7"><td>⚠️ Licencia NO remunerada</td><td style="text-align:right">${selN.diasLicNoRem||0}d</td><td style="text-align:right">Descuenta del salario</td><td style="text-align:right">Reduce IBC proporcional</td></tr>
 </tbody></table>
 <h2>Resumen del período</h2>
 <div class="summary">
@@ -1046,9 +1056,15 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
 <tr><td>Salario base</td><td>${calc.dias}/30</td><td style="font-family:monospace;text-align:right">${fmt(calc.salProp)}</td><td>Lic.rem NO reduce salario</td></tr>
 <tr><td>Aux. transporte</td><td>${calc.diasComm}/30</td><td style="font-family:monospace;text-align:right">${fmt(calc.aux)}</td><td>Incl. festivos, excl. novedades</td></tr>
 <tr><td>Bono asistencia</td><td>${calc.diasAsist}/30</td><td style="font-family:monospace;text-align:right">${fmt(calc.bono)}</td><td>Excl. festivos y novedades</td></tr>
+${(selN.diasIncap||0)>0?`<tr style="background:#FEE2E2"><td>Aux. incapacidad EG</td><td>${selN.diasIncap}d</td><td style="font-family:monospace;text-align:right">${fmt(Math.round((selN.sal||0)/30*(selN.diasIncap||0)*0.6667))}</td><td>66.67% salario diario · empleador dias 1-2, EPS desde dia 3</td></tr>`:""}
+${(calc.totHex||0)>0?`<tr><td>Horas extras y recargos</td><td></td><td style="font-family:monospace;text-align:right">${fmt(calc.totHex)}</td><td>HED 1.25, HEN 1.75, HEDD 2.0, HEDN 2.5</td></tr>`:""}
+${(calc.recFest||0)>0?`<tr><td>Recargo festivos laborados</td><td>${selN.festLab||0}d</td><td style="font-family:monospace;text-align:right">${fmt(calc.recFest)}</td><td>0.75 × valor dia</td></tr>`:""}
+${(selN.otrosIng||0)>0?`<tr><td>Otros ingresos</td><td></td><td style="font-family:monospace;text-align:right">${fmt(selN.otrosIng)}</td><td>Manual</td></tr>`:""}
 <tr style="font-weight:700;border-top:2px solid #111"><td>Total devengado</td><td></td><td style="font-family:monospace;text-align:right">${fmt(calc.dev)}</td><td></td></tr>
 <tr><td>EPS (4%)</td><td></td><td style="font-family:monospace;text-align:right">-${fmt(calc.epsE)}</td><td>IBC: ${fmt(calc.ibc)}</td></tr>
 <tr><td>Pensión (4%)</td><td></td><td style="font-family:monospace;text-align:right">-${fmt(calc.penE)}</td><td>IBC: ${fmt(calc.ibc)}</td></tr>
+${(calc.rteF||0)>0?`<tr><td>Retencion en la fuente</td><td></td><td style="font-family:monospace;text-align:right">-${fmt(calc.rteF)}</td><td>Procedimiento 1 o 2</td></tr>`:""}
+${(selN.otrasDed||0)>0?`<tr><td>Otras deducciones</td><td></td><td style="font-family:monospace;text-align:right">-${fmt(selN.otrasDed)}</td><td>Manual (libranzas, embargos, etc.)</td></tr>`:""}
 <tr style="font-weight:700;background:#f0f0f0"><td>Neto a pagar</td><td></td><td style="font-family:monospace;text-align:right;font-size:11pt">${fmt(calc.neto)}</td><td></td></tr>
 <tr><td style="padding-left:16px">Q1 anticipo</td><td></td><td style="font-family:monospace;text-align:right">${fmt(calc.q1)}</td><td>15 ${MESES[mes].toLowerCase()}</td></tr>
 <tr><td style="padding-left:16px">Q2 ajuste</td><td></td><td style="font-family:monospace;text-align:right">${fmt(calc.q2)}</td><td>Fin de mes</td></tr>
