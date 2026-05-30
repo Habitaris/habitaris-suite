@@ -1879,7 +1879,7 @@ ${body}
                       // Conserva el nombre original como subtitulo para referencia.
                       const tipoLabel = info?.label || "Novedad";
                       const tipoSlug = tipoLabel.replace(/\./g,"").replace(/\s+/g,"-");
-                      const ape = (selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase().replace(/[^A-Z0-9-]/g,"");
+                      const ape = (selN.nombre||"").split(" ").slice(-2).join("-").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9-]/g,"");
                       const m = (f.name||"").match(/\.[a-zA-Z0-9]+$/);
                       const ext = m ? m[0].toLowerCase() : "";
                       const nombreDescriptivo = `${tipoSlug}-${e.fecha}-${ape}${ext}`;
