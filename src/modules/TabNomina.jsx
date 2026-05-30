@@ -1092,6 +1092,7 @@ ${(selN.otrasDed||0)>0?`<tr><td>Otras deducciones</td><td></td><td style="font-f
     const genImputacionesHtml = () => {
             const calc = calcN(selN);
             const iDias = selN.impDias || {};
+            const nDias = selN.novDias || {};
             const esQuincenal = (selN.modalidadPago || "quincenal") === "quincenal";
             const fmtCurr = v => new Intl.NumberFormat(getTenantDefaultsSync().locale,{style:"currency",currency:"COP",maximumFractionDigits:0}).format(v||0);
             const fmtPct = v => (v||0).toFixed(1) + "%";
