@@ -889,6 +889,255 @@ export function TabNomina(){
   const totQ1=noms.reduce((s,n)=>s+calcN(n).q1,0);
   const totQ2=noms.reduce((s,n)=>s+calcN(n).q2,0);
 
+  // Reporte de Conciliacion Contable Mensual (consolidado, todos los empleados activos)
+  // Pensado para que David valide contra los recibos PILA del contador.
+  // Aplica Logica B: festivos y novedades al centro base de cada empleado.
+  const genConciliacionMensualHtml = () => {
+    if (!noms || noms.length === 0) return null;
+    const fmtCurr = v => new Intl.NumberFormat(getTenantDefaultsSync().locale,{style:"currency",currency:"COP",maximumFractionDigits:0}).format(v||0);
+    const fmtPct = v => (v||0).toFixed(1) + "%";
+    const ultDiaMes = new Date(anio, mes+1, 0).getDate();
+    const fechaAStr = (f) => `${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,"0")}-${String(f.getDate()).padStart(2,"0")}`;
+    const dowMap = ["D","L","M","X","J","V","S"];
+    // Calendario base por empleado: dado fechaStr+empId devuelve el centro base
+    const centroBaseParaFechaEmp = (fechaStr, empId) => {
+      const d = new Date(fechaStr + "T12:00:00");
+      const diaSem = dowMap[d.getDay()];
+      for (const c of (centros||[])) {
+        if (c.activo === false) continue;
+        for (const cal of (c.calendarios||[])) {
+          if (!Array.isArray(cal.dias)) continue;
+          if (!cal.dias.includes(diaSem)) continue;
+          const emps = cal.empleados || c.empleados || [];
+          if (!emps.includes(empId)) continue;
+          if (cal.vigencia_desde && fechaStr < cal.vigencia_desde) continue;
+          if (cal.vigencia_hasta && fechaStr > cal.vigencia_hasta) continue;
+          return c.id;
+        }
+      }
+      return null;
+    };
+
+    // === AGREGADOS A NIVEL MES (consolidado) ===
+    // Lista de empleados con sus calc y dias agregados por OT (Logica B)
+    const empleados = noms.map(n => {
+      const c = calcN(n);
+      const iDias = n.impDias || {};
+      const nDias = n.novDias || {};
+      // Acumular dias por OT con desglose trab/fest/nov
+      const diasOT = {};
+      const vistos = new Set();
+      const bump = (otId, tipo) => {
+        if (!diasOT[otId]) diasOT[otId] = {trab:0, fest:0, nov:0, total:0};
+        diasOT[otId][tipo]++;
+        diasOT[otId].total++;
+      };
+      // 1) Imputaciones manuales = trabajados
+      Object.entries(iDias).forEach(([k, otId]) => {
+        if (!otId || otId === "__conflicto__") return;
+        bump(otId, "trab");
+        vistos.add(k);
+      });
+      // 2) Festivos del mes - centro base del empleado
+      festivosMes.forEach(h => {
+        const k = fechaAStr(h.date);
+        if (vistos.has(k)) return;
+        const cId = centroBaseParaFechaEmp(k, n.empId);
+        if (cId) { bump(cId, "fest"); vistos.add(k); }
+      });
+      // 3) Novedades - centro base del empleado
+      Object.entries(nDias).forEach(([k, tipoNov]) => {
+        if (vistos.has(k) || tipoNov === "normal") return;
+        const cId = centroBaseParaFechaEmp(k, n.empId);
+        if (cId) { bump(cId, "nov"); vistos.add(k); }
+      });
+      return { n, calc: c, diasOT };
+    });
+
+    // Totales mes
+    const totDev = empleados.reduce((s,e) => s + e.calc.dev, 0);
+    const totDed = empleados.reduce((s,e) => s + e.calc.totD, 0);
+    const totNeto = empleados.reduce((s,e) => s + e.calc.neto, 0);
+    const totQ1m = empleados.reduce((s,e) => s + e.calc.q1, 0);
+    const totQ2m = empleados.reduce((s,e) => s + e.calc.q2, 0);
+    // Aportes empresa CAJA (PILA)
+    const apSalud = empleados.reduce((s,e) => s + e.calc.epsEr, 0);
+    const apPension = empleados.reduce((s,e) => s + e.calc.penEr, 0);
+    const apArl = empleados.reduce((s,e) => s + e.calc.arlV, 0);
+    const apCaja = empleados.reduce((s,e) => s + e.calc.caja, 0);
+    const apIcbf = empleados.reduce((s,e) => s + e.calc.icbf, 0);
+    const apSena = empleados.reduce((s,e) => s + e.calc.sena, 0);
+    const totSegSocial = apSalud + apPension + apArl + apCaja + apIcbf + apSena;
+    // Provisiones
+    const prPrima = empleados.reduce((s,e) => s + e.calc.prima, 0);
+    const prCes = empleados.reduce((s,e) => s + e.calc.ces, 0);
+    const prIntC = empleados.reduce((s,e) => s + e.calc.intC, 0);
+    const prVac = empleados.reduce((s,e) => s + e.calc.vac, 0);
+    const totProvisiones = prPrima + prCes + prIntC + prVac;
+    // Totales por categoria
+    const totCaja = totQ1m + totQ2m + totDed + totSegSocial;
+    const totCostoEmp = totCaja + totProvisiones;
+
+    // Distribucion consolidada por OT (todos los empleados)
+    const consolidadoOT = {};
+    const bumpCons = (otId, tipo, monto) => {
+      if (!consolidadoOT[otId]) {
+        const c = centros.find(x => x.id === otId);
+        consolidadoOT[otId] = {
+          id: otId,
+          codigo: c ? c.codigo : otId,
+          nombre: c ? c.nombre : "(OT no encontrada)",
+          trab: 0, fest: 0, nov: 0, total: 0,
+          costo: 0
+        };
+      }
+      consolidadoOT[otId][tipo]++;
+      consolidadoOT[otId].total++;
+    };
+    empleados.forEach(e => {
+      const totalDiasEmp = Object.values(e.diasOT).reduce((s,d) => s + d.total, 0);
+      Object.entries(e.diasOT).forEach(([otId, dias]) => {
+        if (!consolidadoOT[otId]) {
+          const c = centros.find(x => x.id === otId);
+          consolidadoOT[otId] = {
+            id: otId,
+            codigo: c ? c.codigo : otId,
+            nombre: c ? c.nombre : "(OT no encontrada)",
+            trab: 0, fest: 0, nov: 0, total: 0,
+            costo: 0
+          };
+        }
+        consolidadoOT[otId].trab += dias.trab;
+        consolidadoOT[otId].fest += dias.fest;
+        consolidadoOT[otId].nov += dias.nov;
+        consolidadoOT[otId].total += dias.total;
+        // Imputar costo proporcional del empleado
+        if (totalDiasEmp > 0) {
+          const pctEmp = dias.total / totalDiasEmp;
+          consolidadoOT[otId].costo += e.calc.costoT * pctEmp;
+        }
+      });
+    });
+    const otsCons = Object.values(consolidadoOT).sort((a,b) => b.total - a.total);
+    const totDiasCons = otsCons.reduce((s,o) => s + o.total, 0);
+
+    // === HTML ===
+    const tenantId = getTenantIdentitySync();
+    const legal = getActiveCompanyLegalDataSync();
+    const empresaName = legal.legalName || tenantId.legalName || "";
+    const empresaNit = legal.taxId || "";
+    const fileName = `CONCILIACION-${MESES[mes].toUpperCase()}${String(anio).slice(-2)}-${(tenantId.slug||"empresa").toUpperCase()}`;
+
+    let bloqueEmpleados = `<table style="font-size:8.5pt"><thead><tr style="background:#F5F4F1"><th>Empleado</th><th>CC</th><th style="text-align:right">Devengado</th><th style="text-align:right">Deducc.</th><th style="text-align:right">Neto</th><th style="text-align:right">Q1</th><th style="text-align:right">Q2</th><th style="text-align:right">Aportes</th><th style="text-align:right">Provis.</th><th style="text-align:right">Costo total</th></tr></thead><tbody>`;
+    empleados.forEach(e => {
+      const apE = e.calc.epsEr + e.calc.penEr + e.calc.arlV + e.calc.caja + e.calc.icbf + e.calc.sena;
+      const prE = e.calc.prima + e.calc.ces + e.calc.intC + e.calc.vac;
+      bloqueEmpleados += `<tr><td><b>${e.n.nombre||""}</b></td><td>${e.n.cc||""}</td><td style="text-align:right;font-family:monospace">${fmtCurr(e.calc.dev)}</td><td style="text-align:right;font-family:monospace;color:#B91C1C">-${fmtCurr(e.calc.totD)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(e.calc.neto)}</b></td><td style="text-align:right;font-family:monospace">${fmtCurr(e.calc.q1)}</td><td style="text-align:right;font-family:monospace">${fmtCurr(e.calc.q2)}</td><td style="text-align:right;font-family:monospace">${fmtCurr(apE)}</td><td style="text-align:right;font-family:monospace">${fmtCurr(prE)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(e.calc.costoT)}</b></td></tr>`;
+    });
+    bloqueEmpleados += `<tr style="background:#111;color:#fff;font-weight:700"><td colspan="2">TOTAL ${empleados.length} EMPLEADO${empleados.length===1?"":"S"}</td><td style="text-align:right;font-family:monospace">${fmtCurr(totDev)}</td><td style="text-align:right;font-family:monospace">-${fmtCurr(totDed)}</td><td style="text-align:right;font-family:monospace">${fmtCurr(totNeto)}</td><td style="text-align:right;font-family:monospace">${fmtCurr(totQ1m)}</td><td style="text-align:right;font-family:monospace">${fmtCurr(totQ2m)}</td><td style="text-align:right;font-family:monospace">${fmtCurr(totSegSocial)}</td><td style="text-align:right;font-family:monospace">${fmtCurr(totProvisiones)}</td><td style="text-align:right;font-family:monospace">${fmtCurr(totCostoEmp)}</td></tr></tbody></table>`;
+
+    // Tabla distribucion consolidada por OT
+    let tablaOTCons = `<table><thead><tr><th>OT</th><th>Centro / Proyecto</th><th style="text-align:right">Trab.</th><th style="text-align:right">Fest.</th><th style="text-align:right">Nov.</th><th style="text-align:right">Dias-Emp.</th><th style="text-align:right">%</th><th style="text-align:right">Costo total imputado</th></tr></thead><tbody>`;
+    otsCons.forEach(o => {
+      const pct = totDiasCons > 0 ? (o.total / totDiasCons) * 100 : 0;
+      tablaOTCons += `<tr><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right;color:#92400E">${o.fest||""}</td><td style="text-align:right;color:#B91C1C">${o.nov||""}</td><td style="text-align:right"><b>${o.total}</b></td><td style="text-align:right">${fmtPct(pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(o.costo)}</b></td></tr>`;
+    });
+    const tTcons = otsCons.reduce((s,o)=>s+o.trab,0);
+    const tFcons = otsCons.reduce((s,o)=>s+o.fest,0);
+    const tNcons = otsCons.reduce((s,o)=>s+o.nov,0);
+    const totCostoOT = otsCons.reduce((s,o)=>s+o.costo,0);
+    tablaOTCons += `<tr style="background:#111;color:#fff"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${tTcons}</td><td style="text-align:right">${tFcons||""}</td><td style="text-align:right">${tNcons||""}</td><td style="text-align:right"><b>${totDiasCons}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(totCostoOT)}</b></td></tr></tbody></table>`;
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+#content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.35;box-shadow:0 0 8px rgba(0,0,0,.15)}
+.hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
+.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
+.hdr img{height:36px}
+h1{font-size:13pt;margin:14px 0 4px;text-align:center;letter-spacing:.5px}
+.sub{text-align:center;font-size:9pt;color:#666;margin-bottom:14px}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin-bottom:14px;padding:8px 12px;background:#FAFAF7;border:1px solid #eee;border-radius:4px;font-size:9pt}
+h2{font-size:10pt;background:#111;color:#fff;padding:5px 10px;margin:14px 0 6px;border-radius:3px}
+h3{font-size:9.5pt;margin:8px 0 4px;color:#333}
+table{width:100%;border-collapse:collapse;margin:6px 0;font-size:9pt}
+th{background:#F5F4F1;padding:5px 8px;text-align:left;font-weight:700;font-size:8.5pt;border-bottom:1px solid #ddd}
+td{padding:4px 8px;border-bottom:1px solid #f0f0f0}
+.kv{display:flex;justify-content:space-between;padding:3px 6px;font-size:9pt}
+.kv .v{font-family:monospace}
+.kv.subtot{border-top:1px solid #ccc;font-weight:700;background:#fafafa;padding:5px 6px}
+.kv.bigtot{border-top:2px solid #111;font-size:11pt;font-weight:800;background:#111;color:#fff;padding:8px 10px;border-radius:3px;margin-top:6px}
+.kv.bigtot .v{color:#fff}
+.notebox{background:#FEF9E7;border:1px solid #F4D85E;border-radius:4px;padding:10px 12px;font-size:8.5pt;line-height:1.6;margin-top:10px}
+@media print{body{background:#fff;padding:0}#content{box-shadow:none;width:100%}}
+</style></head><body><div id="content">
+<div class="hdr"><div class="l">${empresaName?`<img src="${HAB_LOGO}" style="height:36px"/><div style="font-size:10pt;font-weight:700;margin-top:2px">${empresaName}</div>`:""}</div><div class="r">${empresaName}<br/>${empresaNit ? `NIT: ${empresaNit}` : ""}</div></div>
+<h1>CONCILIACION CONTABLE MENSUAL</h1>
+<div class="sub">${MESES[mes]} ${anio} &middot; ${empleados.length} empleado${empleados.length===1?"":"s"} activo${empleados.length===1?"":"s"} &middot; Ref: ${fileName}</div>
+
+<div class="meta">
+<div><b>Periodo:</b> ${MESES[mes]} ${anio} (1 al ${ultDiaMes})</div>
+<div><b>Empresa:</b> ${empresaName || "—"}</div>
+<div><b>Empleados activos:</b> ${empleados.length}</div>
+<div><b>Festivos del mes:</b> ${festivosMes.length}</div>
+</div>
+
+<h2>1. DESGLOSE POR EMPLEADO</h2>
+${bloqueEmpleados}
+
+<h2>2. CONSOLIDADO MENSUAL — CAJA Y PROVISIONES</h2>
+
+<h3 style="background:#FEE2E2;color:#991B1B;padding:6px 8px;border-radius:3px">💵 GASTOS DE CAJA DEL MES (tesoreria)</h3>
+<div class="kv"><div class="l">Pago a empleados — Q1 anticipo (quincenales, pagado el 15)</div><div class="v">${fmtCurr(totQ1m)}</div></div>
+<div class="kv"><div class="l">Pago a empleados — Q2 / Mes (pagado fin de mes)</div><div class="v">${fmtCurr(totQ2m)}</div></div>
+<div class="kv"><div class="l">Deducciones empleado (descontadas, paga la empresa al sistema PILA)</div><div class="v">${fmtCurr(totDed)}</div></div>
+<div class="kv subtot"><div class="l">Subtotal: salario neto + deducciones = devengado total</div><div class="v">${fmtCurr(totQ1m + totQ2m + totDed)}</div></div>
+<div class="kv" style="margin-top:6px"><div class="l">&nbsp;&nbsp;&bull; Salud (8.5% IBC) — ${apSalud === 0 ? "exonerada Art.114-1 ET" : ""}</div><div class="v">${fmtCurr(apSalud)}</div></div>
+<div class="kv"><div class="l">&nbsp;&nbsp;&bull; Pension (12% IBC)</div><div class="v">${fmtCurr(apPension)}</div></div>
+<div class="kv"><div class="l">&nbsp;&nbsp;&bull; ARL</div><div class="v">${fmtCurr(apArl)}</div></div>
+<div class="kv"><div class="l">&nbsp;&nbsp;&bull; Caja de Compensacion (4% IBC)</div><div class="v">${fmtCurr(apCaja)}</div></div>
+<div class="kv"><div class="l">&nbsp;&nbsp;&bull; ICBF ${apIcbf === 0 ? "(exonerada Art.114-1 ET)" : "(3% IBC)"}</div><div class="v">${fmtCurr(apIcbf)}</div></div>
+<div class="kv"><div class="l">&nbsp;&nbsp;&bull; SENA ${apSena === 0 ? "(exonerada Art.114-1 ET)" : "(2% IBC)"}</div><div class="v">${fmtCurr(apSena)}</div></div>
+<div class="kv subtot"><div class="l">Aportes empresa a seguridad social y parafiscales (PILA mes siguiente)</div><div class="v">${fmtCurr(totSegSocial)}</div></div>
+<div class="kv bigtot"><div class="l">TOTAL CAJA DEL MES</div><div class="v">${fmtCurr(totCaja)}</div></div>
+
+<h3 style="background:#FEF3C7;color:#92400E;padding:6px 8px;border-radius:3px;margin-top:14px">📊 PROVISIONES DEL MES (pago futuro)</h3>
+<div class="kv"><div class="l">Prima de servicios (8.33% — pago semestral jun/dic)</div><div class="v">${fmtCurr(prPrima)}</div></div>
+<div class="kv"><div class="l">Cesantias (8.33% — consigna feb año siguiente)</div><div class="v">${fmtCurr(prCes)}</div></div>
+<div class="kv"><div class="l">Intereses sobre cesantias (1% — paga ene año siguiente)</div><div class="v">${fmtCurr(prIntC)}</div></div>
+<div class="kv"><div class="l">Vacaciones (4.17% — cuando se disfrutan o en liquidacion)</div><div class="v">${fmtCurr(prVac)}</div></div>
+<div class="kv bigtot" style="background:#92400E"><div class="l">TOTAL PROVISIONES DEL MES</div><div class="v">${fmtCurr(totProvisiones)}</div></div>
+
+<h2>3. COSTO TOTAL EMPRESA DEL MES</h2>
+<div class="kv subtot"><div class="l">💵 CAJA (sale del banco este mes + PILA mes siguiente)</div><div class="v">${fmtCurr(totCaja)}</div></div>
+<div class="kv subtot"><div class="l">📊 PROVISIONES (pasivo laboral acumulado)</div><div class="v">${fmtCurr(totProvisiones)}</div></div>
+<div class="kv bigtot"><div class="l">COSTO TOTAL EMPRESA DEL MES</div><div class="v">${fmtCurr(totCostoEmp)}</div></div>
+
+<h2>4. DISTRIBUCION CONSOLIDADA POR ORDEN DE TRABAJO</h2>
+<p style="font-size:8.5pt;color:#666;margin-bottom:6px">Suma de dias-empleado (todos los empleados, todas las OTs). Festivos y novedades al centro base de cada empleado segun calendario (Logica B).</p>
+${tablaOTCons}
+
+<div class="notebox">
+<b>Notas para conciliacion contable PILA:</b><br/>
+&bull; <b>💵 CAJA del mes</b> agrupa todo lo que sale efectivamente del banco de la empresa: salarios netos al empleado este mes (Q1 + Q2 o pago mensual completo), deducciones del empleado (salud y pension del trabajador descontadas del salario, que la empresa traslada al sistema PILA), y aportes del empleador a seguridad social y parafiscales (que se pagan en PILA del mes siguiente).<br/>
+&bull; <b>📊 PROVISIONES</b> son obligaciones legales que se reconocen contablemente este mes pero se desembolsan en distinto calendario: prima de servicios (semestral, jun/dic), cesantias (consigna feb año siguiente), intereses sobre cesantias (paga ene año siguiente), vacaciones (cuando se disfrutan o en liquidacion del contrato).<br/>
+&bull; <b>Distribucion por OT (Logica B):</b> festivos y dias de novedad (incapacidad, vacaciones, licencias) se asignan al centro al que le tocaba ese dia segun el calendario base de cada empleado. Las imputaciones manuales prevalecen sobre el calendario base.<br/>
+&bull; <b>Exoneracion Art.114-1 ET:</b> empresas que pagan salarios &lt; 10 SMLMV estan exoneradas del 8.5% de salud, 3% ICBF y 2% SENA sobre esos salarios. Si en la tabla aparece $0 en esos conceptos, es por esta exoneracion.<br/>
+&bull; <b>Validacion contra PILA:</b> el subtotal "Aportes empresa a seguridad social" mas las "Deducciones empleado" deberia coincidir con el total a pagar en la planilla PILA del mes siguiente. Verificar con el contador.<br/>
+</div>
+
+<table style="margin-top:24px;border-top:1px solid #ccc;padding-top:8px"><tr><td style="width:33%;text-align:center;border:none">________________________<br/><span style="font-size:8pt;color:#666">Elaborado por</span><br/><span style="font-size:7pt;color:#999">RRHH ${empresaName||""}</span></td><td style="width:33%;text-align:center;border:none">________________________<br/><span style="font-size:8pt;color:#666">Revisado por</span><br/><span style="font-size:7pt;color:#999">Contador</span></td><td style="width:33%;text-align:center;border:none">________________________<br/><span style="font-size:8pt;color:#666">Aprobado por</span><br/><span style="font-size:7pt;color:#999">Gerencia</span></td></tr></table>
+
+<div style="text-align:center;margin-top:12px;font-size:7.5pt;color:#999">${empresaName||""} Suite &middot; ${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})} &middot; ${fileName}</div>
+
+</div></body></html>`;
+
+    return { html, fileName };
+  };
+
   // Sprint C: validación de pendientes por periodo para bloqueo de liquidación
   // Recorre los días del periodo y detecta los que están sin imputar o en conflicto
   // (excluyendo domingos, festivos y días con novedad registrada).
@@ -2543,6 +2792,16 @@ ${body}
           <span style={{fontSize:12,fontWeight:700,whiteSpace:"nowrap"}}>Nómina {MESES[mes]} {anio}</span>
           <input value={buscar} onChange={e=>setBuscar(e.target.value)} placeholder="🔍 Buscar empleado…" style={{flex:1,maxWidth:280,padding:"6px 12px",border:`1px solid ${T.border}`,borderRadius:6,fontSize:12,fontFamily:"'DM Sans',sans-serif",outline:"none"}}/>
           <span style={{fontSize:10,color:T.inkLight,whiteSpace:"nowrap"}}>Costo empresa: <strong style={{color:T.ink}}>{fmt(totC)}</strong></span>
+          <button
+            type="button"
+            onClick={()=>{
+              const rep = genConciliacionMensualHtml();
+              if (rep) openReport(rep.html);
+              else window.toast && window.toast("Sin empleados para conciliar","warning");
+            }}
+            style={{padding:"6px 12px",fontSize:11,fontWeight:600,border:`1px solid ${T.border}`,borderRadius:5,background:"#FAFAF8",color:T.ink,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",whiteSpace:"nowrap"}}
+            title="Reporte consolidado del mes: caja, provisiones y distribucion por OT de todos los empleados. Util para validar contra el contador y la PILA."
+          >📊 Conciliación contable</button>
         </div>
         {(()=>{
           const getApellido=(nom)=>{const p=(nom||"").split(" ");return p.length>=3?p.slice(-2).join(" "):p.length>=2?p[p.length-1]:nom||"";};
