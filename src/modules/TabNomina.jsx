@@ -1798,7 +1798,7 @@ ${body}
               ]:[]),
               {icon:"📄",label:"Nómina",desc:`Devengado ${fmt(calc.dev)} · Deducciones ${fmt(calc.totD)} · Neto ${fmt(calc.neto)}`,action:"nomina"},
               {icon:"📄",label:"Reporte de novedades",desc:`Festivos, incapacidades, licencias e impacto en nómina`,gen:genNovedadesHtml},
-              {icon:"📊",label:"Reporte de imputaciones",desc:`Días imputados por orden de trabajo (OT)`,gen:genImputacionesHtml},
+              {icon:"📊",label:"Costos por imputación",desc:`Costos Q1, Q2, seg. social y total — distribuidos por OT`,gen:genImputacionesHtml},
               {icon:"📈",label:"Costes por OT",desc:`Reparto de coste empresa entre órdenes de trabajo`,gen:genCostesHtml},
             ].map((d,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
