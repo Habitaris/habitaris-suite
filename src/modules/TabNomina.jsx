@@ -1068,33 +1068,118 @@ ${novList.length>0?novList.map(n=>`<tr class="nov"><td>${n.fecha}</td><td>${n.ti
       return html;
     };
     const genImputacionesHtml = () => {
-            const iDias=selN.impDias||{};
-            // Resolver impInfo (codigo + nombre) por cada día imputado.
-            // Si la OT no se encuentra en BD (centros), mostrar id raw.
-            const impList=Object.entries(iDias).sort().map(([k,otId])=>{
-              const d=new Date(k+"T12:00:00");
-              const c=centros.find(x=>x.id===otId);
-              return{
-                fecha:d.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"}),
-                otCodigo:c?c.codigo:otId,
-                otNombre:c?c.nombre:"(OT no encontrada)"
-              };
+            const calc = calcN(selN);
+            const iDias = selN.impDias || {};
+            const esQuincenal = (selN.modalidadPago || "quincenal") === "quincenal";
+            const fmtCurr = v => new Intl.NumberFormat(getTenantDefaultsSync().locale,{style:"currency",currency:"COP",maximumFractionDigits:0}).format(v||0);
+            const fmtPct = v => (v||0).toFixed(1) + "%";
+
+            // Clasificar dias imputados en Q1 (1-15) y Q2 (16-fin)
+            const impQ1 = {}, impQ2 = {};
+            Object.entries(iDias).forEach(([k, otId]) => {
+              if (!otId || otId === "__conflicto__") return;
+              const dia = parseInt(k.split("-")[2], 10);
+              if (dia <= 15) impQ1[k] = otId; else impQ2[k] = otId;
             });
-            // Agrupar por OT para resumen
-            const resumen={};
-            impList.forEach(r=>{
-              const k=r.otCodigo+"|"+r.otNombre;
-              if(!resumen[k])resumen[k]={codigo:r.otCodigo,nombre:r.otNombre,dias:0};
-              resumen[k].dias++;
-            });
-            const resumenArr=Object.values(resumen);
-            // Estimar horas (presuncion 8h/dia) y coste (proporcional al salario diario)
-            const salDiario=(selN.sal||0)/30;
-            const totalDias=impList.length;
-            const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);
-            const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
-            const fileName=`IMP-${mAbr}${a2}-${ape}-${selN.cc||""}`;
-            const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
+
+            // Dias por OT en cada bloque
+            const diasPorOT = (mapa) => {
+              const out = {};
+              Object.values(mapa).forEach(otId => { out[otId] = (out[otId]||0) + 1; });
+              return out;
+            };
+            const diasQ1 = diasPorOT(impQ1);
+            const diasQ2 = diasPorOT(impQ2);
+            const diasMes = diasPorOT(iDias);
+            const totQ1 = Object.values(diasQ1).reduce((a,b)=>a+b,0);
+            const totQ2 = Object.values(diasQ2).reduce((a,b)=>a+b,0);
+            const totMes = Object.values(diasMes).reduce((a,b)=>a+b,0);
+
+            // Helper: lista de OTs con codigo/nombre
+            const otsConDias = (mapa, total) => {
+              return Object.entries(mapa).map(([otId, dias]) => {
+                const c = centros.find(x => x.id === otId);
+                return {
+                  id: otId,
+                  codigo: c ? c.codigo : otId,
+                  nombre: c ? c.nombre : "(OT no encontrada)",
+                  dias: dias,
+                  pct: total > 0 ? (dias / total) * 100 : 0
+                };
+              }).sort((a,b) => b.dias - a.dias);
+            };
+
+            // === BLOQUE 1: ANTICIPO Q1 (solo quincenal) ===
+            // q1 ya viene calculado de calcN: ratioAsist * (sal*q1Pct)
+            const q1Total = esQuincenal ? (calc.q1 || 0) : 0;
+            const otsQ1 = otsConDias(diasQ1, totQ1);
+
+            // === BLOQUE 2: RESTO Q2 (o pago mensual completo) ===
+            // Para quincenal: q2 = neto - q1 (lo que se paga a fin de mes)
+            // Para mensual: q2 = neto completo (no hubo anticipo)
+            const q2Total = esQuincenal ? (calc.q2 || 0) : (calc.neto || 0);
+            const otsQ2 = otsConDias(diasQ2, totQ2);
+
+            // Desglose del bloque 2 (devengado del periodo - deducciones - q1)
+            // calc.dev = devengado total del mes
+            // calc.totD = total deducciones empleado
+            const dev = calc.dev || 0;
+            const totDed = calc.totD || 0;
+
+            // === BLOQUE 3: SEGURIDAD SOCIAL Y PRESTACIONES ===
+            const segSocial = {
+              salud:   calc.epsEr || 0,   // 8.5% IBC
+              pension: calc.penEr || 0,   // 12% IBC
+              arl:     calc.arlV  || 0,   // tasa segun nivel
+              caja:    calc.caja  || 0,   // 4% IBC
+              icbf:    calc.icbf  || 0,   // 3% IBC (cero si exonerado)
+              sena:    calc.sena  || 0    // 2% IBC (cero si exonerado)
+            };
+            const totSegSocial = segSocial.salud + segSocial.pension + segSocial.arl + segSocial.caja + segSocial.icbf + segSocial.sena;
+            const prestaciones = {
+              prima:   calc.prima || 0,   // 8.33%
+              ces:     calc.ces   || 0,   // 8.33%
+              intC:    calc.intC  || 0,   // 1% (12% anual sobre ces)
+              vac:     calc.vac   || 0    // 4.17%
+            };
+            const totPrestaciones = prestaciones.prima + prestaciones.ces + prestaciones.intC + prestaciones.vac;
+            const totBloque3 = totSegSocial + totPrestaciones;
+            const otsMes = otsConDias(diasMes, totMes);
+
+            // === RESUMEN TOTAL: costo empresa ===
+            // costoT = neto + totDed (devengado liquido) + segSocial + prestaciones
+            const totalCostoEmpresa = calc.costoT || 0;
+
+            // % aportes empleador sobre IBC (para mostrar)
+            const ibc = calc.ibc || 0;
+            const pctSalud = ibc > 0 ? (segSocial.salud / ibc) * 100 : 0;
+            const pctPension = ibc > 0 ? (segSocial.pension / ibc) * 100 : 0;
+            const pctArl = ibc > 0 ? (segSocial.arl / ibc) * 100 : 0;
+            const pctCaja = ibc > 0 ? (segSocial.caja / ibc) * 100 : 0;
+            const pctIcbf = ibc > 0 ? (segSocial.icbf / ibc) * 100 : 0;
+            const pctSena = ibc > 0 ? (segSocial.sena / ibc) * 100 : 0;
+
+            const mAbr = MESES[mes].substring(0,3).toUpperCase();
+            const a2 = String(anio).slice(-2);
+            const ape = (selN.nombre || "").split(" ").slice(-2).join("-").toUpperCase();
+            const fileName = `COSTOS-${mAbr}${a2}-${ape}-${selN.cc||""}`;
+
+            // === RENDER HELPERS ===
+            const tablaOTs = (ots, montoTotal, labelTotal) => {
+              if (ots.length === 0) {
+                return `<div style="padding:8px;background:#FAFAF7;border:1px solid #eee;border-radius:4px;font-size:8pt;color:#999;font-style:italic;text-align:center;margin-bottom:6px">Sin imputaciones en este periodo</div>`;
+              }
+              let h = `<table><thead><tr><th>OT</th><th>Centro / Proyecto</th><th style="text-align:right">Dias</th><th style="text-align:right">%</th><th style="text-align:right">${labelTotal}</th></tr></thead><tbody>`;
+              ots.forEach(o => {
+                const monto = montoTotal * (o.pct / 100);
+                h += `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right">${o.dias}</td><td style="text-align:right">${fmtPct(o.pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(monto)}</b></td></tr>`;
+              });
+              h += `<tr style="background:#111;color:#fff"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right"><b>${ots.reduce((s,o)=>s+o.dias,0)}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(montoTotal)}</b></td></tr>`;
+              h += `</tbody></table>`;
+              return h;
+            };
+
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
@@ -1105,7 +1190,8 @@ body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:
 .hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
 .hdr img{height:36px}
 h1{font-size:12pt;text-align:center;margin:4px 0 2px;clear:both}
-h2{font-size:9.5pt;margin:10px 0 4px;border-bottom:1px solid #ccc;padding-bottom:2px;clear:both}
+h2{font-size:9.5pt;margin:14px 0 4px;padding:6px 8px;background:#111;color:#fff;border-radius:3px;clear:both}
+h3{font-size:8.5pt;margin:8px 0 4px;color:#666;text-transform:uppercase;letter-spacing:.5px;clear:both}
 .sub{font-size:8pt;color:#666;text-align:center;margin-bottom:10px}
 .info{margin-bottom:10px;font-size:8.5pt;overflow:hidden}.info div{float:left;width:50%;padding:1px 0}
 .info span{color:#666}.info b{color:#111}
@@ -1113,10 +1199,12 @@ table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:8.5pt;clea
 th{text-align:left;padding:4px 6px;font-size:7pt;font-weight:700;text-transform:uppercase;border-bottom:2px solid #111}
 td{padding:3px 6px;border-bottom:1px solid #ddd}
 .imp{background:#f4f4f4}
-.summary{margin:8px 0;overflow:hidden}
-.sbox{float:left;width:31%;margin-right:3%;border:1px solid #ccc;border-radius:4px;padding:6px;text-align:center;margin-bottom:6px}
-.sbox:nth-child(3n){margin-right:0}
-.sbox .n{font-size:16pt;font-weight:800;font-family:monospace}.sbox .l{font-size:7pt;color:#666;text-transform:uppercase}
+.kv{display:flex;justify-content:space-between;padding:3px 8px;font-size:8.5pt;border-bottom:1px dotted #ddd}
+.kv .l{color:#444}.kv .v{font-family:monospace;color:#111;font-weight:600}
+.kv.subtot{background:#e8f4ee;border-bottom:1px solid #1E6B42;font-weight:700;color:#1E6B42}
+.kv.bigtot{background:#111;color:#fff;font-weight:700;font-size:9.5pt;padding:6px 8px;margin-top:4px;border-radius:3px}
+.kv.bigtot .l{color:#fff}.kv.bigtot .v{color:#fff;font-size:10pt}
+.notebox{padding:8px 10px;background:#FEF3C7;border:1px solid #F59E0B;border-radius:4px;font-size:7.5pt;color:#92400E;margin:8px 0}
 .sig{margin-top:20px;overflow:hidden}.sig div{float:left;width:30%;margin-right:5%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:5px}
 .sig div:last-child{margin-right:0}
 .foot{font-size:6.5pt;color:#999;text-align:center;margin-top:10px;clear:both}
@@ -1127,43 +1215,89 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 </style></head><body>
 <div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">${getActiveCompanyLegalDataSync().legalName}</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
-<h1>REPORTE DE IMPUTACIONES POR ÓRDENES DE TRABAJO</h1>
+<h1>INFORME DE COSTOS POR IMPUTACION (OT)</h1>
 <div class="sub">${MESES[mes]} ${anio} · Ref: ${fileName}</div>
 <div class="info">
 <div><span>Empleado: </span><b>${selN.nombre}</b></div>
 <div><span>Documento: </span><b>${selN.cc}</b></div>
 <div><span>Cargo: </span><b>${selN.cargo}</b></div>
-<div><span>Contrato: </span><b>${selN.tipoContrato||"fijo"}</b></div>
-<div><span>Salario base: </span><b>${fmt(selN.sal||0)}</b></div>
-<div><span>Salario diario: </span><b>${fmt(salDiario)}</b></div>
+<div><span>Modalidad: </span><b>${esQuincenal?"Quincenal":"Mensual"}</b></div>
+<div><span>Salario base: </span><b>${fmtCurr(selN.sal||0)}</b></div>
+<div><span>Dias trabajados: </span><b>${calc.dias||0}</b></div>
 </div>
-<h2>Imputaciones por día</h2>
-<table><thead><tr><th>Fecha</th><th>OT (código)</th><th>Centro / Proyecto</th><th style="text-align:right">Horas (presunción)</th></tr></thead><tbody>
-${impList.length>0?impList.map(i=>`<tr class="imp"><td>${i.fecha}</td><td>${i.otCodigo}</td><td>${i.otNombre}</td><td style="text-align:right">8h</td></tr>`).join(""):`<tr><td colspan="4" style="color:#999;text-align:center">Sin imputaciones registradas</td></tr>`}
-</tbody></table>
-<h2>Resumen agregado por OT</h2>
-<table><thead><tr><th>OT (código)</th><th>Centro / Proyecto</th><th style="text-align:right">Días</th><th style="text-align:right">Horas est.</th><th style="text-align:right">Coste trabajador</th></tr></thead><tbody>
-${resumenArr.length>0?resumenArr.map(r=>`<tr class="imp"><td>${r.codigo}</td><td>${r.nombre}</td><td style="text-align:right">${r.dias}</td><td style="text-align:right">${r.dias*8}h</td><td style="font-family:monospace;text-align:right">${fmt(r.dias*salDiario)}</td></tr>`).join(""):`<tr><td colspan="5" style="color:#999;text-align:center">Sin imputaciones</td></tr>`}
-</tbody></table>
-<h2>Totales del período</h2>
-<div class="summary">
-<div class="sbox"><div class="n">${totalDias}</div><div class="l">Días imputados</div></div>
-<div class="sbox"><div class="n">${totalDias*8}h</div><div class="l">Horas estimadas</div></div>
-<div class="sbox"><div class="n">${resumenArr.length}</div><div class="l">OTs distintas</div></div>
+
+${esQuincenal ? `
+<h2>1. ANTICIPO QUINCENAL (Q1) — pagado el 15 del mes</h2>
+<div class="kv"><div class="l">Anticipo Q1 (50% salario base proporcional)</div><div class="v">${fmtCurr(q1Total)}</div></div>
+<h3>Distribucion por OT (segun ${totQ1} dias imputados del 1 al 15)</h3>
+${tablaOTs(otsQ1, q1Total, "Coste Q1 imputado")}
+` : ''}
+
+<h2>${esQuincenal ? "2." : "1."} ${esQuincenal ? "RESTO DEL MES (Q2)" : "PAGO MENSUAL"} — devengado menos deducciones${esQuincenal ? " menos Q1" : ""}</h2>
+<h3>Devengado del periodo</h3>
+<div class="kv"><div class="l">Salario proporcional (${calc.dias||0}d)</div><div class="v">${fmtCurr(calc.salProp||0)}</div></div>
+${(calc.bono||0) > 0 ? `<div class="kv"><div class="l">${selN.bonoConcepto||"Bono"} (${calc.diasAsist||0}d asistidos)</div><div class="v">${fmtCurr(calc.bono||0)}</div></div>` : ''}
+${(calc.aux||0) > 0 ? `<div class="kv"><div class="l">Auxilio de transporte</div><div class="v">${fmtCurr(calc.aux||0)}</div></div>` : ''}
+${(calc.totHex||0) > 0 ? `<div class="kv"><div class="l">Horas extras y recargos</div><div class="v">${fmtCurr(calc.totHex||0)}</div></div>` : ''}
+${(calc.recFest||0) > 0 ? `<div class="kv"><div class="l">Recargo festivos</div><div class="v">${fmtCurr(calc.recFest||0)}</div></div>` : ''}
+<div class="kv subtot"><div class="l">Total devengado</div><div class="v">${fmtCurr(dev)}</div></div>
+<h3>Deducciones empleado</h3>
+<div class="kv"><div class="l">Salud (4% IBC)</div><div class="v">- ${fmtCurr(calc.epsE||0)}</div></div>
+<div class="kv"><div class="l">Pension (4% IBC)</div><div class="v">- ${fmtCurr(calc.penE||0)}</div></div>
+${(calc.rteF||0) > 0 ? `<div class="kv"><div class="l">Retencion en la fuente</div><div class="v">- ${fmtCurr(calc.rteF||0)}</div></div>` : ''}
+${(calc.otrasDed||0) > 0 ? `<div class="kv"><div class="l">Otras deducciones</div><div class="v">- ${fmtCurr(calc.otrasDed||0)}</div></div>` : ''}
+<div class="kv subtot"><div class="l">Total deducciones</div><div class="v">- ${fmtCurr(totDed)}</div></div>
+${esQuincenal ? `<div class="kv"><div class="l">Anticipo Q1 ya pagado</div><div class="v">- ${fmtCurr(q1Total)}</div></div>` : ''}
+<div class="kv bigtot"><div class="l">${esQuincenal ? "PAGO Q2 (fin de mes)" : "PAGO NETO MENSUAL"}</div><div class="v">${fmtCurr(q2Total)}</div></div>
+<h3>Distribucion por OT (segun ${totQ2} dias imputados del 16 al ${new Date(anio,mes+1,0).getDate()})</h3>
+${tablaOTs(otsQ2, q2Total, esQuincenal ? "Coste Q2 imputado" : "Coste neto imputado")}
+
+<h2>${esQuincenal ? "3." : "2."} SEGURIDAD SOCIAL Y PRESTACIONES — a cargo de la empresa</h2>
+<h3>Aportes a seguridad social (sobre IBC ${fmtCurr(ibc)})</h3>
+<div class="kv"><div class="l">Salud — ${fmtPct(pctSalud)} ${calc.exS?"(exonerada Art.114-1 ET)":""}</div><div class="v">${fmtCurr(segSocial.salud)}</div></div>
+<div class="kv"><div class="l">Pension — ${fmtPct(pctPension)}</div><div class="v">${fmtCurr(segSocial.pension)}</div></div>
+<div class="kv"><div class="l">ARL — ${fmtPct(pctArl)} (nivel ${selN.arl||0})</div><div class="v">${fmtCurr(segSocial.arl)}</div></div>
+<div class="kv"><div class="l">Caja de Compensacion — ${fmtPct(pctCaja)}</div><div class="v">${fmtCurr(segSocial.caja)}</div></div>
+<div class="kv"><div class="l">ICBF — ${fmtPct(pctIcbf)} ${calc.exS?"(exonerada Art.114-1 ET)":""}</div><div class="v">${fmtCurr(segSocial.icbf)}</div></div>
+<div class="kv"><div class="l">SENA — ${fmtPct(pctSena)} ${calc.exS?"(exonerada Art.114-1 ET)":""}</div><div class="v">${fmtCurr(segSocial.sena)}</div></div>
+<div class="kv subtot"><div class="l">Total seguridad social y parafiscales</div><div class="v">${fmtCurr(totSegSocial)}</div></div>
+<h3>Provisiones de prestaciones sociales</h3>
+<div class="kv"><div class="l">Prima de servicios — 8.33%</div><div class="v">${fmtCurr(prestaciones.prima)}</div></div>
+<div class="kv"><div class="l">Cesantias — 8.33%</div><div class="v">${fmtCurr(prestaciones.ces)}</div></div>
+<div class="kv"><div class="l">Intereses sobre cesantias — 1%</div><div class="v">${fmtCurr(prestaciones.intC)}</div></div>
+<div class="kv"><div class="l">Vacaciones — 4.17%</div><div class="v">${fmtCurr(prestaciones.vac)}</div></div>
+<div class="kv subtot"><div class="l">Total prestaciones</div><div class="v">${fmtCurr(totPrestaciones)}</div></div>
+<div class="kv bigtot"><div class="l">TOTAL SEGURIDAD SOCIAL + PRESTACIONES</div><div class="v">${fmtCurr(totBloque3)}</div></div>
+<h3>Distribucion por OT (segun ${totMes} dias totales imputados del mes)</h3>
+${tablaOTs(otsMes, totBloque3, "Coste imputado")}
+
+<h2>${esQuincenal ? "4." : "3."} RESUMEN TOTAL COSTO EMPRESA</h2>
+<div class="kv"><div class="l">${esQuincenal ? "Anticipo Q1" : "Bloque 1 (no aplica - mensual)"}</div><div class="v">${esQuincenal ? fmtCurr(q1Total) : "—"}</div></div>
+<div class="kv"><div class="l">${esQuincenal ? "Pago Q2" : "Pago mensual neto"}</div><div class="v">${fmtCurr(q2Total)}</div></div>
+<div class="kv"><div class="l">Deducciones empleado (ya descontadas, las paga la empresa al sistema)</div><div class="v">${fmtCurr(totDed)}</div></div>
+<div class="kv"><div class="l">Seguridad social + prestaciones (a cargo empresa)</div><div class="v">${fmtCurr(totBloque3)}</div></div>
+<div class="kv bigtot"><div class="l">COSTO TOTAL EMPRESA DEL MES</div><div class="v">${fmtCurr(totalCostoEmpresa)}</div></div>
+<h3>Distribucion total por OT (segun ${totMes} dias del mes)</h3>
+${tablaOTs(otsMes, totalCostoEmpresa, "Costo total imputado")}
+
+<div class="notebox">
+<b>Notas para conciliacion contable:</b><br/>
+&bull; Q1 y Q2 son los desembolsos efectivos al trabajador (Q1 el 15, Q2 fin de mes).<br/>
+&bull; Seguridad social y prestaciones se reconocen como provision del mes pero se desembolsan en distinto calendario (PILA mes siguiente, prestaciones segun ley).<br/>
+&bull; La distribucion por OT es informativa: las imputaciones NO modifican el calculo de nomina.<br/>
+&bull; ${calc.exS ? "Aplica exoneracion Art.114-1 ET por ingresar < 10 SMLMV: salud, ICBF y SENA en cero." : "No aplica exoneracion Art.114-1 ET."}
 </div>
-<div style="margin-top:8px;padding:8px;background:#FEF3C7;border:1px solid #F59E0B;border-radius:4px;font-size:7.5pt;color:#92400E">
-<b>Nota:</b> Las horas son una presunción de 8h por día imputado (horario asignado del empleado). El coste trabajador es proporcional al salario base / 30 días. Para coste empresa (con prestaciones sociales) consultar reporte de nómina. Las imputaciones NO afectan los cálculos de nómina — son informativas para imputar costes por OT.
-</div>
+
 <div class="sig">
-<div>Elaborado por<br><span style="color:#999">RRHH Habitaris</span></div>
-<div>Revisado por<br><span style="color:#999">Gerencia</span></div>
-<div>Aprobado por<br><span style="color:#999">Dirección</span></div>
+<div>Elaborado por<br><span style="color:#999">RRHH</span></div>
+<div>Revisado por<br><span style="color:#999">Contabilidad</span></div>
+<div>Aprobado por<br><span style="color:#999">Direccion</span></div>
 </div>
-<div class="foot">Habitaris Suite · ${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})} · ${fileName}</div>
+<div class="foot">Habitaris Suite &middot; ${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})} &middot; ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';document.querySelector('.np').style.display='none';var st=document.createElement('div');st.style.cssText='text-align:center;padding:10px;font-family:monospace;color:#999';st.textContent='Generando PDF...';document.body.appendChild(st);html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(canvas){var img=canvas.toDataURL('image/jpeg',0.98);var iW=canvas.width,iH=canvas.height,pW=210,pH=(iH*pW)/iW;var J=jspdf.jsPDF;var pdf=new J({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileName}.pdf');st.textContent='PDF descargado ✅';el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display='';}).catch(function(e){st.textContent='Error: '+e.message;document.querySelector('.np').style.display=''})})()">📥 Descargar PDF</button>
-<button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
+<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';document.querySelector('.np').style.display='none';var st=document.createElement('div');st.style.cssText='text-align:center;padding:10px;font-family:monospace;color:#999';st.textContent='Generando PDF...';document.body.appendChild(st);html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(canvas){var img=canvas.toDataURL('image/jpeg',0.98);var iW=canvas.width,iH=canvas.height,pW=210,pH=(iH*pW)/iW;var J=jspdf.jsPDF;var pdf=new J({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileName}.pdf');st.textContent='PDF descargado';el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display='';}).catch(function(e){st.textContent='Error: '+e.message;document.querySelector('.np').style.display=''})})()">Descargar PDF</button>
+<button class="btn2" onclick="window.print()">Imprimir</button>
 </div>
 </body></html>`;
       return html;
