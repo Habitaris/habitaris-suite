@@ -139,11 +139,26 @@ const useStore = (key, init) => {
   const [data, setData] = useState(init);
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    store.get(key).then(v => { if (v != null) setData(v); setReady(true); });
+    store.get(key).then(v => {
+      if (v != null) {
+        // La columna kv_store.value es TEXT, asi que arrays/objetos se persisten como string JSON.
+        // Si v es string que parece JSON, intentar parsear. Si v ya es objeto/array, dejarlo.
+        if (typeof v === "string") {
+          const t = v.trim();
+          if (t.startsWith("[") || t.startsWith("{")) {
+            try { v = JSON.parse(t); } catch(_) {}
+          }
+        }
+        setData(v);
+      }
+      setReady(true);
+    });
   }, [key]);
   const save = useCallback(async (val) => {
     const next = typeof val === "function" ? val(data) : val;
-    setData(next); store.set(key, next);
+    setData(next);
+    // Serializar a string antes de guardar para que la lectura sea simetrica.
+    store.set(key, typeof next === "string" ? next : JSON.stringify(next));
   }, [key, data]);
   return [data, save, ready];
 };
