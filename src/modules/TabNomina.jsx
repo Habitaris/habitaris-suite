@@ -1874,19 +1874,28 @@ ${body}
                     const tipoNov = (selN.novDias||{})[e.fecha];
                     const info = tipoNov ? NOV_TIPOS.find(n=>n.id===tipoNov) : null;
                     const fechaLbl = new Date(e.fecha+"T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short",year:"numeric"});
-                    return e.arr.map((f,fi)=>(
+                    return e.arr.map((f,fi)=>{
+                      // Generar nombre descriptivo: TipoNovedad-FECHA-APELLIDOS.ext
+                      // Conserva el nombre original como subtitulo para referencia.
+                      const tipoLabel = info?.label || "Novedad";
+                      const tipoSlug = tipoLabel.replace(/\./g,"").replace(/\s+/g,"-");
+                      const ape = (selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase().replace(/[^A-Z0-9-]/g,"");
+                      const m = (f.name||"").match(/\.[a-zA-Z0-9]+$/);
+                      const ext = m ? m[0].toLowerCase() : "";
+                      const nombreDescriptivo = `${tipoSlug}-${e.fecha}-${ape}${ext}`;
+                      return (
                       <div key={ei+"-"+fi} style={{display:"flex",alignItems:"center",gap:14,padding:"12px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8}}>
                         <div style={{fontSize:20,width:32,textAlign:"center"}}>{info?.icon||"📎"}</div>
                         <div style={{flex:1}}>
-                          <div style={{fontSize:13,fontWeight:700,color:T.ink}}>{f.name}</div>
-                          <div style={{fontSize:10,color:T.inkLight,marginTop:1}}>{info?.label||"Novedad"} · {fechaLbl} · {(f.size/1024).toFixed(0)} KB</div>
+                          <div style={{fontSize:13,fontWeight:700,color:T.ink}}>{nombreDescriptivo}</div>
+                          <div style={{fontSize:10,color:T.inkLight,marginTop:1}}>{tipoLabel} · {fechaLbl} · {(f.size/1024).toFixed(0)} KB <span style={{color:"#bbb"}}>· archivo original: {f.name}</span></div>
                         </div>
                         <div style={{display:"flex",gap:6}}>
-                          <button onClick={()=>verArchivo(f.data, f.name)} style={{fontSize:11,fontWeight:600,color:T.blue,background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>👁 Ver</button>
-                          <a href={f.data} download={f.name} style={{fontSize:11,fontWeight:600,color:T.ink,textDecoration:"none",background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px"}}>⬇ Descargar</a>
+                          <button onClick={()=>verArchivo(f.data, nombreDescriptivo)} style={{fontSize:11,fontWeight:600,color:T.blue,background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>👁 Ver</button>
+                          <a href={f.data} download={nombreDescriptivo} style={{fontSize:11,fontWeight:600,color:T.ink,textDecoration:"none",background:"#fff",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 12px"}}>⬇ Descargar</a>
                         </div>
                       </div>
-                    ));
+                    );});
                   })}
                 </div>
               );
