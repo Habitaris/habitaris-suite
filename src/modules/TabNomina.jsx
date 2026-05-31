@@ -1338,6 +1338,167 @@ ${(selN.otrasDed||0)>0?`<tr><td>Otras deducciones</td><td></td><td style="font-f
 </body></html>`;
       return html;
     };
+    // Nota corta de reembolso interempresa Q1 (anticipo del 15).
+    // Se emite al cerrar Q1 para enviar al otro centro de coste pidiendole
+    // el reembolso de su parte del anticipo pagado.
+    const genNotaReembolsoQ1Html = () => {
+      const esQuincenal = (selN.modalidadPago || "quincenal") === "quincenal";
+      if (!esQuincenal) {
+        window.alert("Esta nota solo aplica para empleados con modalidad quincenal.");
+        return null;
+      }
+      const calc = calcN(selN);
+      const fmtCurr = v => new Intl.NumberFormat(getTenantDefaultsSync().locale,{style:"currency",currency:"COP",maximumFractionDigits:0}).format(v||0);
+      const fmtPct = v => (v||0).toFixed(1) + "%";
+      const fechaAStr = (f) => `${f.getFullYear()}-${String(f.getMonth()+1).padStart(2,"0")}-${String(f.getDate()).padStart(2,"0")}`;
+      const dowMap = ["D","L","M","X","J","V","S"];
+      const centroBaseParaFecha = (fechaStr) => {
+        const d = new Date(fechaStr + "T12:00:00");
+        const diaSem = dowMap[d.getDay()];
+        for (const c of (centros||[])) {
+          if (c.activo === false) continue;
+          for (const cal of (c.calendarios||[])) {
+            if (!Array.isArray(cal.dias)) continue;
+            if (!cal.dias.includes(diaSem)) continue;
+            const emps = cal.empleados || c.empleados || [];
+            if (!emps.includes(selN.empId)) continue;
+            if (cal.vigencia_desde && fechaStr < cal.vigencia_desde) continue;
+            if (cal.vigencia_hasta && fechaStr > cal.vigencia_hasta) continue;
+            return c.id;
+          }
+        }
+        return null;
+      };
+      const iDias = selN.impDias || {};
+      const nDias = selN.novDias || {};
+      // Calcular dias Q1 con desglose por centro
+      const diasOT = {};
+      const vistos = new Set();
+      const bump = (otId, tipo) => {
+        if (!diasOT[otId]) diasOT[otId] = {trab:0, fest:0, nov:0, total:0};
+        diasOT[otId][tipo]++;
+        diasOT[otId].total++;
+      };
+      Object.entries(iDias).forEach(([k, otId]) => {
+        if (!otId || otId === "__conflicto__") return;
+        const dia = parseInt(k.split("-")[2], 10);
+        if (dia < 1 || dia > 15) return;
+        bump(otId, "trab");
+        vistos.add(k);
+      });
+      (festivosMes || []).forEach(h => {
+        const k = fechaAStr(h.date);
+        if (vistos.has(k)) return;
+        if (h.date.getDate() > 15) return;
+        const cId = centroBaseParaFecha(k);
+        if (cId) { bump(cId, "fest"); vistos.add(k); }
+      });
+      Object.entries(nDias).forEach(([k, tipoNov]) => {
+        if (vistos.has(k)) return;
+        if (tipoNov === "normal") return;
+        const dia = parseInt(k.split("-")[2], 10);
+        if (dia < 1 || dia > 15) return;
+        const cId = centroBaseParaFecha(k);
+        if (cId) { bump(cId, "nov"); vistos.add(k); }
+      });
+
+      const totDiasQ1 = Object.values(diasOT).reduce((s,d) => s + d.total, 0);
+      const otsConDias = Object.entries(diasOT).map(([otId, info]) => {
+        const c = centros.find(x => x.id === otId);
+        return {
+          codigo: c ? c.codigo : otId,
+          nombre: c ? c.nombre : "(OT no encontrada)",
+          trab: info.trab, fest: info.fest, nov: info.nov,
+          dias: info.total,
+          pct: totDiasQ1 > 0 ? (info.total / totDiasQ1) * 100 : 0
+        };
+      }).sort((a,b) => b.dias - a.dias);
+
+      const anticipoQ1 = calc.q1 || 0;
+      const empresaNombre = getActiveCompanyLegalDataSync().legalName || "";
+      const empresaNit = getActiveCompanyLegalDataSync().taxId || "";
+      const mAbr = MESES[mes].substring(0,3).toUpperCase();
+      const a2 = String(anio).slice(-2);
+      const ape = (selN.nombre || "").split(" ").slice(-2).join("-").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/[^A-Z0-9-]/g,"");
+      const fileName = `NOTA-REEMBOLSO-Q1-${mAbr}${a2}-${ape}`;
+
+      let tablaHtml = `<table><thead><tr><th>OT</th><th>Centro</th><th style="text-align:right">Trab.</th><th style="text-align:right">Fest.</th><th style="text-align:right">Nov.</th><th style="text-align:right">Dias</th><th style="text-align:right">%</th><th style="text-align:right">Importe Q1</th></tr></thead><tbody>`;
+      otsConDias.forEach(o => {
+        const monto = anticipoQ1 * (o.pct / 100);
+        tablaHtml += `<tr><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right">${o.trab}</td><td style="text-align:right;color:#92400E">${o.fest||""}</td><td style="text-align:right;color:#B91C1C">${o.nov||""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(monto)}</b></td></tr>`;
+      });
+      tablaHtml += `<tr style="background:#111;color:#fff"><td colspan="5"><b>TOTAL</b></td><td style="text-align:right"><b>${totDiasQ1}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(anticipoQ1)}</b></td></tr></tbody></table>`;
+
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+#content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9.5pt;color:#111;line-height:1.4;box-shadow:0 0 8px rgba(0,0,0,.15)}
+.hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px;overflow:hidden}
+.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8.5pt;color:#666;padding-top:6px}
+.hdr img{height:38px}
+h1{font-size:14pt;margin:18px 0 4px;text-align:center;letter-spacing:.5px}
+.sub{text-align:center;font-size:9pt;color:#666;margin-bottom:18px}
+.info{background:#FAFAF7;border:1px solid #eee;border-radius:4px;padding:10px 14px;margin-bottom:14px;font-size:9pt}
+.info div{padding:2px 0}.info span{color:#666}.info b{color:#111}
+h2{font-size:11pt;background:#111;color:#fff;padding:6px 12px;margin:14px 0 8px;border-radius:3px}
+table{width:100%;border-collapse:collapse;margin:6px 0;font-size:9pt}
+th{background:#F5F4F1;padding:6px 8px;text-align:left;font-weight:700;font-size:8.5pt;border-bottom:1px solid #ddd}
+td{padding:5px 8px;border-bottom:1px solid #f0f0f0}
+.kv{display:flex;justify-content:space-between;padding:4px 8px;font-size:10pt;border-bottom:1px dotted #ddd}
+.kv .v{font-family:monospace;font-weight:600}
+.kv.bigtot{background:#1E40AF;color:#fff;font-weight:700;font-size:13pt;padding:10px 14px;margin-top:8px;border-radius:4px}
+.kv.bigtot .l{color:#fff}.kv.bigtot .v{color:#fff;font-size:14pt}
+.notebox{padding:10px 14px;background:#FEF9E7;border:1px solid #F4D85E;border-radius:4px;font-size:8.5pt;color:#92400E;margin-top:14px;line-height:1.6}
+.sig{margin-top:32px;overflow:hidden}.sig div{float:left;width:46%;margin-right:8%;text-align:center;font-size:9pt;border-top:1px solid #111;padding-top:6px}
+.sig div:last-child{margin-right:0}
+.foot{font-size:7pt;color:#999;text-align:center;margin-top:14px}
+.np{text-align:center;margin:16px auto;max-width:794px}
+.btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
+@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+</style></head><body>
+<div id="content">
+<div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="${empresaNombre}"/></div><div class="r"><div style="font-weight:600;color:#111">${empresaNombre}</div><div>NIT: ${empresaNit}</div></div></div>
+<h1>NOTA DE REEMBOLSO INTEREMPRESA — Q1</h1>
+<div class="sub">${MESES[mes]} ${anio} · Anticipo quincenal pagado el 15 · Ref: ${fileName}</div>
+
+<div class="info">
+<div><span>Empleado: </span><b>${selN.nombre||""}</b> &middot; <span>CC: </span><b>${selN.cc||""}</b></div>
+<div><span>Cargo: </span><b>${selN.cargo||""}</b> &middot; <span>Salario base: </span><b>${fmtCurr(selN.sal||0)}</b></div>
+<div><span>Periodo: </span><b>1 al 15 de ${MESES[mes].toLowerCase()} ${anio}</b></div>
+</div>
+
+<h2>Reparto del anticipo Q1 por centro</h2>
+${tablaHtml}
+
+<div class="kv bigtot"><div class="l">ANTICIPO Q1 TOTAL PAGADO</div><div class="v">${fmtCurr(anticipoQ1)}</div></div>
+
+<div class="notebox">
+<b>Notas:</b><br/>
+&bull; El anticipo Q1 equivale al 50% del salario base proporcional. Se paga el dia 15 desde la empresa pagadora del grupo.<br/>
+&bull; La distribucion por centro respeta la <b>Logica B</b>: los dias trabajados se asignan segun imputacion manual, los festivos y dias de novedad (incapacidades, vacaciones, licencias) se asignan al centro al que le tocaba ese dia segun el calendario base del empleado.<br/>
+&bull; Este documento es informativo para conciliacion contable entre centros. Cada centro debe abonar a la empresa pagadora el importe correspondiente a su porcentaje, segun los procedimientos internos del grupo.<br/>
+&bull; El informe mensual completo (con Q2, PILA y provisiones) se emitira al cierre del mes.<br/>
+</div>
+
+<div class="sig">
+<div>Emitido por<br/><span style="font-size:7.5pt;color:#999">RRHH ${empresaNombre}</span></div>
+<div>Recibido por<br/><span style="font-size:7.5pt;color:#999">Centro destinatario</span></div>
+</div>
+
+<div class="foot">${empresaNombre} Suite &middot; ${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})} &middot; ${fileName}</div>
+
+</div>
+<div class="np">
+<button class="btn" onclick="window.print()">🖨 Imprimir / Guardar como PDF</button>
+</div>
+</body></html>`;
+
+      return html;
+    };
+
     const genImputacionesHtml = () => {
             const calc = calcN(selN);
             const iDias = selN.impDias || {};
@@ -1493,7 +1654,7 @@ ${(selN.otrasDed||0)>0?`<tr><td>Otras deducciones</td><td></td><td style="font-f
             const mAbr = MESES[mes].substring(0,3).toUpperCase();
             const a2 = String(anio).slice(-2);
             const ape = (selN.nombre || "").split(" ").slice(-2).join("-").toUpperCase();
-            const fileName = `COSTOS-${mAbr}${a2}-${ape}-${selN.cc||""}`;
+            const fileName = `INFORME-MENSUAL-${mAbr}${a2}-${ape}-${selN.cc||""}`;
 
             // === RENDER HELPERS ===
             const tablaOTs = (ots, montoTotal, labelTotal) => {
@@ -1512,6 +1673,37 @@ ${(selN.otrasDed||0)>0?`<tr><td>Otras deducciones</td><td></td><td style="font-f
               h += `</tbody></table>`;
               return h;
             };
+
+            // Listas para el bloque 0: festivos del mes, novedades del mes
+            const festListInforme = festivosMes.map(h => {
+              const k = fechaAStr(h.date);
+              const centroId = centroBaseParaFecha(k);
+              const c = centros.find(x => x.id === centroId);
+              return {
+                fechaTxt: h.date.toLocaleDateString(getTenantDefaultsSync().locale, {weekday:"short", day:"numeric", month:"short"}),
+                motivo: h.name,
+                centroCod: c ? c.codigo : "—"
+              };
+            });
+            const novListInforme = Object.entries(nDias).sort().map(([k, v]) => {
+              if (v === "normal") return null;
+              const d = new Date(k + "T12:00:00");
+              const info = NOV_TIPOS.find(n => n.id === v);
+              const centroId = centroBaseParaFecha(k);
+              const c = centros.find(x => x.id === centroId);
+              return {
+                fechaTxt: d.toLocaleDateString(getTenantDefaultsSync().locale, {weekday:"short", day:"numeric", month:"short"}),
+                tipo: info?.label || v,
+                centroCod: c ? c.codigo : "—",
+                tipoId: v
+              };
+            }).filter(Boolean);
+            // Conteos por tipo para el resumen
+            const cntIncap = Object.values(nDias).filter(v => v === "incapacidad").length;
+            const cntVac = Object.values(nDias).filter(v => v === "vacaciones").length;
+            const cntLicRem = Object.values(nDias).filter(v => v === "licencia").length;
+            const cntLicNoRem = Object.values(nDias).filter(v => v === "licNoRem").length;
+            const cntAus = Object.values(nDias).filter(v => v === "ausencia").length;
 
             const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
@@ -1549,7 +1741,7 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 </style></head><body>
 <div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">${getActiveCompanyLegalDataSync().legalName}</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
-<h1>INFORME DE COSTOS POR IMPUTACION (OT)</h1>
+<h1>INFORME MENSUAL COMPLETO</h1>
 <div class="sub">${MESES[mes]} ${anio} · Ref: ${fileName}</div>
 <div class="info">
 <div><span>Empleado: </span><b>${selN.nombre}</b></div>
@@ -1560,7 +1752,36 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 <div><span>Dias trabajados: </span><b>${calc.dias||0}</b></div>
 </div>
 
-<h2>1. SALARIO NETO — lo que se paga al trabajador</h2>
+<h2>1. ASISTENCIA Y NOVEDADES DEL MES</h2>
+
+<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">
+<div style="padding:6px 8px;background:#FAFAF7;border:1px solid #eee;border-radius:4px"><div style="font-size:6.5pt;color:#999;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Trabajados</div><div style="font-size:13pt;font-weight:700;color:#111">${calc.dias||0}</div></div>
+<div style="padding:6px 8px;background:#FFFBEB;border:1px solid #F4D85E;border-radius:4px"><div style="font-size:6.5pt;color:#92400E;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Festivos</div><div style="font-size:13pt;font-weight:700;color:#92400E">${festivosMes.length}</div></div>
+<div style="padding:6px 8px;background:#FEE2E2;border:1px solid #FCA5A5;border-radius:4px"><div style="font-size:6.5pt;color:#B91C1C;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Novedades</div><div style="font-size:13pt;font-weight:700;color:#B91C1C">${novListInforme.length}</div></div>
+<div style="padding:6px 8px;background:#EFF6FF;border:1px solid #93C5FD;border-radius:4px"><div style="font-size:6.5pt;color:#1D4ED8;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Asistidos</div><div style="font-size:13pt;font-weight:700;color:#1D4ED8">${calc.diasAsist||0}</div></div>
+</div>
+
+${festListInforme.length > 0 ? `
+<h3 style="font-size:9pt;margin:6px 0 3px">🎉 Festivos del mes</h3>
+<table style="margin-bottom:6px"><thead><tr><th style="width:30%">Fecha</th><th>Motivo</th><th style="width:20%;text-align:right">Centro base</th></tr></thead><tbody>
+${festListInforme.map(f => `<tr><td>${f.fechaTxt}</td><td>${f.motivo}</td><td style="text-align:right;font-family:monospace">${f.centroCod}</td></tr>`).join("")}
+</tbody></table>` : ""}
+
+${novListInforme.length > 0 ? `
+<h3 style="font-size:9pt;margin:6px 0 3px">🏥 Novedades del mes</h3>
+<table style="margin-bottom:6px"><thead><tr><th style="width:30%">Fecha</th><th>Tipo</th><th style="width:20%;text-align:right">Centro base</th></tr></thead><tbody>
+${novListInforme.map(n => `<tr><td>${n.fechaTxt}</td><td>${n.tipo}</td><td style="text-align:right;font-family:monospace">${n.centroCod}</td></tr>`).join("")}
+</tbody></table>
+<div style="font-size:7.5pt;color:#666;margin:2px 0 8px;padding-left:4px">Resumen: 🏥 Incap. ${cntIncap}d &middot; 🏖️ Vac. ${cntVac}d &middot; 📋 Lic.rem. ${cntLicRem}d &middot; ⚠️ Lic.NO rem. ${cntLicNoRem}d &middot; ❌ Aus. ${cntAus}d</div>
+` : ""}
+
+<h3 style="font-size:9pt;margin:6px 0 3px">📍 Imputacion total del mes por centro</h3>
+<table style="margin-bottom:6px"><thead><tr><th>Centro</th><th>Nombre</th><th style="text-align:right">Trab.</th><th style="text-align:right">Fest.</th><th style="text-align:right">Nov.</th><th style="text-align:right">Total dias</th><th style="text-align:right">%</th></tr></thead><tbody>
+${otsMes.map(o => `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right;color:#92400E">${o.fest||""}</td><td style="text-align:right;color:#B91C1C">${o.nov||""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td></tr>`).join("")}
+<tr style="background:#111;color:#fff"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${otsMes.reduce((s,o)=>s+o.trab,0)}</td><td style="text-align:right">${otsMes.reduce((s,o)=>s+o.fest,0)||""}</td><td style="text-align:right">${otsMes.reduce((s,o)=>s+o.nov,0)||""}</td><td style="text-align:right"><b>${otsMes.reduce((s,o)=>s+o.dias,0)}</b></td><td style="text-align:right"><b>100%</b></td></tr>
+</tbody></table>
+
+<h2>2. SALARIO NETO — lo que se paga al trabajador</h2>
 <div class="kv"><div class="l">Devengado bruto</div><div class="v">${fmtCurr(dev)}</div></div>
 <div class="kv"><div class="l" style="padding-left:12px">&nbsp;&nbsp;(-) Salud empleado (4% IBC)</div><div class="v">- ${fmtCurr(calc.epsE||0)}</div></div>
 <div class="kv"><div class="l" style="padding-left:12px">&nbsp;&nbsp;(-) Pension empleado (4% IBC)</div><div class="v">- ${fmtCurr(calc.penE||0)}</div></div>
@@ -1573,7 +1794,25 @@ ${esQuincenal ? `<div class="kv" style="padding-left:12px"><div class="l">&nbsp;
 <h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del NETO por OT (${totMes} dias del mes — Logica B)</h3>
 ${tablaOTs(otsMes, dev - totDed, "Neto imputado")}
 
-<h2>2. SEGURIDAD SOCIAL — lo que se paga a PILA mes siguiente</h2>
+${esQuincenal ? `
+<h2>3. DETALLE QUINCENAL — pagos al trabajador por quincena</h2>
+
+<div style="background:#EFF6FF;border:1px solid #93C5FD;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:8pt;color:#1E3A8A">
+<b>Nota:</b> los porcentajes de Q1 y Q2 son independientes (dependen de los dias imputados en cada quincena). La seguridad social del mes y las provisiones usan el porcentaje total del mes (bloques 4 y 5).
+</div>
+
+<h3 style="font-size:9.5pt;margin:8px 0 4px;color:#1E3A8A">📅 Quincena 1 (1-15 ${MESES[mes].toLowerCase()}) — Anticipo Q1</h3>
+<div class="kv"><div class="l">Anticipo Q1 pagado (50% salario base proporcional)</div><div class="v">${fmtCurr(q1Total)}</div></div>
+<h3 style="font-size:8pt;margin:4px 0 3px;color:#666">Reparto Q1 por OT (${totQ1} dias del 1 al 15)</h3>
+${tablaOTs(otsQ1, q1Total, "Q1 imputado")}
+
+<h3 style="font-size:9.5pt;margin:14px 0 4px;color:#1E3A8A">📅 Quincena 2 (16-${new Date(anio,mes+1,0).getDate()} ${MESES[mes].toLowerCase()}) — Pago Q2 (neto Q2)</h3>
+<div class="kv"><div class="l">Pago Q2 (neto del mes menos anticipo Q1)</div><div class="v">${fmtCurr(q2Total)}</div></div>
+<h3 style="font-size:8pt;margin:4px 0 3px;color:#666">Reparto Q2 por OT (${totQ2} dias del 16 al ${new Date(anio,mes+1,0).getDate()})</h3>
+${tablaOTs(otsQ2, q2Total, "Q2 imputado")}
+` : ''}
+
+<h2>4. SEGURIDAD SOCIAL — lo que se paga a PILA mes siguiente</h2>
 <h3 style="font-size:9pt;margin-top:4px">Aportes del trabajador (descontados del salario, paga la empresa al sistema)</h3>
 <div class="kv"><div class="l">Salud trabajador (4% IBC ${fmtCurr(ibc)})</div><div class="v">${fmtCurr(calc.epsE||0)}</div></div>
 <div class="kv"><div class="l">Pension trabajador (4% IBC)</div><div class="v">${fmtCurr(calc.penE||0)}</div></div>
@@ -1592,7 +1831,7 @@ ${tablaOTs(otsMes, dev - totDed, "Neto imputado")}
 <h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del PILA por OT (${totMes} dias del mes — Logica B)</h3>
 ${tablaOTs(otsMes, totDed + totSegSocial, "PILA imputado")}
 
-<h2>3. PROVISIONES — pasivo acumulado, pago futuro</h2>
+<h2>5. PROVISIONES — pasivo acumulado, pago futuro</h2>
 <div class="kv"><div class="l">Prima de servicios (8.33% — pago semestral jun/dic)</div><div class="v">${fmtCurr(prestaciones.prima)}</div></div>
 <div class="kv"><div class="l">Cesantias (8.33% — consigna feb año siguiente)</div><div class="v">${fmtCurr(prestaciones.ces)}</div></div>
 <div class="kv"><div class="l">Intereses sobre cesantias (1% — paga ene año siguiente)</div><div class="v">${fmtCurr(prestaciones.intC)}</div></div>
@@ -1601,14 +1840,14 @@ ${tablaOTs(otsMes, totDed + totSegSocial, "PILA imputado")}
 <h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto de las PROVISIONES por OT (${totMes} dias del mes — Logica B)</h3>
 ${tablaOTs(otsMes, totPrestaciones, "Provision imputada")}
 
-<h2 style="background:#7F1D1D">💵 GASTO TOTAL DE CAJA DEL MES</h2>
+<h2 style="background:#7F1D1D">6. 💵 GASTO TOTAL DE CAJA DEL MES</h2>
 <div class="kv"><div class="l">Neto al trabajador (sale del banco al empleado)</div><div class="v">${fmtCurr(dev - totDed)}</div></div>
 <div class="kv"><div class="l">PILA empresa (sale del banco al sistema, mes siguiente)</div><div class="v">${fmtCurr(totDed + totSegSocial)}</div></div>
 <div class="kv bigtot" style="background:#7F1D1D"><div class="l">TOTAL CAJA DEL MES</div><div class="v">${fmtCurr((dev - totDed) + (totDed + totSegSocial))}</div></div>
 <h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto de la CAJA TOTAL por OT</h3>
 ${tablaOTs(otsMes, (dev - totDed) + (totDed + totSegSocial), "Caja imputada")}
 
-<h2 style="background:#78350F">🏷️ COSTO TOTAL CON PROVISIONES</h2>
+<h2 style="background:#78350F">7. 🏷️ COSTO TOTAL CON PROVISIONES</h2>
 <div class="kv"><div class="l">💵 Caja del mes</div><div class="v">${fmtCurr((dev - totDed) + (totDed + totSegSocial))}</div></div>
 <div class="kv"><div class="l">📊 Provisiones del mes</div><div class="v">${fmtCurr(totPrestaciones)}</div></div>
 <div class="kv bigtot" style="background:#78350F"><div class="l">COSTO TOTAL EMPRESA</div><div class="v">${fmtCurr(totalCostoEmpresa)}</div></div>
@@ -2157,15 +2396,17 @@ ${body}
             {[
               ...(selN.modalidadPago!=="mensual"?[
                 {icon:"📋",label:"Justificante de anticipo",desc:`Anticipo ${fmt(calc.q1)} · 15 de ${MESES[mes]}`,action:"anticipo"},
+                ...((selN.estado==="q1_pagado"||selN.estado==="pagada"||selN.estado==="liquidada")?[
+                  {icon:"💸",label:"Nota de Reembolso Q1 (interempresa)",desc:`Reparto anticipo Q1 por centro · enviar al centro destinatario`,gen:genNotaReembolsoQ1Html},
+                ]:[]),
               ]:[]),
               {icon:"📄",label:"Nómina",desc:`Devengado ${fmt(calc.dev)} · Deducciones ${fmt(calc.totD)} · Neto ${fmt(calc.neto)}`,action:"nomina"},
-              {icon:"📄",label:"Reporte de novedades",desc:`Festivos, incapacidades, licencias e impacto en nómina`,gen:genNovedadesHtml},
-              {icon:"📊",label:"Costos por imputación",desc:`Costos Q1, Q2, seg. social y total — distribuidos por OT`,gen:genImputacionesHtml},
+              {icon:"📊",label:"Informe Mensual Completo",desc:`Asistencia, novedades, salario, Q1, Q2, PILA, provisiones y reparto por centro (todo en uno)`,gen:genImputacionesHtml},
             ].map((d,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
                 onClick={()=>{
                   const html = d.gen ? d.gen() : buildNominaHtml({ selN, calc, anio, mes, tipo:d.action, refBancaria:selN.refPago||null }).html;
-                  openReport(html);
+                  if (html) openReport(html);
                 }}
                 onMouseEnter={e=>e.currentTarget.style.borderColor=T.ink}
                 onMouseLeave={e=>e.currentTarget.style.borderColor=T.border}>
