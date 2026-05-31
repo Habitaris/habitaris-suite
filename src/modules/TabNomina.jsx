@@ -1560,81 +1560,70 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 <div><span>Dias trabajados: </span><b>${calc.dias||0}</b></div>
 </div>
 
-${esQuincenal ? `
-<h2>1. ANTICIPO QUINCENAL (Q1) — pagado el 15 del mes</h2>
-<div class="kv"><div class="l">Anticipo Q1 (50% salario base proporcional)</div><div class="v">${fmtCurr(q1Total)}</div></div>
-<h3>Distribucion por OT (${totQ1} dias del 1 al 15 — incluye festivos y novedades al centro base)</h3>
-${tablaOTs(otsQ1, q1Total, "Coste Q1 imputado")}
-` : ''}
-
-<h2>${esQuincenal ? "2." : "1."} ${esQuincenal ? "RESTO DEL MES (Q2)" : "PAGO MENSUAL"} — devengado menos deducciones${esQuincenal ? " menos Q1" : ""}</h2>
-<h3>Devengado del periodo</h3>
-<div class="kv"><div class="l">Salario proporcional (${calc.dias||0}d)</div><div class="v">${fmtCurr(calc.salProp||0)}</div></div>
-${(calc.bono||0) > 0 ? `<div class="kv"><div class="l">${selN.bonoConcepto||"Bono"} (${calc.diasAsist||0}d asistidos)</div><div class="v">${fmtCurr(calc.bono||0)}</div></div>` : ''}
-${(calc.aux||0) > 0 ? `<div class="kv"><div class="l">Auxilio de transporte</div><div class="v">${fmtCurr(calc.aux||0)}</div></div>` : ''}
-${(calc.totHex||0) > 0 ? `<div class="kv"><div class="l">Horas extras y recargos</div><div class="v">${fmtCurr(calc.totHex||0)}</div></div>` : ''}
-${(calc.recFest||0) > 0 ? `<div class="kv"><div class="l">Recargo festivos</div><div class="v">${fmtCurr(calc.recFest||0)}</div></div>` : ''}
-<div class="kv subtot"><div class="l">Total devengado</div><div class="v">${fmtCurr(dev)}</div></div>
-<h3>Deducciones empleado</h3>
-<div class="kv"><div class="l">Salud (4% IBC)</div><div class="v">- ${fmtCurr(calc.epsE||0)}</div></div>
-<div class="kv"><div class="l">Pension (4% IBC)</div><div class="v">- ${fmtCurr(calc.penE||0)}</div></div>
-${(calc.rteF||0) > 0 ? `<div class="kv"><div class="l">Retencion en la fuente</div><div class="v">- ${fmtCurr(calc.rteF||0)}</div></div>` : ''}
-${(calc.otrasDed||0) > 0 ? `<div class="kv"><div class="l">Otras deducciones</div><div class="v">- ${fmtCurr(calc.otrasDed||0)}</div></div>` : ''}
+<h2>1. SALARIO NETO — lo que se paga al trabajador</h2>
+<div class="kv"><div class="l">Devengado bruto</div><div class="v">${fmtCurr(dev)}</div></div>
+<div class="kv"><div class="l" style="padding-left:12px">&nbsp;&nbsp;(-) Salud empleado (4% IBC)</div><div class="v">- ${fmtCurr(calc.epsE||0)}</div></div>
+<div class="kv"><div class="l" style="padding-left:12px">&nbsp;&nbsp;(-) Pension empleado (4% IBC)</div><div class="v">- ${fmtCurr(calc.penE||0)}</div></div>
+${(calc.rteF||0) > 0 ? `<div class="kv"><div class="l" style="padding-left:12px">&nbsp;&nbsp;(-) Retencion en la fuente</div><div class="v">- ${fmtCurr(calc.rteF||0)}</div></div>` : ''}
+${(calc.otrasDed||0) > 0 ? `<div class="kv"><div class="l" style="padding-left:12px">&nbsp;&nbsp;(-) Otras deducciones</div><div class="v">- ${fmtCurr(calc.otrasDed||0)}</div></div>` : ''}
 <div class="kv subtot"><div class="l">Total deducciones</div><div class="v">- ${fmtCurr(totDed)}</div></div>
-${esQuincenal ? `<div class="kv"><div class="l">Anticipo Q1 ya pagado</div><div class="v">- ${fmtCurr(q1Total)}</div></div>` : ''}
-<div class="kv bigtot"><div class="l">${esQuincenal ? "PAGO Q2 (fin de mes)" : "PAGO NETO MENSUAL"}</div><div class="v">${fmtCurr(q2Total)}</div></div>
-<h3>Distribucion por OT (${totQ2} dias del 16 al ${new Date(anio,mes+1,0).getDate()} — incluye festivos y novedades al centro base)</h3>
-${tablaOTs(otsQ2, q2Total, esQuincenal ? "Coste Q2 imputado" : "Coste neto imputado")}
+<div class="kv bigtot"><div class="l">NETO AL TRABAJADOR</div><div class="v">${fmtCurr(dev - totDed)}</div></div>
+${esQuincenal ? `<div class="kv" style="padding-left:12px"><div class="l">&nbsp;&nbsp;Q1 anticipo (pagado 15 ${MESES[mes].toLowerCase()})</div><div class="v">${fmtCurr(q1Total)}</div></div>
+<div class="kv" style="padding-left:12px"><div class="l">&nbsp;&nbsp;Q2 fin de mes</div><div class="v">${fmtCurr(q2Total)}</div></div>` : ''}
+<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del NETO por OT (${totMes} dias del mes — Logica B)</h3>
+${tablaOTs(otsMes, dev - totDed, "Neto imputado")}
 
-<h2>${esQuincenal ? "3." : "2."} SEGURIDAD SOCIAL Y PRESTACIONES — a cargo de la empresa</h2>
+<h2>2. SEGURIDAD SOCIAL — lo que se paga a PILA mes siguiente</h2>
+<h3 style="font-size:9pt;margin-top:4px">Aportes del trabajador (descontados del salario, paga la empresa al sistema)</h3>
+<div class="kv"><div class="l">Salud trabajador (4% IBC ${fmtCurr(ibc)})</div><div class="v">${fmtCurr(calc.epsE||0)}</div></div>
+<div class="kv"><div class="l">Pension trabajador (4% IBC)</div><div class="v">${fmtCurr(calc.penE||0)}</div></div>
+<div class="kv subtot"><div class="l">Subtotal aportes trabajador</div><div class="v">${fmtCurr((calc.epsE||0)+(calc.penE||0))}</div></div>
 
-<h3 style="background:#FEE2E2;color:#991B1B;padding:6px 8px;border-radius:3px">💵 CAJA — aportes a seguridad social y parafiscales (se pagan en PILA del mes siguiente)</h3>
-<div class="kv"><div class="l">Salud — ${fmtPct(pctSalud)} ${calc.exS?"(exonerada Art.114-1 ET)":""}</div><div class="v">${fmtCurr(segSocial.salud)}</div></div>
-<div class="kv"><div class="l">Pension — ${fmtPct(pctPension)}</div><div class="v">${fmtCurr(segSocial.pension)}</div></div>
-<div class="kv"><div class="l">ARL — ${fmtPct(pctArl)} (nivel ${selN.arl||0})</div><div class="v">${fmtCurr(segSocial.arl)}</div></div>
-<div class="kv"><div class="l">Caja de Compensacion — ${fmtPct(pctCaja)}</div><div class="v">${fmtCurr(segSocial.caja)}</div></div>
-<div class="kv"><div class="l">ICBF — ${fmtPct(pctIcbf)} ${calc.exS?"(exonerada Art.114-1 ET)":""}</div><div class="v">${fmtCurr(segSocial.icbf)}</div></div>
-<div class="kv"><div class="l">SENA — ${fmtPct(pctSena)} ${calc.exS?"(exonerada Art.114-1 ET)":""}</div><div class="v">${fmtCurr(segSocial.sena)}</div></div>
-<div class="kv subtot"><div class="l">Total CAJA seguridad social (IBC ${fmtCurr(ibc)})</div><div class="v">${fmtCurr(totSegSocial)}</div></div>
-<h3 style="font-size:8pt;margin-top:4px;color:#666">Distribucion CAJA por OT (${totMes} dias del mes — trabajados + festivos + novedades al centro base)</h3>
-${tablaOTs(otsMes, totSegSocial, "CAJA imputada")}
+<h3 style="font-size:9pt;margin-top:6px">Aportes de la empresa</h3>
+<div class="kv"><div class="l">Salud empresa (8.5% IBC) ${calc.exS?"<i style='color:#666'>— exonerada Art.114-1 ET</i>":""}</div><div class="v">${fmtCurr(segSocial.salud)}</div></div>
+<div class="kv"><div class="l">Pension empresa (12% IBC)</div><div class="v">${fmtCurr(segSocial.pension)}</div></div>
+<div class="kv"><div class="l">ARL (${fmtPct(pctArl)} IBC, nivel ${selN.arl||0})</div><div class="v">${fmtCurr(segSocial.arl)}</div></div>
+<div class="kv"><div class="l">Caja de Compensacion (4% IBC)</div><div class="v">${fmtCurr(segSocial.caja)}</div></div>
+<div class="kv"><div class="l">ICBF (3% IBC) ${calc.exS?"<i style='color:#666'>— exonerada Art.114-1 ET</i>":""}</div><div class="v">${fmtCurr(segSocial.icbf)}</div></div>
+<div class="kv"><div class="l">SENA (2% IBC) ${calc.exS?"<i style='color:#666'>— exonerada Art.114-1 ET</i>":""}</div><div class="v">${fmtCurr(segSocial.sena)}</div></div>
+<div class="kv subtot"><div class="l">Subtotal aportes empresa</div><div class="v">${fmtCurr(totSegSocial)}</div></div>
 
-<h3 style="background:#FEF3C7;color:#92400E;padding:6px 8px;border-radius:3px;margin-top:14px">📊 PROVISIONES — prestaciones sociales (pago futuro segun ley o liquidacion)</h3>
-<div class="kv"><div class="l">Prima de servicios — 8.33% (pago semestral: jun/dic)</div><div class="v">${fmtCurr(prestaciones.prima)}</div></div>
-<div class="kv"><div class="l">Cesantias — 8.33% (consigna feb año siguiente)</div><div class="v">${fmtCurr(prestaciones.ces)}</div></div>
-<div class="kv"><div class="l">Intereses sobre cesantias — 1% (paga ene año siguiente)</div><div class="v">${fmtCurr(prestaciones.intC)}</div></div>
-<div class="kv"><div class="l">Vacaciones — 4.17% (cuando se disfrutan o en liquidacion)</div><div class="v">${fmtCurr(prestaciones.vac)}</div></div>
-<div class="kv subtot"><div class="l">Total PROVISIONES</div><div class="v">${fmtCurr(totPrestaciones)}</div></div>
-<h3 style="font-size:8pt;margin-top:4px;color:#666">Distribucion PROVISIONES por OT (${totMes} dias del mes — trabajados + festivos + novedades al centro base)</h3>
+<div class="kv bigtot"><div class="l">TOTAL PILA EMPRESA (trabajador + empresa)</div><div class="v">${fmtCurr(totDed + totSegSocial)}</div></div>
+<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del PILA por OT (${totMes} dias del mes — Logica B)</h3>
+${tablaOTs(otsMes, totDed + totSegSocial, "PILA imputado")}
+
+<h2>3. PROVISIONES — pasivo acumulado, pago futuro</h2>
+<div class="kv"><div class="l">Prima de servicios (8.33% — pago semestral jun/dic)</div><div class="v">${fmtCurr(prestaciones.prima)}</div></div>
+<div class="kv"><div class="l">Cesantias (8.33% — consigna feb año siguiente)</div><div class="v">${fmtCurr(prestaciones.ces)}</div></div>
+<div class="kv"><div class="l">Intereses sobre cesantias (1% — paga ene año siguiente)</div><div class="v">${fmtCurr(prestaciones.intC)}</div></div>
+<div class="kv"><div class="l">Vacaciones (4.17% — cuando se disfrutan o en liquidacion)</div><div class="v">${fmtCurr(prestaciones.vac)}</div></div>
+<div class="kv bigtot"><div class="l">TOTAL PROVISIONES</div><div class="v">${fmtCurr(totPrestaciones)}</div></div>
+<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto de las PROVISIONES por OT (${totMes} dias del mes — Logica B)</h3>
 ${tablaOTs(otsMes, totPrestaciones, "Provision imputada")}
 
-<div class="kv bigtot"><div class="l">TOTAL SEG.SOCIAL (caja) + PRESTACIONES (provision)</div><div class="v">${fmtCurr(totBloque3)}</div></div>
+<h2 style="background:#7F1D1D">💵 GASTO TOTAL DE CAJA DEL MES</h2>
+<div class="kv"><div class="l">Neto al trabajador (sale del banco al empleado)</div><div class="v">${fmtCurr(dev - totDed)}</div></div>
+<div class="kv"><div class="l">PILA empresa (sale del banco al sistema, mes siguiente)</div><div class="v">${fmtCurr(totDed + totSegSocial)}</div></div>
+<div class="kv bigtot" style="background:#7F1D1D"><div class="l">TOTAL CAJA DEL MES</div><div class="v">${fmtCurr((dev - totDed) + (totDed + totSegSocial))}</div></div>
+<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto de la CAJA TOTAL por OT</h3>
+${tablaOTs(otsMes, (dev - totDed) + (totDed + totSegSocial), "Caja imputada")}
 
-<h2>${esQuincenal ? "4." : "3."} RESUMEN TOTAL COSTO EMPRESA</h2>
-
-<h3 style="background:#FEE2E2;color:#991B1B;padding:6px 8px;border-radius:3px">💵 GASTOS DE CAJA DEL PERIODO (tesoreria)</h3>
-${esQuincenal ? `<div class="kv"><div class="l">Anticipo Q1 (pagado 15 ${MESES[mes].toLowerCase()})</div><div class="v">${fmtCurr(q1Total)}</div></div>` : ''}
-<div class="kv"><div class="l">${esQuincenal ? "Pago Q2 (pagado fin de mes)" : "Pago mensual neto (fin de mes)"}</div><div class="v">${fmtCurr(q2Total)}</div></div>
-<div class="kv"><div class="l">Deducciones empleado (descontadas del salario, las paga la empresa al sistema PILA)</div><div class="v">${fmtCurr(totDed)}</div></div>
-<div class="kv"><div class="l">Aportes empresa seguridad social y parafiscales (PILA mes siguiente)</div><div class="v">${fmtCurr(totSegSocial)}</div></div>
-<div class="kv subtot"><div class="l">Total CAJA del mes</div><div class="v">${fmtCurr((esQuincenal?q1Total:0) + q2Total + totDed + totSegSocial)}</div></div>
-
-<h3 style="background:#FEF3C7;color:#92400E;padding:6px 8px;border-radius:3px;margin-top:10px">📊 PROVISIONES DEL PERIODO (pago futuro)</h3>
-<div class="kv"><div class="l">Prima + Cesantias + Intereses + Vacaciones (acumuladas)</div><div class="v">${fmtCurr(totPrestaciones)}</div></div>
-<div class="kv subtot"><div class="l">Total PROVISIONES del mes</div><div class="v">${fmtCurr(totPrestaciones)}</div></div>
-
-<div class="kv bigtot"><div class="l">COSTO TOTAL EMPRESA DEL MES (caja + provisiones)</div><div class="v">${fmtCurr(totalCostoEmpresa)}</div></div>
-
-<h3 style="font-size:8pt;margin-top:4px;color:#666">Distribucion total por OT (${totMes} dias del mes — trabajados + festivos + novedades al centro base)</h3>
+<h2 style="background:#78350F">🏷️ COSTO TOTAL CON PROVISIONES</h2>
+<div class="kv"><div class="l">💵 Caja del mes</div><div class="v">${fmtCurr((dev - totDed) + (totDed + totSegSocial))}</div></div>
+<div class="kv"><div class="l">📊 Provisiones del mes</div><div class="v">${fmtCurr(totPrestaciones)}</div></div>
+<div class="kv bigtot" style="background:#78350F"><div class="l">COSTO TOTAL EMPRESA</div><div class="v">${fmtCurr(totalCostoEmpresa)}</div></div>
+<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del COSTO TOTAL por OT</h3>
 ${tablaOTs(otsMes, totalCostoEmpresa, "Costo total imputado")}
 
 <div class="notebox">
 <b>Notas para conciliacion contable:</b><br/>
-&bull; <b>💵 CAJA del mes</b> = Q1 + Q2 + deducciones del empleado (descontadas del salario, las paga la empresa al sistema PILA) + aportes empresa a seguridad social/parafiscales. Todo esto sale del banco de la empresa: salarios al empleado este mes, y PILA al mes siguiente.<br/>
-&bull; <b>📊 PROVISIONES</b> = prima, cesantias, intereses, vacaciones. NO salen del banco este mes — se acumulan como pasivo laboral y se pagan en calendarios distintos (prima semestral, cesantias feb año siguiente, intereses ene año siguiente, vacaciones cuando se disfrutan o en liquidacion).<br/>
-&bull; <b>Distribucion por OT (Logica B):</b> incluye dias trabajados + festivos + novedades. Cada festivo y dia de novedad (incapacidad, vacaciones, licencias) se asigna al centro al que le tocaba ese dia segun el calendario base del empleado. Si por algun motivo debe asignarse manualmente, usa el boton ✏️ Editar imputaciones del calendario.<br/>
-&bull; <b>Imputaciones informativas:</b> NO modifican el calculo de nomina ni el pago al empleado. Solo afectan la distribucion del costo entre centros para reportes y conciliacion contable.<br/>
-&bull; ${calc.exS ? "Aplica exoneracion Art.114-1 ET por ingresar < 10 SMLMV: salud, ICBF y SENA en cero." : "No aplica exoneracion Art.114-1 ET."}
+&bull; <b>1. SALARIO NETO:</b> lo que efectivamente recibe el trabajador en su cuenta (devengado menos deducciones del trabajador). Se reparte entre OTs por dias.<br/>
+&bull; <b>2. SEGURIDAD SOCIAL (PILA):</b> agrupa los aportes del trabajador (descontados del salario, pero los paga la empresa al sistema) y los aportes propios de la empresa. Se paga en la planilla PILA del mes siguiente.<br/>
+&bull; <b>3. PROVISIONES:</b> prima, cesantias, intereses y vacaciones. NO son caja este mes — se acumulan como pasivo laboral y se pagan en calendarios distintos (prima semestral, cesantias feb año siguiente, intereses ene año siguiente, vacaciones cuando se disfrutan o en liquidacion).<br/>
+&bull; <b>💵 CAJA TOTAL DEL MES</b> = Neto al trabajador + PILA empresa. Es lo que efectivamente sale del banco de la empresa (al empleado este mes, al sistema PILA el mes siguiente).<br/>
+&bull; <b>🏷️ COSTO TOTAL CON PROVISIONES</b> = Caja del mes + Provisiones. Refleja el verdadero costo laboral aunque parte sea diferida.<br/>
+&bull; <b>Logica B:</b> cada festivo y dia de novedad (incapacidad, vacaciones, licencias) se asigna al centro al que le tocaba ese dia segun el calendario base. Las imputaciones manuales prevalecen sobre el calendario base. Para corregir en un mes pagado, usa el boton ✏️ Editar imputaciones.<br/>
+&bull; ${calc.exS ? "Aplica exoneracion Art.114-1 ET por ingresar < 10 SMLMV: salud empresa 8.5%, ICBF 3% y SENA 2% en cero." : "No aplica exoneracion Art.114-1 ET."}
 </div>
 
 <div class="sig">
