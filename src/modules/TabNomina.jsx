@@ -2401,7 +2401,8 @@ ${body}
                 ]:[]),
               ]:[]),
               {icon:"📄",label:"Nómina",desc:`Devengado ${fmt(calc.dev)} · Deducciones ${fmt(calc.totD)} · Neto ${fmt(calc.neto)}`,action:"nomina"},
-              {icon:"📊",label:"Informe Mensual Completo",desc:`Asistencia, novedades, salario, Q1, Q2, PILA, provisiones y reparto por centro (todo en uno)`,gen:genImputacionesHtml},
+              {icon:"📋",label:"Pre-nómina (insumo contador)",desc:`Novedades del mes para que el contador liquide: incapacidades, vacaciones, licencias, festivos, horas extras`,gen:genNovedadesHtml},
+              {icon:"📊",label:"Informe Mensual Completo",desc:`Cierre post-pago: salario, Q1, Q2, PILA, provisiones y reparto por centro (todo en uno)`,gen:genImputacionesHtml},
             ].map((d,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
                 onClick={()=>{
