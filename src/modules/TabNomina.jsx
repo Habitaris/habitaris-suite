@@ -587,8 +587,8 @@ td{padding:4px 8px;border-bottom:1px solid #ddd}.r{text-align:right;font-family:
 ${bodyHtml}
 </div>
 <div class="np">
-
-<button class="btn" onclick="window.print()">🖨 Imprimir / Guardar como PDF</button>
+<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';document.querySelector('.np').style.display='none';html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(c){var img=c.toDataURL('image/jpeg',0.98);var pW=210,pH=(c.height*pW)/c.width;var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileName}.pdf');el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display=''})})()">📥 Descargar PDF</button>
+<button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div></body></html>`;
     openReport(html);
   };
@@ -1332,8 +1332,8 @@ ${(selN.otrasDed||0)>0?`<tr><td>Otras deducciones</td><td></td><td style="font-f
 <div class="foot">Habitaris Suite · ${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})} · ${fileName}</div>
 </div>
 <div class="np">
-
-<button class="btn" onclick="window.print()">🖨 Imprimir / Guardar como PDF</button>
+<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';document.querySelector('.np').style.display='none';var st=document.createElement('div');st.style.cssText='text-align:center;padding:10px;font-family:monospace;color:#999';st.textContent='Generando PDF...';document.body.appendChild(st);html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(canvas){var img=canvas.toDataURL('image/jpeg',0.98);var iW=canvas.width,iH=canvas.height,pW=210,pH=(iH*pW)/iW;var J=jspdf.jsPDF;var pdf=new J({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileName}.pdf');st.textContent='PDF descargado ✅';el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display='';}).catch(function(e){st.textContent='Error: '+e.message;document.querySelector('.np').style.display=''})})()">📥 Descargar PDF</button>
+<button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
       return html;
@@ -1858,8 +1858,8 @@ ${tablaOTs(otsMes, totalCostoEmpresa, "Costo total imputado")}
 <div class="foot">Habitaris Suite &middot; ${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})} &middot; ${fileName}</div>
 </div>
 <div class="np">
-
-<button class="btn" onclick="window.print()">🖨 Imprimir / Guardar como PDF</button>
+<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';document.querySelector('.np').style.display='none';var st=document.createElement('div');st.style.cssText='text-align:center;padding:10px;font-family:monospace;color:#999';st.textContent='Generando PDF...';document.body.appendChild(st);html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(canvas){var img=canvas.toDataURL('image/jpeg',0.98);var iW=canvas.width,iH=canvas.height,pW=210,pH=(iH*pW)/iW;var J=jspdf.jsPDF;var pdf=new J({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileName}.pdf');st.textContent='PDF descargado';el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display='';}).catch(function(e){st.textContent='Error: '+e.message;document.querySelector('.np').style.display=''})})()">Descargar PDF</button>
+<button class="btn2" onclick="window.print()">Imprimir</button>
 </div>
 </body></html>`;
       return html;
@@ -1963,7 +1963,7 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 ${body}
 <div class="foot">Habitaris Suite · ${fechaGen} · ${fileName}</div>
 </div>
-<div class="np"><button class="btn" onclick="window.print()">🖨 Imprimir / Guardar como PDF</button><button class="btn2" onclick="window.close()">Cerrar</button></div>
+<div class="np"><button class="btn" onclick="window.print()">🖨 Imprimir</button><button class="btn2" onclick="window.close()">Cerrar</button></div>
 </body></html>`;
       return html;
     };
