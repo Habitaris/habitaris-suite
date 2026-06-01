@@ -1018,7 +1018,7 @@ export function TabNomina(){
         }
       });
     });
-    const otsCons = Object.values(consolidadoOT).sort((a,b) => b.total - a.total);
+    const otsCons = Object.values(consolidadoOT).sort((a,b) => (a.codigo||"").localeCompare(b.codigo||""));
     const totDiasCons = otsCons.reduce((s,o) => s + o.total, 0);
 
     // === HTML ===
@@ -1412,7 +1412,7 @@ ${(selN.otrasDed||0)>0?`<tr><td>Otras deducciones</td><td></td><td style="font-f
           dias: info.total,
           pct: totDiasQ1 > 0 ? (info.total / totDiasQ1) * 100 : 0
         };
-      }).sort((a,b) => b.dias - a.dias);
+      }).sort((a,b) => (a.codigo||"").localeCompare(b.codigo||""));
 
       const anticipoQ1 = calc.q1 || 0;
       const empresaNombre = getActiveCompanyLegalDataSync().legalName || "";
@@ -1598,7 +1598,7 @@ ${tablaHtml}
                   dias: info.total,
                   pct: total > 0 ? (info.total / total) * 100 : 0
                 };
-              }).sort((a,b) => b.dias - a.dias);
+              }).sort((a,b) => (a.codigo||"").localeCompare(b.codigo||""));
             };
 
             // === BLOQUE 1: ANTICIPO Q1 (solo quincenal) ===
