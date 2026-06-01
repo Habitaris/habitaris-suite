@@ -605,7 +605,48 @@ h3{page-break-after:avoid;break-after:avoid;page-break-inside:avoid;break-inside
 ${bodyHtml}
 </div>
 <div class="np">
-<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';document.querySelector('.np').style.display='none';html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(c){var img=c.toDataURL('image/jpeg',0.98);var pW=210,pH=(c.height*pW)/c.width;var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileName}.pdf');el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display=''})})()">📥 Descargar PDF</button>
+<button class="btn" onclick="(function(){
+var el=document.getElementById('content');
+el.style.boxShadow='none';
+document.querySelector('.np').style.display='none';
+var elRect=el.getBoundingClientRect();
+var noBreak=el.querySelectorAll('table, tr, h2, h3, .kv.bigtot, .info, .notebox, .sig');
+var noBreakRanges=[];
+noBreak.forEach(function(e){var r=e.getBoundingClientRect();noBreakRanges.push({top:r.top-elRect.top, bot:r.bottom-elRect.top});});
+html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(canvas){
+  var iW=canvas.width,iH=canvas.height,pW=210,pH_full=(iH*pW)/iW;
+  var scaleY=iH/el.scrollHeight;
+  var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  var pgH_mm=297, pgH_px=Math.floor(pgH_mm*iW/pW);
+  if(pH_full<=pgH_mm){
+    pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,pW,pH_full);
+  } else {
+    var pos=0, pg=0;
+    while(pos<iH){
+      var cutCanvas=Math.min(pos+pgH_px, iH);
+      if(cutCanvas<iH){
+        var cutDOM=cutCanvas/scaleY, bestCutDOM=cutDOM;
+        for(var i=0;i<noBreakRanges.length;i++){var nr=noBreakRanges[i];if(cutDOM>nr.top+3 && cutDOM<nr.bot-3){if(nr.top-2<bestCutDOM) bestCutDOM=nr.top-2;}}
+        var minDOM=(pos/scaleY)+(pgH_px/scaleY)*0.25;
+        if(bestCutDOM<minDOM) bestCutDOM=cutDOM;
+        cutCanvas=Math.floor(bestCutDOM*scaleY);
+      }
+      var sliceH_px=cutCanvas-pos;
+      var tmpCanvas=document.createElement('canvas');
+      tmpCanvas.width=iW; tmpCanvas.height=sliceH_px;
+      var ctx=tmpCanvas.getContext('2d');
+      ctx.fillStyle='#fff'; ctx.fillRect(0,0,iW,sliceH_px);
+      ctx.drawImage(canvas,0,pos,iW,sliceH_px,0,0,iW,sliceH_px);
+      if(pg>0) pdf.addPage();
+      pdf.addImage(tmpCanvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,pW,sliceH_px*pW/iW);
+      pos=cutCanvas; pg++;
+      if(pg>30) break;
+    }
+  }
+  pdf.save('${fileName}.pdf');
+  el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';
+  document.querySelector('.np').style.display='';
+})})()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div></body></html>`;
     openReport(html);
@@ -1376,53 +1417,55 @@ var st=document.createElement('div');
 st.style.cssText='text-align:center;padding:10px;font-family:monospace;color:#999';
 st.textContent='Generando PDF...';
 document.body.appendChild(st);
-// Calcular puntos seguros de corte: parte superior de elementos no rompibles
-// (h2, tablas, bloques .kv.bigtot) - en pixeles del contenido
+// Recolectar elementos no rompibles ANTES de renderizar (para mapear a pixel del canvas)
 var elRect=el.getBoundingClientRect();
-var noBreak=el.querySelectorAll('table, h2, h3, .kv.bigtot, .info, .notebox, .sig');
+var noBreak=el.querySelectorAll('table, tr, h2, h3, .kv.bigtot, .info, .notebox, .sig');
 var noBreakRanges=[];
 noBreak.forEach(function(e){
   var r=e.getBoundingClientRect();
   noBreakRanges.push({top:r.top-elRect.top, bot:r.bottom-elRect.top});
 });
 html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(canvas){
-  var img=canvas.toDataURL('image/jpeg',0.95);
-  var iW=canvas.width,iH=canvas.height,pW=210,pH=(iH*pW)/iW;
-  var scaleY=iH/el.scrollHeight; // factor pixel-canvas a pixel-DOM
+  var iW=canvas.width,iH=canvas.height,pW=210,pH_full=(iH*pW)/iW;
+  var scaleY=iH/el.scrollHeight; // factor px-canvas / px-DOM
   var J=jspdf.jsPDF;
   var pdf=new J({orientation:'portrait',unit:'mm',format:'a4'});
-  var pgH_mm=297, pgH_px_canvas=pgH_mm*iW/pW; // alto de pagina en pixeles del canvas
-  if(pH<=pgH_mm){
-    pdf.addImage(img,'JPEG',0,0,pW,pH);
+  var pgH_mm=297, pgH_px=Math.floor(pgH_mm*iW/pW); // alto pagina en px-canvas
+  if(pH_full<=pgH_mm){
+    pdf.addImage(canvas.toDataURL('image/jpeg',0.92),'JPEG',0,0,pW,pH_full);
   } else {
+    // Recortar pagina por pagina con un canvas temporal por pagina
     var pos=0, pg=0;
     while(pos<iH){
-      var cutCanvas=Math.min(pos+pgH_px_canvas, iH);
-      // Buscar el corte seguro: si cae dentro de un rango no-rompible, retrocedemos
+      var cutCanvas=Math.min(pos+pgH_px, iH);
+      // Si el corte cae dentro de un bloque no rompible, retroceder al inicio del bloque
       if(cutCanvas<iH){
         var cutDOM=cutCanvas/scaleY;
-        var bestCut=cutDOM;
+        var bestCutDOM=cutDOM;
         for(var i=0;i<noBreakRanges.length;i++){
           var nr=noBreakRanges[i];
-          // Si el corte cae dentro del rango (con margen de 5px), retroceder al top del rango
-          if(cutDOM>nr.top+5 && cutDOM<nr.bot-5){
-            bestCut=Math.min(bestCut, nr.top-2);
+          if(cutDOM>nr.top+3 && cutDOM<nr.bot-3){
+            if(nr.top-2<bestCutDOM) bestCutDOM=nr.top-2;
           }
         }
-        // Garantizar que avancemos algo (mínimo 30% de página)
-        var minCut=(pos/scaleY)+(pgH_px_canvas/scaleY)*0.3;
-        if(bestCut<minCut) bestCut=cutDOM; // si no hay corte seguro, cortar donde sea
-        cutCanvas=bestCut*scaleY;
+        // Minimo: avanzar al menos 25% de la pagina
+        var minDOM=(pos/scaleY)+(pgH_px/scaleY)*0.25;
+        if(bestCutDOM<minDOM) bestCutDOM=cutDOM;
+        cutCanvas=Math.floor(bestCutDOM*scaleY);
       }
+      var sliceH_px=cutCanvas-pos;
+      // Crear canvas temporal para esta pagina y copiar la franja
+      var tmpCanvas=document.createElement('canvas');
+      tmpCanvas.width=iW;
+      tmpCanvas.height=sliceH_px;
+      var ctx=tmpCanvas.getContext('2d');
+      ctx.fillStyle='#fff';
+      ctx.fillRect(0,0,iW,sliceH_px);
+      ctx.drawImage(canvas,0,pos,iW,sliceH_px,0,0,iW,sliceH_px);
+      var sliceImg=tmpCanvas.toDataURL('image/jpeg',0.92);
+      var sliceH_mm=sliceH_px*pW/iW;
       if(pg>0) pdf.addPage();
-      // Imagen completa desplazada para mostrar solo la sección entre pos y cutCanvas
-      var sliceH_mm=(cutCanvas-pos)*pW/iW;
-      pdf.addImage(img,'JPEG',0,-pos*pW/iW,pW,pH);
-      // Recortar con clip blanco lo que sobra abajo
-      if(cutCanvas<iH){
-        pdf.setFillColor(255,255,255);
-        pdf.rect(0,sliceH_mm,pW,pgH_mm-sliceH_mm,'F');
-      }
+      pdf.addImage(sliceImg,'JPEG',0,0,pW,sliceH_mm);
       pos=cutCanvas;
       pg++;
       if(pg>30) break; // safety
