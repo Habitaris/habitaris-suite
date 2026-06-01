@@ -580,7 +580,25 @@ td{padding:4px 8px;border-bottom:1px solid #ddd}.r{text-align:right;font-family:
 .np{text-align:center;margin:16px auto;max-width:794px}
 .btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
 .btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
-@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+/* SALTOS DE PAGINA: regla clave para evitar que las tablas se partan por la mitad */
+table, tr, .kv, .info, .notebox, .sig{page-break-inside:avoid;break-inside:avoid}
+thead{display:table-header-group}
+h2{page-break-after:avoid;break-after:avoid}
+h3{page-break-after:avoid;break-after:avoid;page-break-inside:avoid;break-inside:avoid}
+.page-break{page-break-before:always;break-before:page}
+@media print{
+  body{background:#fff;padding:0;margin:0}
+  .np{display:none}
+  #content{width:100%;margin:0;padding:18mm 14mm;box-shadow:none;page-break-after:auto}
+  /* Reglas reforzadas en impresion */
+  table{page-break-inside:avoid;break-inside:avoid}
+  tr{page-break-inside:avoid;break-inside:avoid}
+  .kv{page-break-inside:avoid;break-inside:avoid}
+  .kv.bigtot{page-break-before:avoid;break-before:avoid}
+  h1,h2{page-break-after:avoid;break-after:avoid}
+  /* Margenes de pagina (A4) */
+  @page{size:A4;margin:0}
+}
 </style></head><body>
 <div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">${getActiveCompanyLegalDataSync().legalName}</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
@@ -1088,7 +1106,7 @@ td{padding:4px 8px;border-bottom:1px solid #f0f0f0}
 <h2>1. DESGLOSE POR EMPLEADO</h2>
 ${bloqueEmpleados}
 
-<h2>2. CONSOLIDADO MENSUAL — CAJA Y PROVISIONES</h2>
+<h2 class="page-break">2. CONSOLIDADO MENSUAL — CAJA Y PROVISIONES</h2>
 
 <h3 style="background:#FEE2E2;color:#991B1B;padding:6px 8px;border-radius:3px">💵 GASTOS DE CAJA DEL MES (tesoreria)</h3>
 <div class="kv"><div class="l">Pago a empleados — Q1 anticipo (quincenales, pagado el 15)</div><div class="v">${fmtCurr(totQ1m)}</div></div>
@@ -1116,7 +1134,7 @@ ${bloqueEmpleados}
 <div class="kv subtot"><div class="l">📊 PROVISIONES (pasivo laboral acumulado)</div><div class="v">${fmtCurr(totProvisiones)}</div></div>
 <div class="kv bigtot"><div class="l">COSTO TOTAL EMPRESA DEL MES</div><div class="v">${fmtCurr(totCostoEmp)}</div></div>
 
-<h2>4. DISTRIBUCION CONSOLIDADA POR ORDEN DE TRABAJO</h2>
+<h2 class="page-break">4. DISTRIBUCION CONSOLIDADA POR ORDEN DE TRABAJO</h2>
 <p style="font-size:8.5pt;color:#666;margin-bottom:6px">Suma de dias-empleado (todos los empleados, todas las OTs). Festivos y novedades al centro base de cada empleado segun calendario (Logica B).</p>
 ${tablaOTCons}
 
@@ -1263,7 +1281,25 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 .np{text-align:center;margin:16px auto;max-width:794px}
 .btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
 .btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
-@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+/* SALTOS DE PAGINA: regla clave para evitar que las tablas se partan por la mitad */
+table, tr, .kv, .info, .notebox, .sig{page-break-inside:avoid;break-inside:avoid}
+thead{display:table-header-group}
+h2{page-break-after:avoid;break-after:avoid}
+h3{page-break-after:avoid;break-after:avoid;page-break-inside:avoid;break-inside:avoid}
+.page-break{page-break-before:always;break-before:page}
+@media print{
+  body{background:#fff;padding:0;margin:0}
+  .np{display:none}
+  #content{width:100%;margin:0;padding:18mm 14mm;box-shadow:none;page-break-after:auto}
+  /* Reglas reforzadas en impresion */
+  table{page-break-inside:avoid;break-inside:avoid}
+  tr{page-break-inside:avoid;break-inside:avoid}
+  .kv{page-break-inside:avoid;break-inside:avoid}
+  .kv.bigtot{page-break-before:avoid;break-before:avoid}
+  h1,h2{page-break-after:avoid;break-after:avoid}
+  /* Margenes de pagina (A4) */
+  @page{size:A4;margin:0}
+}
 </style></head><body>
 <div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">${getActiveCompanyLegalDataSync().legalName}</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
@@ -1332,7 +1368,75 @@ ${(selN.otrasDed||0)>0?`<tr><td>Otras deducciones</td><td></td><td style="font-f
 <div class="foot">Habitaris Suite · ${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})} · ${fileName}</div>
 </div>
 <div class="np">
-<button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';document.querySelector('.np').style.display='none';var st=document.createElement('div');st.style.cssText='text-align:center;padding:10px;font-family:monospace;color:#999';st.textContent='Generando PDF...';document.body.appendChild(st);html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(canvas){var img=canvas.toDataURL('image/jpeg',0.98);var iW=canvas.width,iH=canvas.height,pW=210,pH=(iH*pW)/iW;var J=jspdf.jsPDF;var pdf=new J({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileName}.pdf');st.textContent='PDF descargado ✅';el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display='';}).catch(function(e){st.textContent='Error: '+e.message;document.querySelector('.np').style.display=''})})()">📥 Descargar PDF</button>
+<button class="btn" onclick="(function(){
+var el=document.getElementById('content');
+el.style.boxShadow='none';
+document.querySelector('.np').style.display='none';
+var st=document.createElement('div');
+st.style.cssText='text-align:center;padding:10px;font-family:monospace;color:#999';
+st.textContent='Generando PDF...';
+document.body.appendChild(st);
+// Calcular puntos seguros de corte: parte superior de elementos no rompibles
+// (h2, tablas, bloques .kv.bigtot) - en pixeles del contenido
+var elRect=el.getBoundingClientRect();
+var noBreak=el.querySelectorAll('table, h2, h3, .kv.bigtot, .info, .notebox, .sig');
+var noBreakRanges=[];
+noBreak.forEach(function(e){
+  var r=e.getBoundingClientRect();
+  noBreakRanges.push({top:r.top-elRect.top, bot:r.bottom-elRect.top});
+});
+html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(canvas){
+  var img=canvas.toDataURL('image/jpeg',0.95);
+  var iW=canvas.width,iH=canvas.height,pW=210,pH=(iH*pW)/iW;
+  var scaleY=iH/el.scrollHeight; // factor pixel-canvas a pixel-DOM
+  var J=jspdf.jsPDF;
+  var pdf=new J({orientation:'portrait',unit:'mm',format:'a4'});
+  var pgH_mm=297, pgH_px_canvas=pgH_mm*iW/pW; // alto de pagina en pixeles del canvas
+  if(pH<=pgH_mm){
+    pdf.addImage(img,'JPEG',0,0,pW,pH);
+  } else {
+    var pos=0, pg=0;
+    while(pos<iH){
+      var cutCanvas=Math.min(pos+pgH_px_canvas, iH);
+      // Buscar el corte seguro: si cae dentro de un rango no-rompible, retrocedemos
+      if(cutCanvas<iH){
+        var cutDOM=cutCanvas/scaleY;
+        var bestCut=cutDOM;
+        for(var i=0;i<noBreakRanges.length;i++){
+          var nr=noBreakRanges[i];
+          // Si el corte cae dentro del rango (con margen de 5px), retroceder al top del rango
+          if(cutDOM>nr.top+5 && cutDOM<nr.bot-5){
+            bestCut=Math.min(bestCut, nr.top-2);
+          }
+        }
+        // Garantizar que avancemos algo (mínimo 30% de página)
+        var minCut=(pos/scaleY)+(pgH_px_canvas/scaleY)*0.3;
+        if(bestCut<minCut) bestCut=cutDOM; // si no hay corte seguro, cortar donde sea
+        cutCanvas=bestCut*scaleY;
+      }
+      if(pg>0) pdf.addPage();
+      // Imagen completa desplazada para mostrar solo la sección entre pos y cutCanvas
+      var sliceH_mm=(cutCanvas-pos)*pW/iW;
+      pdf.addImage(img,'JPEG',0,-pos*pW/iW,pW,pH);
+      // Recortar con clip blanco lo que sobra abajo
+      if(cutCanvas<iH){
+        pdf.setFillColor(255,255,255);
+        pdf.rect(0,sliceH_mm,pW,pgH_mm-sliceH_mm,'F');
+      }
+      pos=cutCanvas;
+      pg++;
+      if(pg>30) break; // safety
+    }
+  }
+  pdf.save('${fileName}.pdf');
+  st.textContent='PDF descargado ✅';
+  el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';
+  document.querySelector('.np').style.display='';
+}).catch(function(e){
+  st.textContent='Error: '+e.message;
+  document.querySelector('.np').style.display='';
+});
+})()">📥 Descargar PDF</button>
 <button class="btn2" onclick="window.print()">🖨️ Imprimir</button>
 </div>
 </body></html>`;
@@ -1457,7 +1561,25 @@ td{padding:5px 8px;border-bottom:1px solid #f0f0f0}
 .foot{font-size:7pt;color:#999;text-align:center;margin-top:14px}
 .np{text-align:center;margin:16px auto;max-width:794px}
 .btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
-@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+/* SALTOS DE PAGINA: regla clave para evitar que las tablas se partan por la mitad */
+table, tr, .kv, .info, .notebox, .sig{page-break-inside:avoid;break-inside:avoid}
+thead{display:table-header-group}
+h2{page-break-after:avoid;break-after:avoid}
+h3{page-break-after:avoid;break-after:avoid;page-break-inside:avoid;break-inside:avoid}
+.page-break{page-break-before:always;break-before:page}
+@media print{
+  body{background:#fff;padding:0;margin:0}
+  .np{display:none}
+  #content{width:100%;margin:0;padding:18mm 14mm;box-shadow:none;page-break-after:auto}
+  /* Reglas reforzadas en impresion */
+  table{page-break-inside:avoid;break-inside:avoid}
+  tr{page-break-inside:avoid;break-inside:avoid}
+  .kv{page-break-inside:avoid;break-inside:avoid}
+  .kv.bigtot{page-break-before:avoid;break-before:avoid}
+  h1,h2{page-break-after:avoid;break-after:avoid}
+  /* Margenes de pagina (A4) */
+  @page{size:A4;margin:0}
+}
 </style></head><body>
 <div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="${empresaNombre}"/></div><div class="r"><div style="font-weight:600;color:#111">${empresaNombre}</div><div>NIT: ${empresaNit}</div></div></div>
@@ -1737,7 +1859,25 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 .np{text-align:center;margin:16px auto;max-width:794px}
 .btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
 .btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
-@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+/* SALTOS DE PAGINA: regla clave para evitar que las tablas se partan por la mitad */
+table, tr, .kv, .info, .notebox, .sig{page-break-inside:avoid;break-inside:avoid}
+thead{display:table-header-group}
+h2{page-break-after:avoid;break-after:avoid}
+h3{page-break-after:avoid;break-after:avoid;page-break-inside:avoid;break-inside:avoid}
+.page-break{page-break-before:always;break-before:page}
+@media print{
+  body{background:#fff;padding:0;margin:0}
+  .np{display:none}
+  #content{width:100%;margin:0;padding:18mm 14mm;box-shadow:none;page-break-after:auto}
+  /* Reglas reforzadas en impresion */
+  table{page-break-inside:avoid;break-inside:avoid}
+  tr{page-break-inside:avoid;break-inside:avoid}
+  .kv{page-break-inside:avoid;break-inside:avoid}
+  .kv.bigtot{page-break-before:avoid;break-before:avoid}
+  h1,h2{page-break-after:avoid;break-after:avoid}
+  /* Margenes de pagina (A4) */
+  @page{size:A4;margin:0}
+}
 </style></head><body>
 <div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">${getActiveCompanyLegalDataSync().legalName}</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
@@ -1795,7 +1935,7 @@ ${esQuincenal ? `<div class="kv" style="padding-left:12px"><div class="l">&nbsp;
 ${tablaOTs(otsMes, dev - totDed, "Neto imputado")}
 
 ${esQuincenal ? `
-<h2>3. DETALLE QUINCENAL — pagos al trabajador por quincena</h2>
+<h2 class="page-break">3. DETALLE QUINCENAL — pagos al trabajador por quincena</h2>
 
 <div style="background:#EFF6FF;border:1px solid #93C5FD;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:8pt;color:#1E3A8A">
 <b>Nota:</b> los porcentajes de Q1 y Q2 son independientes (dependen de los dias imputados en cada quincena). La seguridad social del mes y las provisiones usan el porcentaje total del mes (bloques 4 y 5).
@@ -1831,7 +1971,7 @@ ${tablaOTs(otsQ2, q2Total, "Q2 imputado")}
 <h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del PILA por OT (${totMes} dias del mes — Logica B)</h3>
 ${tablaOTs(otsMes, totDed + totSegSocial, "PILA imputado")}
 
-<h2>5. PROVISIONES — pasivo acumulado, pago futuro</h2>
+<h2 class="page-break">5. PROVISIONES — pasivo acumulado, pago futuro</h2>
 <div class="kv"><div class="l">Prima de servicios (8.33% — pago semestral jun/dic)</div><div class="v">${fmtCurr(prestaciones.prima)}</div></div>
 <div class="kv"><div class="l">Cesantias (8.33% — consigna feb año siguiente)</div><div class="v">${fmtCurr(prestaciones.ces)}</div></div>
 <div class="kv"><div class="l">Intereses sobre cesantias (1% — paga ene año siguiente)</div><div class="v">${fmtCurr(prestaciones.intC)}</div></div>
@@ -1969,7 +2109,25 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 .np{text-align:center;margin:16px auto;max-width:794px}
 .btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
 .btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
-@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+/* SALTOS DE PAGINA: regla clave para evitar que las tablas se partan por la mitad */
+table, tr, .kv, .info, .notebox, .sig{page-break-inside:avoid;break-inside:avoid}
+thead{display:table-header-group}
+h2{page-break-after:avoid;break-after:avoid}
+h3{page-break-after:avoid;break-after:avoid;page-break-inside:avoid;break-inside:avoid}
+.page-break{page-break-before:always;break-before:page}
+@media print{
+  body{background:#fff;padding:0;margin:0}
+  .np{display:none}
+  #content{width:100%;margin:0;padding:18mm 14mm;box-shadow:none;page-break-after:auto}
+  /* Reglas reforzadas en impresion */
+  table{page-break-inside:avoid;break-inside:avoid}
+  tr{page-break-inside:avoid;break-inside:avoid}
+  .kv{page-break-inside:avoid;break-inside:avoid}
+  .kv.bigtot{page-break-before:avoid;break-before:avoid}
+  h1,h2{page-break-after:avoid;break-after:avoid}
+  /* Margenes de pagina (A4) */
+  @page{size:A4;margin:0}
+}
 </style></head><body>
 <div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">${getActiveCompanyLegalDataSync().legalName}</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
