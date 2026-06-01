@@ -37,10 +37,18 @@ export default async function handler(req, res) {
         tipo,
         fecha,
         timestamp: bodyTimestamp,
-        gps_lat, gps_lng, gps_accuracy,
         foto_url, centro_costo, centro_id, ot_tipo,
         device_info,
       } = body;
+
+      // GPS: el portal empleado envía lat/lng/precision/gps_error.
+      // Aceptamos también los nombres alternos gps_lat/gps_lng/gps_accuracy por compatibilidad.
+      const gps_lat  = (body.lat != null ? body.lat : body.gps_lat);
+      const gps_lng  = (body.lng != null ? body.lng : body.gps_lng);
+      const gps_prec = (body.precision != null ? body.precision
+                        : body.gps_accuracy != null ? body.gps_accuracy
+                        : body.precision_m);
+      const gps_err  = body.gps_error || null;
 
       if (!employee_id || !tipo) {
         return res.status(400).json({ ok: false, error: "employee_id y tipo son requeridos" });
@@ -68,9 +76,10 @@ export default async function handler(req, res) {
         timestamp: (bodyTimestamp && !isNaN(new Date(bodyTimestamp).getTime()))
           ? new Date(bodyTimestamp).toISOString()
           : new Date().toISOString(),
-        gps_lat:      gps_lat    || null,
-        gps_lng:      gps_lng    || null,
-        precision_m:  gps_accuracy || null,
+        lat:          gps_lat  != null ? gps_lat  : null,
+        lng:          gps_lng  != null ? gps_lng  : null,
+        precision_m:  gps_prec != null ? gps_prec : null,
+        gps_error:    gps_err,
         ip_address,
         device_info:  device_info ? (typeof device_info === "string" ? device_info : JSON.stringify(device_info)) : null,
         foto_url:     foto_url || null,
