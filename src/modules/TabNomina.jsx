@@ -1797,10 +1797,6 @@ ${tablaOTs(otsMes, dev - totDed, "Neto imputado")}
 ${esQuincenal ? `
 <h2 class="page-break">3. DETALLE QUINCENAL — pagos al trabajador por quincena</h2>
 
-<div style="background:#EFF6FF;border:1px solid #93C5FD;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:8pt;color:#1E3A8A">
-<b>Nota:</b> los porcentajes de Q1 y Q2 son independientes (dependen de los dias imputados en cada quincena). La seguridad social del mes y las provisiones usan el porcentaje total del mes (bloques 4 y 5).
-</div>
-
 <h3 style="font-size:9.5pt;margin:8px 0 4px;color:#1E3A8A">📅 Quincena 1 (1-15 ${MESES[mes].toLowerCase()}) — Anticipo Q1</h3>
 <div class="kv"><div class="l">Anticipo Q1 pagado (50% salario base proporcional)</div><div class="v">${fmtCurr(q1Total)}</div></div>
 <h3 style="font-size:8pt;margin:4px 0 3px;color:#666">Reparto Q1 por OT (${totQ1} dias del 1 al 15)</h3>
@@ -1853,17 +1849,6 @@ ${tablaOTs(otsMes, (dev - totDed) + (totDed + totSegSocial), "Caja imputada")}
 <div class="kv bigtot" style="background:#78350F"><div class="l">COSTO TOTAL EMPRESA</div><div class="v">${fmtCurr(totalCostoEmpresa)}</div></div>
 <h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del COSTO TOTAL por OT</h3>
 ${tablaOTs(otsMes, totalCostoEmpresa, "Costo total imputado")}
-
-<div class="notebox">
-<b>Notas para conciliacion contable:</b><br/>
-&bull; <b>1. SALARIO NETO:</b> lo que efectivamente recibe el trabajador en su cuenta (devengado menos deducciones del trabajador). Se reparte entre OTs por dias.<br/>
-&bull; <b>2. SEGURIDAD SOCIAL (PILA):</b> agrupa los aportes del trabajador (descontados del salario, pero los paga la empresa al sistema) y los aportes propios de la empresa. Se paga en la planilla PILA del mes siguiente.<br/>
-&bull; <b>3. PROVISIONES:</b> prima, cesantias, intereses y vacaciones. NO son caja este mes — se acumulan como pasivo laboral y se pagan en calendarios distintos (prima semestral, cesantias feb año siguiente, intereses ene año siguiente, vacaciones cuando se disfrutan o en liquidacion).<br/>
-&bull; <b>💵 CAJA TOTAL DEL MES</b> = Neto al trabajador + PILA empresa. Es lo que efectivamente sale del banco de la empresa (al empleado este mes, al sistema PILA el mes siguiente).<br/>
-&bull; <b>🏷️ COSTO TOTAL CON PROVISIONES</b> = Caja del mes + Provisiones. Refleja el verdadero costo laboral aunque parte sea diferida.<br/>
-&bull; <b>Logica B:</b> cada festivo y dia de novedad (incapacidad, vacaciones, licencias) se asigna al centro al que le tocaba ese dia segun el calendario base. Las imputaciones manuales prevalecen sobre el calendario base. Para corregir en un mes pagado, usa el boton ✏️ Editar imputaciones.<br/>
-&bull; ${calc.exS ? "Aplica exoneracion Art.114-1 ET por ingresar < 10 SMLMV: salud empresa 8.5%, ICBF 3% y SENA 2% en cero." : "No aplica exoneracion Art.114-1 ET."}
-</div>
 
 <div class="sig">
 <div>Elaborado por<br><span style="color:#999">RRHH</span></div>
