@@ -580,7 +580,7 @@ td{padding:4px 8px;border-bottom:1px solid #ddd}.r{text-align:right;font-family:
 .np{text-align:center;margin:16px auto;max-width:794px}
 .btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
 .btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
-@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+@page{size:A4 portrait;margin:12mm}table,tr,thead{page-break-inside:avoid;break-inside:avoid}h1,h2,h3{page-break-after:avoid;break-after:avoid}.kv,.kv.bigtot,.info,.notebox,.sig{page-break-inside:avoid;break-inside:avoid}.page-break{page-break-before:always;break-before:page}@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
 </style></head><body>
 <div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">${getActiveCompanyLegalDataSync().legalName}</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
@@ -1072,7 +1072,7 @@ td{padding:4px 8px;border-bottom:1px solid #f0f0f0}
 .kv.bigtot{border-top:2px solid #111;font-size:11pt;font-weight:800;background:#111;color:#fff;padding:8px 10px;border-radius:3px;margin-top:6px}
 .kv.bigtot .v{color:#fff}
 .notebox{background:#FEF9E7;border:1px solid #F4D85E;border-radius:4px;padding:10px 12px;font-size:8.5pt;line-height:1.6;margin-top:10px}
-@media print{body{background:#fff;padding:0}#content{box-shadow:none;width:100%}}
+@page{size:A4 portrait;margin:12mm}table,tr,thead{page-break-inside:avoid;break-inside:avoid}h1,h2,h3{page-break-after:avoid;break-after:avoid}.kv,.kv.bigtot,.info,.notebox,.sig{page-break-inside:avoid;break-inside:avoid}.page-break{page-break-before:always;break-before:page}@media print{body{background:#fff;padding:0}#content{box-shadow:none;width:100%}}
 </style></head><body><div id="content">
 <div class="hdr"><div class="l">${empresaName?`<img src="${HAB_LOGO}" style="height:36px"/><div style="font-size:10pt;font-weight:700;margin-top:2px">${empresaName}</div>`:""}</div><div class="r">${empresaName}<br/>${empresaNit ? `NIT: ${empresaNit}` : ""}</div></div>
 <h1>CONCILIACION CONTABLE MENSUAL</h1>
@@ -1088,7 +1088,7 @@ td{padding:4px 8px;border-bottom:1px solid #f0f0f0}
 <h2>1. DESGLOSE POR EMPLEADO</h2>
 ${bloqueEmpleados}
 
-<h2>2. CONSOLIDADO MENSUAL — CAJA Y PROVISIONES</h2>
+<h2 class="page-break">2. CONSOLIDADO MENSUAL — CAJA Y PROVISIONES</h2>
 
 <h3 style="background:#FEE2E2;color:#991B1B;padding:6px 8px;border-radius:3px">💵 GASTOS DE CAJA DEL MES (tesoreria)</h3>
 <div class="kv"><div class="l">Pago a empleados — Q1 anticipo (quincenales, pagado el 15)</div><div class="v">${fmtCurr(totQ1m)}</div></div>
@@ -1116,7 +1116,7 @@ ${bloqueEmpleados}
 <div class="kv subtot"><div class="l">📊 PROVISIONES (pasivo laboral acumulado)</div><div class="v">${fmtCurr(totProvisiones)}</div></div>
 <div class="kv bigtot"><div class="l">COSTO TOTAL EMPRESA DEL MES</div><div class="v">${fmtCurr(totCostoEmp)}</div></div>
 
-<h2>4. DISTRIBUCION CONSOLIDADA POR ORDEN DE TRABAJO</h2>
+<h2 class="page-break">4. DISTRIBUCION CONSOLIDADA POR ORDEN DE TRABAJO</h2>
 <p style="font-size:8.5pt;color:#666;margin-bottom:6px">Suma de dias-empleado (todos los empleados, todas las OTs). Festivos y novedades al centro base de cada empleado segun calendario (Logica B).</p>
 ${tablaOTCons}
 
@@ -1263,7 +1263,7 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 .np{text-align:center;margin:16px auto;max-width:794px}
 .btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
 .btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
-@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+@page{size:A4 portrait;margin:12mm}table,tr,thead{page-break-inside:avoid;break-inside:avoid}h1,h2,h3{page-break-after:avoid;break-after:avoid}.kv,.kv.bigtot,.info,.notebox,.sig{page-break-inside:avoid;break-inside:avoid}.page-break{page-break-before:always;break-before:page}@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
 </style></head><body>
 <div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">${getActiveCompanyLegalDataSync().legalName}</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
@@ -1457,7 +1457,7 @@ td{padding:5px 8px;border-bottom:1px solid #f0f0f0}
 .foot{font-size:7pt;color:#999;text-align:center;margin-top:14px}
 .np{text-align:center;margin:16px auto;max-width:794px}
 .btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
-@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+@page{size:A4 portrait;margin:12mm}table,tr,thead{page-break-inside:avoid;break-inside:avoid}h1,h2,h3{page-break-after:avoid;break-after:avoid}.kv,.kv.bigtot,.info,.notebox,.sig{page-break-inside:avoid;break-inside:avoid}.page-break{page-break-before:always;break-before:page}@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
 </style></head><body>
 <div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="${empresaNombre}"/></div><div class="r"><div style="font-weight:600;color:#111">${empresaNombre}</div><div>NIT: ${empresaNit}</div></div></div>
@@ -1737,7 +1737,7 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 .np{text-align:center;margin:16px auto;max-width:794px}
 .btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
 .btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
-@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+@page{size:A4 portrait;margin:12mm}table,tr,thead{page-break-inside:avoid;break-inside:avoid}h1,h2,h3{page-break-after:avoid;break-after:avoid}.kv,.kv.bigtot,.info,.notebox,.sig{page-break-inside:avoid;break-inside:avoid}.page-break{page-break-before:always;break-before:page}@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
 </style></head><body>
 <div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">${getActiveCompanyLegalDataSync().legalName}</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
@@ -1795,7 +1795,7 @@ ${esQuincenal ? `<div class="kv" style="padding-left:12px"><div class="l">&nbsp;
 ${tablaOTs(otsMes, dev - totDed, "Neto imputado")}
 
 ${esQuincenal ? `
-<h2>3. DETALLE QUINCENAL — pagos al trabajador por quincena</h2>
+<h2 class="page-break">3. DETALLE QUINCENAL — pagos al trabajador por quincena</h2>
 
 <div style="background:#EFF6FF;border:1px solid #93C5FD;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:8pt;color:#1E3A8A">
 <b>Nota:</b> los porcentajes de Q1 y Q2 son independientes (dependen de los dias imputados en cada quincena). La seguridad social del mes y las provisiones usan el porcentaje total del mes (bloques 4 y 5).
@@ -1831,7 +1831,7 @@ ${tablaOTs(otsQ2, q2Total, "Q2 imputado")}
 <h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del PILA por OT (${totMes} dias del mes — Logica B)</h3>
 ${tablaOTs(otsMes, totDed + totSegSocial, "PILA imputado")}
 
-<h2>5. PROVISIONES — pasivo acumulado, pago futuro</h2>
+<h2 class="page-break">5. PROVISIONES — pasivo acumulado, pago futuro</h2>
 <div class="kv"><div class="l">Prima de servicios (8.33% — pago semestral jun/dic)</div><div class="v">${fmtCurr(prestaciones.prima)}</div></div>
 <div class="kv"><div class="l">Cesantias (8.33% — consigna feb año siguiente)</div><div class="v">${fmtCurr(prestaciones.ces)}</div></div>
 <div class="kv"><div class="l">Intereses sobre cesantias (1% — paga ene año siguiente)</div><div class="v">${fmtCurr(prestaciones.intC)}</div></div>
@@ -1969,7 +1969,7 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 .np{text-align:center;margin:16px auto;max-width:794px}
 .btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
 .btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
-@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
+@page{size:A4 portrait;margin:12mm}table,tr,thead{page-break-inside:avoid;break-inside:avoid}h1,h2,h3{page-break-after:avoid;break-after:avoid}.kv,.kv.bigtot,.info,.notebox,.sig{page-break-inside:avoid;break-inside:avoid}.page-break{page-break-before:always;break-before:page}@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:0;box-shadow:none}}
 </style></head><body>
 <div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">${getActiveCompanyLegalDataSync().legalName}</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
