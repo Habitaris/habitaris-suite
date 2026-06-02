@@ -457,10 +457,40 @@ function NovedadesPanel({selN, anio, mes, MESES, novHist, setNovHist, novYear, s
               const filas = filtered.map(n=>{
                 const f=novDate(n);
                 const dias = (()=>{ if(!n.fecha_inicio) return 1; const fi=new Date(n.fecha_inicio+"T12:00:00"), ff=n.fecha_fin?new Date(n.fecha_fin+"T12:00:00"):fi; return Math.max(1,Math.floor((ff-fi)/86400000)+1); })();
-                return `<tr><td style="padding:6px 10px;border-bottom:1px solid #eee">${f.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short",year:"numeric"})}</td><td style="padding:6px 10px;border-bottom:1px solid #eee">${tipoIcon[n.tipo]||"📋"} ${n.tipo}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;font-family:monospace;font-size:10px">${n.fecha_inicio||""}${n.fecha_fin&&n.fecha_fin!==n.fecha_inicio?" → "+n.fecha_fin:""}</td><td style="padding:6px 10px;border-bottom:1px solid #eee;text-align:center">${dias}</td><td style="padding:6px 10px;border-bottom:1px solid #eee">${n.motivo||"—"}</td><td style="padding:6px 10px;border-bottom:1px solid #eee">${n.estado||""}</td></tr>`;
+                return `<tr><td>${f.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short",year:"numeric"})}</td><td>${tipoIcon[n.tipo]||"📋"} ${n.tipo}</td><td style="font-family:monospace;font-size:7.5pt">${n.fecha_inicio||""}${n.fecha_fin&&n.fecha_fin!==n.fecha_inicio?" → "+n.fecha_fin:""}</td><td style="text-align:center">${dias}</td><td>${n.motivo||"—"}</td><td>${n.estado||""}</td></tr>`;
               }).join("");
               const totalDias = filtered.reduce((s,n)=>{ if(!n.fecha_inicio) return s+1; const fi=new Date(n.fecha_inicio+"T12:00:00"), ff=n.fecha_fin?new Date(n.fecha_fin+"T12:00:00"):fi; return s+Math.max(1,Math.floor((ff-fi)/86400000)+1); },0);
-              const html = `<div style="font-family:'DM Sans',Arial,sans-serif;max-width:800px;margin:0 auto;padding:24px;color:#111"><h1 style="font-size:20px;margin:0 0 4px">Informe de novedades</h1><div style="font-size:13px;color:#555;margin-bottom:2px"><strong>${selN.nombre}</strong> · ${selN.cc||""}</div><div style="font-size:12px;color:#777;margin-bottom:16px">Período: ${periodoLbl} · ${filtered.length} novedad(es) · ${totalDias} día(s) en total</div><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="border-bottom:2px solid #111;text-align:left"><th style="padding:6px 10px">Fecha</th><th style="padding:6px 10px">Tipo</th><th style="padding:6px 10px">Período</th><th style="padding:6px 10px;text-align:center">Días</th><th style="padding:6px 10px">Motivo</th><th style="padding:6px 10px">Estado</th></tr></thead><tbody>${filas}</tbody></table><div style="margin-top:24px;font-size:10px;color:#999;text-align:center">Habitaris Suite · ${new Date().toLocaleDateString(getTenantDefaultsSync().locale)}</div></div>`;
+              const fileNameNov = `NOVEDADES-${filtroMes==="all"?"ANUAL":MESES[parseInt(filtroMes)].substring(0,3).toUpperCase()}${String(novYear).slice(-2)}-${(selN.cc||"").replace(/\D/g,"")}`;
+              const legalNov = getActiveCompanyLegalDataSync();
+              const html = `<!doctype html><html><head><meta charset="utf-8"><style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+#content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.35;box-shadow:0 0 8px rgba(0,0,0,.15)}
+.hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
+.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
+.hdr img{height:36px}
+h1{font-size:12pt;text-align:center;margin:4px 0 2px;clear:both}
+.sub{font-size:8pt;color:#666;text-align:center;margin-bottom:10px}
+.info{margin-bottom:10px;font-size:8.5pt;overflow:hidden}.info div{float:left;width:50%;padding:1px 0}
+.info span{color:#666}.info b{color:#111}
+table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:8.5pt;clear:both}
+th{text-align:left;padding:4px 6px;font-size:7pt;font-weight:700;text-transform:uppercase;border-bottom:2px solid #111}
+td{padding:3px 6px;border-bottom:1px solid #ddd}
+.foot{font-size:6.5pt;color:#999;text-align:center;margin-top:10px;clear:both}
+@page{size:A4 portrait;margin:0}@media print{html,body{background:#fff;margin:0;padding:0}#content{width:210mm;margin:0;padding:14mm;box-shadow:none}}
+</style></head><body><div id="content">
+<div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="logo"/></div><div class="r"><div style="font-weight:600;color:#111">${legalNov.legalName}</div><div>NIT: ${legalNov.taxId}</div></div></div>
+<h1>INFORME DE NOVEDADES</h1>
+<div class="sub">${periodoLbl} &middot; ${filtered.length} novedad(es) &middot; ${totalDias} día(s) en total &middot; Ref: ${fileNameNov}</div>
+<div class="info">
+<div><span>Empleado: </span><b>${selN.nombre}</b></div>
+<div><span>Documento: </span><b>${selN.cc||""}</b></div>
+<div><span>Cargo: </span><b>${selN.cargo||"—"}</b></div>
+<div><span>Período: </span><b>${periodoLbl}</b></div>
+</div>
+<table><thead><tr><th>Fecha</th><th>Tipo</th><th>Período</th><th style="text-align:center">Días</th><th>Motivo</th><th>Estado</th></tr></thead><tbody>${filas}</tbody></table>
+<div class="foot">${getTenantIdentitySync().displayName} · Generado ${new Date().toLocaleDateString(getTenantDefaultsSync().locale)}</div>
+</div></body></html>`;
               openReport(html);
             }} style={{padding:"4px 10px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,fontWeight:600,background:filtered.length===0?"#f5f5f5":"#fff",color:filtered.length===0?T.inkLight:T.ink,cursor:filtered.length===0?"default":"pointer",fontFamily:"'DM Sans',sans-serif"}}>📄 Informe</button>
           </div>
@@ -3039,30 +3069,25 @@ ${body}
           <Btn pri onClick={guardar} disabled={guard}>{guard?"Guardando…":"💾 Guardar"}</Btn>
         </div>
       </div>
-      {/* Barra de progreso del año: cerrado=verde · en curso=ámbar · sin datos=gris · futuro=bloqueado · activo=oscuro */}
+      {/* Barra de progreso del año (estilo Excel): cerrado=verde · en curso=ámbar · pendiente=gris · activo=oscuro */}
       <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:6}}>
         {MESES.map((m,i)=>{
-          const hoy0=new Date(), curY=hoy0.getFullYear(), curM=hoy0.getMonth();
-          const esFuturo=anio>curY||(anio===curY&&i>curM);
           const activo=i===mes, est=estadosAnio[i];
           let bg="#fff",col=T.inkLight,bd=T.border,mark=null;
-          if(esFuturo){bg="#FAFAF8";col=T.inkXLight;bd=T.border;mark="🔒";}
-          else if(est==="cerrada"){bg=T.greenBg;col=T.green;bd="#BBF7D0";mark="✓";}
+          if(est==="cerrada"){bg=T.greenBg;col=T.green;bd="#BBF7D0";mark="✓";}
           else if(est==="borrador"){bg=T.amberBg;col=T.amber;bd="#FDE68A";}
-          else{mark="—";}
-          if(activo&&!esFuturo){bg=T.ink;col="#fff";bd=T.ink;}
+          if(activo){bg=T.ink;col="#fff";bd=T.ink;}
           return(
-            <button key={i} onClick={esFuturo?undefined:()=>setMes(i)} disabled={esFuturo} title={esFuturo?"Mes aún no iniciado":undefined} style={{position:"relative",flex:"1 1 0",minWidth:54,padding:"6px 4px",borderRadius:5,border:`1.5px solid ${bd}`,background:bg,color:col,fontSize:11,fontWeight:activo?700:600,cursor:esFuturo?"not-allowed":"pointer",opacity:esFuturo?0.6:1,fontFamily:"'DM Sans',sans-serif",transition:"all .12s"}}>
+            <button key={i} onClick={()=>setMes(i)} style={{position:"relative",flex:"1 1 0",minWidth:54,padding:"6px 4px",borderRadius:5,border:`1.5px solid ${bd}`,background:bg,color:col,fontSize:11,fontWeight:activo?700:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",transition:"all .12s"}}>
               {m.substring(0,3)}{mark&&!activo&&<span style={{marginLeft:3,fontSize:9}}>{mark}</span>}
             </button>
           );
         })}
       </div>
-      <div style={{display:"flex",gap:14,marginBottom:16,fontSize:9,color:T.inkLight,flexWrap:"wrap"}}>
+      <div style={{display:"flex",gap:14,marginBottom:16,fontSize:9,color:T.inkLight}}>
         <span><span style={{display:"inline-block",width:8,height:8,borderRadius:2,background:T.greenBg,border:`1px solid #BBF7D0`,marginRight:4,verticalAlign:"middle"}}/>Cerrado</span>
         <span><span style={{display:"inline-block",width:8,height:8,borderRadius:2,background:T.amberBg,border:`1px solid #FDE68A`,marginRight:4,verticalAlign:"middle"}}/>En curso</span>
-        <span><span style={{display:"inline-block",width:8,height:8,borderRadius:2,background:"#fff",border:`1px solid ${T.border}`,marginRight:4,verticalAlign:"middle"}}/>Sin actividad</span>
-        <span>🔒 No iniciado</span>
+        <span><span style={{display:"inline-block",width:8,height:8,borderRadius:2,background:"#fff",border:`1px solid ${T.border}`,marginRight:4,verticalAlign:"middle"}}/>Pendiente</span>
       </div>
       {(()=>{const h=new Date();return h.getFullYear()===anio&&h.getMonth()===mes;})() && <BannerPagos noms={noms} />}
       <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
