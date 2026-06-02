@@ -164,9 +164,19 @@ function calcN(n) {
   const vH=sal/(n.horasMes||240);
   const hexD=(n.hexD||0)*vH*1.25, hexN=(n.hexN||0)*vH*1.75, hexDD=(n.hexDD||0)*vH*2, hexDN=(n.hexDN||0)*vH*2.5;
   const totHex=hexD+hexN+hexDD+hexDN, recFest=(n.festLab||0)*vH*8*0.75;
+  // Bonos manuales del mes (lista). Salariales: entran a IBC, devengado y prestaciones.
+  // No salariales: entran al devengado; y por regla 40/60 (Ley 1393/2010) el excedente
+  // sobre el 40% de la remuneración total se incluye en el IBC. La base excluye los
+  // auxilios legales (transporte, incapacidad). Criterio a validar con el contador.
+  const _bonos=Array.isArray(n.bonos)?n.bonos:[];
+  const bonosSal=_bonos.filter(b=>b&&b.salarial).reduce((s,b)=>s+(+b.valor||0),0);
+  const bonosNoSal=_bonos.filter(b=>b&&!b.salarial).reduce((s,b)=>s+(+b.valor||0),0);
   // Salario siempre sobre 30 días (incluye festivos y domingos)
-  const salProp=sal*ratio, salPropIBC=sal*ratioIBC, auxIncap=Math.round((sal/30)*(n.diasIncap||0)*0.6667), ibc=Math.max(salPropIBC+totHex+recFest, SMLMV*ratio);
-  const dev=salProp+totHex+recFest+aux+bono+(n.otrosIng||0)+auxIncap;
+  const salProp=sal*ratio, salPropIBC=sal*ratioIBC, auxIncap=Math.round((sal/30)*(n.diasIncap||0)*0.6667);
+  const remunSal=salProp+totHex+recFest+bonosSal, remunNoSal=bono+bonosNoSal, totalRemun=remunSal+remunNoSal;
+  const topeNoSal=totalRemun*0.40, excedenteNoSal=remunNoSal>topeNoSal?(remunNoSal-topeNoSal):0;
+  const ibc=Math.max(salPropIBC+totHex+recFest+bonosSal+excedenteNoSal, SMLMV*ratio);
+  const dev=salProp+totHex+recFest+aux+bono+bonosSal+bonosNoSal+(n.otrosIng||0)+auxIncap;
   const eSub=n.reg==="subsidiado", epsE=eSub?0:ibc*0.04, penE=ibc*0.04;
   const rteF=(ibc/UVT)>95?((ibc/UVT)-95)*UVT*0.19:0;
   const totD=epsE+penE+rteF+(n.otrasDed||0), neto=dev-totD;
@@ -178,9 +188,9 @@ function calcN(n) {
   const epsEr=(eSub||exS)?0:ibc*0.085, penEr=ibc*0.12, arlV=Math.max(sal*ratioARL+totHex+recFest,SMLMV*ratioARL)*tasa;
   const caja=ibc*0.04, icbf=exS?0:ibc*0.03, sena=exS?0:ibc*0.02;
   const totAp=epsEr+penEr+arlV+caja+icbf+sena;
-  const bPr=salProp+aux, prima=bPr/12, ces=bPr/12, intC=ces*0.12/12, vac=salProp*15/360;
+  const bPr=salProp+aux+bonosSal, prima=bPr/12, ces=bPr/12, intC=ces*0.12/12, vac=salProp*15/360;
   const totPr=prima+ces+intC+vac, costoT=dev+totAp+totPr;
-  return {sal,salProp,bono,aux,aplA,dev,ibc,eSub,vH,totHex,hexD,hexN,hexDD,hexDN,recFest,epsE,penE,rteF,otrasDed:n.otrasDed||0,totD,neto,q1,q2,q1Pct,epsEr,penEr,arlV,caja,icbf,sena,totAp,exS,tasa,prima,ces,intC,vac,totPr,costoT,ratio,dias,festMes,diasComm,ratioComm,diasAsist,ratioAsist,horasMes:n.horasMes||240};
+  return {sal,salProp,bono,aux,aplA,dev,ibc,eSub,vH,totHex,hexD,hexN,hexDD,hexDN,recFest,epsE,penE,rteF,otrasDed:n.otrasDed||0,totD,neto,q1,q2,q1Pct,epsEr,penEr,arlV,caja,icbf,sena,totAp,exS,tasa,prima,ces,intC,vac,totPr,costoT,ratio,dias,festMes,diasComm,ratioComm,diasAsist,ratioAsist,horasMes:n.horasMes||240,bonosSal,bonosNoSal,excedenteNoSal,topeNoSal,remunNoSal};
 }
 
 const T={bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#666",inkLight:"#999",inkXLight:"#CCC",border:"#E5E3DE",accent:"#F5F5F3",green:"#16A34A",greenBg:"#F0FDF4",red:"#DC2626",redBg:"#FEF2F2",blue:"#2563EB",blueBg:"#EFF6FF",amber:"#D97706",amberBg:"#FFFBEB",purple:"#7C3AED",purpleBg:"#F5F3FF",shadow:"0 1px 3px rgba(0,0,0,.06)"};
@@ -2180,6 +2190,7 @@ ${body}
                               hexD:0, hexN:0, hexDD:0, hexDN:0, festLab:0,
                               diasIncap:0, diasLicRem:0, diasLicNoRem:0, diasVac:0,
                               otrosIng:0, otrasDed:0,
+                              bonos:[],
                               nov:""
                             };
                             const rs=await fetch(`/api/hiring?kv=nomina&anio=${anio}&mes=${mes}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:arr})});
@@ -2358,6 +2369,23 @@ ${body}
                 <Sel label="Nivel ARL" value={selN.arl} onChange={()=>{}} disabled={true} opts={ARL_OPTS.map((a,i)=>({v:i,l:`${a.lbl} — ${fPct(a.t)}`}))}/>
                 <Inp label="Otros ingresos" type="number" value={selN.otrosIng||0} onChange={v=>u({otrosIng:v})} suf="COP" disabled={!ed} small/>
                 <Inp label="Otras deducciones" type="number" value={selN.otrasDed||0} onChange={v=>u({otrasDed:v})} suf="COP" disabled={!ed} small/>
+                {/* Otros bonos del mes — lista dinámica, regla 40/60 (Ley 1393) */}
+                <div style={{marginTop:10,borderTop:`1px solid ${T.border}`,paddingTop:10}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                    <Lbl>Otros bonos del mes</Lbl>
+                    {ed&&<button onClick={()=>u({bonos:[...(selN.bonos||[]),{nombre:"",valor:0,salarial:false}]})} style={{fontSize:10,fontWeight:600,border:`1px solid ${T.green}`,color:T.green,background:"#fff",borderRadius:5,padding:"3px 8px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>+ Añadir bono</button>}
+                  </div>
+                  {(selN.bonos||[]).length===0&&<div style={{fontSize:9,color:T.inkLight,fontStyle:"italic"}}>Sin bonos adicionales este mes.</div>}
+                  {(selN.bonos||[]).map((b,i)=>(
+                    <div key={i} style={{display:"flex",gap:4,alignItems:"center",marginBottom:5}}>
+                      <input value={b.nombre||""} disabled={!ed} placeholder="Concepto" onChange={e=>{const a=[...(selN.bonos||[])];a[i]={...a[i],nombre:e.target.value};u({bonos:a});}} style={{flex:"1 1 80px",minWidth:0,border:`1px solid ${T.border}`,borderRadius:4,padding:"4px 6px",fontSize:10,fontFamily:"'DM Sans',sans-serif",background:ed?"#fff":T.accent,color:T.ink}}/>
+                      <input type="number" value={b.valor||0} disabled={!ed} onChange={e=>{const a=[...(selN.bonos||[])];a[i]={...a[i],valor:+e.target.value};u({bonos:a});}} style={{width:72,border:`1px solid ${T.border}`,borderRadius:4,padding:"4px 6px",fontSize:10,fontFamily:"'DM Mono',monospace",background:ed?"#fff":T.accent,color:T.ink}}/>
+                      <button onClick={()=>{if(!ed)return;const a=[...(selN.bonos||[])];a[i]={...a[i],salarial:!a[i].salarial};u({bonos:a});}} title="Click para cambiar salarial / no salarial" style={{fontSize:9,fontWeight:700,border:"none",borderRadius:4,padding:"4px 7px",cursor:ed?"pointer":"default",whiteSpace:"nowrap",background:b.salarial?T.greenBg:T.accent,color:b.salarial?T.green:T.inkMid,fontFamily:"'DM Sans',sans-serif"}}>{b.salarial?"Salarial":"No salarial"}</button>
+                      {ed&&<button onClick={()=>{const a=(selN.bonos||[]).filter((_,j)=>j!==i);u({bonos:a});}} style={{border:"none",background:"none",color:"#dc2626",cursor:"pointer",fontSize:13,padding:"0 2px"}}>×</button>}
+                    </div>
+                  ))}
+                  {calc.excedenteNoSal>0&&<div style={{fontSize:9,color:T.amber,background:T.amberBg,borderRadius:3,padding:"5px 7px",marginTop:4,lineHeight:1.4}}>⚠️ Los pagos no salariales superan el 40% de la remuneración. El excedente de {fmt(calc.excedenteNoSal)} entra al IBC (Ley 1393).</div>}
+                </div>
               </Card>
             </div>
             <Card accent={T.green}><STit color={T.green}>✅ Devengado</STit>
