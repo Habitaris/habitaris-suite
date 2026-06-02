@@ -188,7 +188,7 @@ const T={bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#666",inkLight:"#999"
 const Card=({children,style,accent})=><div style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:8,padding:"16px 18px",marginBottom:10,boxShadow:T.shadow,borderLeft:accent?`3px solid ${accent}`:undefined,...style}}>{children}</div>;
 const Lbl=({children})=><label style={{display:"block",fontSize:9,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:1,marginBottom:3}}>{children}</label>;
 const Inp=({label,value,onChange,type="text",disabled,suf,small,...rest})=><div style={{marginBottom:8}}>{label&&<Lbl>{label}</Lbl>}<div style={{position:"relative"}}><input type={type} value={value} onChange={e=>onChange(type==="number"?+e.target.value:e.target.value)} disabled={disabled} style={{width:"100%",boxSizing:"border-box",border:`1px solid ${T.border}`,borderRadius:4,padding:small?"5px 8px":"6px 10px",paddingRight:suf?32:undefined,fontSize:small?11:12,fontFamily:"'DM Mono',monospace",background:disabled?T.accent:"#fff",color:T.ink}} {...rest}/>{suf&&<span style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",fontSize:9,color:T.inkLight,fontFamily:"'DM Mono',monospace"}}>{suf}</span>}</div></div>;
-const Sel=({label,value,onChange,opts})=><div style={{marginBottom:8}}>{label&&<Lbl>{label}</Lbl>}<select value={value} onChange={e=>onChange(e.target.value)} style={{width:"100%",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 10px",fontSize:12,fontFamily:"'DM Sans',sans-serif",background:"#fff",color:T.ink}}>{opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}</select></div>;
+const Sel=({label,value,onChange,opts,disabled})=><div style={{marginBottom:8}}>{label&&<Lbl>{label}</Lbl>}<select value={value} onChange={e=>onChange(e.target.value)} disabled={disabled} style={{width:"100%",border:`1px solid ${T.border}`,borderRadius:4,padding:"6px 10px",fontSize:12,fontFamily:"'DM Sans',sans-serif",background:disabled?T.accent:"#fff",color:T.ink}}>{opts.map(o=><option key={o.v} value={o.v}>{o.l}</option>)}</select></div>;
 const Row=({lbl,val,color,bold,sub,indent,bg})=><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",padding:`${sub?2:4}px ${indent?10:0}px`,background:bg||"transparent",borderRadius:bg?3:0,marginBottom:bg?3:0}}><span style={{fontSize:sub?10:11,color:sub?T.inkLight:(color||T.inkMid),fontWeight:bold?700:400}}>{indent&&<span style={{color:T.inkXLight,marginRight:4}}>└</span>}{lbl}</span><span style={{fontSize:sub?10:12,fontWeight:bold?800:500,color:color||T.ink,fontFamily:"'DM Mono',monospace"}}>{fmt(val)}</span></div>;
 const Div=()=><div style={{height:1,background:T.border,margin:"6px 0"}}/>;
 const STit=({children,color})=><div style={{fontSize:12,fontWeight:700,color:color||T.ink,marginBottom:8}}>{children}</div>;
@@ -2350,11 +2350,12 @@ ${body}
                 {calc.totHex>0&&<div style={{fontSize:10,fontFamily:"'DM Mono',monospace",color:T.purple,marginTop:2}}>Total: {fmt(calc.totHex)}</div>}
               </Card>
               <Card><STit>Parámetros</STit>
-                <Inp label="Salario base" type="number" value={selN.sal} onChange={v=>u({sal:v})} suf="COP" disabled={!ed} small/>
-                <Inp label="Bono (Art.128)" type="number" value={selN.bono} onChange={v=>u({bono:v})} suf="COP" disabled={!ed} small/>
+                <div style={{fontSize:9,color:T.inkLight,background:T.accent,borderRadius:3,padding:"5px 8px",marginBottom:8}}>🔒 Salario, bono base, régimen y ARL se gestionan en <b>Condiciones</b> (ficha del empleado). Aquí solo se consultan.</div>
+                <Inp label="Salario base" type="number" value={selN.sal} onChange={()=>{}} suf="COP" disabled={true} small/>
+                <Inp label="Bono (Art.128)" type="number" value={selN.bono} onChange={()=>{}} suf="COP" disabled={true} small/>
                 {selN.modalidadPago!=="mensual"&&<Inp label="Anticipo Q1 (%)" type="number" value={(selN.q1Pct||0.5)*100} onChange={v=>u({q1Pct:v/100})} suf="%" disabled={!ed} small/>}
-                <Sel label="Régimen" value={selN.reg} onChange={v=>u({reg:v})} opts={[{v:"contributivo",l:"Contributivo (EPS)"},{v:"subsidiado",l:"Subsidiado (SISBEN)"}]}/>
-                <Sel label="Nivel ARL" value={selN.arl} onChange={v=>u({arl:parseInt(v)})} opts={ARL_OPTS.map((a,i)=>({v:i,l:`${a.lbl} — ${fPct(a.t)}`}))}/>
+                <Sel label="Régimen" value={selN.reg} onChange={()=>{}} disabled={true} opts={[{v:"contributivo",l:"Contributivo (EPS)"},{v:"subsidiado",l:"Subsidiado (SISBEN)"}]}/>
+                <Sel label="Nivel ARL" value={selN.arl} onChange={()=>{}} disabled={true} opts={ARL_OPTS.map((a,i)=>({v:i,l:`${a.lbl} — ${fPct(a.t)}`}))}/>
                 <Inp label="Otros ingresos" type="number" value={selN.otrosIng||0} onChange={v=>u({otrosIng:v})} suf="COP" disabled={!ed} small/>
                 <Inp label="Otras deducciones" type="number" value={selN.otrasDed||0} onChange={v=>u({otrasDed:v})} suf="COP" disabled={!ed} small/>
               </Card>
