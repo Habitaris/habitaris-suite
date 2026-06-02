@@ -13,6 +13,25 @@ export default async function handler(req,res){
   try{
     // GET - by token or list
     if(req.method==="GET"){
+      // Resumen de estados de los 12 meses de un año (una sola query, para la barra de progreso del liquidador)
+      if(req.query.estados_anio){
+        var anioE=req.query.estados_anio;
+        var re=await fetch(SB_URL+"/rest/v1/kv_store?key=like.hab:nomina:"+anioE+":*&select=key,value",{headers:sbH()});
+        var de=await re.json();
+        var out=[];
+        if(Array.isArray(de)){
+          for(var i=0;i<de.length;i++){
+            try{
+              var mesIdx=parseInt(de[i].key.split(":")[3],10);
+              var emps=JSON.parse(de[i].value)||[];
+              if(!emps.length)continue;
+              var allPaid=emps.every(function(e){return e.estado==="pagada"||e.estado==="liquidada";});
+              out.push({mes:mesIdx,estado:allPaid?"cerrada":"borrador",empleados:emps.length});
+            }catch(_){}
+          }
+        }
+        return res.json({ok:true,data:out});
+      }
       // KV store operations (nomina)
       var kv=req.query.kv||"";
       if(kv){
