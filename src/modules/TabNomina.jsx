@@ -3023,13 +3023,25 @@ ${body}
 
   return(
     <div className="fade-up">
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
         <div style={{fontSize:11,color:T.inkLight}}>Colombia 2026 · SMLMV {fmt(SMLMV)} · Aux.T {fmt(AUX_TR)}</div>
         <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <select value={mes} onChange={e=>setMes(parseInt(e.target.value))} style={{padding:"6px 10px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif",background:"#fff"}}>{MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
-          <select value={anio} onChange={e=>setAnio(parseInt(e.target.value))} style={{padding:"6px 10px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif",background:"#fff",width:80}}>{[2024,2025,2026,2027].map(y=><option key={y} value={y}>{y}</option>)}</select>
+          <select value={anio} onChange={e=>setAnio(parseInt(e.target.value))} style={{padding:"6px 10px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:12,fontFamily:"'DM Sans',sans-serif",background:"#fff",width:84}}>{(()=>{const yA=new Date().getFullYear();return[yA-2,yA-1,yA,yA+1];})().map(y=><option key={y} value={y}>{y}</option>)}</select>
           <Btn pri onClick={guardar} disabled={guard}>{guard?"Guardando…":"💾 Guardar"}</Btn>
         </div>
+      </div>
+      {/* Segmentación de meses (estilo Excel): 12 meses siempre visibles, mes activo resaltado, avance del año */}
+      <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:16}}>
+        {MESES.map((m,i)=>{
+          const activo=i===mes, hoy=new Date(), anioAct=anio===hoy.getFullYear();
+          const transcurrido=anioAct&&i<hoy.getMonth(), esActual=anioAct&&i===hoy.getMonth();
+          return(
+            <button key={i} onClick={()=>setMes(i)} style={{position:"relative",flex:"1 1 0",minWidth:54,padding:"6px 4px",borderRadius:5,border:`1px solid ${activo?T.ink:T.border}`,background:activo?T.ink:(transcurrido?T.accent:"#fff"),color:activo?"#fff":(transcurrido?T.inkMid:T.inkLight),fontSize:11,fontWeight:activo?700:500,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",transition:"all .12s"}}>
+              {m.substring(0,3)}
+              {esActual&&!activo&&<span style={{position:"absolute",top:4,right:5,width:5,height:5,borderRadius:"50%",background:T.green}}/>}
+            </button>
+          );
+        })}
       </div>
       {(()=>{const h=new Date();return h.getFullYear()===anio&&h.getMonth()===mes;})() && <BannerPagos noms={noms} />}
       <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
