@@ -3039,25 +3039,30 @@ ${body}
           <Btn pri onClick={guardar} disabled={guard}>{guard?"Guardando…":"💾 Guardar"}</Btn>
         </div>
       </div>
-      {/* Barra de progreso del año (estilo Excel): cerrado=verde · en curso=ámbar · pendiente=gris · activo=oscuro */}
+      {/* Barra de progreso del año: cerrado=verde · en curso=ámbar · sin datos=gris · futuro=bloqueado · activo=oscuro */}
       <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:6}}>
         {MESES.map((m,i)=>{
+          const hoy0=new Date(), curY=hoy0.getFullYear(), curM=hoy0.getMonth();
+          const esFuturo=anio>curY||(anio===curY&&i>curM);
           const activo=i===mes, est=estadosAnio[i];
           let bg="#fff",col=T.inkLight,bd=T.border,mark=null;
-          if(est==="cerrada"){bg=T.greenBg;col=T.green;bd="#BBF7D0";mark="✓";}
+          if(esFuturo){bg="#FAFAF8";col=T.inkXLight;bd=T.border;mark="🔒";}
+          else if(est==="cerrada"){bg=T.greenBg;col=T.green;bd="#BBF7D0";mark="✓";}
           else if(est==="borrador"){bg=T.amberBg;col=T.amber;bd="#FDE68A";}
-          if(activo){bg=T.ink;col="#fff";bd=T.ink;}
+          else{mark="—";}
+          if(activo&&!esFuturo){bg=T.ink;col="#fff";bd=T.ink;}
           return(
-            <button key={i} onClick={()=>setMes(i)} style={{position:"relative",flex:"1 1 0",minWidth:54,padding:"6px 4px",borderRadius:5,border:`1.5px solid ${bd}`,background:bg,color:col,fontSize:11,fontWeight:activo?700:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",transition:"all .12s"}}>
+            <button key={i} onClick={esFuturo?undefined:()=>setMes(i)} disabled={esFuturo} title={esFuturo?"Mes aún no iniciado":undefined} style={{position:"relative",flex:"1 1 0",minWidth:54,padding:"6px 4px",borderRadius:5,border:`1.5px solid ${bd}`,background:bg,color:col,fontSize:11,fontWeight:activo?700:600,cursor:esFuturo?"not-allowed":"pointer",opacity:esFuturo?0.6:1,fontFamily:"'DM Sans',sans-serif",transition:"all .12s"}}>
               {m.substring(0,3)}{mark&&!activo&&<span style={{marginLeft:3,fontSize:9}}>{mark}</span>}
             </button>
           );
         })}
       </div>
-      <div style={{display:"flex",gap:14,marginBottom:16,fontSize:9,color:T.inkLight}}>
+      <div style={{display:"flex",gap:14,marginBottom:16,fontSize:9,color:T.inkLight,flexWrap:"wrap"}}>
         <span><span style={{display:"inline-block",width:8,height:8,borderRadius:2,background:T.greenBg,border:`1px solid #BBF7D0`,marginRight:4,verticalAlign:"middle"}}/>Cerrado</span>
         <span><span style={{display:"inline-block",width:8,height:8,borderRadius:2,background:T.amberBg,border:`1px solid #FDE68A`,marginRight:4,verticalAlign:"middle"}}/>En curso</span>
-        <span><span style={{display:"inline-block",width:8,height:8,borderRadius:2,background:"#fff",border:`1px solid ${T.border}`,marginRight:4,verticalAlign:"middle"}}/>Pendiente</span>
+        <span><span style={{display:"inline-block",width:8,height:8,borderRadius:2,background:"#fff",border:`1px solid ${T.border}`,marginRight:4,verticalAlign:"middle"}}/>Sin actividad</span>
+        <span>🔒 No iniciado</span>
       </div>
       {(()=>{const h=new Date();return h.getFullYear()===anio&&h.getMonth()===mes;})() && <BannerPagos noms={noms} />}
       <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
