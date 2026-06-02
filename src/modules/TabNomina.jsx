@@ -114,6 +114,10 @@ async function loadEmpMaestro(){try{const r=await fetch("/api/hiring?kv=rrhh:emp
 async function loadN(a,m){try{const r=await fetch("/api/hiring?kv=nomina&anio="+a+"&mes="+m);const d=await r.json();return d.ok?d.data:[];}catch{return[];}}
 // Condiciones laborales con fecha de vigencia (ARL, salario, etc.) del empleado.
 async function loadCond(empId){try{const r=await fetch("/api/hiring?kv=rrhh:condiciones:"+empId+"&flat=1");const d=await r.json();return Array.isArray(d.data)?d.data:[];}catch(_){return[];}}
+// Redondeo PILA: la plataforma (MiPlanilla) aproxima cada aporte al múltiplo de 100 superior.
+// Confirmado por el contador: las aproximaciones las asume la empresa al pagar; NO se trasladan
+// al trabajador. Por eso ceil100 se aplica SOLO al lado PILA, nunca a la nómina del empleado.
+const ceil100=(x)=>Math.ceil((Number(x)||0)/100)*100;
 async function saveN(a,m,data){await fetch("/api/hiring?kv=nomina&anio="+a+"&mes="+m,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data})});}
 
 // Calcula las horas mensuales reales del empleado según los calendarios de los centros donde esta asignado,
@@ -977,13 +981,15 @@ export function TabNomina(){
     const totNeto = empleados.reduce((s,e) => s + e.calc.neto, 0);
     const totQ1m = empleados.reduce((s,e) => s + e.calc.q1, 0);
     const totQ2m = empleados.reduce((s,e) => s + e.calc.q2, 0);
-    // Aportes empresa CAJA (PILA)
-    const apSalud = empleados.reduce((s,e) => s + e.calc.epsEr, 0);
-    const apPensión = empleados.reduce((s,e) => s + e.calc.penEr, 0);
-    const apArl = empleados.reduce((s,e) => s + e.calc.arlV, 0);
-    const apCaja = empleados.reduce((s,e) => s + e.calc.caja, 0);
-    const apIcbf = empleados.reduce((s,e) => s + e.calc.icbf, 0);
-    const apSena = empleados.reduce((s,e) => s + e.calc.sena, 0);
+    // Aportes empresa CAJA (PILA). Redondeo a centena superior por concepto agregado
+    // (trabajador+empleador), regla MiPlanilla. La diferencia la asume la empresa: la
+    // deducción del trabajador (totDed) NO se modifica.
+    const apSalud = ceil100(empleados.reduce((s,e) => s + e.calc.epsEr + e.calc.epsE, 0)) - empleados.reduce((s,e) => s + e.calc.epsE, 0);
+    const apPensión = ceil100(empleados.reduce((s,e) => s + e.calc.penEr + e.calc.penE, 0)) - empleados.reduce((s,e) => s + e.calc.penE, 0);
+    const apArl = ceil100(empleados.reduce((s,e) => s + e.calc.arlV, 0));
+    const apCaja = ceil100(empleados.reduce((s,e) => s + e.calc.caja, 0));
+    const apIcbf = ceil100(empleados.reduce((s,e) => s + e.calc.icbf, 0));
+    const apSena = ceil100(empleados.reduce((s,e) => s + e.calc.sena, 0));
     const totSegSocial = apSalud + apPensión + apArl + apCaja + apIcbf + apSena;
     // Provisiones
     const prPrima = empleados.reduce((s,e) => s + e.calc.prima, 0);
@@ -1047,7 +1053,10 @@ export function TabNomina(){
 
     let bloqueEmpleados = `<table style="font-size:8.5pt"><thead><tr style="background:#F5F4F1"><th>Empleado</th><th>CC</th><th style="text-align:right">Devengado</th><th style="text-align:right">Deducc.</th><th style="text-align:right">Neto</th><th style="text-align:right">Q1</th><th style="text-align:right">Q2</th><th style="text-align:right">Aportes</th><th style="text-align:right">Provis.</th><th style="text-align:right">Costo total</th></tr></thead><tbody>`;
     empleados.forEach(e => {
-      const apE = e.calc.epsEr + e.calc.penEr + e.calc.arlV + e.calc.caja + e.calc.icbf + e.calc.sena;
+      // Aporte PILA del empleado, redondeado a centena superior por concepto agregado (trab+emp).
+      const apE = (ceil100(e.calc.epsEr + e.calc.epsE) - e.calc.epsE)
+                + (ceil100(e.calc.penEr + e.calc.penE) - e.calc.penE)
+                + ceil100(e.calc.arlV) + ceil100(e.calc.caja) + ceil100(e.calc.icbf) + ceil100(e.calc.sena);
       const prE = e.calc.prima + e.calc.ces + e.calc.intC + e.calc.vac;
       bloqueEmpleados += `<tr><td><b>${e.n.nombre||""}</b></td><td>${e.n.cc||""}</td><td style="text-align:right;font-family:monospace">${fmtCurr(e.calc.dev)}</td><td style="text-align:right;font-family:monospace;color:#B91C1C">-${fmtCurr(e.calc.totD)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(e.calc.neto)}</b></td><td style="text-align:right;font-family:monospace">${fmtCurr(e.calc.q1)}</td><td style="text-align:right;font-family:monospace">${fmtCurr(e.calc.q2)}</td><td style="text-align:right;font-family:monospace">${fmtCurr(apE)}</td><td style="text-align:right;font-family:monospace">${fmtCurr(prE)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(e.calc.costoT)}</b></td></tr>`;
     });
@@ -1636,13 +1645,19 @@ ${tablaHtml}
             const totDed = calc.totD || 0;
 
             // === BLOQUE 3: SEGURIDAD SOCIAL Y PRESTACIONES ===
+            // Lado PILA: cada concepto se aproxima a centena superior (regla MiPlanilla,
+            // confirmada por contador). El redondeo se hace sobre el concepto COMPLETO
+            // (trabajador + empleador, p.ej. pensión 4%+12%), y la diferencia la asume la
+            // empresa: la deducción del trabajador (calc.epsE/penE) NO se toca.
+            const _saludEmp = calc.epsEr || 0, _pensEmp = calc.penEr || 0;
+            const _saludTrab = calc.epsE || 0, _pensTrab = calc.penE || 0;
             const segSocial = {
-              salud:   calc.epsEr || 0,   // 8.5% IBC
-              pension: calc.penEr || 0,   // 12% IBC
-              arl:     calc.arlV  || 0,   // tasa según nivel
-              caja:    calc.caja  || 0,   // 4% IBC
-              icbf:    calc.icbf  || 0,   // 3% IBC (cero si exonerado)
-              sena:    calc.sena  || 0    // 2% IBC (cero si exonerado)
+              salud:   ceil100(_saludEmp + _saludTrab) - _saludTrab,  // concepto salud completo redondeado, menos parte trabajador
+              pension: ceil100(_pensEmp + _pensTrab) - _pensTrab,      // concepto pensión completo redondeado, menos parte trabajador
+              arl:     ceil100(calc.arlV || 0),
+              caja:    ceil100(calc.caja || 0),
+              icbf:    ceil100(calc.icbf || 0),
+              sena:    ceil100(calc.sena || 0)
             };
             const totSegSocial = segSocial.salud + segSocial.pension + segSocial.arl + segSocial.caja + segSocial.icbf + segSocial.sena;
             const prestaciones = {
