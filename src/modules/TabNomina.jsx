@@ -165,7 +165,10 @@ function calcN(n) {
   const totD=epsE+penE+rteF+(n.otrasDed||0), neto=dev-totD;
   const q1Pct=n.q1Pct!=null?n.q1Pct:0.5, q1=Math.round(sal*q1Pct), q2=neto-q1;
   const enSM=sal/SMLMV, exS=n.ex114!==false&&enSM<10, tasa=ARL_OPTS[n.arl||0]?.t||0.00522;
-  const epsEr=(eSub||exS)?0:ibc*0.085, penEr=ibc*0.12, arlV=Math.max(ibc,SMLMV*ratio)*tasa;
+  // ARL: se suspende durante incapacidad (EG/AT) y licencia NO remunerada — no hay exposición a riesgo.
+  // Vacaciones y licencia remunerada SÍ mantienen ARL. Salud/pensión/caja siguen sobre ibc completo.
+  const diasARL=dias+(n.diasVac||0)+(n.diasLicRem||0), ratioARL=diasARL/30;
+  const epsEr=(eSub||exS)?0:ibc*0.085, penEr=ibc*0.12, arlV=Math.max(sal*ratioARL+totHex+recFest,SMLMV*ratioARL)*tasa;
   const caja=ibc*0.04, icbf=exS?0:ibc*0.03, sena=exS?0:ibc*0.02;
   const totAp=epsEr+penEr+arlV+caja+icbf+sena;
   const bPr=salProp+aux, prima=bPr/12, ces=bPr/12, intC=ces*0.12/12, vac=salProp*15/360;
