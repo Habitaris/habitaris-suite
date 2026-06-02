@@ -740,6 +740,7 @@ export function TabNomina(){
   const hoy=new Date();
   const[anio,setAnio]=useState(hoy.getFullYear());
   const[mes,setMes]=useState(hoy.getMonth());
+  const[estadosAnio,setEstadosAnio]=useState({});
   const[noms,setNoms]=useState([]);
   const[loading,setLoading]=useState(true);
   const[guard,setGuard]=useState(false);
@@ -828,6 +829,14 @@ export function TabNomina(){
       setFichajeHab(d.ok && d.data && !Array.isArray(d.data) ? d.data : {});
     }).catch(()=>setFichajeHab({}));
   },[anio,mes]);
+
+  // Barra de progreso del año: estados de los 12 meses (una sola query al cambiar de año o guardar)
+  useEffect(()=>{
+    fetch("/api/hiring?estados_anio="+anio).then(r=>r.json()).then(d=>{
+      const m={}; (d.ok&&Array.isArray(d.data)?d.data:[]).forEach(x=>{m[x.mes]=x.estado;});
+      setEstadosAnio(m);
+    }).catch(()=>setEstadosAnio({}));
+  },[anio,noms]);
 
 
     // Helper: dado un día del mes (1..31), devuelve la letra del día de la semana en formato L M X J V S D
@@ -3030,18 +3039,25 @@ ${body}
           <Btn pri onClick={guardar} disabled={guard}>{guard?"Guardando…":"💾 Guardar"}</Btn>
         </div>
       </div>
-      {/* Segmentación de meses (estilo Excel): 12 meses siempre visibles, mes activo resaltado, avance del año */}
-      <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:16}}>
+      {/* Barra de progreso del año (estilo Excel): cerrado=verde · en curso=ámbar · pendiente=gris · activo=oscuro */}
+      <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:6}}>
         {MESES.map((m,i)=>{
-          const activo=i===mes, hoy=new Date(), anioAct=anio===hoy.getFullYear();
-          const transcurrido=anioAct&&i<hoy.getMonth(), esActual=anioAct&&i===hoy.getMonth();
+          const activo=i===mes, est=estadosAnio[i];
+          let bg="#fff",col=T.inkLight,bd=T.border,mark=null;
+          if(est==="cerrada"){bg=T.greenBg;col=T.green;bd="#BBF7D0";mark="✓";}
+          else if(est==="borrador"){bg=T.amberBg;col=T.amber;bd="#FDE68A";}
+          if(activo){bg=T.ink;col="#fff";bd=T.ink;}
           return(
-            <button key={i} onClick={()=>setMes(i)} style={{position:"relative",flex:"1 1 0",minWidth:54,padding:"6px 4px",borderRadius:5,border:`1px solid ${activo?T.ink:T.border}`,background:activo?T.ink:(transcurrido?T.accent:"#fff"),color:activo?"#fff":(transcurrido?T.inkMid:T.inkLight),fontSize:11,fontWeight:activo?700:500,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",transition:"all .12s"}}>
-              {m.substring(0,3)}
-              {esActual&&!activo&&<span style={{position:"absolute",top:4,right:5,width:5,height:5,borderRadius:"50%",background:T.green}}/>}
+            <button key={i} onClick={()=>setMes(i)} style={{position:"relative",flex:"1 1 0",minWidth:54,padding:"6px 4px",borderRadius:5,border:`1.5px solid ${bd}`,background:bg,color:col,fontSize:11,fontWeight:activo?700:600,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",transition:"all .12s"}}>
+              {m.substring(0,3)}{mark&&!activo&&<span style={{marginLeft:3,fontSize:9}}>{mark}</span>}
             </button>
           );
         })}
+      </div>
+      <div style={{display:"flex",gap:14,marginBottom:16,fontSize:9,color:T.inkLight}}>
+        <span><span style={{display:"inline-block",width:8,height:8,borderRadius:2,background:T.greenBg,border:`1px solid #BBF7D0`,marginRight:4,verticalAlign:"middle"}}/>Cerrado</span>
+        <span><span style={{display:"inline-block",width:8,height:8,borderRadius:2,background:T.amberBg,border:`1px solid #FDE68A`,marginRight:4,verticalAlign:"middle"}}/>En curso</span>
+        <span><span style={{display:"inline-block",width:8,height:8,borderRadius:2,background:"#fff",border:`1px solid ${T.border}`,marginRight:4,verticalAlign:"middle"}}/>Pendiente</span>
       </div>
       {(()=>{const h=new Date();return h.getFullYear()===anio&&h.getMonth()===mes;})() && <BannerPagos noms={noms} />}
       <div style={{display:"grid",gridTemplateColumns:"repeat(5,1fr)",gap:10,marginBottom:16}}>
