@@ -1823,7 +1823,7 @@ ${(calc.otrasDed||0) > 0 ? `<div class="kv"><div class="l" style="padding-left:1
 <div class="kv bigtot"><div class="l">NETO AL TRABAJADOR</div><div class="v">${fmtCurr(dev - totDed)}</div></div>
 ${esQuincenal ? `<div class="kv" style="padding-left:12px"><div class="l">&nbsp;&nbsp;Q1 anticipo (pagado 15 ${MESES[mes].toLowerCase()})</div><div class="v">${fmtCurr(q1Total)}</div></div>
 <div class="kv" style="padding-left:12px"><div class="l">&nbsp;&nbsp;Q2 fin de mes</div><div class="v">${fmtCurr(q2Total)}</div></div>` : ''}
-<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del NETO por CT (${totMes} días del mes — Lógica B)</h3>
+<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del NETO por CT</h3>
 ${tablaOTs(otsMes, dev - totDed, "Neto imputado")}
 
 ${esQuincenal ? `
@@ -1841,7 +1841,7 @@ ${tablaOTs(otsQ2, q2Total, "Q2 imputado")}
 ` : ''}
 
 <h2>4. SEGURIDAD SOCIAL — lo que se paga a PILA mes siguiente</h2>
-<h3 style="font-size:9pt;margin-top:4px">Aportes del trabajador (descontados del salario, paga la empresa al sistema)</h3>
+<h3 style="font-size:9pt;margin-top:4px">Aportes del trabajador</h3>
 <div class="kv"><div class="l">Salud trabajador (4% IBC ${fmtCurr(ibc)})</div><div class="v">${fmtCurr(calc.epsE||0)}</div></div>
 <div class="kv"><div class="l">Pensión trabajador (4% IBC)</div><div class="v">${fmtCurr(calc.penE||0)}</div></div>
 <div class="kv subtot"><div class="l">Subtotal aportes trabajador</div><div class="v">${fmtCurr((calc.epsE||0)+(calc.penE||0))}</div></div>
@@ -1856,7 +1856,7 @@ ${tablaOTs(otsQ2, q2Total, "Q2 imputado")}
 <div class="kv subtot"><div class="l">Subtotal aportes empresa</div><div class="v">${fmtCurr(totSegSocial)}</div></div>
 
 <div class="kv bigtot"><div class="l">TOTAL PILA EMPRESA (trabajador + empresa)</div><div class="v">${fmtCurr(totDed + totSegSocial)}</div></div>
-<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del PILA por CT (${totMes} días del mes — Lógica B)</h3>
+<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del PILA por CT</h3>
 ${tablaOTs(otsMes, totDed + totSegSocial, "PILA imputado")}
 
 <h2 class="page-break">5. PROVISIÓNES — pasivo acumulado, pago futuro</h2>
@@ -1865,7 +1865,7 @@ ${tablaOTs(otsMes, totDed + totSegSocial, "PILA imputado")}
 <div class="kv"><div class="l">Intereses sobre cesantias (1% — paga ene año siguiente)</div><div class="v">${fmtCurr(prestaciones.intC)}</div></div>
 <div class="kv"><div class="l">Vacaciones (4.17% — cuando se disfrutan o en liquidación)</div><div class="v">${fmtCurr(prestaciones.vac)}</div></div>
 <div class="kv bigtot"><div class="l">TOTAL PROVISIÓNES</div><div class="v">${fmtCurr(totPrestaciones)}</div></div>
-<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto de las PROVISIÓNES por CT (${totMes} días del mes — Lógica B)</h3>
+<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto de las PROVISIÓNES por CT</h3>
 ${tablaOTs(otsMes, totPrestaciones, "Provisión imputada")}
 
 <h2 style="background:#7F1D1D">6. 💵 GASTO TOTAL DE CAJA DEL MES</h2>
