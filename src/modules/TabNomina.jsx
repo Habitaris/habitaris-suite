@@ -5,6 +5,7 @@ import {  getTenantUrlsSync, getTenantIdentitySync, getLegalConstantsSync, getAc
 import { downloadPDF } from "./pdfUtil.js";
 import { buildNominaHtml } from "./nominaHtml.js";
 import { BannerPagos } from "./BannerPagos.jsx";
+import { condicionVigente } from "./condicionesHelper.js";
 import { openReport, openFileViewer } from "./reportModal.js";
 import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
@@ -111,6 +112,8 @@ async function fetchEmps(){try{
 }catch{return[];}}
 async function loadEmpMaestro(){try{const r=await fetch("/api/hiring?kv=rrhh:empleados&flat=1");const d=await r.json();return Array.isArray(d?.value)?d.value:(d?.value?JSON.parse(d.value):[])}catch(_){return[]}}
 async function loadN(a,m){try{const r=await fetch("/api/hiring?kv=nomina&anio="+a+"&mes="+m);const d=await r.json();return d.ok?d.data:[];}catch{return[];}}
+// Condiciones laborales con fecha de vigencia (ARL, salario, etc.) del empleado.
+async function loadCond(empId){try{const r=await fetch("/api/hiring?kv=rrhh:condiciones:"+empId+"&flat=1");const d=await r.json();return Array.isArray(d.data)?d.data:[];}catch(_){return[];}}
 async function saveN(a,m,data){await fetch("/api/hiring?kv=nomina&anio="+a+"&mes="+m,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data})});}
 
 // Calcula las horas mensuales reales del empleado según los calendarios de los centros donde esta asignado,
@@ -775,10 +778,21 @@ export function TabNomina(){
     const hols=getHolidays(anio);
     // Count festivos on work days (Mon-Sat) for this month
     const festCount=hols.filter(h=>h.date.getMonth()===mes&&h.date.getDay()!==0).length;
-    Promise.all([fetchEmps(),loadN(anio,mes),loadN(mes===0?anio-1:anio,mes===0?11:mes-1),loadEmpMaestro()]).then(([emps,saved,prevSaved,maestro])=>{
+    Promise.all([fetchEmps(),loadN(anio,mes),loadN(mes===0?anio-1:anio,mes===0?11:mes-1),loadEmpMaestro()]).then(async ([emps,saved,prevSaved,maestro])=>{
       const ex=saved||[];
       const lista=emps.map(e=>{const f=ex.find(n=>n.empId===e.id);if(f){if(f.festMes===undefined)f.festMes=festCount;if(!f.fechaFinContrato)f.fechaFinContrato=e.fecha_fin_contrato||"";if(!f.duracionMeses)f.duracionMeses=e.duracion_meses||0;if(!f.fechaIngreso)f.fechaIngreso=e.fecha_inicio||"";if(!f.tipoContrato)f.tipoContrato=e.tipo_contrato||"";if(!f.banco)f.banco=((maestro||[]).find(x=>x.empId===e.id)?.banco)||((prevSaved||[]).find(x=>x.empId===e.id)?.banco)||e.candidato_banco||"";if(!f.cuenta)f.cuenta=((maestro||[]).find(x=>x.empId===e.id)?.cuenta)||((prevSaved||[]).find(x=>x.empId===e.id)?.cuenta)||e.candidato_numero_cuenta||"";if(!f.tipoCuenta)f.tipoCuenta=((maestro||[]).find(x=>x.empId===e.id)?.tipoCuenta)||((prevSaved||[]).find(x=>x.empId===e.id)?.tipoCuenta)||e.candidato_tipo_cuenta||"";if(!f.modalidadPago){f.modalidadPago=e.modalidad_pago||"quincenal";if(f.modalidadPago==="mensual"&&f.q1Pct>0)f.q1Pct=0;}return f;}
         return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:(e.modalidad_pago||"quincenal")==="mensual"?0:0.5,modalidadPago:e.modalidad_pago||"quincenal",hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.candidato_banco||"",cuenta:e.candidato_numero_cuenta||"",tipoCuenta:e.candidato_tipo_cuenta||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",duracionMeses:e.duracion_meses||0,fechaFinContrato:e.fecha_fin_contrato||"",auxT:e.auxilio_transporte||AUX_TR,netoRef:e.salario_neto||0,anio,mes};});
+      // Condiciones con fecha de vigencia (ARL, salario, etc.): para meses NO pagados,
+      // los valores salen de la condición vigente en ese mes, no del valor crudo de la ficha.
+      // Mes pagado = inmutable: se respeta lo que se liquidó. Si algo falla, queda como hoy.
+      try{
+        const conds=await Promise.all(lista.map(n=>loadCond(n.empId)));
+        lista.forEach((n,i)=>{
+          if(n.estado==="pagada")return;
+          const vig=condicionVigente(conds[i]||[],anio,mes);
+          Object.keys(vig).forEach(k=>{ if(k!=="_nota") n[k]=vig[k]; });
+        });
+      }catch(_){/* sin condiciones: se usan los valores de la ficha, como hoy */}
       setNoms(lista);setLoading(false);
     });
     // Cargar adjuntos de novedades del mes (kv_store). Aislado: si falla, queda {}.
