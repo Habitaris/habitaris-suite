@@ -6,6 +6,7 @@ import { downloadPDF } from "./pdfUtil.js";
 import { buildNominaHtml } from "./nominaHtml.js";
 import { BannerPagos } from "./BannerPagos.jsx";
 import { condicionVigente } from "./condicionesHelper.js";
+import DashboardTrabajadorAnio from "./DashboardTrabajadorAnio.jsx";
 import { openReport, openFileViewer } from "./reportModal.js";
 import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
@@ -2701,6 +2702,7 @@ ${body}
                   <Dato l="Cuenta" v={selN.cuenta}/>
                 </Card>
               </div>
+              <DashboardTrabajadorAnio empId={selN.empId} fechaIngreso={selN.fechaIngreso} anio={anio} />
             </div>
           );
         })()}
