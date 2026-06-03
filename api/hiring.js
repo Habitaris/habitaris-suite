@@ -32,6 +32,33 @@ export default async function handler(req,res){
         }
         return res.json({ok:true,data:out});
       }
+      // Resumen anual de UN empleado (una sola query, para el dashboard del trabajador en su ficha)
+      if(req.query.emp_anio&&req.query.anio){
+        var empAid=req.query.emp_anio, anioA=req.query.anio;
+        var ra=await fetch(SB_URL+"/rest/v1/kv_store?key=like.hab:nomina:"+anioA+":*&select=key,value",{headers:sbH()});
+        var da=await ra.json();
+        var outA=[];
+        if(Array.isArray(da)){
+          for(var j=0;j<da.length;j++){
+            try{
+              var mIdx=parseInt(da[j].key.split(":")[3],10);
+              var arr=JSON.parse(da[j].value)||[];
+              var e=arr.find(function(x){return x.empId===empAid;});
+              if(!e)continue;
+              outA.push({
+                mes:mIdx, estado:e.estado||"borrador",
+                dias:+e.dias||0, diasIncap:+e.diasIncap||0, diasVac:+e.diasVac||0,
+                diasLicRem:+e.diasLicRem||0, diasLicNoRem:+e.diasLicNoRem||0,
+                festMes:+e.festMes||0,
+                hexD:+e.hexD||0, hexN:+e.hexN||0, hexDD:+e.hexDD||0, hexDN:+e.hexDN||0,
+                horasMes:+e.horasMes||0
+              });
+            }catch(_){}
+          }
+        }
+        outA.sort(function(a,b){return a.mes-b.mes;});
+        return res.json({ok:true,data:outA});
+      }
       // KV store operations (nomina)
       var kv=req.query.kv||"";
       if(kv){
