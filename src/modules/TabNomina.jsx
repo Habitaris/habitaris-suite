@@ -460,7 +460,10 @@ function NovedadesPanel({selN, anio, mes, MESES, novHist, setNovHist, novYear, s
                 return `<tr><td>${f.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short",year:"numeric"})}</td><td>${tipoIcon[n.tipo]||"📋"} ${n.tipo}</td><td style="font-family:monospace;font-size:7.5pt">${n.fecha_inicio||""}${n.fecha_fin&&n.fecha_fin!==n.fecha_inicio?" → "+n.fecha_fin:""}</td><td style="text-align:center">${dias}</td><td>${n.motivo||"—"}</td><td>${n.estado||""}</td></tr>`;
               }).join("");
               const totalDias = filtered.reduce((s,n)=>{ if(!n.fecha_inicio) return s+1; const fi=new Date(n.fecha_inicio+"T12:00:00"), ff=n.fecha_fin?new Date(n.fecha_fin+"T12:00:00"):fi; return s+Math.max(1,Math.floor((ff-fi)/86400000)+1); },0);
-              const fileNameNov = `NOVEDADES-${filtroMes==="all"?"ANUAL":MESES[parseInt(filtroMes)].substring(0,3).toUpperCase()}${String(novYear).slice(-2)}-${(selN.cc||"").replace(/\D/g,"")}`;
+              const _mAbrNov = filtroMes==="all"?"ANUAL":MESES[parseInt(filtroMes)].substring(0,3).toUpperCase();
+              const _a2Nov = String(novYear).slice(-2);
+              const _apeNov = (selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
+              const fileNameNov = `NOVEDADES-${_mAbrNov}${_a2Nov}-${_apeNov}-${(selN.cc||"").replace(/\D/g,"")}`;
               const legalNov = getActiveCompanyLegalDataSync();
               const html = `<!doctype html><html><head><meta charset="utf-8">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
