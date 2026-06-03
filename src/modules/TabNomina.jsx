@@ -7,6 +7,7 @@ import { buildNominaHtml } from "./nominaHtml.js";
 import { BannerPagos } from "./BannerPagos.jsx";
 import { condicionVigente } from "./condicionesHelper.js";
 import DashboardTrabajadorAnio from "./DashboardTrabajadorAnio.jsx";
+import HistorialCondiciones from "./HistorialCondiciones.jsx";
 import { openReport, openFileViewer } from "./reportModal.js";
 import { getTenantDefaultsSync } from "../core/configHelpers.js";
 
@@ -2739,7 +2740,10 @@ ${body}
               </div>
 
               <SecTit n="05">Resumen del año</SecTit>
-              <DashboardTrabajadorAnio empId={selN.empId} fechaIngreso={selN.fechaIngreso} anio={anio} nombre={selN.nombre} embedded={true}/>
+              <DashboardTrabajadorAnio empId={selN.empId} fechaIngreso={selN.fechaIngreso} anio={anio} nombre={selN.nombre} durMeses={selN.duracionMeses} embedded={true}/>
+
+              <SecTit n="06">Historial de condiciones</SecTit>
+              <HistorialCondiciones empId={selN.empId}/>
 
               <div style={{marginTop:24,paddingTop:12,borderTop:`1px solid ${T.border}`,fontSize:9,color:T.inkLight,fontStyle:"italic"}}>
                 Ficha de consulta. Los datos se editan en Contratación o Personal.
