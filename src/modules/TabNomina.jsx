@@ -462,9 +462,16 @@ function NovedadesPanel({selN, anio, mes, MESES, novHist, setNovHist, novYear, s
               const totalDias = filtered.reduce((s,n)=>{ if(!n.fecha_inicio) return s+1; const fi=new Date(n.fecha_inicio+"T12:00:00"), ff=n.fecha_fin?new Date(n.fecha_fin+"T12:00:00"):fi; return s+Math.max(1,Math.floor((ff-fi)/86400000)+1); },0);
               const fileNameNov = `NOVEDADES-${filtroMes==="all"?"ANUAL":MESES[parseInt(filtroMes)].substring(0,3).toUpperCase()}${String(novYear).slice(-2)}-${(selN.cc||"").replace(/\D/g,"")}`;
               const legalNov = getActiveCompanyLegalDataSync();
-              const html = `<!doctype html><html><head><meta charset="utf-8"><style>
+              const html = `<!doctype html><html><head><meta charset="utf-8">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
+<style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+.np{position:sticky;top:0;text-align:center;padding:10px;background:#e5e5e5;z-index:10}
+.np .btn,.np .btn2{font-size:12px;font-weight:600;border-radius:5px;padding:8px 16px;cursor:pointer;font-family:Helvetica,Arial,sans-serif;margin:0 4px}
+.np .btn{background:#111;color:#fff;border:1px solid #111}
+.np .btn2{background:#fff;color:#111;border:1px solid #bbb}
 #content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.35;box-shadow:0 0 8px rgba(0,0,0,.15)}
 .hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
 .hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
@@ -477,8 +484,10 @@ table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:8.5pt;clea
 th{text-align:left;padding:4px 6px;font-size:7pt;font-weight:700;text-transform:uppercase;border-bottom:2px solid #111}
 td{padding:3px 6px;border-bottom:1px solid #ddd}
 .foot{font-size:6.5pt;color:#999;text-align:center;margin-top:10px;clear:both}
-@page{size:A4 portrait;margin:0}@media print{html,body{background:#fff;margin:0;padding:0}#content{width:210mm;margin:0;padding:14mm;box-shadow:none}}
-</style></head><body><div id="content">
+@page{size:A4 portrait;margin:0}table,tr,thead{page-break-inside:avoid;break-inside:avoid}@media print{html,body{background:#fff;margin:0;padding:0}.np{display:none}#content{width:210mm;margin:0;padding:14mm;box-shadow:none}}
+</style></head><body>
+<div class="np"><button class="btn" onclick="(function(){var el=document.getElementById('content');el.style.boxShadow='none';document.querySelector('.np').style.display='none';html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(c){var img=c.toDataURL('image/jpeg',0.98);var pW=210,pH=(c.height*pW)/c.width;var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});if(pH<=297){pdf.addImage(img,'JPEG',0,0,pW,pH)}else{var pos=0,pg=0;while(pos<pH){if(pg>0)pdf.addPage();pdf.addImage(img,'JPEG',0,-pos,pW,pH);pos+=297;pg++}}pdf.save('${fileNameNov}.pdf');el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display=''})})()">📥 Descargar PDF</button><button class="btn2" onclick="window.print()">🖨️ Imprimir</button></div>
+<div id="content">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="logo"/></div><div class="r"><div style="font-weight:600;color:#111">${legalNov.legalName}</div><div>NIT: ${legalNov.taxId}</div></div></div>
 <h1>INFORME DE NOVEDADES</h1>
 <div class="sub">${periodoLbl} &middot; ${filtered.length} novedad(es) &middot; ${totalDias} día(s) en total &middot; Ref: ${fileNameNov}</div>
