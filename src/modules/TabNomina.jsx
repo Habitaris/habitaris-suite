@@ -2702,7 +2702,7 @@ ${body}
                   <Dato l="Cuenta" v={selN.cuenta}/>
                 </Card>
               </div>
-              <DashboardTrabajadorAnio empId={selN.empId} fechaIngreso={selN.fechaIngreso} anio={anio} />
+              <DashboardTrabajadorAnio empId={selN.empId} fechaIngreso={selN.fechaIngreso} anio={anio} nombre={selN.nombre} />
             </div>
           );
         })()}
