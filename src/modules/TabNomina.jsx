@@ -1135,6 +1135,15 @@ export function TabNomina(){
     const totCostoOT = otsCons.reduce((s,o)=>s+o.costo,0);
     tablaOTCons += `<tr style="background:#111;color:#fff"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${tTcons}</td><td style="text-align:right">${tFcons||""}</td><td style="text-align:right">${tNcons||""}</td><td style="text-align:right"><b>${totDiasCons}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(totCostoOT)}</b></td></tr></tbody></table>`;
 
+    // Reparto de un monto entre los CT consolidados (según % de días-empleado). Espeja tablaOTs del informe mensual.
+    const tablaOTconsMonto = (monto, label) => {
+      if (!otsCons.length) return `<div style="padding:8px;background:#FAFAF7;border:1px solid #eee;border-radius:4px;font-size:8pt;color:#999;font-style:italic;text-align:center;margin-bottom:6px">Sin imputaciones</div>`;
+      let h = `<table><thead><tr><th>CT</th><th>Centro / Proyecto</th><th style="text-align:right">Días-Emp.</th><th style="text-align:right">%</th><th style="text-align:right">${label}</th></tr></thead><tbody>`;
+      otsCons.forEach(o => { const pct = totDiasCons>0?(o.total/totDiasCons)*100:0; h += `<tr><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right"><b>${o.total}</b></td><td style="text-align:right">${fmtPct(pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(monto*pct/100)}</b></td></tr>`; });
+      h += `<tr style="background:#111;color:#fff"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right"><b>${totDiasCons}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(monto)}</b></td></tr></tbody></table>`;
+      return h;
+    };
+
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
@@ -1162,7 +1171,7 @@ td{padding:4px 8px;border-bottom:1px solid #f0f0f0}
 @page{size:A4 portrait;margin:0}table,tr,thead{page-break-inside:avoid;break-inside:avoid}h1,h2,h3{page-break-after:avoid;break-after:avoid}.kv,.kv.bigtot,.info,.notebox,.sig{page-break-inside:avoid;break-inside:avoid}.page-break{page-break-before:always;break-before:page}@media print{html,body{background:#fff;margin:0;padding:0;width:210mm}#content{width:210mm;max-width:none;margin:0;padding:14mm 14mm;box-shadow:none;box-sizing:border-box}}
 </style></head><body><div id="content">
 <div class="hdr"><div class="l">${empresaName?`<img src="${HAB_LOGO}" style="height:36px"/><div style="font-size:10pt;font-weight:700;margin-top:2px">${empresaName}</div>`:""}</div><div class="r">${empresaName}<br/>${empresaNit ? `NIT: ${empresaNit}` : ""}</div></div>
-<h1>CONCILIACION CONTABLE MENSUAL</h1>
+<h1>INFORME MENSUAL DE LA EMPRESA</h1>
 <div class="sub">${MESES[mes]} ${anio} &middot; ${empleados.length} empleado${empleados.length===1?"":"s"} activo${empleados.length===1?"":"s"} &middot; Ref: ${fileName}</div>
 
 <div class="meta">
@@ -1172,40 +1181,55 @@ td{padding:4px 8px;border-bottom:1px solid #f0f0f0}
 <div><b>Festivos del mes:</b> ${festivosMes.length}</div>
 </div>
 
-<h2>1. DESGLOSE POR EMPLEADO</h2>
+<h2>1. RESUMEN DE PLANTILLA</h2>
 ${bloqueEmpleados}
 
-<h2 class="page-break">2. CONSOLIDADO MENSUAL — CAJA Y PROVISIÓNES</h2>
+<h2>2. SALARIO NETO — total plantilla</h2>
+<div class="kv"><div class="l">Devengado bruto (todos los empleados)</div><div class="v">${fmtCurr(totDev)}</div></div>
+<div class="kv"><div class="l" style="padding-left:12px">&nbsp;&nbsp;(-) Total deducciones empleado (salud + pensión)</div><div class="v">- ${fmtCurr(totDed)}</div></div>
+<div class="kv bigtot"><div class="l">NETO TOTAL A LOS TRABAJADORES</div><div class="v">${fmtCurr(totNeto)}</div></div>
+<div class="kv" style="padding-left:12px"><div class="l">&nbsp;&nbsp;Q1 anticipo (quincenales)</div><div class="v">${fmtCurr(totQ1m)}</div></div>
+<div class="kv" style="padding-left:12px"><div class="l">&nbsp;&nbsp;Q2 / mes</div><div class="v">${fmtCurr(totQ2m)}</div></div>
+<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del NETO por CT</h3>
+${tablaOTconsMonto(totNeto, "Neto imputado")}
 
-<h3 style="background:#FEE2E2;color:#991B1B;padding:6px 8px;border-radius:3px">💵 GASTOS DE CAJA DEL MES (tesoreria)</h3>
-<div class="kv"><div class="l">Pago a empleados — Q1 anticipo (quincenales, pagado el 15)</div><div class="v">${fmtCurr(totQ1m)}</div></div>
-<div class="kv"><div class="l">Pago a empleados — Q2 / Mes (pagado fin de mes)</div><div class="v">${fmtCurr(totQ2m)}</div></div>
-<div class="kv"><div class="l">Deducciones empleado (descontadas, paga la empresa al sistema PILA)</div><div class="v">${fmtCurr(totDed)}</div></div>
-<div class="kv subtot"><div class="l">Subtotal: salario neto + deducciones = devengado total</div><div class="v">${fmtCurr(totQ1m + totQ2m + totDed)}</div></div>
-<div class="kv" style="margin-top:6px"><div class="l">&nbsp;&nbsp;&bull; Salud (8.5% IBC) — ${apSalud === 0 ? "exonerada Art.114-1 ET" : ""}</div><div class="v">${fmtCurr(apSalud)}</div></div>
-<div class="kv"><div class="l">&nbsp;&nbsp;&bull; Pensión (12% IBC)</div><div class="v">${fmtCurr(apPensión)}</div></div>
-<div class="kv"><div class="l">&nbsp;&nbsp;&bull; ARL</div><div class="v">${fmtCurr(apArl)}</div></div>
-<div class="kv"><div class="l">&nbsp;&nbsp;&bull; Caja de Compensación (4% IBC)</div><div class="v">${fmtCurr(apCaja)}</div></div>
-<div class="kv"><div class="l">&nbsp;&nbsp;&bull; ICBF ${apIcbf === 0 ? "(exonerada Art.114-1 ET)" : "(3% IBC)"}</div><div class="v">${fmtCurr(apIcbf)}</div></div>
-<div class="kv"><div class="l">&nbsp;&nbsp;&bull; SENA ${apSena === 0 ? "(exonerada Art.114-1 ET)" : "(2% IBC)"}</div><div class="v">${fmtCurr(apSena)}</div></div>
-<div class="kv subtot"><div class="l">Aportes empresa a seguridad social y parafiscales (PILA mes siguiente)</div><div class="v">${fmtCurr(totSegSocial)}</div></div>
-<div class="kv bigtot"><div class="l">TOTAL CAJA DEL MES</div><div class="v">${fmtCurr(totCaja)}</div></div>
+<h2 class="page-break">3. SEGURIDAD SOCIAL — PILA (mes siguiente)</h2>
+<h3 style="font-size:9pt;margin-top:4px">Aportes del trabajador</h3>
+<div class="kv"><div class="l">Salud + pensión trabajador (4% + 4% IBC)</div><div class="v">${fmtCurr(totDed)}</div></div>
+<h3 style="font-size:9pt;margin-top:6px">Aportes de la empresa</h3>
+<div class="kv"><div class="l">Salud empresa (8.5% IBC) ${apSalud===0?"<i style='color:#666'>— exonerada Art.114-1 ET</i>":""}</div><div class="v">${fmtCurr(apSalud)}</div></div>
+<div class="kv"><div class="l">Pensión empresa (12% IBC)</div><div class="v">${fmtCurr(apPensión)}</div></div>
+<div class="kv"><div class="l">ARL</div><div class="v">${fmtCurr(apArl)}</div></div>
+<div class="kv"><div class="l">Caja de Compensación (4% IBC)</div><div class="v">${fmtCurr(apCaja)}</div></div>
+<div class="kv"><div class="l">ICBF (3% IBC) ${apIcbf===0?"<i style='color:#666'>— exonerada Art.114-1 ET</i>":""}</div><div class="v">${fmtCurr(apIcbf)}</div></div>
+<div class="kv"><div class="l">SENA (2% IBC) ${apSena===0?"<i style='color:#666'>— exonerada Art.114-1 ET</i>":""}</div><div class="v">${fmtCurr(apSena)}</div></div>
+<div class="kv subtot"><div class="l">Subtotal aportes empresa</div><div class="v">${fmtCurr(totSegSocial)}</div></div>
+<div class="kv bigtot"><div class="l">TOTAL PILA (trabajador + empresa)</div><div class="v">${fmtCurr(totDed + totSegSocial)}</div></div>
+<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del PILA por CT</h3>
+${tablaOTconsMonto(totDed + totSegSocial, "PILA imputado")}
 
-<h3 style="background:#FEF3C7;color:#92400E;padding:6px 8px;border-radius:3px;margin-top:14px">📊 PROVISIÓNES DEL MES (pago futuro)</h3>
+<h2 class="page-break">4. PROVISIÓNES — pasivo acumulado, pago futuro</h2>
 <div class="kv"><div class="l">Prima de servicios (8.33% — pago semestral jun/dic)</div><div class="v">${fmtCurr(prPrima)}</div></div>
 <div class="kv"><div class="l">Cesantías (8.33% — consigna feb año siguiente)</div><div class="v">${fmtCurr(prCes)}</div></div>
-<div class="kv"><div class="l">Intereses sobre cesantias (1% — paga ene año siguiente)</div><div class="v">${fmtCurr(prIntC)}</div></div>
-<div class="kv"><div class="l">Vacaciones (4.17% — cuando se disfrutan o en liquidación)</div><div class="v">${fmtCurr(prVac)}</div></div>
-<div class="kv bigtot" style="background:#92400E"><div class="l">TOTAL PROVISIÓNES DEL MES</div><div class="v">${fmtCurr(totProvisiones)}</div></div>
+<div class="kv"><div class="l">Intereses sobre cesantías (1% — paga ene año siguiente)</div><div class="v">${fmtCurr(prIntC)}</div></div>
+<div class="kv"><div class="l">Vacaciones (4.17% — al disfrutarlas o en liquidación)</div><div class="v">${fmtCurr(prVac)}</div></div>
+<div class="kv bigtot" style="background:#92400E"><div class="l">TOTAL PROVISIÓNES</div><div class="v">${fmtCurr(totProvisiones)}</div></div>
+<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto de las PROVISIÓNES por CT</h3>
+${tablaOTconsMonto(totProvisiones, "Provisión imputada")}
 
-<h2>3. COSTO TOTAL EMPRESA DEL MES</h2>
-<div class="kv subtot"><div class="l">💵 CAJA (sale del banco este mes + PILA mes siguiente)</div><div class="v">${fmtCurr(totCaja)}</div></div>
-<div class="kv subtot"><div class="l">📊 PROVISIÓNES (pasivo laboral acumulado)</div><div class="v">${fmtCurr(totProvisiones)}</div></div>
-<div class="kv bigtot"><div class="l">COSTO TOTAL EMPRESA DEL MES</div><div class="v">${fmtCurr(totCostoEmp)}</div></div>
+<h2 class="page-break" style="background:#7F1D1D">5. 💵 GASTO TOTAL DE CAJA DEL MES</h2>
+<div class="kv"><div class="l">Neto a los trabajadores (sale del banco este mes)</div><div class="v">${fmtCurr(totNeto)}</div></div>
+<div class="kv"><div class="l">PILA — trabajador + empresa (sale del banco mes siguiente)</div><div class="v">${fmtCurr(totDed + totSegSocial)}</div></div>
+<div class="kv bigtot" style="background:#7F1D1D"><div class="l">TOTAL CAJA DEL MES</div><div class="v">${fmtCurr(totCaja)}</div></div>
+<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto de la CAJA por CT</h3>
+${tablaOTconsMonto(totCaja, "Caja imputada")}
 
-<h2 class="page-break">4. DISTRIBUCIÓN CONSOLIDADA POR CENTRO DE TRABAJO</h2>
-<p style="font-size:8.5pt;color:#666;margin-bottom:6px">Suma de dias-empleado (todos los empleados, todos los CT). Festivos y novedades al centro base de cada empleado según calendario (Lógica B).</p>
-${tablaOTCons}
+<h2 style="background:#78350F">6. 🏷️ COSTO TOTAL EMPRESA DEL MES</h2>
+<div class="kv"><div class="l">💵 Caja del mes</div><div class="v">${fmtCurr(totCaja)}</div></div>
+<div class="kv"><div class="l">📊 Provisiones del mes</div><div class="v">${fmtCurr(totProvisiones)}</div></div>
+<div class="kv bigtot" style="background:#78350F"><div class="l">COSTO TOTAL EMPRESA</div><div class="v">${fmtCurr(totCostoEmp)}</div></div>
+<h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del COSTO TOTAL por CT</h3>
+${tablaOTconsMonto(totCostoEmp, "Costo total imputado")}
 
 <div class="notebox">
 <b>Notas para conciliacion contable PILA:</b><br/>
