@@ -5,6 +5,7 @@ import CalcSalarial from "./CalcSalarial.jsx";
 import TabFestivos from "./TabFestivos.jsx";
 import TabLiquidacion from "./TabLiquidacion.jsx";
 import CondicionesEditor from "./CondicionesEditor.jsx";
+import DashboardTrabajadorAnio from "./DashboardTrabajadorAnio.jsx";
 import { BannerPagos } from "./BannerPagos.jsx";
 import { downloadPDF } from "./pdfUtil.js";
 import { HAB_LOGO } from "./habLogo.js";
@@ -4665,6 +4666,9 @@ function TabPersonal() {
                   ))}
                   <button onClick={()=>{(()=>{const u=getTenantUrlsSync();const id=getTenantIdentitySync();window.open("https://wa.me/?text="+encodeURIComponent(id.displayName+"\n\n👤 Portal del empleado:\n"+u.portalEmpleado+"\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");})();}} style={{padding:"5px 12px",fontSize:11,fontWeight:600,border:"1px solid #059669",borderRadius:6,background:"#DCFCE7",cursor:"pointer",fontFamily:"DM Sans,sans-serif",color:"#059669"}}>💬 Link empleados</button>
                 </div>
+
+                {/* Mini-dashboard anual del trabajador */}
+                <DashboardTrabajadorAnio empId={emp.id} fechaIngreso={emp.fecha_inicio} anio={new Date().getFullYear()} />
 
                 {/* Cambios de condiciones (ARL, salario, etc.) con fecha de vigencia */}
                 <CondicionesEditor empId={emp.id} />
