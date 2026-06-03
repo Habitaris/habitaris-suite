@@ -58,50 +58,52 @@ export default function DashboardTrabajadorAnio({ empId, fechaIngreso, anio, nom
   const years = [yA - 2, yA - 1, yA, yA + 1];
   const fmtN = (n) => (n || 0).toLocaleString("es-CO");
 
-  // Cifra destacada
-  const Big = ({ label, valor, sub }) => (
-    <div style={{ flex: 1, padding: "0 14px 0 0" }}>
-      <div style={{ fontSize: 8.5, fontWeight: 700, color: LIGHT, textTransform: "uppercase", letterSpacing: ".7px" }}>{label}</div>
-      <div style={{ fontSize: 24, fontWeight: 700, color: INK, lineHeight: 1.15, marginTop: 4, fontFamily: MONO }}>{valor}</div>
-      {sub && <div style={{ fontSize: 9, color: LIGHT, marginTop: 1 }}>{sub}</div>}
+  // Tarjeta-globito: número grande + etiqueta, estética sobria
+  const Tile = ({ label, valor, sub, accent }) => (
+    <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 9, padding: "11px 13px" }}>
+      <div style={{ fontSize: 8, fontWeight: 700, color: LIGHT, textTransform: "uppercase", letterSpacing: ".6px", lineHeight: 1.3, minHeight: 21 }}>{label}</div>
+      <div style={{ fontSize: 21, fontWeight: 700, color: accent || INK, lineHeight: 1.1, marginTop: 4, fontFamily: MONO }}>{valor}</div>
+      {sub && <div style={{ fontSize: 8.5, color: LIGHT, marginTop: 2 }}>{sub}</div>}
     </div>
   );
-  // Fila etiqueta/valor
-  const R = ({ l, v, strong }) => (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "7px 0", borderBottom: `1px solid ${LINE}` }}>
-      <span style={{ fontSize: 11, color: strong ? INK : MID, fontWeight: strong ? 700 : 400 }}>{l}</span>
-      <span style={{ fontSize: 12.5, fontWeight: strong ? 800 : 600, color: INK, fontFamily: MONO }}>{v}</span>
-    </div>
-  );
+  const grupoTit = (t) => <div style={{ fontSize: 8.5, fontWeight: 700, color: LIGHT, textTransform: "uppercase", letterSpacing: ".7px", margin: "16px 0 7px" }}>{t}</div>;
+  const g3 = { display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 };
+  const g4 = { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 };
+
+  const vacTiles = [
+    { label: vacTotalContrato != null ? "Total del contrato" : "Total anual (ref.)", v: vacTotalContrato != null ? vacTotalContrato : 15 },
+    { label: "Causadas a hoy", v: vacAcumuladas },
+    ...(vacPorCausar != null ? [{ label: "Por causar", v: vacPorCausar }] : []),
+    { label: "Disfrutadas", v: vacDisfrutadas },
+    { label: "Pendientes por disfrutar", v: vacPendientes, accent: "#1E6B42" },
+  ];
+  const ausTiles = [
+    { label: "Festivos", v: fmtN(festivos) },
+    { label: "Incapacidad", v: fmtN(incap) },
+    { label: "Licencia rem.", v: fmtN(licRem) },
+    { label: "Licencia no rem.", v: fmtN(licNoRem) },
+  ];
 
   const Inner = () => (
     loading ? <div style={{ fontSize: 12, color: LIGHT, padding: 8 }}>Cargando…</div>
     : mesesLiquidados === 0 ? <div style={{ fontSize: 12, color: LIGHT, fontStyle: "italic", padding: "10px 0" }}>Sin nóminas registradas en {year}.</div>
     : (
       <>
-        {/* Cifras destacadas */}
-        <div style={{ display: "flex", borderBottom: `1px solid ${BORDER}`, paddingBottom: 14, marginBottom: 4 }}>
-          <Big label="Días trabajados" valor={fmtN(diasTrab)} sub={mesesLiquidados + " de " + mesesTranscurridos + " meses"} />
-          <Big label="Horas trabajadas" valor={fmtN(horasTrab)} sub={hExtra ? fmtN(hExtra) + "h extra incl." : "jornada"} />
-          <Big label="Vac. pendientes" valor={vacPendientes} sub="días hábiles" />
+        {/* Métricas principales */}
+        <div style={g3}>
+          <Tile label="Días trabajados" valor={fmtN(diasTrab)} sub={mesesLiquidados + " de " + mesesTranscurridos + " meses"} />
+          <Tile label="Horas trabajadas" valor={fmtN(horasTrab)} sub={hExtra ? fmtN(hExtra) + "h extra incl." : "jornada"} />
+          <Tile label="Vac. pendientes por disfrutar" valor={vacPendientes} sub="días hábiles" accent="#1E6B42" />
         </div>
-        {/* Dos columnas: vacaciones / ausencias */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 32px", marginTop: 8 }}>
-          <div>
-            <div style={{ fontSize: 8.5, fontWeight: 700, color: LIGHT, textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 2 }}>Vacaciones · Art. 186 CST (1,25 días/mes)</div>
-            <R l={vacTotalContrato != null ? "Total del contrato" : "Total anual (referencia)"} v={vacTotalContrato != null ? vacTotalContrato : 15} />
-            <R l="Causadas a hoy" v={vacAcumuladas} />
-            {vacPorCausar != null && <R l="Por causar" v={vacPorCausar} />}
-            <R l="Disfrutadas" v={vacDisfrutadas} />
-            <R l="Pendientes (por coger)" v={vacPendientes} strong />
-          </div>
-          <div>
-            <div style={{ fontSize: 8.5, fontWeight: 700, color: LIGHT, textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 2 }}>Festivos y ausencias</div>
-            <R l="Festivos" v={fmtN(festivos)} />
-            <R l="Incapacidad (días)" v={fmtN(incap)} />
-            <R l="Licencia remunerada" v={fmtN(licRem)} />
-            <R l="Licencia no rem." v={fmtN(licNoRem)} />
-          </div>
+
+        {grupoTit("Vacaciones · Art. 186 CST (1,25 días/mes)")}
+        <div style={g4}>
+          {vacTiles.map((t, i) => <Tile key={i} label={t.label} valor={t.v} accent={t.accent} />)}
+        </div>
+
+        {grupoTit("Festivos y ausencias")}
+        <div style={g4}>
+          {ausTiles.map((t, i) => <Tile key={i} label={t.label} valor={t.v} />)}
         </div>
       </>
     )
