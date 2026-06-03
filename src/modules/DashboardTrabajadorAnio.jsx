@@ -17,7 +17,7 @@ function mesesDesde(fechaIngreso, hasta) {
   return ms / (1000 * 60 * 60 * 24 * 30.4375);
 }
 
-export default function DashboardTrabajadorAnio({ empId, fechaIngreso, anio, nombre, embedded }) {
+export default function DashboardTrabajadorAnio({ empId, fechaIngreso, anio, nombre, embedded, durMeses }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [year, setYear] = useState(anio || new Date().getFullYear());
@@ -47,6 +47,9 @@ export default function DashboardTrabajadorAnio({ empId, fechaIngreso, anio, nom
   const mTrab = mesesDesde(fechaIngreso);
   const vacAcumuladas = Math.round(mTrab * 1.25 * 10) / 10;
   const vacPendientes = Math.max(0, Math.round((vacAcumuladas - vacDisfrutadas) * 10) / 10);
+  // Total por contrato: duración pactada × 1,25 (15 días hábiles/año). Indefinido → null (sin tope).
+  const vacTotalContrato = durMeses && durMeses > 0 ? Math.round(durMeses * 1.25 * 10) / 10 : null;
+  const vacPorCausar = vacTotalContrato != null ? Math.max(0, Math.round((vacTotalContrato - vacAcumuladas) * 10) / 10) : null;
 
   const hoy = new Date();
   const mesesTranscurridos = year === hoy.getFullYear() ? hoy.getMonth() + 1 : (year < hoy.getFullYear() ? 12 : 0);
@@ -85,10 +88,12 @@ export default function DashboardTrabajadorAnio({ empId, fechaIngreso, anio, nom
         {/* Dos columnas: vacaciones / ausencias */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 32px", marginTop: 8 }}>
           <div>
-            <div style={{ fontSize: 8.5, fontWeight: 700, color: LIGHT, textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 2 }}>Vacaciones · Art. 186 CST</div>
-            <R l="Acumuladas (derecho)" v={vacAcumuladas} />
+            <div style={{ fontSize: 8.5, fontWeight: 700, color: LIGHT, textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 2 }}>Vacaciones · Art. 186 CST (1,25 días/mes)</div>
+            <R l={vacTotalContrato != null ? "Total del contrato" : "Total anual (referencia)"} v={vacTotalContrato != null ? vacTotalContrato : 15} />
+            <R l="Causadas a hoy" v={vacAcumuladas} />
+            {vacPorCausar != null && <R l="Por causar" v={vacPorCausar} />}
             <R l="Disfrutadas" v={vacDisfrutadas} />
-            <R l="Pendientes" v={vacPendientes} strong />
+            <R l="Pendientes (por coger)" v={vacPendientes} strong />
           </div>
           <div>
             <div style={{ fontSize: 8.5, fontWeight: 700, color: LIGHT, textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 2 }}>Festivos y ausencias</div>
