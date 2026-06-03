@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 
-// Mini-dashboard anual del trabajador, con la PIEL de los informes (papel blanco,
-// membrete con borde negro, secciones en mayúscula, filas finas) pero embebido en la ficha.
+// Resumen anual del trabajador. Estética sobria/editorial.
+// Si embedded=true, se integra dentro de la ficha (sin recuadro propio).
 // Vacaciones: Art. 186 CST → 15 días hábiles/año = 1,25 por mes trabajado.
+
+const INK = "#111", MID = "#666", LIGHT = "#999", BORDER = "#E5E3DE", LINE = "#EFEEEA";
+const MONO = "'DM Mono',monospace";
 
 function mesesDesde(fechaIngreso, hasta) {
   if (!fechaIngreso) return 0;
@@ -14,7 +17,7 @@ function mesesDesde(fechaIngreso, hasta) {
   return ms / (1000 * 60 * 60 * 24 * 30.4375);
 }
 
-export default function DashboardTrabajadorAnio({ empId, fechaIngreso, anio, nombre }) {
+export default function DashboardTrabajadorAnio({ empId, fechaIngreso, anio, nombre, embedded }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [year, setYear] = useState(anio || new Date().getFullYear());
@@ -52,87 +55,77 @@ export default function DashboardTrabajadorAnio({ empId, fechaIngreso, anio, nom
   const years = [yA - 2, yA - 1, yA, yA + 1];
   const fmtN = (n) => (n || 0).toLocaleString("es-CO");
 
-  // --- Estilos tomados de los informes ---
-  const paper = { background: "#fff", border: "1px solid #ddd", borderRadius: 6, padding: "22px 26px", fontFamily: "Helvetica,Arial,sans-serif", color: "#111", boxShadow: "0 1px 4px rgba(0,0,0,.06)" };
-  const hdr = { borderBottom: "2px solid #111", paddingBottom: 6, marginBottom: 12, display: "flex", justifyContent: "space-between", alignItems: "flex-end" };
-  const h1 = { fontSize: "13pt", fontWeight: 700, letterSpacing: ".3px", margin: 0 };
-  const subTxt = { fontSize: "8pt", color: "#666", marginTop: 2 };
-  const h3 = { fontSize: "7.5pt", fontWeight: 700, color: "#666", textTransform: "uppercase", letterSpacing: ".5px", margin: "12px 0 4px" };
-  const th = { textAlign: "left", padding: "4px 6px", fontSize: "7pt", fontWeight: 700, textTransform: "uppercase", borderBottom: "2px solid #111", color: "#111" };
-  const td = { padding: "4px 6px", borderBottom: "1px solid #eee", fontSize: "9pt" };
-  const tdR = { ...td, textAlign: "right", fontFamily: "'DM Mono',monospace", fontWeight: 600 };
+  // Cifra destacada
+  const Big = ({ label, valor, sub }) => (
+    <div style={{ flex: 1, padding: "0 14px 0 0" }}>
+      <div style={{ fontSize: 8.5, fontWeight: 700, color: LIGHT, textTransform: "uppercase", letterSpacing: ".7px" }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 700, color: INK, lineHeight: 1.15, marginTop: 4, fontFamily: MONO }}>{valor}</div>
+      {sub && <div style={{ fontSize: 9, color: LIGHT, marginTop: 1 }}>{sub}</div>}
+    </div>
+  );
+  // Fila etiqueta/valor
+  const R = ({ l, v, strong }) => (
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", padding: "7px 0", borderBottom: `1px solid ${LINE}` }}>
+      <span style={{ fontSize: 11, color: strong ? INK : MID, fontWeight: strong ? 700 : 400 }}>{l}</span>
+      <span style={{ fontSize: 12.5, fontWeight: strong ? 800 : 600, color: INK, fontFamily: MONO }}>{v}</span>
+    </div>
+  );
 
+  const Inner = () => (
+    loading ? <div style={{ fontSize: 12, color: LIGHT, padding: 8 }}>Cargando…</div>
+    : mesesLiquidados === 0 ? <div style={{ fontSize: 12, color: LIGHT, fontStyle: "italic", padding: "10px 0" }}>Sin nóminas registradas en {year}.</div>
+    : (
+      <>
+        {/* Cifras destacadas */}
+        <div style={{ display: "flex", borderBottom: `1px solid ${BORDER}`, paddingBottom: 14, marginBottom: 4 }}>
+          <Big label="Días trabajados" valor={fmtN(diasTrab)} sub={mesesLiquidados + " de " + mesesTranscurridos + " meses"} />
+          <Big label="Horas trabajadas" valor={fmtN(horasTrab)} sub={hExtra ? fmtN(hExtra) + "h extra incl." : "jornada"} />
+          <Big label="Vac. pendientes" valor={vacPendientes} sub="días hábiles" />
+        </div>
+        {/* Dos columnas: vacaciones / ausencias */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 32px", marginTop: 8 }}>
+          <div>
+            <div style={{ fontSize: 8.5, fontWeight: 700, color: LIGHT, textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 2 }}>Vacaciones · Art. 186 CST</div>
+            <R l="Acumuladas (derecho)" v={vacAcumuladas} />
+            <R l="Disfrutadas" v={vacDisfrutadas} />
+            <R l="Pendientes" v={vacPendientes} strong />
+          </div>
+          <div>
+            <div style={{ fontSize: 8.5, fontWeight: 700, color: LIGHT, textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 2 }}>Festivos y ausencias</div>
+            <R l="Festivos" v={fmtN(festivos)} />
+            <R l="Incapacidad (días)" v={fmtN(incap)} />
+            <R l="Licencia remunerada" v={fmtN(licRem)} />
+            <R l="Licencia no rem." v={fmtN(licNoRem)} />
+          </div>
+        </div>
+      </>
+    )
+  );
+
+  // Modo embebido: sin recuadro propio (la ficha ya es el papel), pero con selector de año a la derecha.
+  if (embedded) {
+    return (
+      <div>
+        <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 6, marginTop: -28 }}>
+          <select value={year} onChange={(e) => setYear(parseInt(e.target.value))} style={{ fontSize: 10, padding: "2px 8px", border: `1px solid ${BORDER}`, borderRadius: 5, fontFamily: "'DM Sans',sans-serif", background: "#fff", fontWeight: 600, color: MID }}>
+            {years.map((y) => <option key={y} value={y}>{y}</option>)}
+          </select>
+        </div>
+        <Inner />
+      </div>
+    );
+  }
+
+  // Modo autónomo (por si se usa fuera de la ficha)
   return (
-    <div style={{ marginTop: 14, borderTop: "1px solid #E5E3DE", paddingTop: 14 }}>
+    <div style={{ marginTop: 14, borderTop: `1px solid ${BORDER}`, paddingTop: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-        <div style={{ fontSize: 12, fontWeight: 700, color: "#1A1A19", textTransform: "uppercase", letterSpacing: ".5px" }}>Resumen del año</div>
-        <select value={year} onChange={(e) => setYear(parseInt(e.target.value))} style={{ fontSize: 11, padding: "4px 10px", border: "1px solid #E5E3DE", borderRadius: 6, fontFamily: "'DM Sans',sans-serif", background: "#fff", fontWeight: 600 }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: INK, textTransform: "uppercase", letterSpacing: ".5px" }}>Resumen del año</div>
+        <select value={year} onChange={(e) => setYear(parseInt(e.target.value))} style={{ fontSize: 11, padding: "4px 10px", border: `1px solid ${BORDER}`, borderRadius: 6, fontFamily: "'DM Sans',sans-serif", background: "#fff", fontWeight: 600 }}>
           {years.map((y) => <option key={y} value={y}>{y}</option>)}
         </select>
       </div>
-
-      {loading ? (
-        <div style={{ fontSize: 12, color: "#9B9B99", padding: 8 }}>Cargando…</div>
-      ) : mesesLiquidados === 0 ? (
-        <div style={{ fontSize: 12, color: "#9B9B99", fontStyle: "italic", padding: "10px 0" }}>Sin nóminas registradas en {year}.</div>
-      ) : (
-        <div style={paper}>
-          {/* Membrete */}
-          <div style={hdr}>
-            <div>
-              <h1 style={h1}>RESUMEN ANUAL DEL TRABAJADOR</h1>
-              <div style={subTxt}>{nombre ? nombre + " · " : ""}Ejercicio {year} · {mesesLiquidados} de {mesesTranscurridos} meses procesados</div>
-            </div>
-            <div style={{ textAlign: "right", fontSize: "8pt", color: "#666" }}>
-              <div>Ingreso</div>
-              <div style={{ fontWeight: 700, color: "#111", fontFamily: "'DM Mono',monospace" }}>{fechaIngreso || "—"}</div>
-            </div>
-          </div>
-
-          {/* Cifras destacadas */}
-          <div style={{ display: "flex", gap: 0, marginBottom: 4 }}>
-            {[["Días trabajados", fmtN(diasTrab)], ["Horas trabajadas", fmtN(horasTrab)], ["Vacaciones pendientes", vacPendientes + " días"]].map((m, i) => (
-              <div key={i} style={{ flex: 1, padding: "6px 10px", borderLeft: i ? "1px solid #eee" : "none" }}>
-                <div style={{ fontSize: "7pt", fontWeight: 700, color: "#666", textTransform: "uppercase", letterSpacing: ".5px" }}>{m[0]}</div>
-                <div style={{ fontSize: "16pt", fontWeight: 700, fontFamily: "'DM Mono',monospace", color: "#111", lineHeight: 1.2 }}>{m[1]}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Sección: Tiempo y jornada */}
-          <h3 style={h3}>Tiempo y jornada</h3>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead><tr><th style={th}>Concepto</th><th style={{ ...th, textAlign: "right" }}>Acumulado {year}</th></tr></thead>
-            <tbody>
-              <tr><td style={td}>Días efectivamente trabajados</td><td style={tdR}>{fmtN(diasTrab)}</td></tr>
-              <tr><td style={td}>Horas trabajadas (incl. {fmtN(hExtra)}h extra)</td><td style={tdR}>{fmtN(horasTrab)}</td></tr>
-              <tr><td style={td}>Festivos del periodo</td><td style={tdR}>{fmtN(festivos)}</td></tr>
-            </tbody>
-          </table>
-
-          {/* Sección: Vacaciones */}
-          <h3 style={h3}>Vacaciones · Art. 186 CST (1,25 días/mes)</h3>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead><tr><th style={th}>Concepto</th><th style={{ ...th, textAlign: "right" }}>Días hábiles</th></tr></thead>
-            <tbody>
-              <tr><td style={td}>Acumuladas (derecho generado)</td><td style={tdR}>{vacAcumuladas}</td></tr>
-              <tr><td style={td}>Disfrutadas</td><td style={tdR}>{vacDisfrutadas}</td></tr>
-              <tr><td style={{ ...td, fontWeight: 700, borderBottom: "2px solid #111" }}>Pendientes por disfrutar</td><td style={{ ...tdR, fontWeight: 800, borderBottom: "2px solid #111" }}>{vacPendientes}</td></tr>
-            </tbody>
-          </table>
-
-          {/* Sección: Ausencias */}
-          <h3 style={h3}>Ausencias del periodo</h3>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead><tr><th style={th}>Tipo</th><th style={{ ...th, textAlign: "right" }}>Días</th></tr></thead>
-            <tbody>
-              <tr><td style={td}>Incapacidades / bajas médicas</td><td style={tdR}>{fmtN(incap)}</td></tr>
-              <tr><td style={td}>Licencias remuneradas</td><td style={tdR}>{fmtN(licRem)}</td></tr>
-              <tr><td style={{ ...td, borderBottom: "none" }}>Licencias no remuneradas</td><td style={{ ...tdR, borderBottom: "none" }}>{fmtN(licNoRem)}</td></tr>
-            </tbody>
-          </table>
-        </div>
-      )}
+      <Inner />
     </div>
   );
 }
