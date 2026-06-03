@@ -2654,55 +2654,80 @@ ${body}
         )}
 
         {subTab==="ficha"&&(()=>{
-          // Ficha de consulta (solo lectura). La edición vive en Contratación/Personal (fuente de verdad).
-          const Dato=({l,v})=>(
-            <div style={{display:"flex",justifyContent:"space-between",gap:12,padding:"7px 0",borderBottom:`1px solid ${T.border}`,fontSize:12}}>
-              <span style={{color:T.inkMid}}>{l}</span>
-              <span style={{fontWeight:600,color:T.ink,textAlign:"right"}}>{v||"—"}</span>
-            </div>
-          );
+          // Ficha editorial (solo lectura). Estética sobria: papel, filetes finos, sin colores ni emojis.
           const fechaFmt=(s)=>s?new Date(s+"T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"}):"—";
           const arlLbl=ARL_OPTS[selN.arl||0]?`${ARL_OPTS[selN.arl||0].lbl} (${fPct(ARL_OPTS[selN.arl||0].t)})`:"—";
+          const cc=(selN.cc||"").replace(/\D/g,"")||selN.cc;
+          const estadoLbl={borrador:"En borrador",q1_pagado:"Q1 pagado",liquidada:"Liquidada",pagada:"Pagada",aprobada:"Aprobada"}[selN.estado]||selN.estado;
+          // Dato en pareja etiqueta/valor (rejilla)
+          const D=({l,v})=>(
+            <div style={{padding:"9px 0",borderBottom:`1px solid ${T.border}`}}>
+              <div style={{fontSize:8.5,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:".7px"}}>{l}</div>
+              <div style={{fontSize:12.5,color:T.ink,marginTop:3,fontWeight:500}}>{v||"—"}</div>
+            </div>
+          );
+          // Título de sección editorial (filete + label)
+          const SecTit=({n,children})=>(
+            <div style={{display:"flex",alignItems:"baseline",gap:10,margin:"26px 0 6px"}}>
+              <span style={{fontSize:9,fontWeight:700,color:T.inkLight,fontFamily:"'DM Mono',monospace"}}>{n}</span>
+              <span style={{fontSize:11,fontWeight:700,color:T.ink,textTransform:"uppercase",letterSpacing:"1px"}}>{children}</span>
+              <span style={{flex:1,height:1,background:T.border}}/>
+            </div>
+          );
+          const grid={display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 32px"};
           return (
-            <div>
-              <div style={{fontSize:11,color:T.inkLight,marginBottom:12,padding:"8px 12px",background:T.amberBg,border:`1px solid #FDE68A`,borderRadius:6}}>
-                ℹ️ Ficha de consulta. Para modificar estos datos ve a <strong>Contratación</strong> o <strong>Personal</strong> (módulos donde se editan).
+            <div style={{maxWidth:780,margin:"0 auto",background:T.surface,border:`1px solid ${T.border}`,borderRadius:10,padding:"34px 40px",boxShadow:T.shadow}}>
+              {/* Cabecera de identidad */}
+              <div style={{borderBottom:`2px solid ${T.ink}`,paddingBottom:16,marginBottom:4,display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+                <div>
+                  <div style={{fontSize:9,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:"1.5px",marginBottom:6}}>Ficha del trabajador</div>
+                  <div style={{fontSize:26,fontWeight:700,color:T.ink,lineHeight:1.1,letterSpacing:"-.5px"}}>{selN.nombre}</div>
+                  <div style={{fontSize:12.5,color:T.inkMid,marginTop:5}}>{selN.cargo||"—"}{cc?`  ·  C.C. ${cc}`:""}</div>
+                </div>
+                <div style={{textAlign:"right",paddingTop:4}}>
+                  <div style={{fontSize:8.5,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:".7px"}}>Nómina {MESES[mes]} {anio}</div>
+                  <div style={{fontSize:13,fontWeight:700,color:T.ink,marginTop:4}}>{estadoLbl}</div>
+                </div>
               </div>
-              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-                <Card accent={T.ink}>
-                  <STit>📄 Contrato</STit>
-                  <Dato l="Tipo de contrato" v={selN.tipoContrato}/>
-                  <Dato l="Modalidad de pago" v={selN.modalidadPago==="mensual"?"Mensual":"Quincenal"}/>
-                  <Dato l="Fecha de ingreso" v={fechaFmt(selN.fechaIngreso)}/>
-                  <Dato l="Fecha fin de contrato" v={selN.fechaFinContrato?fechaFmt(selN.fechaFinContrato):"Indefinido / sin fecha"}/>
-                  {(selN.duracionMeses||0)>0&&<Dato l="Duración pactada" v={selN.duracionMeses+" meses"}/>}
-                  <Dato l="Estado nómina (mes)" v={selN.estado}/>
-                </Card>
-                <Card accent={T.green}>
-                  <STit color={T.green}>💰 Condiciones salariales</STit>
-                  <Dato l="Cargo" v={selN.cargo}/>
-                  <Dato l="Salario base" v={fmt(selN.sal)}/>
-                  {(selN.bono||0)>0&&<Dato l={(selN.bonoConcepto||"Bono")+(selN.bonoPrest?" (salarial)":" (no salarial)")} v={fmt(selN.bono)}/>}
-                  <Dato l="Auxilio de transporte" v={fmt(selN.auxT)}/>
-                  {(selN.netoRef||0)>0&&<Dato l="Neto de referencia" v={fmt(selN.netoRef)}/>}
-                </Card>
-                <Card accent={T.blue}>
-                  <STit color={T.blue}>🏥 Afiliaciones</STit>
-                  <Dato l="Régimen salud" v={selN.reg==="subsidiado"?"Subsidiado":"Contributivo"}/>
-                  <Dato l="EPS" v={selN.eps}/>
-                  <Dato l="Fondo de pensión" v={selN.pen}/>
-                  <Dato l="Nivel ARL" v={arlLbl}/>
-                </Card>
-                <Card accent={T.purple}>
-                  <STit color={T.purple}>🏦 Datos personales y bancarios</STit>
-                  <Dato l="Nombre" v={selN.nombre}/>
-                  <Dato l="Documento (CC)" v={(selN.cc||"").replace(/\D/g,"")||selN.cc}/>
-                  <Dato l="Banco" v={selN.banco}/>
-                  <Dato l="Tipo de cuenta" v={selN.tipoCuenta}/>
-                  <Dato l="Cuenta" v={selN.cuenta}/>
-                </Card>
+
+              <SecTit n="01">Contrato</SecTit>
+              <div style={grid}>
+                <D l="Tipo de contrato" v={selN.tipoContrato}/>
+                <D l="Modalidad de pago" v={selN.modalidadPago==="mensual"?"Mensual":"Quincenal"}/>
+                <D l="Fecha de ingreso" v={fechaFmt(selN.fechaIngreso)}/>
+                <D l="Fin de contrato" v={selN.fechaFinContrato?fechaFmt(selN.fechaFinContrato):"Indefinido"}/>
+                {(selN.duracionMeses||0)>0&&<D l="Duración pactada" v={selN.duracionMeses+" meses"}/>}
               </div>
-              <DashboardTrabajadorAnio empId={selN.empId} fechaIngreso={selN.fechaIngreso} anio={anio} nombre={selN.nombre} />
+
+              <SecTit n="02">Condiciones salariales</SecTit>
+              <div style={grid}>
+                <D l="Salario base" v={fmt(selN.sal)}/>
+                <D l="Auxilio de transporte" v={fmt(selN.auxT)}/>
+                {(selN.bono||0)>0&&<D l={(selN.bonoConcepto||"Bono")+(selN.bonoPrest?" · salarial":" · no salarial")} v={fmt(selN.bono)}/>}
+                {(selN.netoRef||0)>0&&<D l="Neto de referencia" v={fmt(selN.netoRef)}/>}
+              </div>
+
+              <SecTit n="03">Afiliaciones</SecTit>
+              <div style={grid}>
+                <D l="Régimen de salud" v={selN.reg==="subsidiado"?"Subsidiado":"Contributivo"}/>
+                <D l="EPS" v={selN.eps}/>
+                <D l="Fondo de pensión" v={selN.pen}/>
+                <D l="Nivel de riesgo ARL" v={arlLbl}/>
+              </div>
+
+              <SecTit n="04">Datos bancarios</SecTit>
+              <div style={grid}>
+                <D l="Banco" v={selN.banco}/>
+                <D l="Tipo de cuenta" v={selN.tipoCuenta}/>
+                <D l="Número de cuenta" v={selN.cuenta}/>
+              </div>
+
+              <SecTit n="05">Resumen del año</SecTit>
+              <DashboardTrabajadorAnio empId={selN.empId} fechaIngreso={selN.fechaIngreso} anio={anio} nombre={selN.nombre} embedded={true}/>
+
+              <div style={{marginTop:24,paddingTop:12,borderTop:`1px solid ${T.border}`,fontSize:9,color:T.inkLight,fontStyle:"italic"}}>
+                Ficha de consulta. Los datos se editan en Contratación o Personal.
+              </div>
             </div>
           );
         })()}
