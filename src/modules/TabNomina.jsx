@@ -2675,6 +2675,18 @@ ${body}
             </div>
           );
           const grid={display:"grid",gridTemplateColumns:"1fr 1fr",gap:"0 32px"};
+          // Tiempo restante hasta fin de contrato
+          let restanteTxt=null, restanteAlerta=false;
+          if(selN.fechaFinContrato){
+            const fin=new Date(selN.fechaFinContrato+"T12:00:00");
+            const diffDias=Math.ceil((fin-new Date())/86400000);
+            if(diffDias<0){ restanteTxt="Contrato vencido"; restanteAlerta=true; }
+            else{
+              const mm=Math.floor(diffDias/30), dd=diffDias%30;
+              restanteTxt=`${diffDias} días`+(mm>0?` · ${mm} mes${mm===1?"":"es"} ${dd}d`:"");
+              restanteAlerta=diffDias<=33;
+            }
+          }
           return (
             <div style={{maxWidth:780,margin:"0 auto",background:T.surface,border:`1px solid ${T.border}`,borderRadius:10,padding:"34px 40px",boxShadow:T.shadow}}>
               {/* Cabecera de identidad */}
@@ -2697,6 +2709,10 @@ ${body}
                 <D l="Fecha de ingreso" v={fechaFmt(selN.fechaIngreso)}/>
                 <D l="Fin de contrato" v={selN.fechaFinContrato?fechaFmt(selN.fechaFinContrato):"Indefinido"}/>
                 {(selN.duracionMeses||0)>0&&<D l="Duración pactada" v={selN.duracionMeses+" meses"}/>}
+                {restanteTxt&&<div style={{padding:"9px 0",borderBottom:`1px solid ${T.border}`}}>
+                  <div style={{fontSize:8.5,fontWeight:700,color:restanteAlerta?T.red:T.inkLight,textTransform:"uppercase",letterSpacing:".7px"}}>Tiempo restante{restanteAlerta?" · próximo a vencer":""}</div>
+                  <div style={{fontSize:12.5,color:restanteAlerta?T.red:T.ink,marginTop:3,fontWeight:restanteAlerta?700:500}}>{restanteTxt}</div>
+                </div>}
               </div>
 
               <SecTit n="02">Condiciones salariales</SecTit>
