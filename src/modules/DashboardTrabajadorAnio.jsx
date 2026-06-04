@@ -99,46 +99,39 @@ export default function DashboardTrabajadorAnio({ empId, fechaIngreso, fechaFin,
     : mesesLiquidados === 0 ? <div style={{ fontSize: 12, color: LIGHT, fontStyle: "italic", padding: "10px 0" }}>Sin nóminas registradas en {year}.</div>
     : (
       <>
-        {/* HERO: vacaciones pendientes protagonista + métricas a la derecha */}
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(190px,1fr) 1.3fr", gap: 22, alignItems: "stretch" }}>
-          {/* Bloque protagonista */}
-          <div style={{ background: INK, borderRadius: 12, padding: "18px 20px", color: "#fff", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-            <div style={{ fontSize: 8.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", color: "rgba(255,255,255,.6)" }}>Vacaciones pendientes</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 6, margin: "6px 0 2px" }}>
-              <span style={{ fontSize: 46, fontWeight: 700, fontFamily: MONO, lineHeight: 1 }}>{vacPendientes}</span>
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,.6)" }}>días háb.</span>
-            </div>
-            <div style={{ fontSize: 9, color: "rgba(255,255,255,.55)", marginBottom: 10 }}>por disfrutar · de {vacBase} del {vacTotalContrato != null ? "contrato" : "año"}</div>
-            {/* medidor */}
-            <div style={{ height: 6, background: "rgba(255,255,255,.18)", borderRadius: 99, overflow: "hidden", display: "flex" }}>
-              <div style={{ width: pctDisfrutadas + "%", height: "100%", background: "rgba(255,255,255,.45)" }} title="Disfrutadas" />
-              <div style={{ width: pctPend + "%", height: "100%", background: "#fff" }} title="Pendientes" />
-            </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 5, fontSize: 8, color: "rgba(255,255,255,.6)" }}>
-              <span>Disfrutadas {vacDisfrutadas}</span><span>Pendientes {vacPendientes}</span>
-            </div>
-          </div>
-          {/* Métricas clave */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-            <Tile label="Días trabajados" valor={fmtN(diasTrab)} sub={mesesLiquidados + " de " + mesesTranscurridos + " meses"} />
-            <Tile label="Horas trabajadas" valor={fmtN(horasTrab)} sub={hExtra ? fmtN(hExtra) + "h extra incl." : "jornada"} />
-            <Tile label="Vac. causadas a hoy" valor={vacAcumuladas} sub="derecho generado" />
-            <Tile label={vacTotalContrato != null ? "Total del contrato" : "Total anual (ref.)"} valor={vacBase} sub={vacPorCausar != null ? vacPorCausar + " por causar" : "referencia"} />
-          </div>
-        </div>
-
-        {/* Avance del contrato */}
+        {/* Avance del contrato — protagonista visual */}
         {pctContrato != null && (
-          <div style={{ marginTop: 16 }}>
-            {grupoTit("Avance del contrato", diasRestantes + " días restantes")}
-            <div style={{ height: 8, background: TRACK, borderRadius: 99, overflow: "hidden" }}>
-              <div style={{ width: pctContrato + "%", height: "100%", background: FILL, borderRadius: 99 }} />
+          <div style={{ background: "#fff", border: `1px solid ${BORDER}`, borderRadius: 11, padding: "16px 18px", marginBottom: 14 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+              <span style={{ fontSize: 9, fontWeight: 700, color: INK, textTransform: "uppercase", letterSpacing: "1px" }}>Avance del contrato</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: INK, fontFamily: MONO }}>{diasRestantes} días restantes</span>
             </div>
-            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4, fontSize: 8.5, color: LIGHT, fontFamily: MONO }}>
-              <span>{fechaIngreso}</span><span>{Math.round(pctContrato)}%</span><span>{fechaFin}</span>
+            <div style={{ height: 16, background: TRACK, borderRadius: 99, overflow: "hidden", position: "relative" }}>
+              <div style={{ width: pctContrato + "%", height: "100%", background: FILL, borderRadius: 99 }} />
+              <span style={{ position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)", fontSize: 9, fontWeight: 700, color: pctContrato > 88 ? "#fff" : INK, fontFamily: MONO }}>{Math.round(pctContrato)}%</span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, fontSize: 9, color: LIGHT, fontFamily: MONO }}>
+              <span>Ingreso · {fechaIngreso}</span><span>Fin · {fechaFin}</span>
             </div>
           </div>
         )}
+
+        {/* Métricas principales */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8 }}>
+          <Tile label="Días trabajados" valor={fmtN(diasTrab)} sub={mesesLiquidados + " de " + mesesTranscurridos + " meses"} />
+          <Tile label="Horas trabajadas" valor={fmtN(horasTrab)} sub={hExtra ? fmtN(hExtra) + "h extra incl." : "jornada"} />
+          <Tile label="Vac. pendientes por disfrutar" valor={vacPendientes} sub="días hábiles" />
+        </div>
+
+        {/* Vacaciones */}
+        {grupoTit("Vacaciones · Art. 186 CST (1,25 días/mes)")}
+        <div style={g4}>
+          <Tile label={vacTotalContrato != null ? "Total del contrato" : "Total anual (ref.)"} valor={vacBase} />
+          <Tile label="Causadas a hoy" valor={vacAcumuladas} />
+          {vacPorCausar != null && <Tile label="Por causar" valor={vacPorCausar} />}
+          <Tile label="Disfrutadas" valor={vacDisfrutadas} />
+          <Tile label="Pendientes por disfrutar" valor={vacPendientes} />
+        </div>
 
         {/* Festivos y ausencias */}
         {grupoTit("Festivos y ausencias")}
