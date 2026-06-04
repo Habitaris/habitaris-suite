@@ -437,13 +437,107 @@ async function handleCronDaily(body, res) {
   // Wrappers que evitan res.status(...).json(...) bloqueante en sub-handlers.
   const reminders = await runCronReminders().catch(err => ({ ok: false, error: String(err) }));
   const expired = await runCronExpired().catch(err => ({ ok: false, error: String(err) }));
+  const finContrato = await runCronFinContrato().catch(err => ({ ok: false, error: String(err) }));
   return res.status(200).json({
     ok: true,
     reminders,
     expired,
+    finContrato,
     ran_at: new Date().toISOString()
   });
 }
+
+// ============================================================
+// AVISO DE FIN DE CONTRATO
+// Lee config hab:config:aviso_fin_contrato {activo, diasAviso, destinatarios[]}.
+// Revisa contratos fijos con fecha_fin_contrato; si faltan <= diasAviso y no se
+// ha avisado aún, envía correo a los destinatarios y marca el contrato como avisado
+// en hab:config:fin_contrato_avisados (para no repetir). Envío único por contrato.
+// ============================================================
+async function runCronFinContrato() {
+  const sb = getSupabaseClient();
+  const tenantId = "habitaris";
+
+  // 1) Config
+  let cfg = { activo: false, diasAviso: 33, destinatarios: ["dparra@habitaris.es", "adiaz@habitaris.es"] };
+  try {
+    const r = await fetch(sb.url + "/rest/v1/kv_store?key=eq.hab:config:aviso_fin_contrato&tenant_id=eq." + tenantId + "&select=value", { headers: sb.headers });
+    const arr = await r.json();
+    if (Array.isArray(arr) && arr.length) { const v = JSON.parse(arr[0].value); cfg = { ...cfg, ...v }; }
+  } catch (e) { /* usa defaults */ }
+  if (!cfg.activo) return { ok: true, skipped: "desactivado" };
+  if (!Array.isArray(cfg.destinatarios) || cfg.destinatarios.length === 0) return { ok: true, skipped: "sin destinatarios" };
+  const diasAviso = parseInt(cfg.diasAviso) || 33;
+
+  // 2) Contratos fijos con fecha fin
+  const cr = await fetch(sb.url + "/rest/v1/hiring_processes?tipo_contrato=eq.fijo&fecha_fin_contrato=not.is.null&select=id,candidato_nombre,fecha_fin_contrato,estado", { headers: sb.headers });
+  const contratos = await cr.json();
+  if (!Array.isArray(contratos)) return { ok: false, error: "no contratos" };
+
+  // 3) Registro de ya avisados
+  let avisados = [];
+  try {
+    const ar = await fetch(sb.url + "/rest/v1/kv_store?key=eq.hab:config:fin_contrato_avisados&tenant_id=eq." + tenantId + "&select=value", { headers: sb.headers });
+    const aarr = await ar.json();
+    if (Array.isArray(aarr) && aarr.length) avisados = JSON.parse(aarr[0].value) || [];
+  } catch (e) { avisados = []; }
+
+  const hoy = new Date();
+  const enviados = [];
+  for (const c of contratos) {
+    if (!c.fecha_fin_contrato) continue;
+    if (c.estado === "terminado" || c.estado === "liquidado") continue;
+    const fin = new Date(c.fecha_fin_contrato + "T12:00:00");
+    const dias = Math.ceil((fin - hoy) / 86400000);
+    // marca única por contrato+fecha fin (si se prorroga cambia la fecha y vuelve a avisar)
+    const marca = c.id + "|" + c.fecha_fin_contrato;
+    if (dias <= diasAviso && dias >= 0 && !avisados.includes(marca)) {
+      const html = finContratoTemplate(c.candidato_nombre || "Trabajador", c.fecha_fin_contrato, dias);
+      const sender = await getSenderConfig(tenantId, "reminder").catch(() => ({ email: "noreply@habitaris.es", name: "Habitaris" }));
+      const from = `${sender.name} <${sender.email}>`;
+      try {
+        await sendViaResend({ from, to: cfg.destinatarios, subject: `Aviso: fin de contrato de ${c.candidato_nombre || "trabajador"} en ${dias} días`, html });
+        avisados.push(marca);
+        enviados.push({ nombre: c.candidato_nombre, dias });
+      } catch (e) { /* sigue con el resto */ }
+    }
+  }
+
+  // 4) Persistir avisados (si hubo cambios)
+  if (enviados.length) {
+    const payload = JSON.stringify({ key: "hab:config:fin_contrato_avisados", value: JSON.stringify(avisados), tenant_id: tenantId });
+    await fetch(sb.url + "/rest/v1/kv_store?on_conflict=key,tenant_id", {
+      method: "POST",
+      headers: { ...sb.headers, Prefer: "resolution=merge-duplicates" },
+      body: payload
+    });
+  }
+  return { ok: true, enviados: enviados.length, detalle: enviados };
+}
+
+// Plantilla del aviso de fin de contrato (estética sobria, botón negro como los demás).
+function finContratoTemplate(nombre, fechaFin, dias) {
+  const finFmt = new Date(fechaFin + "T12:00:00").toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" });
+  return `<!doctype html><html><body style="margin:0;background:#f4f4f2;font-family:Helvetica,Arial,sans-serif;color:#111">
+  <div style="max-width:520px;margin:0 auto;padding:32px 28px">
+    <div style="background:#fff;border:1px solid #e5e3de;border-radius:10px;padding:28px 30px">
+      <div style="font-size:11px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Aviso de fin de contrato</div>
+      <div style="font-size:20px;font-weight:700;margin-bottom:14px">El contrato de ${nombre} finaliza pronto</div>
+      <p style="font-size:14px;line-height:1.5;color:#444;margin:0 0 18px">
+        El contrato a término fijo de <strong>${nombre}</strong> finaliza el <strong>${finFmt}</strong>,
+        dentro de <strong>${dias} día${dias === 1 ? "" : "s"}</strong>.
+      </p>
+      <p style="font-size:13px;line-height:1.5;color:#666;margin:0 0 20px">
+        Conviene decidir con tiempo si se renueva, se prorroga mediante otrosí o se procede a la liquidación.
+        Recuerda que la no renovación de un contrato a término fijo requiere preaviso de 30 días.
+      </p>
+      <div style="border-top:1px solid #eee;padding-top:14px;font-size:11px;color:#999">
+        Aviso automático de Habitaris Suite · comercial@habitaris.es
+      </div>
+    </div>
+  </div></body></html>`;
+}
+
 
 // Ejecuta la lógica de reminders sin escribir res. Devuelve resumen.
 async function runCronReminders() {
