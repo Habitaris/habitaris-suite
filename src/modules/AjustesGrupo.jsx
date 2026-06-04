@@ -1787,6 +1787,9 @@ function TabAlertas() {
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState(null);
   const [error, setError] = useState(null);
+  const [testEmail, setTestEmail] = useState("");
+  const [testing, setTesting] = useState(false);
+  const [testMsg, setTestMsg] = useState(null);
 
   useEffect(() => {
     fetch("/api/hiring?kv=config:aviso_fin_contrato&flat=1")
@@ -1821,6 +1824,22 @@ function TabAlertas() {
     setSaving(false);
   };
 
+  const onTest = async () => {
+    setTesting(true); setTestMsg(null);
+    try {
+      const to = (testEmail || "").trim() || (form.destinatarios.split(",")[0] || "").trim();
+      if (!to) { setTestMsg({ ok: false, t: "Indica un correo de prueba." }); setTesting(false); return; }
+      const r = await fetch("/api/send-email", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "test_fin_contrato", to }),
+      });
+      const d = await r.json();
+      if (r.ok && d.ok) setTestMsg({ ok: true, t: "Correo de prueba enviado a " + to });
+      else setTestMsg({ ok: false, t: "No se pudo enviar: " + (d.error || r.status) });
+    } catch (e) { setTestMsg({ ok: false, t: "Error: " + (e.message || "desconocido") }); }
+    setTesting(false);
+  };
+
   if (loading) return <div style={{ padding: 40, ...F, color: C.inkLight, textAlign: "center" }}>Cargando…</div>;
 
   return (
@@ -1852,6 +1871,20 @@ function TabAlertas() {
       </Field>
 
       <SaveBar saving={saving} savedAt={savedAt} error={error} onSave={onSave} />
+
+      <div style={{ marginTop: 26, paddingTop: 18, borderTop: `1px solid ${C.border}` }}>
+        <h3 style={{ ...F, fontSize: 13, fontWeight: 700, color: C.ink, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: 0.5 }}>Probar la plantilla</h3>
+        <p style={{ ...F, fontSize: 11.5, color: C.inkMid, margin: "0 0 14px", lineHeight: 1.5 }}>
+          Envía un correo de prueba al instante con la plantilla real (datos de ejemplo), sin esperar al ciclo diario ni marcar ningún contrato como avisado.
+        </p>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <input style={{ ...inputStyle, maxWidth: 280 }} value={testEmail} onChange={e => setTestEmail(e.target.value)} placeholder="correo@para-la-prueba.com" />
+          <button onClick={onTest} disabled={testing} style={{ ...F, fontSize: 13, fontWeight: 600, padding: "9px 18px", borderRadius: 6, border: `1px solid ${C.ink}`, background: testing ? C.inkLight : C.ink, color: "#fff", cursor: testing ? "default" : "pointer" }}>
+            {testing ? "Enviando…" : "Enviar prueba"}
+          </button>
+        </div>
+        {testMsg && <div style={{ ...F, fontSize: 12, marginTop: 10, color: testMsg.ok ? "#1E6B42" : "#B91C1C" }}>{testMsg.t}</div>}
+      </div>
     </div>
   );
 }
