@@ -123,14 +123,33 @@ export default function DashboardTrabajadorAnio({ empId, fechaIngreso, fechaFin,
           <Tile label="Vac. pendientes por disfrutar" valor={vacPendientes} sub="días hábiles" />
         </div>
 
-        {/* Vacaciones */}
+        {/* Vacaciones — agrupadas por lógica: derecho · generado · resultado */}
         {grupoTit("Vacaciones · Art. 186 CST (1,25 días/mes)")}
-        <div style={g4}>
-          <Tile label={vacTotalContrato != null ? "Total del contrato" : "Total anual (ref.)"} valor={vacBase} />
-          <Tile label="Causadas a hoy" valor={vacAcumuladas} />
-          {vacPorCausar != null && <Tile label="Por causar" valor={vacPorCausar} />}
-          <Tile label="Disfrutadas" valor={vacDisfrutadas} />
-          <Tile label="Pendientes por disfrutar" valor={vacPendientes} />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, alignItems: "stretch" }}>
+          {/* Grupo 1: el derecho */}
+          <div style={{ border: `1px solid ${BORDER}`, borderRadius: 9, padding: "9px 11px", display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ fontSize: 7.5, fontWeight: 700, color: LIGHT, textTransform: "uppercase", letterSpacing: ".6px" }}>El derecho</div>
+            <div style={{ display: "flex", gap: 14 }}>
+              <div><div style={{ fontSize: 8, fontWeight: 700, color: LIGHT, textTransform: "uppercase" }}>{vacTotalContrato != null ? "Total contrato" : "Total año (ref.)"}</div><div style={{ fontSize: 20, fontWeight: 700, fontFamily: MONO, color: INK, marginTop: 2 }}>{vacBase}</div></div>
+              {vacPorCausar != null && <div><div style={{ fontSize: 8, fontWeight: 700, color: LIGHT, textTransform: "uppercase" }}>Por causar</div><div style={{ fontSize: 20, fontWeight: 700, fontFamily: MONO, color: INK, marginTop: 2 }}>{vacPorCausar}</div></div>}
+            </div>
+          </div>
+          {/* Grupo 2: lo generado */}
+          <div style={{ border: `1px solid ${BORDER}`, borderRadius: 9, padding: "9px 11px", display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ fontSize: 7.5, fontWeight: 700, color: LIGHT, textTransform: "uppercase", letterSpacing: ".6px" }}>Lo generado</div>
+            <div style={{ display: "flex", gap: 14 }}>
+              <div><div style={{ fontSize: 8, fontWeight: 700, color: LIGHT, textTransform: "uppercase" }}>Causadas</div><div style={{ fontSize: 20, fontWeight: 700, fontFamily: MONO, color: INK, marginTop: 2 }}>{vacAcumuladas}</div></div>
+              <div><div style={{ fontSize: 8, fontWeight: 700, color: LIGHT, textTransform: "uppercase" }}>Disfrutadas</div><div style={{ fontSize: 20, fontWeight: 700, fontFamily: MONO, color: INK, marginTop: 2 }}>{vacDisfrutadas}</div></div>
+            </div>
+          </div>
+          {/* Grupo 3: resultado — destacado */}
+          <div style={{ border: `1.5px solid ${INK}`, borderRadius: 9, padding: "9px 11px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+            <div style={{ fontSize: 7.5, fontWeight: 700, color: INK, textTransform: "uppercase", letterSpacing: ".6px" }}>Pendientes por disfrutar</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 5, marginTop: 3 }}>
+              <span style={{ fontSize: 30, fontWeight: 700, fontFamily: MONO, color: INK, lineHeight: 1 }}>{vacPendientes}</span>
+              <span style={{ fontSize: 9, color: LIGHT }}>días háb.</span>
+            </div>
+          </div>
         </div>
 
         {/* Festivos y ausencias */}
