@@ -54,6 +54,7 @@ const TABS = [
   { id: "rep_legal", label: "Rep. legal",       desc: "Firmante por defecto" },
   { id: "legal",     label: "Estructura legal", desc: "Países y empresas" },
   { id: "comms",     label: "Comunicaciones",   desc: "SMTP y plantillas" },
+  { id: "alertas",   label: "Alertas y avisos", desc: "Avisos automáticos por correo" },
   { id: "miembros",  label: "Miembros",         desc: "Usuarios y permisos" },
 ];
 
@@ -1779,6 +1780,82 @@ const sectionH4 = { ...F, fontSize: 12, fontWeight: 700, color: C.ink, margin: "
 const cancelBtnStyle = { ...F, fontSize: 13, fontWeight: 600, padding: "8px 14px", border: `1px solid ${C.border}`, borderRadius: 6, background: "#fff", cursor: "pointer", color: C.inkMid };
 const saveBtnStyle = { ...F, fontSize: 13, fontWeight: 600, padding: "8px 14px", border: "none", borderRadius: 6, background: C.ink, color: "#fff", cursor: "pointer" };
 
+// ─── Tab: Alertas y avisos (embrión del módulo de notificaciones) ──────
+function TabAlertas() {
+  const [form, setForm] = useState({ activo: false, diasAviso: 33, destinatarios: "" });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [savedAt, setSavedAt] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch("/api/hiring?kv=config:aviso_fin_contrato&flat=1")
+      .then(r => r.json())
+      .then(d => {
+        const v = d && d.data && !Array.isArray(d.data) ? d.data : null;
+        if (v) setForm({
+          activo: !!v.activo,
+          diasAviso: v.diasAviso || 33,
+          destinatarios: Array.isArray(v.destinatarios) ? v.destinatarios.join(", ") : (v.destinatarios || ""),
+        });
+        else setForm(f => ({ ...f, destinatarios: "dparra@habitaris.es, adiaz@habitaris.es" }));
+        setLoading(false);
+      })
+      .catch(() => { setForm(f => ({ ...f, destinatarios: "dparra@habitaris.es, adiaz@habitaris.es" })); setLoading(false); });
+  }, []);
+
+  const update = (k, v) => setForm(f => ({ ...f, [k]: v }));
+
+  const onSave = async () => {
+    setSaving(true); setError(null);
+    try {
+      const dest = form.destinatarios.split(",").map(s => s.trim()).filter(Boolean);
+      const payload = { activo: !!form.activo, diasAviso: parseInt(form.diasAviso) || 33, destinatarios: dest };
+      const r = await fetch("/api/hiring?kv=config:aviso_fin_contrato&flat=1", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: payload }),
+      });
+      if (!r.ok) throw new Error("No se pudo guardar");
+      setSavedAt(Date.now());
+    } catch (e) { setError(e.message || "Error al guardar"); }
+    setSaving(false);
+  };
+
+  if (loading) return <div style={{ padding: 40, ...F, color: C.inkLight, textAlign: "center" }}>Cargando…</div>;
+
+  return (
+    <div style={{ maxWidth: 640 }}>
+      <p style={{ ...F, fontSize: 12, color: C.inkMid, margin: "0 0 22px", lineHeight: 1.5 }}>
+        Avisos automáticos que la suite envía por correo. Se revisan una vez al día.
+        Aquí irán creciendo las alertas del sistema (vencimientos, documentos, etc.).
+      </p>
+
+      <h3 style={{ ...F, fontSize: 13, fontWeight: 700, color: C.ink, margin: "0 0 4px", textTransform: "uppercase", letterSpacing: 0.5 }}>Fin de contrato</h3>
+      <p style={{ ...F, fontSize: 11.5, color: C.inkMid, margin: "0 0 16px", lineHeight: 1.5 }}>
+        Avisa cuando un contrato a término fijo está próximo a vencer, para decidir a tiempo
+        si se renueva, se prorroga o se liquida. Se envía una sola vez por contrato.
+      </p>
+
+      <Field label="Activar aviso de fin de contrato">
+        <label style={{ ...F, display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13, color: C.ink, cursor: "pointer" }}>
+          <input type="checkbox" checked={form.activo} onChange={e => update("activo", e.target.checked)} style={{ width: 16, height: 16 }} />
+          {form.activo ? "Activado" : "Desactivado"}
+        </label>
+      </Field>
+
+      <Field label="Días de antelación" hint="Cuántos días antes del fin de contrato se envía el aviso.">
+        <input style={{ ...inputStyle, maxWidth: 120 }} type="number" min="1" max="180" value={form.diasAviso} onChange={e => update("diasAviso", e.target.value)} disabled={!form.activo} />
+      </Field>
+
+      <Field label="Destinatarios" hint="Correos separados por comas. Reciben todos el aviso.">
+        <input style={inputStyle} value={form.destinatarios} onChange={e => update("destinatarios", e.target.value)} placeholder="dparra@habitaris.es, adiaz@habitaris.es" disabled={!form.activo} />
+      </Field>
+
+      <SaveBar saving={saving} savedAt={savedAt} error={error} onSave={onSave} />
+    </div>
+  );
+}
+
 function TabPlaceholder({ title, desc, sprintRef }) {
   return (
     <div style={{
@@ -1905,6 +1982,9 @@ export default function AjustesGrupo({ onBack }) {
             )}
             {active === "comms" && (
               <TabComunicaciones />
+            )}
+            {active === "alertas" && (
+              <TabAlertas />
             )}
             {active === "miembros" && (
               <TabPlaceholder
