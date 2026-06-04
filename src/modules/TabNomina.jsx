@@ -2740,7 +2740,7 @@ ${body}
               </div>
 
               <SecTit n="05">Resumen del año</SecTit>
-              <DashboardTrabajadorAnio empId={selN.empId} fechaIngreso={selN.fechaIngreso} anio={anio} nombre={selN.nombre} durMeses={selN.duracionMeses} embedded={true}/>
+              <DashboardTrabajadorAnio empId={selN.empId} fechaIngreso={selN.fechaIngreso} fechaFin={selN.fechaFinContrato} anio={anio} nombre={selN.nombre} durMeses={selN.duracionMeses} embedded={true}/>
 
               <SecTit n="06">Historial de condiciones</SecTit>
               <HistorialCondiciones empId={selN.empId}/>
