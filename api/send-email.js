@@ -24,6 +24,18 @@ export default async function handler(req, res) {
     if (body.type === "cron_daily") {
       return await handleCronDaily(body, res);
     }
+    // Envío de prueba de la plantilla de fin de contrato (no marca avisados; ignora días).
+    if (body.type === "test_fin_contrato") {
+      const to = body.to;
+      if (!to) return res.status(400).json({ ok: false, error: "to required" });
+      const nombre = body.nombre || "Carmen Gloria Ceballos Córdoba";
+      const fechaFin = body.fechaFin || "2026-07-31";
+      const dias = body.dias != null ? body.dias : Math.max(0, Math.ceil((new Date(fechaFin + "T12:00:00") - new Date()) / 86400000));
+      const html = finContratoTemplate(nombre, fechaFin, dias);
+      const sender = await getSenderConfig("habitaris", "reminder").catch(() => ({ email: "noreply@habitaris.es", name: "Habitaris" }));
+      const r = await sendViaResend({ from: `${sender.name} <${sender.email}>`, to, subject: `[PRUEBA] Fin de contrato de ${nombre} en ${dias} días`, html });
+      return res.status(200).json({ ok: r.ok, status: r.status, sent_to: to, data: r.data });
+    }
     if (body.type === "password_reset_request") {
       return await handlePasswordResetRequest(body, res);
     }
