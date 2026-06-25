@@ -865,6 +865,7 @@ export function TabNomina(){
   const [rangoFin,setRangoFin]=useState(""); // fecha fin del rango de novedad
   const [modoNov,setModoNov]=useState("dia"); // "dia" = solo este día | "rango" = fecha inicio→fin
   const [rangoInicio,setRangoInicio]=useState(""); // fecha inicio editable del rango (por defecto el día clicado)
+  const [notaNov,setNotaNov]=useState(""); // nota manual (motivo) al registrar la novedad
   // Centros de Trabajo (OTs) cargados desde BD. Cada centro: {id, codigo, nombre, activo, empleados:[uuid]}.
   // Las OTs disponibles para imputar a un empleado se filtran por activo=true AND selN.empId IN empleados.
   const [centros,setCentros]=useState([]);
@@ -883,7 +884,7 @@ export function TabNomina(){
     Promise.all([fetchEmps(),loadN(anio,mes),loadN(mes===0?anio-1:anio,mes===0?11:mes-1),loadEmpMaestro()]).then(async ([emps,saved,prevSaved,maestro])=>{
       const ex=saved||[];
       const lista=emps.map(e=>{const f=ex.find(n=>n.empId===e.id);if(f){if(f.festMes===undefined)f.festMes=festCount;if(!f.fechaFinContrato)f.fechaFinContrato=e.fecha_fin_contrato||"";if(!f.duracionMeses)f.duracionMeses=e.duracion_meses||0;if(!f.fechaIngreso)f.fechaIngreso=e.fecha_inicio||"";if(!f.tipoContrato)f.tipoContrato=e.tipo_contrato||"";if(!f.banco)f.banco=((maestro||[]).find(x=>x.empId===e.id)?.banco)||((prevSaved||[]).find(x=>x.empId===e.id)?.banco)||e.candidato_banco||"";if(!f.cuenta)f.cuenta=((maestro||[]).find(x=>x.empId===e.id)?.cuenta)||((prevSaved||[]).find(x=>x.empId===e.id)?.cuenta)||e.candidato_numero_cuenta||"";if(!f.tipoCuenta)f.tipoCuenta=((maestro||[]).find(x=>x.empId===e.id)?.tipoCuenta)||((prevSaved||[]).find(x=>x.empId===e.id)?.tipoCuenta)||e.candidato_tipo_cuenta||"";if(!f.modalidadPago){f.modalidadPago=e.modalidad_pago||"quincenal";if(f.modalidadPago==="mensual"&&f.q1Pct>0)f.q1Pct=0;}return f;}
-        return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:(e.modalidad_pago||"quincenal")==="mensual"?0:0.5,modalidadPago:e.modalidad_pago||"quincenal",hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,diasAusencia:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.candidato_banco||"",cuenta:e.candidato_numero_cuenta||"",tipoCuenta:e.candidato_tipo_cuenta||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",duracionMeses:e.duracion_meses||0,fechaFinContrato:e.fecha_fin_contrato||"",auxT:e.auxilio_transporte||AUX_TR,netoRef:e.salario_neto||0,anio,mes};});
+        return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:(e.modalidad_pago||"quincenal")==="mensual"?0:0.5,modalidadPago:e.modalidad_pago||"quincenal",hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,diasAusencia:0,novNotas:{},otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.candidato_banco||"",cuenta:e.candidato_numero_cuenta||"",tipoCuenta:e.candidato_tipo_cuenta||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",duracionMeses:e.duracion_meses||0,fechaFinContrato:e.fecha_fin_contrato||"",auxT:e.auxilio_transporte||AUX_TR,netoRef:e.salario_neto||0,anio,mes};});
       // Condiciones con fecha de vigencia (ARL, salario, etc.): para meses NO pagados,
       // los valores salen de la condición vigente en ese mes, no del valor crudo de la ficha.
       // Mes pagado = inmutable: se respeta lo que se liquidó. Si algo falla, queda como hoy.
@@ -1385,12 +1386,13 @@ ${tablaOTconsMonto(totCostoEmp, "Costo total imputado")}
     };
     const genNovedadesHtml = () => {
             const nDias=selN.novDias||{};
-            // Agrupado por tipo: { tipoId: { dias, fechas:[] } } a partir del calendario del mes.
+            const nNotas=selN.novNotas||{};
+            // Agrupado por tipo: { tipoId: { dias, fechas:[], notas:[] } } a partir del calendario del mes.
             const novGrp={};
-            Object.entries(nDias).sort().forEach(([k,v])=>{const d=new Date(k+"T12:00:00");if(!novGrp[v])novGrp[v]={dias:0,fechas:[]};novGrp[v].dias++;novGrp[v].fechas.push(d.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short"}));});
+            Object.entries(nDias).sort().forEach(([k,v])=>{const d=new Date(k+"T12:00:00");if(!novGrp[v])novGrp[v]={dias:0,fechas:[],notas:[]};novGrp[v].dias++;novGrp[v].fechas.push(d.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short"}));const _n=(nNotas[k]||"").trim();if(_n&&!novGrp[v].notas.includes(_n))novGrp[v].notas.push(_n);});
             // Tabla fija: TODOS los tipos del sistema (los que están en 0 quedan atenuados).
             const NTIPOS_FIJOS=[{id:"incapacidad",icon:"🏥",label:"Incapacidad EG"},{id:"vacaciones",icon:"🏖️",label:"Vacaciones"},{id:"licencia",icon:"📋",label:"Licencia remunerada"},{id:"licNoRem",icon:"⚠️",label:"Licencia no remunerada"},{id:"ausencia",icon:"❌",label:"Ausencia injustificada"}];
-            const novGrpRows=NTIPOS_FIJOS.map(t=>{const g=novGrp[t.id];const dd=g?g.dias:0;const fechas=g?g.fechas.join(" · "):"—";const dim=dd===0?' style="opacity:.4"':'';return `<tr class="nov"${dim}><td>${t.icon} ${t.label}</td><td class="dd">${dd}</td><td style="font-size:7.5pt;color:#777">${fechas}</td></tr>`;}).join("");
+            const novGrpRows=NTIPOS_FIJOS.map(t=>{const g=novGrp[t.id];const dd=g?g.dias:0;const fechas=g?g.fechas.join(" · "):"—";const notaTxt=(g&&g.notas.length)?`<div style="font-style:italic;color:#999;margin-top:1px">${g.notas.join(" · ")}</div>`:"";const dim=dd===0?' style="opacity:.4"':'';return `<tr class="nov"${dim}><td>${t.icon} ${t.label}</td><td class="dd">${dd}</td><td style="font-size:7.5pt;color:#777">${fechas}${notaTxt}</td></tr>`;}).join("");
             const festList=festivosMes.map(h=>({fecha:h.date.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"}),name:h.name}));
             const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);
             const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
@@ -2292,6 +2294,7 @@ ${body}
                               ...arr[idx],
                               impDias:{},
                               novDias:{},
+                              novNotas:{},
                               hexD:0, hexN:0, hexDD:0, hexDN:0, festLab:0,
                               diasIncap:0, diasLicRem:0, diasLicNoRem:0, diasVac:0, diasAusencia:0,
                               otrosIng:0, otrasDed:0,
@@ -2414,7 +2417,7 @@ ${body}
                       if(isConflicto)tooltipParts.push("⚠️ Conflicto: el empleado tiene 2+ OTs configuradas para este día. Click para resolver.");
                       else if(impInfo)tooltipParts.push("OT: "+impInfo.codigo+" — "+impInfo.nombre);
 
-                      return <div key={day} onClick={()=>{if(ed){setModoNov("dia");setRangoInicio(k);setRangoFin("");setDayEditor({day,k,date});}}} title={tooltipParts.join(" · ")} style={{
+                      return <div key={day} onClick={()=>{if(ed){setModoNov("dia");setRangoInicio(k);setRangoFin("");setNotaNov((selN.novNotas||{})[k]||"");setDayEditor({day,k,date});}}} title={tooltipParts.join(" · ")} style={{
                         textAlign:"center",padding:"4px 2px",borderRadius:4,fontSize:11,fontWeight:isToday?800:(hol?700:400),
                         cursor:!ed?"default":"pointer",
                         background:novInfo?novInfo.color:hol?"#FDE68A":isSun?"#F5F4F1":"transparent",
@@ -2968,12 +2971,16 @@ ${body}
           if(dias.length===0) dias.push(ini); // seguridad: al menos el día de inicio
           // Aplicar el tipo a cada día y quitar imputación OT solapada (excluyentes)
           dias.forEach(kk=>{ cur[kk]=tipoNov; if(iCur[kk]) delete iCur[kk]; });
+          // Nota manual (motivo): se guarda por día en novNotas y se manda como motivo a hr_novelties.
+          const curNotas={...(selN.novNotas||{})};
+          const _nota=(notaNov||"").trim();
+          dias.forEach(kk=>{ if(_nota) curNotas[kk]=_nota; else delete curNotas[kk]; });
           const ncCounts={incapacidad:0,vacaciones:0,licencia:0,licNoRem:0,ausencia:0};
           Object.values(cur).forEach(v=>{if(ncCounts[v]!==undefined)ncCounts[v]++;});
           const diasRed = ncCounts.incapacidad + ncCounts.vacaciones + ncCounts.licNoRem + ncCounts.ausencia;
-          u({novDias:cur,impDias:iCur,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem,diasAusencia:ncCounts.ausencia});
+          u({novDias:cur,novNotas:curNotas,impDias:iCur,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem,diasAusencia:ncCounts.ausencia});
           // UN solo registro en hr_novelties con fecha_inicio→fecha_fin del rango
-          fetch("/api/novelties",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,employee_nombre:selN.nombre,tipo:tipoMap[tipoNov]||tipoNov,fecha_inicio:dias[0],fecha_fin:dias[dias.length-1],motivo:"Registrado por RRHH",source:"rrhh"})}).catch(()=>{});
+          fetch("/api/novelties",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,employee_nombre:selN.nombre,tipo:tipoMap[tipoNov]||tipoNov,fecha_inicio:dias[0],fecha_fin:dias[dias.length-1],motivo:_nota||"Registrado por RRHH",source:"rrhh"})}).catch(()=>{});
           // Si estamos en modo rango y el día de inicio no es el día abierto, mover el editor al día de inicio
           // para que la sección de adjuntos apunte al inicio del rango (donde se guarda el archivo único).
           if(dias[0]!==k){
@@ -2990,10 +2997,11 @@ ${body}
           if (currentImp) delete iCur[k];
           if (currentNov) {
             delete nCur[k];
+            const nNotas={...(selN.novNotas||{})}; delete nNotas[k];
             const ncCounts={incapacidad:0,vacaciones:0,licencia:0,licNoRem:0,ausencia:0};
             Object.values(nCur).forEach(v=>{if(ncCounts[v]!==undefined)ncCounts[v]++;});
             const diasRed = ncCounts.incapacidad + ncCounts.vacaciones + ncCounts.licNoRem + ncCounts.ausencia;
-            u({impDias:iCur,novDias:nCur,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem,diasAusencia:ncCounts.ausencia});
+            u({impDias:iCur,novDias:nCur,novNotas:nNotas,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem,diasAusencia:ncCounts.ausencia});
             const tipoMap={incapacidad:"incapacidad",vacaciones:"vacaciones",licencia:"licencia_remunerada",licNoRem:"licencia_no_remunerada",ausencia:"ausencia"};
             fetch("/api/novelties",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,fecha_inicio:k,tipo:tipoMap[currentNov]||currentNov})}).catch(()=>{});
             // El adjunto va con la novedad: al limpiar la novedad, borrar también su archivo de este día.
@@ -3075,6 +3083,11 @@ ${body}
                     </div>
                   </div>
                 )}
+                <div style={{marginBottom:10}}>
+                  <div style={{fontSize:10,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:"0.05em",marginBottom:4}}>📝 Nota (opcional)</div>
+                  <textarea value={notaNov} onChange={e=>setNotaNov(e.target.value)} rows={2} placeholder="Ej.: dijo que fue al médico, sin justificante" style={{width:"100%",fontSize:11,padding:"6px 8px",border:`1px solid ${T.border}`,borderRadius:6,fontFamily:"'DM Sans',sans-serif",resize:"vertical",boxSizing:"border-box"}}/>
+                  <div style={{fontSize:9,color:T.inkLight,marginTop:2}}>Se guarda con la novedad y aparece en el informe del contador. Escríbela y luego elige el tipo.</div>
+                </div>
                 <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:6}}>
                   {novOpts.map(n => {
                     const isActive = currentNov === n.id;

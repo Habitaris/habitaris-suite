@@ -42,6 +42,10 @@ export default async function handler(req, res) {
           });
         } catch (e) { /* si falla el borrado previo, continuamos con el insert */ }
       }
+      // Ausencia e incapacidad NO se aprueban: se registran. El resto (vacaciones, licencias, permiso)
+      // sigue el flujo de aprobación (rrhh => aprobada, portal => pendiente).
+      var NO_APRUEBA = ["ausencia", "incapacidad"];
+      var esRegistrada = NO_APRUEBA.indexOf(body.tipo) !== -1;
       var record = {
         employee_id: body.employee_id,
         employee_nombre: body.employee_nombre || "",
@@ -51,9 +55,9 @@ export default async function handler(req, res) {
         horas_extra: body.horas_extra || 0,
         motivo: body.motivo || "",
         adjunto_url: body.adjunto_url || null,
-        estado: body.source === "rrhh" ? "aprobada" : "pendiente",
-        aprobado_por: body.source === "rrhh" ? (body.aprobado_por || "admin") : null,
-        aprobado_at: body.source === "rrhh" ? new Date().toISOString() : null,
+        estado: esRegistrada ? "registrada" : (body.source === "rrhh" ? "aprobada" : "pendiente"),
+        aprobado_por: esRegistrada ? null : (body.source === "rrhh" ? (body.aprobado_por || "admin") : null),
+        aprobado_at: esRegistrada ? null : (body.source === "rrhh" ? new Date().toISOString() : null),
         centro_costo: body.centro_costo || null,
         ot_id: body.ot_id || null,
       };
