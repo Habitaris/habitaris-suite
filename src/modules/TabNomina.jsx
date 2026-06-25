@@ -153,6 +153,17 @@ function calcN(n) {
   const dias=n.dias||30, ratio=dias/30, diasIBC=dias+(n.diasIncap||0)+(n.diasVac||0)+(n.diasLicRem||0), ratioIBC=diasIBC/30, sal=n.sal||0;
   const festMes=n.festMes||0;
   const licRem=n.diasLicRem||0;
+  // Ausencia injustificada: contador propio. Usa el guardado si existe; si no, lo deriva de novDias (robusto con datos antiguos sin el campo).
+  const diasAusencia = n.diasAusencia != null ? n.diasAusencia : Object.values(n.novDias||{}).filter(v=>v==="ausencia").length;
+  // Días de vinculación del mes (para el piso de IBC conforme a ley). El IBC mínimo es 1 SMLMV completo salvo
+  // fracción de mes por ingreso/retiro, donde es proporcional (Ley 100; doctrina UGPP). Una ausencia DENTRO de un
+  // mes completo descuenta salario pero NO reduce el piso de 1 SMLMV.
+  let diasVinc = 30;
+  { const _fi=n.fechaIngreso?new Date(n.fechaIngreso+"T12:00:00"):null, _ff=n.fechaFinContrato?new Date(n.fechaFinContrato+"T12:00:00"):null;
+    if(_fi&&_fi.getFullYear()===n.anio&&_fi.getMonth()===n.mes) diasVinc=30-(_fi.getDate()-1);
+    if(_ff&&_ff.getFullYear()===n.anio&&_ff.getMonth()===n.mes) diasVinc=Math.min(diasVinc,Math.min(30,_ff.getDate()));
+    diasVinc=Math.max(0,diasVinc); }
+  const ratioVinc=diasVinc/30;
   // Días que se transportó = días laborados - licencias rem (festivos SÍ incluidos — Concepto 219821/2020)
   const diasComm=Math.max(0,dias-licRem);
   const ratioComm=diasComm/30;
@@ -177,7 +188,7 @@ function calcN(n) {
   const salProp=sal*ratio, salPropIBC=sal*ratioIBC, auxIncap=Math.round((sal/30)*(n.diasIncap||0)*0.6667);
   const remunSal=salProp+totHex+recFest+bonosSal, remunNoSal=bono+bonosNoSal, totalRemun=remunSal+remunNoSal;
   const topeNoSal=totalRemun*0.40, excedenteNoSal=remunNoSal>topeNoSal?(remunNoSal-topeNoSal):0;
-  const ibc=Math.max(salPropIBC+totHex+recFest+bonosSal+excedenteNoSal, SMLMV*ratio);
+  const ibc=Math.max(salPropIBC+totHex+recFest+bonosSal+excedenteNoSal, SMLMV*ratioVinc);
   const dev=salProp+totHex+recFest+aux+bono+bonosSal+bonosNoSal+(n.otrosIng||0)+auxIncap;
   const eSub=n.reg==="subsidiado", epsE=eSub?0:ibc*0.04, penE=ibc*0.04;
   const rteF=(ibc/UVT)>95?((ibc/UVT)-95)*UVT*0.19:0;
@@ -192,7 +203,7 @@ function calcN(n) {
   const totAp=epsEr+penEr+arlV+caja+icbf+sena;
   const bPr=salProp+aux+bonosSal, prima=bPr/12, ces=bPr/12, intC=ces*0.12/12, vac=salProp*15/360;
   const totPr=prima+ces+intC+vac, costoT=dev+totAp+totPr;
-  return {sal,salProp,bono,aux,aplA,dev,ibc,eSub,vH,totHex,hexD,hexN,hexDD,hexDN,recFest,epsE,penE,rteF,otrasDed:n.otrasDed||0,totD,neto,q1,q2,q1Pct,epsEr,penEr,arlV,caja,icbf,sena,totAp,exS,tasa,prima,ces,intC,vac,totPr,costoT,ratio,dias,festMes,diasComm,ratioComm,diasAsist,ratioAsist,horasMes:n.horasMes||240,bonosSal,bonosNoSal,excedenteNoSal,topeNoSal,remunNoSal};
+  return {sal,salProp,bono,aux,aplA,dev,ibc,eSub,vH,totHex,hexD,hexN,hexDD,hexDN,recFest,epsE,penE,rteF,otrasDed:n.otrasDed||0,totD,neto,q1,q2,q1Pct,epsEr,penEr,arlV,caja,icbf,sena,totAp,exS,tasa,prima,ces,intC,vac,totPr,costoT,ratio,dias,festMes,diasComm,ratioComm,diasAsist,ratioAsist,diasAusencia,diasVinc,ratioVinc,horasMes:n.horasMes||240,bonosSal,bonosNoSal,excedenteNoSal,topeNoSal,remunNoSal};
 }
 
 const T={bg:"#F5F4F1",surface:"#FFFFFF",ink:"#111",inkMid:"#666",inkLight:"#999",inkXLight:"#CCC",border:"#E5E3DE",accent:"#F5F5F3",green:"#16A34A",greenBg:"#F0FDF4",red:"#DC2626",redBg:"#FEF2F2",blue:"#2563EB",blueBg:"#EFF6FF",amber:"#D97706",amberBg:"#FFFBEB",purple:"#7C3AED",purpleBg:"#F5F3FF",shadow:"0 1px 3px rgba(0,0,0,.06)"};
@@ -840,7 +851,7 @@ export function TabNomina(){
     Promise.all([fetchEmps(),loadN(anio,mes),loadN(mes===0?anio-1:anio,mes===0?11:mes-1),loadEmpMaestro()]).then(async ([emps,saved,prevSaved,maestro])=>{
       const ex=saved||[];
       const lista=emps.map(e=>{const f=ex.find(n=>n.empId===e.id);if(f){if(f.festMes===undefined)f.festMes=festCount;if(!f.fechaFinContrato)f.fechaFinContrato=e.fecha_fin_contrato||"";if(!f.duracionMeses)f.duracionMeses=e.duracion_meses||0;if(!f.fechaIngreso)f.fechaIngreso=e.fecha_inicio||"";if(!f.tipoContrato)f.tipoContrato=e.tipo_contrato||"";if(!f.banco)f.banco=((maestro||[]).find(x=>x.empId===e.id)?.banco)||((prevSaved||[]).find(x=>x.empId===e.id)?.banco)||e.candidato_banco||"";if(!f.cuenta)f.cuenta=((maestro||[]).find(x=>x.empId===e.id)?.cuenta)||((prevSaved||[]).find(x=>x.empId===e.id)?.cuenta)||e.candidato_numero_cuenta||"";if(!f.tipoCuenta)f.tipoCuenta=((maestro||[]).find(x=>x.empId===e.id)?.tipoCuenta)||((prevSaved||[]).find(x=>x.empId===e.id)?.tipoCuenta)||e.candidato_tipo_cuenta||"";if(!f.modalidadPago){f.modalidadPago=e.modalidad_pago||"quincenal";if(f.modalidadPago==="mensual"&&f.q1Pct>0)f.q1Pct=0;}return f;}
-        return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:(e.modalidad_pago||"quincenal")==="mensual"?0:0.5,modalidadPago:e.modalidad_pago||"quincenal",hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.candidato_banco||"",cuenta:e.candidato_numero_cuenta||"",tipoCuenta:e.candidato_tipo_cuenta||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",duracionMeses:e.duracion_meses||0,fechaFinContrato:e.fecha_fin_contrato||"",auxT:e.auxilio_transporte||AUX_TR,netoRef:e.salario_neto||0,anio,mes};});
+        return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:(e.modalidad_pago||"quincenal")==="mensual"?0:0.5,modalidadPago:e.modalidad_pago||"quincenal",hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,diasAusencia:0,otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.candidato_banco||"",cuenta:e.candidato_numero_cuenta||"",tipoCuenta:e.candidato_tipo_cuenta||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",duracionMeses:e.duracion_meses||0,fechaFinContrato:e.fecha_fin_contrato||"",auxT:e.auxilio_transporte||AUX_TR,netoRef:e.salario_neto||0,anio,mes};});
       // Condiciones con fecha de vigencia (ARL, salario, etc.): para meses NO pagados,
       // los valores salen de la condición vigente en ese mes, no del valor crudo de la ficha.
       // Mes pagado = inmutable: se respeta lo que se liquidó. Si algo falla, queda como hoy.
@@ -1399,7 +1410,7 @@ ${festList.length>0?festList.map(f=>`<tr class="fest"><td>${f.fecha}</td><td>${f
 <h2>Novedades del periodo</h2>
 ${novList.length>0?`<table><thead><tr><th>Fecha</th><th>Tipo</th><th style="text-align:right">Impacto</th></tr></thead><tbody>
 ${novList.map(n=>{
-  const efectoIBC = n.tipoId==="licNoRem"||n.tipoId==="ausencia" ? "Reduce IBC y salario" : "No reduce IBC";
+  const efectoIBC = n.tipoId==="licNoRem" ? "Reduce IBC y salario" : n.tipoId==="ausencia" ? "Descuenta salario (piso 1 SMLMV)" : "No reduce IBC";
   return `<tr class="nov"><td>${n.fecha}</td><td>${n.tipo}</td><td style="text-align:right;font-size:7.5pt;color:#666">${efectoIBC}</td></tr>`;
 }).join("")}
 </tbody></table>`:'<div style="padding:8px;background:#FAFAF7;border:1px solid #eee;border-radius:4px;font-size:8pt;color:#999;font-style:italic;text-align:center;margin-bottom:6px">Sin novedades registradas en el calendario</div>'}
@@ -1409,6 +1420,7 @@ ${novList.map(n=>{
 <tr><td>🏖️ Vacaciones disfrutadas</td><td style="text-align:right">${selN.diasVac||0}d</td><td style="text-align:right">Mantiene salario base</td><td style="text-align:right">No reduce IBC</td></tr>
 <tr><td>📋 Licencia remunerada</td><td style="text-align:right">${selN.diasLicRem||0}d</td><td style="text-align:right">Mantiene salario base</td><td style="text-align:right">No reduce IBC</td></tr>
 <tr style="background:#FEF3C7"><td>⚠️ Licencia NO remunerada</td><td style="text-align:right">${selN.diasLicNoRem||0}d</td><td style="text-align:right">Descuenta del salario</td><td style="text-align:right">Reduce IBC proporcional</td></tr>
+<tr style="background:#FEE2E2"><td>❌ Ausencia injustificada</td><td style="text-align:right">${calc.diasAusencia||0}d</td><td style="text-align:right">Descuenta del salario</td><td style="text-align:right">No reduce (piso 1 SMLMV)</td></tr>
 </tbody></table>
 <h2>Resumen del período</h2>
 <div class="summary">
@@ -1418,6 +1430,7 @@ ${novList.map(n=>{
 <div class="sbox"><div class="n">${calc.diasComm}</div><div class="l">Días transporte</div></div>
 <div class="sbox"><div class="n">${calc.diasAsist}</div><div class="l">Días asistidos</div></div>
 <div class="sbox"><div class="n">${selN.diasIncap||0}</div><div class="l">Incapacidad</div></div>
+<div class="sbox"><div class="n">${calc.diasAusencia||0}</div><div class="l">Ausencia injust.</div></div>
 </div>
 <h2>Impacto en nómina</h2>
 <table><thead><tr><th>Concepto</th><th>Días</th><th style="text-align:right">Valor</th><th>Observación</th></tr></thead><tbody>
@@ -2265,7 +2278,7 @@ ${body}
                               impDias:{},
                               novDias:{},
                               hexD:0, hexN:0, hexDD:0, hexDN:0, festLab:0,
-                              diasIncap:0, diasLicRem:0, diasLicNoRem:0, diasVac:0,
+                              diasIncap:0, diasLicRem:0, diasLicNoRem:0, diasVac:0, diasAusencia:0,
                               otrosIng:0, otrasDed:0,
                               bonos:[],
                               nov:""
@@ -2347,7 +2360,7 @@ ${body}
                   // Licencia remunerada NO reduce días (trabajador sigue cobrando)
                   // Solo reducen: incapacidad, lic NO rem, ausencia, vacaciones
                   const diasRed = nc.incapacidad + nc.vacaciones + nc.licNoRem + nc.ausencia;
-                  u({novDias:cur,dias:Math.max(0,30-diasRed),diasIncap:nc.incapacidad,diasVac:nc.vacaciones,diasLicRem:nc.licencia,diasLicNoRem:nc.licNoRem});
+                  u({novDias:cur,dias:Math.max(0,30-diasRed),diasIncap:nc.incapacidad,diasVac:nc.vacaciones,diasLicRem:nc.licencia,diasLicNoRem:nc.licNoRem,diasAusencia:nc.ausencia});
                   // Sync to hr_novelties
                   const tipoMap={incapacidad:"incapacidad",vacaciones:"vacaciones",licencia:"licencia_remunerada",licNoRem:"licencia_no_remunerada",ausencia:"ausencia"};
                   const apiTipo=tipoMap[selNovTipo]||selNovTipo;
@@ -2905,7 +2918,7 @@ ${body}
             const ncCounts={incapacidad:0,vacaciones:0,licencia:0,licNoRem:0,ausencia:0};
             Object.values(nc).forEach(v=>{if(ncCounts[v]!==undefined)ncCounts[v]++;});
             const diasRed = ncCounts.incapacidad + ncCounts.vacaciones + ncCounts.licNoRem + ncCounts.ausencia;
-            u({impDias:cur,novDias:nc,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem});
+            u({impDias:cur,novDias:nc,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem,diasAusencia:ncCounts.ausencia});
             const tipoMap={incapacidad:"incapacidad",vacaciones:"vacaciones",licencia:"licencia_remunerada",licNoRem:"licencia_no_remunerada",ausencia:"ausencia"};
             fetch("/api/novelties",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,fecha_inicio:k,tipo:tipoMap[currentNov]||currentNov})}).catch(()=>{});
           } else {
@@ -2939,7 +2952,7 @@ ${body}
           const ncCounts={incapacidad:0,vacaciones:0,licencia:0,licNoRem:0,ausencia:0};
           Object.values(cur).forEach(v=>{if(ncCounts[v]!==undefined)ncCounts[v]++;});
           const diasRed = ncCounts.incapacidad + ncCounts.vacaciones + ncCounts.licNoRem + ncCounts.ausencia;
-          u({novDias:cur,impDias:iCur,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem});
+          u({novDias:cur,impDias:iCur,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem,diasAusencia:ncCounts.ausencia});
           // UN solo registro en hr_novelties con fecha_inicio→fecha_fin del rango
           fetch("/api/novelties",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,employee_nombre:selN.nombre,tipo:tipoMap[tipoNov]||tipoNov,fecha_inicio:dias[0],fecha_fin:dias[dias.length-1],motivo:"Registrado por RRHH",source:"rrhh"})}).catch(()=>{});
           // Si estamos en modo rango y el día de inicio no es el día abierto, mover el editor al día de inicio
@@ -2961,7 +2974,7 @@ ${body}
             const ncCounts={incapacidad:0,vacaciones:0,licencia:0,licNoRem:0,ausencia:0};
             Object.values(nCur).forEach(v=>{if(ncCounts[v]!==undefined)ncCounts[v]++;});
             const diasRed = ncCounts.incapacidad + ncCounts.vacaciones + ncCounts.licNoRem + ncCounts.ausencia;
-            u({impDias:iCur,novDias:nCur,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem});
+            u({impDias:iCur,novDias:nCur,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem,diasAusencia:ncCounts.ausencia});
             const tipoMap={incapacidad:"incapacidad",vacaciones:"vacaciones",licencia:"licencia_remunerada",licNoRem:"licencia_no_remunerada",ausencia:"ausencia"};
             fetch("/api/novelties",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,fecha_inicio:k,tipo:tipoMap[currentNov]||currentNov})}).catch(()=>{});
             // El adjunto va con la novedad: al limpiar la novedad, borrar también su archivo de este día.
