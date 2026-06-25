@@ -124,25 +124,12 @@ export function buildPrimaHtml({ selN, prima, anio }) {
   const a2 = String(anio).slice(-2);
   const ape = (selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
   const fileName = `PRIMA-S${sem}${a2}-${ape}`;
-  const auxTxt = prima.aplA ? `${fmt(prima.sal)} + aux. transporte ${fmt(prima.aux)}` : `${fmt(prima.sal)} (sin aux: salario > 2 SMLMV)`;
 
-  const filasMeses = prima.meses.filter(m=>m.diasVinc>0).map(m=>{
-    const obs=[];
-    if(m.ausencias>0) obs.push(`−${m.ausencias} ausencia injust.`);
-    if(m.licNoRem>0) obs.push(`−${m.licNoRem} lic. no rem.`);
-    return `<tr><td>${MESES[m.mes]}</td><td class="r">${m.diasVinc}</td><td class="r">${m.diasPrima}</td><td style="font-size:7pt;color:#999">${obs.join(" · ")||"—"}</td></tr>`;
-  }).join("");
-
-  const bodyHtml = `<h1>Liquidación de prima de servicios</h1>
+  const bodyHtml = `<h1>Justificante de prima de servicios</h1>
   <div class="sub">${semLabel} · ${anio}</div>
-  <div class="info"><div><span>Nombre: </span><b>${selN.nombre}</b></div><div><span>Documento: </span><b>${selN.cc}</b></div><div><span>Cargo: </span>${selN.cargo}</div><div><span>Contrato: </span>${selN.tipoContrato||"fijo"}</div><div><span>Período liquidado: </span><b>${semLabel}</b></div><div><span>Fecha de pago: </span><b>${fechaPago}</b></div><div><span>Base mensual: </span><b>${auxTxt}</b></div><div><span>Total base: </span><b>${fmt(prima.base)}</b></div></div>
-  <table><thead><tr><th>Mes</th><th class="r">Días vinculación</th><th class="r">Días computados</th><th>Observación</th></tr></thead><tbody>
-  ${filasMeses}
-  <tr class="tot"><td>Total días computados (base 360)</td><td class="r"></td><td class="r">${prima.diasTotal}</td><td></td></tr>
-  </tbody></table>
-  <div style="margin:10px 0;padding:8px 10px;background:#f7f7f4;border:1px solid #eee;border-radius:3px;font-size:8pt;font-family:'SF Mono',Menlo,monospace;color:#444">Prima = base ${fmt(prima.base)} × ${prima.diasTotal} días ÷ 360</div>
+  <div class="info"><div><span>Nombre: </span><b>${selN.nombre}</b></div><div><span>Documento: </span><b>${selN.cc}</b></div><div><span>Cargo: </span>${selN.cargo}</div><div><span>Contrato: </span>${selN.tipoContrato||"fijo"}</div><div><span>Período liquidado: </span><b>${semLabel}</b></div><div><span>Fecha de pago: </span><b>${fechaPago}</b></div></div>
   <table><tbody><tr class="liq"><td>Prima de servicios a pagar</td><td class="r"></td><td class="r">${fmt(prima.prima)}</td></tr></tbody></table>
-  <div style="font-size:7pt;color:#999;margin:10px 0">Art. 306 CST. Base = salario + auxilio de transporte. Incapacidades, vacaciones y licencias remuneradas computan como tiempo de servicio; las ausencias injustificadas y licencias no remuneradas no computan.</div>
+  <div style="font-size:7pt;color:#999;margin:10px 0">Art. 306 CST. El desglose mes a mes que sustenta este valor se detalla en el Informe Mensual Completo.</div>
   <div class="sig"><div><div class="line"></div><div class="name">${getActiveCompanyLegalDataSync().legalName}</div><div class="role">Administración de personal</div></div><div><div class="line"></div><div class="name">${selN.nombre}</div><div class="role">Recibí conforme</div></div></div>`;
 
   const css = `@page{size:A5 portrait;margin:8mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#e8e8e8;padding:20px 0}#content{background:#fff;width:560px;margin:0 auto;padding:40px 50px;font-size:8.5pt;color:#333;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,.1)}.hdr{padding-bottom:12px;margin-bottom:16px;border-bottom:1px solid #ddd;overflow:hidden}.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:7.5pt;color:#999;padding-top:12px}.hdr img{height:46px}h1{font-size:10pt;font-weight:600;text-align:center;margin:10px 0 4px;letter-spacing:.3px;clear:both}.sub{text-align:center;font-size:7.5pt;color:#999;margin-bottom:14px}.info{margin-bottom:14px;font-size:8pt;overflow:hidden;border:1px solid #eee;border-radius:3px;padding:8px 12px}.info div{float:left;width:50%;padding:2px 0;color:#555}.info span{color:#999}.info b{color:#333}table{width:100%;border-collapse:collapse;font-size:8pt;clear:both;margin-bottom:4px}th{padding:5px 8px;text-align:left;font-size:6.5pt;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #ddd}td{padding:4px 8px;border-bottom:1px solid #f2f2f2;color:#444}.r{text-align:right;font-family:'SF Mono',Menlo,monospace;font-size:8pt}.tot td{border-top:1px solid #333;border-bottom:none;font-weight:600;color:#333;padding:6px 8px}.liq td{border-top:2px solid #333;border-bottom:none;font-weight:700;color:#111;padding:8px;font-size:9pt}.sig{margin-top:48px;overflow:hidden;padding:0 20px}.sig>div{float:left;width:44%;text-align:center}.sig>div:last-child{float:right}.sig .line{border-top:1px solid #999;margin-bottom:6px}.sig .name{font-size:8pt;font-weight:600;color:#333}.sig .role{font-size:7pt;color:#999;margin-top:1px}.foot{font-size:6pt;color:#bbb;text-align:center;margin-top:20px;clear:both;letter-spacing:.3px}.np{text-align:center;margin:16px auto;max-width:560px}.btn{background:#333;color:#fff;border:none;padding:8px 20px;border-radius:3px;cursor:pointer;font-size:10pt;font-weight:500;margin:0 4px;font-family:inherit}@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:8mm 10mm;box-shadow:none}}`;

@@ -1642,8 +1642,23 @@ ${tablaHtml}
       return html;
     };
 
-    const genImputaciónesHtml = () => {
+    const genImputaciónesHtml = async () => {
             const calc = calcN(selN);
+            // Prima de servicios del semestre: desglose mes a mes (solo en meses de pago jun/dic).
+            let primaSemBlock = "";
+            if (mes === 5 || mes === 11) {
+              const ps = await calcPrimaSemestre(selN, anio, mes);
+              const filasPS = ps.meses.filter(m=>m.diasVinc>0).map(m=>{
+                const obs=[]; if(m.ausencias>0)obs.push(`−${m.ausencias} ausencia`); if(m.licNoRem>0)obs.push(`−${m.licNoRem} lic. no rem.`);
+                return `<div class="kv"><div class="l">${MESES[m.mes]} · ${m.diasVinc} días de vinculación → ${m.diasPrima} computados${obs.length?` (${obs.join(", ")})`:""}</div><div class="v">${m.diasPrima} d</div></div>`;
+              }).join("");
+              primaSemBlock = `<h2 style="background:#1E40AF">5b. 🎁 PRIMA DE SERVICIOS DEL SEMESTRE</h2>
+<div class="kv"><div class="l">Base (salario ${fmtCurr(ps.sal)} + aux. transporte ${fmtCurr(ps.aux)})</div><div class="v">${fmtCurr(ps.base)}</div></div>
+${filasPS}
+<div class="kv"><div class="l">Total días computados (base 360)</div><div class="v">${ps.diasTotal} d</div></div>
+<div class="kv bigtot" style="background:#1E40AF"><div class="l">PRIMA A PAGAR (base × ${ps.diasTotal} ÷ 360)</div><div class="v">${fmtCurr(ps.prima)}</div></div>
+<div style="font-size:7pt;color:#999;margin:4px 0 8px">Art. 306 CST. Incapacidades, vacaciones y licencias remuneradas computan como tiempo de servicio; las ausencias injustificadas y licencias no remuneradas no computan.</div>`;
+            }
             const iDias = selN.impDias || {};
             const nDias = selN.novDias || {};
             const esQuincenal = (selN.modalidadPago || "quincenal") === "quincenal";
@@ -1984,6 +1999,7 @@ ${tablaOTs(otsMes, totDed + totSegSocial, "PILA imputado")}
 <div class="kv bigtot"><div class="l">TOTAL PROVISIÓNES</div><div class="v">${fmtCurr(totPrestaciones)}</div></div>
 <h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto de las PROVISIÓNES por CT</h3>
 ${tablaOTs(otsMes, totPrestaciones, "Provisión imputada")}
+${primaSemBlock}
 
 <h2 style="background:#7F1D1D">6. 💵 GASTO TOTAL DE CAJA DEL MES</h2>
 <div class="kv"><div class="l">Neto al trabajador (sale del banco al empleado)</div><div class="v">${fmtCurr(dev - totDed)}</div></div>
