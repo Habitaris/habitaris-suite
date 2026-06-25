@@ -17,6 +17,18 @@ const T = {
   red:"#dc2626",redBg:"#FEF2F2",
 };
 
+const MESES_LIQ=["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+
+// Carga la nómina de un mes (mismo endpoint que el liquidador) para conocer anticipos ya pagados.
+async function loadNomMes(anio, mes){ try { const r = await fetch("/api/hiring?kv=nomina&anio="+anio+"&mes="+mes); const d = await r.json(); return d.ok ? (d.data||[]) : []; } catch { return []; } }
+
+// Fecha de vencimiento del contrato: la del campo si existe, si no fecha_inicio + duración.
+function getFechaFinContrato(emp){
+  if(emp?.fecha_fin_contrato) return new Date(emp.fecha_fin_contrato+"T12:00:00");
+  if(emp?.fecha_inicio && emp?.duracion_meses){ const fi=new Date(emp.fecha_inicio+"T12:00:00"); return new Date(fi.getFullYear(), fi.getMonth()+emp.duracion_meses, fi.getDate()-1); }
+  return null;
+}
+
 const TIPOS_TERMINACION = [
   { id:"renuncia", label:"Renuncia voluntaria", icon:"📝", color:T.blue, indemniza:false },
   { id:"vencimiento", label:"Terminación de contrato (vencimiento)", icon:"📅", color:T.amber, indemniza:false },
@@ -24,7 +36,7 @@ const TIPOS_TERMINACION = [
   { id:"sin_justa", label:"Despido sin justa causa", icon:"🚨", color:T.red, indemniza:true },
 ];
 
-function calcLiquidacion(emp, tipo, fechaSalida) {
+function calcLiquidacion(emp, tipo, fechaSalida, pagosPrevios = 0) {
   const sal = emp.salario_base || 0;
   const aux = (sal <= 2*SMLMV) ? (emp.auxilio_transporte || AUX_TR) : 0;
   const bono = emp.bono_no_salarial || 0;
@@ -37,8 +49,9 @@ function calcLiquidacion(emp, tipo, fechaSalida) {
   const msTrab = fechaFin - fechaIni;
   const diasTotales = Math.max(1, Math.floor(msTrab / 86400000) + 1);
 
-  // Días trabajados en el último mes
+  // Días trabajados en el último mes (tope 30: un mes completo cotiza/paga sobre base 30)
   const diaDelMes = fechaFin.getDate();
+  const diasUltMes = Math.min(30, diaDelMes);
 
   // Días trabajados en el semestre actual (para prima)
   const inicioSem = fechaFin.getMonth() < 6
@@ -49,8 +62,8 @@ function calcLiquidacion(emp, tipo, fechaSalida) {
   // Años trabajados (fracción)
   const aniosTrab = diasTotales / 365;
 
-  // 1. Salario pendiente (días del último mes)
-  const salPendiente = Math.round((sal / 30) * diaDelMes);
+  // 1. Salario pendiente (días del último mes, tope 30)
+  const salPendiente = Math.round((sal / 30) * diasUltMes);
 
   // 2. Vacaciones no disfrutadas = (sal × diasTotales) / 720
   const vacaciones = Math.round((sal * diasTotales) / 720);
@@ -99,12 +112,13 @@ function calcLiquidacion(emp, tipo, fechaSalida) {
 
   const subtotal = salPendiente + vacaciones + prima + cesantias + intCes;
   const total = subtotal + indemnizacion;
+  const neto = Math.max(0, total - (pagosPrevios || 0));
 
   return {
-    sal, aux, bono, fechaIni, fechaFin, diasTotales, diaDelMes, diasSem, aniosTrab, isFijo, durMeses,
-    salPendiente, vacaciones, prima, cesantias, intCes, indemnizacion, subtotal, total,
+    sal, aux, bono, fechaIni, fechaFin, diasTotales, diaDelMes, diasUltMes, diasSem, aniosTrab, isFijo, durMeses,
+    salPendiente, vacaciones, prima, cesantias, intCes, indemnizacion, subtotal, total, pagosPrevios: pagosPrevios||0, neto,
     items: [
-      { concepto:"Salario pendiente ("+diaDelMes+" días)", valor:salPendiente, norma:"Art. 65 CST" },
+      { concepto:"Salario pendiente ("+diasUltMes+" días)", valor:salPendiente, norma:"Art. 65 CST" },
       { concepto:"Vacaciones no disfrutadas", valor:vacaciones, norma:"Art. 186 CST — "+diasTotales+"d/720" },
       { concepto:"Prima de servicios proporcional", valor:prima, norma:"Art. 306 CST — "+diasSem+"d semestre" },
       { concepto:"Cesantías proporcionales", valor:cesantias, norma:"Art. 249 CST — "+diasTotales+"d/360" },
@@ -181,7 +195,9 @@ td{padding:4px 8px;border-bottom:1px solid #ddd}.r{text-align:right;font-family:
 </div>
 <table><thead><tr><th>Concepto</th><th class="r">Valor</th><th>Base legal</th></tr></thead><tbody>
 ${liq.items.map(i=>"<tr><td>"+i.concepto+"</td><td class='r'>"+fmt(i.valor)+"</td><td style='font-size:8pt;color:#666'>"+i.norma+"</td></tr>").join("")}
-<tr class="tot"><td>TOTAL A PAGAR</td><td class="r">${fmt(liq.total)}</td><td></td></tr>
+<tr class="tot"><td>${liq.pagosPrevios>0?"TOTAL LIQUIDACIÓN (bruto)":"TOTAL A PAGAR"}</td><td class="r">${fmt(liq.total)}</td><td></td></tr>
+${liq.pagosPrevios>0?`<tr><td>Menos: anticipos / pagos ya realizados</td><td class="r">−${fmt(liq.pagosPrevios)}</td><td style='font-size:8pt;color:#666'>Ya desembolsado</td></tr>
+<tr class="tot"><td>NETO A PAGAR</td><td class="r">${fmt(liq.neto)}</td><td></td></tr>`:""}
 </tbody></table>
 <div class="body"><p>El valor total de la liquidación será consignado en la cuenta registrada del trabajador.</p></div>
 <div class="sig"><div>Empleador<br/><b>${getActiveCompanyLegalDataSync().legalName}</b><br/>NIT: ${getActiveCompanyLegalDataSync().taxId}</div><div>Trabajador<br/><b>${emp.candidato_nombre}</b><br/>${emp.tipo_documento||"C.C."} ${emp.candidato_cc}</div></div>
@@ -222,12 +238,46 @@ h1{font-size:13pt;text-align:center;margin:20px 0 16px}
 <div class="foot">Habitaris Suite · ${hoy} · PYS-${(emp.candidato_cc||"").slice(-4)}</div>`;
 }
 
+function genPreaviso(emp, fechaVenc) {
+  const hoy = new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"});
+  const venc = fechaVenc ? fechaVenc.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"}) : "—";
+  const ini = emp.fecha_inicio ? new Date(emp.fecha_inicio+"T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"}) : "—";
+  return `<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Helvetica,Arial,sans-serif}
+.hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:24px;overflow:hidden}
+.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
+.hdr img{height:36px}
+h1{font-size:12pt;text-align:center;margin:18px 0 4px;letter-spacing:.5px}
+.sub{text-align:center;font-size:8.5pt;color:#888;margin-bottom:20px}
+.body{font-size:10.5pt;line-height:1.8;text-align:justify}
+.body p{margin-bottom:10px}
+.ref{margin:14px 0;padding:10px 14px;background:#FAFAF7;border-left:3px solid #111;font-size:9.5pt;line-height:1.6}
+.sig{margin-top:48px;overflow:hidden}.sig div{float:left;width:48%;text-align:center;font-size:8.5pt;border-top:1px solid #111;padding-top:6px}.sig div:last-child{float:right}
+.foot{font-size:6.5pt;color:#999;text-align:center;margin-top:28px;clear:both}
+</style>
+<div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">${getActiveCompanyLegalDataSync().legalName}</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
+<h1>PREAVISO DE NO RENOVACIÓN DE CONTRATO</h1>
+<div class="sub">Contrato a término fijo · Art. 46 CST</div>
+<div class="body">
+<p>Bogotá D.C., ${hoy}</p>
+<p>Señor(a)<br/><b>${emp.candidato_nombre||""}</b><br/>${emp.tipo_documento||"C.C."} ${emp.candidato_cc||""}<br/>Cargo: ${emp.cargo||""}</p>
+<div class="ref"><b>Referencia:</b> No prórroga del contrato de trabajo a término fijo suscrito el ${ini}.</div>
+<p>Por medio de la presente le comunicamos, con una antelación no inferior a treinta (30) días, la decisión de <b>${getActiveCompanyLegalDataSync().legalName}</b> de <b>no renovar ni prorrogar</b> su contrato de trabajo a término fijo, el cual terminará en su fecha de vencimiento pactada, esto es, el <b>${venc}</b> (Art. 46 CST).</p>
+<p>Por tratarse de una terminación legal por vencimiento del plazo pactado, no hay lugar a indemnización. La liquidación definitiva de sus prestaciones sociales le será entregada a la terminación del contrato.</p>
+<p>Agradecemos su aporte durante el tiempo de vinculación. Atentamente,</p>
+</div>
+<div class="sig"><div>Empleador<br/><b>${getActiveCompanyLegalDataSync().legalName}</b><br/>NIT: ${getActiveCompanyLegalDataSync().taxId}</div><div>Recibido — Trabajador<br/><b>${emp.candidato_nombre||""}</b><br/>${emp.tipo_documento||"C.C."} ${emp.candidato_cc||""}</div></div>
+<div class="foot">Habitaris Suite · ${hoy} · PREAVISO-${(emp.candidato_cc||"").slice(-4)}</div>`;
+}
+
 export default function TabLiquidacion() {
   const [empleados, setEmpleados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selEmp, setSelEmp] = useState(null);
   const [tipo, setTipo] = useState("renuncia");
   const [fechaSalida, setFechaSalida] = useState(new Date().toISOString().split("T")[0]);
+  const [pagosPrevios, setPagosPrevios] = useState(0);
+  const [pagosDetalle, setPagosDetalle] = useState([]);
 
   useEffect(()=>{
     (async()=>{
@@ -245,7 +295,41 @@ export default function TabLiquidacion() {
   },[]);
 
   const emp = empleados.find(e=>e.id===selEmp);
-  const liq = emp ? calcLiquidacion(emp, tipo, fechaSalida) : null;
+
+  // Al elegir "Terminación de contrato (vencimiento)", tomar la fecha fin del contrato (editable).
+  useEffect(()=>{
+    if(tipo==="vencimiento" && emp){
+      const ff = getFechaFinContrato(emp);
+      if(ff) setFechaSalida(ff.toISOString().split("T")[0]);
+    }
+  },[tipo, selEmp]); // eslint-disable-line
+
+  // Cargar anticipos/pagos ya realizados del mes de salida para descontarlos (evitar pagar de más).
+  useEffect(()=>{
+    let cancel=false;
+    (async()=>{
+      if(!emp || !fechaSalida){ setPagosPrevios(0); setPagosDetalle([]); return; }
+      const f=new Date(fechaSalida+"T12:00:00");
+      const anio=f.getFullYear(), mesExit=f.getMonth(), diaExit=Math.min(30, f.getDate());
+      const arr=await loadNomMes(anio, mesExit);
+      const rec=(arr||[]).find(n=>n.empId===emp.id);
+      let disbursed=0; const detalle=[];
+      if(rec){
+        const salRec=rec.sal||emp.salario_base||0;
+        if(rec.estado==="pagada"){
+          const v=Math.round((salRec/30)*diaExit);
+          disbursed=v; detalle.push({lbl:`Salario ${MESES_LIQ[mesExit]} ${anio} ya pagado (mes liquidado)`, val:v});
+        } else if(rec.estado==="q1_pagado"){
+          const v=Math.round(salRec*(rec.q1Pct!=null?Number(rec.q1Pct):0.5));
+          disbursed=v; detalle.push({lbl:`Anticipo Q1 ${MESES_LIQ[mesExit]} ${anio} ya pagado`, val:v});
+        }
+      }
+      if(!cancel){ setPagosPrevios(disbursed); setPagosDetalle(detalle); }
+    })();
+    return ()=>{cancel=true;};
+  },[selEmp, fechaSalida, tipo]); // eslint-disable-line
+
+  const liq = emp ? calcLiquidacion(emp, tipo, fechaSalida, pagosPrevios) : null;
 
   return (
     <div style={{fontFamily:"'DM Sans',sans-serif",color:T.ink}}>
@@ -304,6 +388,11 @@ export default function TabLiquidacion() {
                 <div style={{fontSize:10,fontWeight:700,color:T.inkLight,letterSpacing:.8,textTransform:"uppercase",marginBottom:8}}>Documentos</div>
                 <button onClick={async()=>{
                   const ape=(emp.candidato_nombre||"").split(" ").slice(-2).join("-").toUpperCase();
+                  await downloadPDF(genPreaviso(emp, getFechaFinContrato(emp)), `PREAVISO-${ape}`, "a4");
+                }} style={{width:"100%",padding:"8px 10px",fontSize:11,fontWeight:600,border:`1px solid ${T.amber}`,borderRadius:6,background:T.amberBg,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",color:T.amber,marginBottom:6,textAlign:"left"}}>📩 Preaviso de no renovación (30 días)</button>
+
+                <button onClick={async()=>{
+                  const ape=(emp.candidato_nombre||"").split(" ").slice(-2).join("-").toUpperCase();
                   await downloadPDF(genCartaTerminacion(emp, tipo, liq), `CARTA-TERM-${ape}`, "a4");
                 }} style={{width:"100%",padding:"8px 10px",fontSize:11,fontWeight:600,border:`1px solid ${T.ink}`,borderRadius:6,background:T.surface,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",color:T.ink,marginBottom:6,textAlign:"left"}}>📄 Carta de terminación + Liquidación</button>
 
@@ -357,11 +446,11 @@ export default function TabLiquidacion() {
                     ["Salario base",fmt(liq.sal),T.ink],
                     ["Aux. transporte",fmt(liq.aux),T.inkMid],
                     ["Tipo terminación",TIPOS_TERMINACION.find(t=>t.id===tipo)?.icon+" "+TIPOS_TERMINACION.find(t=>t.id===tipo)?.label.split(" ")[0],TIPOS_TERMINACION.find(t=>t.id===tipo)?.color],
-                    ["TOTAL LIQUIDACIÓN",fmt(liq.total),T.green],
+                    [liq.pagosPrevios>0?"NETO A PAGAR":"TOTAL LIQUIDACIÓN",fmt(liq.pagosPrevios>0?liq.neto:liq.total),T.green],
                   ].map(([l,v,c])=>(
                     <div key={l} style={{background:T.surface,border:`1px solid ${T.border}`,borderRadius:6,padding:"10px 12px",textAlign:"center"}}>
                       <div style={{fontSize:8,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:.8}}>{l}</div>
-                      <div style={{fontSize:l==="TOTAL LIQUIDACIÓN"?18:14,fontWeight:800,color:c,fontFamily:l.includes("Tipo")?"'DM Sans'":"'DM Mono',monospace"}}>{v}</div>
+                      <div style={{fontSize:(l.includes("TOTAL")||l.includes("NETO"))?18:14,fontWeight:800,color:c,fontFamily:l.includes("Tipo")?"'DM Sans'":"'DM Mono',monospace"}}>{v}</div>
                     </div>
                   ))}
                 </div>
@@ -385,11 +474,25 @@ export default function TabLiquidacion() {
                           <td style={{padding:"6px 10px",fontSize:10,color:T.inkMid}}>{item.norma}</td>
                         </tr>
                       ))}
-                      <tr style={{borderTop:`2px solid ${T.ink}`,background:T.greenBg}}>
-                        <td style={{padding:"8px 10px",fontSize:14,fontWeight:800}}>TOTAL A PAGAR</td>
-                        <td style={{padding:"8px 10px",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:800,fontSize:18,color:T.green}}>{fmt(liq.total)}</td>
+                      <tr style={{borderTop:`2px solid ${T.ink}`}}>
+                        <td style={{padding:"8px 10px",fontSize:13,fontWeight:700}}>{liq.pagosPrevios>0?"TOTAL LIQUIDACIÓN (bruto)":"TOTAL A PAGAR"}</td>
+                        <td style={{padding:"8px 10px",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:800,fontSize:15}}>{fmt(liq.total)}</td>
                         <td></td>
                       </tr>
+                      {pagosDetalle.map((p,i)=>(
+                        <tr key={"pp"+i} style={{background:T.amberBg}}>
+                          <td style={{padding:"6px 10px",fontSize:12,color:T.amber}}>− {p.lbl}</td>
+                          <td style={{padding:"6px 10px",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:600,fontSize:13,color:T.amber}}>−{fmt(p.val)}</td>
+                          <td style={{padding:"6px 10px",fontSize:10,color:T.inkMid}}>Ya desembolsado</td>
+                        </tr>
+                      ))}
+                      {liq.pagosPrevios>0 && (
+                        <tr style={{borderTop:`2px solid ${T.ink}`,background:T.greenBg}}>
+                          <td style={{padding:"8px 10px",fontSize:14,fontWeight:800}}>NETO A PAGAR</td>
+                          <td style={{padding:"8px 10px",textAlign:"right",fontFamily:"'DM Mono',monospace",fontWeight:800,fontSize:18,color:T.green}}>{fmt(liq.neto)}</td>
+                          <td></td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
 
