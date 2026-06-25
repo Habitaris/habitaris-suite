@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { HAB_LOGO } from "./habLogo.js";
 import {  getTenantUrlsSync, getTenantIdentitySync, getLegalConstantsSync, getActiveCompanyLegalDataSync } from "../core/configHelpers.js";
 import { downloadPDF } from "./pdfUtil.js";
-import { buildNominaHtml } from "./nominaHtml.js";
+import { buildNominaHtml, buildPrimaHtml } from "./nominaHtml.js";
 import { BannerPagos } from "./BannerPagos.jsx";
 import { condicionVigente } from "./condicionesHelper.js";
 import DashboardTrabajadorAnio from "./DashboardTrabajadorAnio.jsx";
@@ -114,6 +114,38 @@ async function fetchEmps(){try{
 }catch{return[];}}
 async function loadEmpMaestro(){try{const r=await fetch("/api/hiring?kv=rrhh:empleados&flat=1");const d=await r.json();return Array.isArray(d?.value)?d.value:(d?.value?JSON.parse(d.value):[])}catch(_){return[]}}
 async function loadN(a,m){try{const r=await fetch("/api/hiring?kv=nomina&anio="+a+"&mes="+m);const d=await r.json();return d.ok?d.data:[];}catch{return[];}}
+// Prima de servicios del semestre (Art. 306 CST). Recorre los meses del semestre del mesActual,
+// cuenta por mes los días de vinculación menos las novedades que NO computan (ausencia injustificada
+// y licencia no remunerada); incapacidad, vacaciones y licencia remunerada SÍ computan.
+// base = salario + auxilio de transporte (si aplica). prima = base × díasTotal / 360.
+async function calcPrimaSemestre(emp, anio, mesActual){
+  const sal=emp.sal||0, aplA=sal<=2*SMLMV, aux=aplA?AUX_TR:0, base=sal+aux;
+  const semStart=mesActual<=5?0:6;
+  const fi=emp.fechaIngreso?new Date(emp.fechaIngreso+"T12:00:00"):null;
+  const ff=emp.fechaFinContrato?new Date(emp.fechaFinContrato+"T12:00:00"):null;
+  const meses=[];
+  for(let m=semStart;m<=mesActual;m++){
+    let diasVinc=30;
+    if(fi){ if(fi.getFullYear()>anio||(fi.getFullYear()===anio&&fi.getMonth()>m)) diasVinc=0;
+            else if(fi.getFullYear()===anio&&fi.getMonth()===m) diasVinc=30-(fi.getDate()-1); }
+    if(ff){ if(ff.getFullYear()<anio||(ff.getFullYear()===anio&&ff.getMonth()<m)) diasVinc=0;
+            else if(ff.getFullYear()===anio&&ff.getMonth()===m) diasVinc=Math.min(diasVinc,Math.min(30,ff.getDate())); }
+    diasVinc=Math.max(0,diasVinc);
+    let ausencias=0, licNoRem=0;
+    if(diasVinc>0){
+      const arr=await loadN(anio,m);
+      const rec=(arr||[]).find(n=>n.empId===emp.empId);
+      if(rec){ const nd=rec.novDias||{};
+        ausencias=Object.values(nd).filter(v=>v==="ausencia").length;
+        licNoRem=Object.values(nd).filter(v=>v==="licNoRem").length; }
+    }
+    const diasPrima=Math.max(0,diasVinc-ausencias-licNoRem);
+    meses.push({mes:m,diasVinc,ausencias,licNoRem,diasPrima});
+  }
+  const diasTotal=meses.reduce((s,x)=>s+x.diasPrima,0);
+  const prima=Math.round(base*diasTotal/360);
+  return {semestre:semStart===0?1:2, base, sal, aux, aplA, meses, diasTotal, prima};
+}
 // Condiciones laborales con fecha de vigencia (ARL, salario, etc.) del empleado.
 async function loadCond(empId){try{const r=await fetch("/api/hiring?kv=rrhh:condiciones:"+empId+"&flat=1");const d=await r.json();return Array.isArray(d.data)?d.data:[];}catch(_){return[];}}
 // Redondeo PILA: la plataforma (MiPlanilla) aproxima cada aporte al múltiplo de 100 superior.
@@ -1353,7 +1385,12 @@ ${tablaOTconsMonto(totCostoEmp, "Costo total imputado")}
     };
     const genNovedadesHtml = () => {
             const nDias=selN.novDias||{};
-            const novList=Object.entries(nDias).sort().map(([k,v])=>{const d=new Date(k+"T12:00:00");const info=NOV_TIPOS.find(n=>n.id===v);return{fecha:d.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"}),tipo:info?.label||v,tipoId:v};});
+            // Agrupado por tipo: { tipoId: { dias, fechas:[] } } a partir del calendario del mes.
+            const novGrp={};
+            Object.entries(nDias).sort().forEach(([k,v])=>{const d=new Date(k+"T12:00:00");if(!novGrp[v])novGrp[v]={dias:0,fechas:[]};novGrp[v].dias++;novGrp[v].fechas.push(d.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short"}));});
+            // Tabla fija: TODOS los tipos del sistema (los que están en 0 quedan atenuados).
+            const NTIPOS_FIJOS=[{id:"incapacidad",icon:"🏥",label:"Incapacidad EG"},{id:"vacaciones",icon:"🏖️",label:"Vacaciones"},{id:"licencia",icon:"📋",label:"Licencia remunerada"},{id:"licNoRem",icon:"⚠️",label:"Licencia no remunerada"},{id:"ausencia",icon:"❌",label:"Ausencia injustificada"}];
+            const novGrpRows=NTIPOS_FIJOS.map(t=>{const g=novGrp[t.id];const dd=g?g.dias:0;const fechas=g?g.fechas.join(" · "):"—";const dim=dd===0?' style="opacity:.4"':'';return `<tr class="nov"${dim}><td>${t.icon} ${t.label}</td><td class="dd">${dd}</td><td style="font-size:7.5pt;color:#777">${fechas}</td></tr>`;}).join("");
             const festList=festivosMes.map(h=>({fecha:h.date.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"}),name:h.name}));
             const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);
             const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
@@ -1377,6 +1414,15 @@ table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:8.5pt;clea
 th{text-align:left;padding:4px 6px;font-size:7pt;font-weight:700;text-transform:uppercase;border-bottom:2px solid #111}
 td{padding:3px 6px;border-bottom:1px solid #ddd}
 .fest{background:#f9f9f9}.nov{background:#f4f4f4}
+.dias{margin-bottom:12px}.dias td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:middle}
+.dias .cpt{font-weight:700;color:#111;font-size:9pt;width:34%}
+.dias .num{font-family:'SF Mono',Menlo,monospace;text-align:right;white-space:nowrap;width:16%}
+.dias .num .big{font-size:15pt;font-weight:800;color:#111}.dias .num .den{font-size:8pt;color:#bbb;font-weight:600}
+.dias .rule{font-size:7.5pt;color:#888;line-height:1.35}
+.efx td{padding:6px 8px;vertical-align:middle;border-bottom:1px solid #eee}.efx th{text-align:center}.efx th:first-child{text-align:left}
+.efx .tp{font-weight:600;color:#111}.efx .dd{text-align:center;font-family:'SF Mono',Menlo,monospace;color:#666}
+.pill{display:inline-block;padding:2px 9px;border-radius:10px;font-size:6.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
+.pill.ok{color:#15803D;background:#ECFDF3}.pill.no{color:#B42318;background:#FEF3F2}.pill.neu{color:#475467;background:#F2F4F7}
 .summary{margin:8px 0;overflow:hidden}
 .sbox{float:left;width:31%;margin-right:3%;border:1px solid #ccc;border-radius:4px;padding:6px;text-align:center;margin-bottom:6px}
 .sbox:nth-child(3n){margin-right:0}
@@ -1407,31 +1453,18 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 <table><thead><tr><th>Fecha</th><th>Motivo</th></tr></thead><tbody>
 ${festList.length>0?festList.map(f=>`<tr class="fest"><td>${f.fecha}</td><td>${f.name}</td></tr>`).join(""):`<tr><td colspan="2" style="color:#999;text-align:center">Sin festivos</td></tr>`}
 </tbody></table>
-<h2>Novedades del periodo</h2>
-${novList.length>0?`<table><thead><tr><th>Fecha</th><th>Tipo</th><th style="text-align:right">Impacto</th></tr></thead><tbody>
-${novList.map(n=>{
-  const efectoIBC = n.tipoId==="licNoRem" ? "Reduce IBC y salario" : n.tipoId==="ausencia" ? "Descuenta salario (piso 1 SMLMV)" : "No reduce IBC";
-  return `<tr class="nov"><td>${n.fecha}</td><td>${n.tipo}</td><td style="text-align:right;font-size:7.5pt;color:#666">${efectoIBC}</td></tr>`;
-}).join("")}
-</tbody></table>`:'<div style="padding:8px;background:#FAFAF7;border:1px solid #eee;border-radius:4px;font-size:8pt;color:#999;font-style:italic;text-align:center;margin-bottom:6px">Sin novedades registradas en el calendario</div>'}
-<h3 style="font-size:8.5pt;margin:8px 0 4px;color:#666;text-transform:uppercase;letter-spacing:.5px">Resumen por tipo</h3>
-<table><thead><tr><th>Tipo</th><th style="text-align:right">Dias</th><th style="text-align:right">Efecto en salario</th><th style="text-align:right">Efecto en IBC</th></tr></thead><tbody>
-<tr><td>🏥 Incapacidad EG</td><td style="text-align:right">${selN.diasIncap||0}d</td><td style="text-align:right">Mantiene salario base</td><td style="text-align:right">No reduce IBC</td></tr>
-<tr><td>🏖️ Vacaciones disfrutadas</td><td style="text-align:right">${selN.diasVac||0}d</td><td style="text-align:right">Mantiene salario base</td><td style="text-align:right">No reduce IBC</td></tr>
-<tr><td>📋 Licencia remunerada</td><td style="text-align:right">${selN.diasLicRem||0}d</td><td style="text-align:right">Mantiene salario base</td><td style="text-align:right">No reduce IBC</td></tr>
-<tr style="background:#FEF3C7"><td>⚠️ Licencia NO remunerada</td><td style="text-align:right">${selN.diasLicNoRem||0}d</td><td style="text-align:right">Descuenta del salario</td><td style="text-align:right">Reduce IBC proporcional</td></tr>
-<tr style="background:#FEE2E2"><td>❌ Ausencia injustificada</td><td style="text-align:right">${calc.diasAusencia||0}d</td><td style="text-align:right">Descuenta del salario</td><td style="text-align:right">No reduce (piso 1 SMLMV)</td></tr>
+<h2>Novedades del mes</h2>
+<table class="efx"><thead><tr><th>Tipo</th><th>Días</th><th style="text-align:left">Fechas</th></tr></thead><tbody>
+${novGrpRows}
 </tbody></table>
-<h2>Resumen del período</h2>
-<div class="summary">
-<div class="sbox"><div class="n">${calc.dias}</div><div class="l">Días salario</div></div>
-<div class="sbox"><div class="n">${calc.festMes}</div><div class="l">Festivos (L-S)</div></div>
-<div class="sbox"><div class="n">${selN.diasLicRem||0}</div><div class="l">Lic. remunerada</div></div>
-<div class="sbox"><div class="n">${calc.diasComm}</div><div class="l">Días transporte</div></div>
-<div class="sbox"><div class="n">${calc.diasAsist}</div><div class="l">Días asistidos</div></div>
-<div class="sbox"><div class="n">${selN.diasIncap||0}</div><div class="l">Incapacidad</div></div>
-<div class="sbox"><div class="n">${calc.diasAusencia||0}</div><div class="l">Ausencia injust.</div></div>
-</div>
+<h2>Días por concepto</h2>
+<table class="dias"><tbody>
+<tr><td class="cpt">Salario</td><td class="num"><span class="big">${calc.dias}</span><span class="den">/30</span></td><td class="rule">Días pagados. Restan ausencias injustificadas y licencias no remuneradas; la licencia remunerada no resta.</td></tr>
+<tr><td class="cpt">Auxilio de transporte</td><td class="num"><span class="big">${calc.diasComm}</span><span class="den">/30</span></td><td class="rule">Restan las licencias remuneradas; los festivos sí cuentan (Concepto 219821/2020).</td></tr>
+<tr><td class="cpt">Bono de asistencia</td><td class="num"><span class="big">${calc.diasAsist}</span><span class="den">/30</span></td><td class="rule">Restan festivos, novedades y licencias remuneradas.</td></tr>
+<tr><td class="cpt">Base de cotización (IBC)</td><td class="num"><span class="big">${calc.diasVinc}</span><span class="den">/30</span></td><td class="rule">Días de vinculación del mes. Piso de 1 SMLMV en mes completo, aunque haya ausencias.</td></tr>
+</tbody></table>
+</tbody></table>
 <div class="sig">
 <div>Elaborado por<br><span style="color:#999">RRHH Habitaris</span></div>
 <div>Revisado por<br><span style="color:#999">Contador</span></div>
@@ -2521,10 +2554,14 @@ ${body}
               {icon:"📄",label:"Nómina",desc:`Devengado ${fmt(calc.dev)} · Deducciones ${fmt(calc.totD)} · Neto ${fmt(calc.neto)}`,action:"nomina"},
               {icon:"📋",label:"Informe de novedades (contador)",desc:`Festivos y novedades del mes (incapacidades, vacaciones, licencias, ausencias) — sin valores económicos`,gen:genNovedadesHtml},
               {icon:"📊",label:"Informe Mensual Completo",desc:`Cierre post-pago: salario, Q1, Q2, PILA, provisiones y reparto por centro (todo en uno)`,gen:genImputaciónesHtml},
+              ...((mes===5||mes===11)?[
+                {icon:"🎁",label:`Prima de servicios (${mes===5?"1.º":"2.º"} semestre)`,desc:`Liquidación del semestre · base (salario + aux. transporte) × días ÷ 360 · Art. 306 CST`,gen:async()=>buildPrimaHtml({selN,prima:await calcPrimaSemestre(selN,anio,mes),anio}).html},
+              ]:[]),
             ].map((d,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
-                onClick={()=>{
-                  const html = d.gen ? d.gen() : buildNominaHtml({ selN, calc, anio, mes, tipo:d.action, refBancaria:selN.refPago||null }).html;
+                onClick={async()=>{
+                  const r = d.gen ? d.gen() : buildNominaHtml({ selN, calc, anio, mes, tipo:d.action, refBancaria:selN.refPago||null }).html;
+                  const html = (r && typeof r.then === "function") ? await r : r;
                   if (html) openReport(html);
                 }}
                 onMouseEnter={e=>e.currentTarget.style.borderColor=T.ink}
