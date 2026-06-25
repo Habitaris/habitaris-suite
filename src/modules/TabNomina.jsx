@@ -1432,24 +1432,6 @@ ${novList.map(n=>{
 <div class="sbox"><div class="n">${selN.diasIncap||0}</div><div class="l">Incapacidad</div></div>
 <div class="sbox"><div class="n">${calc.diasAusencia||0}</div><div class="l">Ausencia injust.</div></div>
 </div>
-<h2>Impacto en nómina</h2>
-<table><thead><tr><th>Concepto</th><th>Días</th><th style="text-align:right">Valor</th><th>Observación</th></tr></thead><tbody>
-<tr><td>Salario base</td><td>${calc.dias}/30</td><td style="font-family:monospace;text-align:right">${fmt(calc.salProp)}</td><td>Lic.rem NO reduce salario</td></tr>
-<tr><td>Aux. transporte</td><td>${calc.diasComm}/30</td><td style="font-family:monospace;text-align:right">${fmt(calc.aux)}</td><td>Incl. festivos, excl. novedades</td></tr>
-<tr><td>Bono asistencia</td><td>${calc.diasAsist}/30</td><td style="font-family:monospace;text-align:right">${fmt(calc.bono)}</td><td>Excl. festivos y novedades</td></tr>
-${(selN.diasIncap||0)>0?`<tr style="background:#FEE2E2"><td>Aux. incapacidad EG</td><td>${selN.diasIncap}d</td><td style="font-family:monospace;text-align:right">${fmt(Math.round((selN.sal||0)/30*(selN.diasIncap||0)*0.6667))}</td><td>66.67% salario diario · empleador dias 1-2, EPS desde dia 3</td></tr>`:""}
-${(calc.totHex||0)>0?`<tr><td>Horas extras y recargos</td><td></td><td style="font-family:monospace;text-align:right">${fmt(calc.totHex)}</td><td>HED 1.25, HEN 1.75, HEDD 2.0, HEDN 2.5</td></tr>`:""}
-${(calc.recFest||0)>0?`<tr><td>Recargo festivos laborados</td><td>${selN.festLab||0}d</td><td style="font-family:monospace;text-align:right">${fmt(calc.recFest)}</td><td>0.75 × valor dia</td></tr>`:""}
-${(selN.otrosIng||0)>0?`<tr><td>Otros ingresos</td><td></td><td style="font-family:monospace;text-align:right">${fmt(selN.otrosIng)}</td><td>Manual</td></tr>`:""}
-<tr style="font-weight:700;border-top:2px solid #111"><td>Total devengado</td><td></td><td style="font-family:monospace;text-align:right">${fmt(calc.dev)}</td><td></td></tr>
-<tr><td>EPS (4%)</td><td></td><td style="font-family:monospace;text-align:right">-${fmt(calc.epsE)}</td><td>IBC: ${fmt(calc.ibc)}</td></tr>
-<tr><td>Pensión (4%)</td><td></td><td style="font-family:monospace;text-align:right">-${fmt(calc.penE)}</td><td>IBC: ${fmt(calc.ibc)}</td></tr>
-${(calc.rteF||0)>0?`<tr><td>Retencion en la fuente</td><td></td><td style="font-family:monospace;text-align:right">-${fmt(calc.rteF)}</td><td>Procedimiento 1 o 2</td></tr>`:""}
-${(selN.otrasDed||0)>0?`<tr><td>Otras deducciones</td><td></td><td style="font-family:monospace;text-align:right">-${fmt(selN.otrasDed)}</td><td>Manual (libranzas, embargos, etc.)</td></tr>`:""}
-<tr style="font-weight:700;background:#f0f0f0"><td>Neto a pagar</td><td></td><td style="font-family:monospace;text-align:right;font-size:11pt">${fmt(calc.neto)}</td><td></td></tr>
-<tr><td style="padding-left:16px">Q1 anticipo</td><td></td><td style="font-family:monospace;text-align:right">${fmt(calc.q1)}</td><td>15 ${MESES[mes].toLowerCase()}</td></tr>
-<tr><td style="padding-left:16px">Q2 ajuste</td><td></td><td style="font-family:monospace;text-align:right">${fmt(calc.q2)}</td><td>Fin de mes</td></tr>
-</tbody></table>
 <div class="sig">
 <div>Elaborado por<br><span style="color:#999">RRHH Habitaris</span></div>
 <div>Revisado por<br><span style="color:#999">Contador</span></div>
@@ -2537,7 +2519,7 @@ ${body}
                 ]:[]),
               ]:[]),
               {icon:"📄",label:"Nómina",desc:`Devengado ${fmt(calc.dev)} · Deducciones ${fmt(calc.totD)} · Neto ${fmt(calc.neto)}`,action:"nomina"},
-              {icon:"📋",label:"Pre-nómina (insumo contador)",desc:`Novedades del mes para que el contador liquide: incapacidades, vacaciones, licencias, festivos, horas extras`,gen:genNovedadesHtml},
+              {icon:"📋",label:"Informe de novedades (contador)",desc:`Festivos y novedades del mes (incapacidades, vacaciones, licencias, ausencias) — sin valores económicos`,gen:genNovedadesHtml},
               {icon:"📊",label:"Informe Mensual Completo",desc:`Cierre post-pago: salario, Q1, Q2, PILA, provisiones y reparto por centro (todo en uno)`,gen:genImputaciónesHtml},
             ].map((d,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
