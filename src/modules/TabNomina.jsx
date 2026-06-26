@@ -1483,7 +1483,7 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 <div class="sub">${MESES[mes]} ${anio} · Ref: ${fileName}</div>
 <div class="cols">
 <div class="col"><div class="ct">EMPLEADOR</div><b>${_leg.legalName||""}</b><br/>NIT ${_leg.taxId||""}</div>
-<div class="col"><div class="ct">TRABAJADORA</div><b>${selN.nombre||""}</b><br/>C.C. ${selN.cc||""}<br/>${selN.cargo||""}<br/>EPS: ${selN.eps||"—"} · Pensión: ${selN.pen||"—"}</div>
+<div class="col"><div class="ct">TRABAJADORA</div><b>${selN.nombre||""}</b><br/>C.C. ${selN.cc||""}<br/>${selN.cargo||""}<br/>EPS: ${selN.eps||"—"} · Pensión: ${selN.pen||"—"}<br/>Banco: ${selN.banco||"—"} · Cuenta: ${selN.cuenta||"—"}</div>
 </div>
 <div class="contrato"><b>Contrato:</b> ${_contratoLbl}.</div>
 <h2>Festivos del mes</h2>
