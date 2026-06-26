@@ -701,7 +701,7 @@ th{padding:5px 8px;text-align:left;font-size:7pt;font-weight:700;text-transform:
 td{padding:4px 8px;border-bottom:1px solid #ddd}.r{text-align:right;font-family:monospace}
 .tot td{border-top:2px solid #111;font-weight:700;font-size:10pt;padding:6px 8px}
 .checks{margin:14px 0;font-size:10pt;line-height:2}
-.sig{margin-top:30px;display:flex;align-items:center;justify-content:space-between;gap:24px}.sig>div{width:47%;text-align:center;font-size:8pt}.sig>div:not(.ebox){border-top:1px solid #111;padding-top:6px;position:relative;top:22px}
+.sig{margin-top:30px;display:flex;align-items:center;justify-content:space-between;gap:24px}.sig>div{width:47%;text-align:center;font-size:8pt}.sig>div:not(.ebox){border-top:1px solid #111;padding-top:6px;position:relative;top:42px}
 .sig div.ebox{border:1px solid #bbb;border-radius:6px;padding:12px 14px;background:none}
 .foot{font-size:6pt;color:#999;text-align:center;margin-top:14px;clear:both}
 .fullpage{display:flex;flex-direction:column;min-height:1123px}
