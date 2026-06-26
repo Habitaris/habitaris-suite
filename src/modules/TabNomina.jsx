@@ -1308,12 +1308,17 @@ ${tablaOTconsMonto(totCostoEmp, "Costo total imputado")}
     const hols = getHolidays(n.anio);
     const novDias = n.novDias || {};
     const impDias = n.impDias || {};
+    const fi = n.fechaIngreso || null;          // "YYYY-MM-DD"
+    const ff = n.fechaFinContrato || null;       // "YYYY-MM-DD"
     const pendientes = [];
     for (let d = dDesde; d <= dHasta; d++) {
       const date = new Date(n.anio, n.mes, d);
       if (date.getDay() === 0) continue;
       if (hols.find(h => sameDay(h.date, date))) continue;
       const k = n.anio+"-"+String(n.mes+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+      // Fuera del periodo de vinculación (antes del ingreso o tras el fin de contrato): no se exige imputar.
+      if (fi && k < fi) continue;
+      if (ff && k > ff) continue;
       if (novDias[k]) continue;
       const imp = impDias[k];
       if (!imp) pendientes.push({ day: d, key: k, motivo: "sin_imputar" });
