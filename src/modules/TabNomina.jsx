@@ -2994,19 +2994,10 @@ ${body}
         const aplicarOT = (otId) => {
           const cur = {...iDias};
           cur[k] = otId;
-          // Si había novedad, quitarla (excluyentes)
-          if (currentNov) {
-            const nc = {...nDias};
-            delete nc[k];
-            const ncCounts={incapacidad:0,vacaciones:0,licencia:0,licNoRem:0,ausencia:0};
-            Object.values(nc).forEach(v=>{if(ncCounts[v]!==undefined)ncCounts[v]++;});
-            const diasRed = ncCounts.incapacidad + ncCounts.vacaciones + ncCounts.licNoRem + ncCounts.ausencia;
-            u({impDias:cur,novDias:nc,dias:Math.max(0,30-diasRed),diasIncap:ncCounts.incapacidad,diasVac:ncCounts.vacaciones,diasLicRem:ncCounts.licencia,diasLicNoRem:ncCounts.licNoRem,diasAusencia:ncCounts.ausencia});
-            const tipoMap={incapacidad:"incapacidad",vacaciones:"vacaciones",licencia:"licencia_remunerada",licNoRem:"licencia_no_remunerada",ausencia:"ausencia"};
-            fetch("/api/novelties",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({employee_id:selN.empId,fecha_inicio:k,tipo:tipoMap[currentNov]||currentNov})}).catch(()=>{});
-          } else {
-            u({impDias:cur});
-          }
+          // La imputación (centro/OT) y la novedad CONVIVEN, como un festivo: imputar
+          // solo asigna el coste del día a un centro; NO borra la novedad. Una licencia
+          // remunerada es un día pagado cuyo coste debe quedar imputado a un centro.
+          u({impDias:cur});
           setDayEditor(null);
         };
 
@@ -3030,8 +3021,9 @@ ${body}
             cursor.setDate(cursor.getDate()+1);
           }
           if(dias.length===0) dias.push(ini); // seguridad: al menos el día de inicio
-          // Aplicar el tipo a cada día y quitar imputación OT solapada (excluyentes)
-          dias.forEach(kk=>{ cur[kk]=tipoNov; if(iCur[kk]) delete iCur[kk]; });
+          // Aplicar el tipo a cada día. La imputación (centro/OT) CONVIVE con la novedad
+          // (como un festivo): no se borra al registrar una novedad.
+          dias.forEach(kk=>{ cur[kk]=tipoNov; });
           // Nota manual (motivo): se guarda por día en novNotas y se manda como motivo a hr_novelties.
           const curNotas={...(selN.novNotas||{})};
           const _nota=(notaNov||"").trim();
