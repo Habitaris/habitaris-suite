@@ -870,6 +870,7 @@ export function TabNomina(){
   const[vista,setVista]=useState("lista");
   const[subTab,setSubTab]=useState("nomina");
   const[pagoForm,setPagoForm]=useState(null); // null=hidden, {tipo:"q1"|"nomina", ref:"", soporte:null}
+  const[incluirValoresNov,setIncluirValoresNov]=useState(false); // informe novedades contador: incluir estimación de nómina
   const holidays=useMemo(()=>getHolidays(anio),[anio]);
   const festivosMes=holidays.filter(h=>h.date.getMonth()===mes);
   const [novDias,setNovDias]=useState({});  // {dayKey: novType}
@@ -1443,7 +1444,7 @@ ${tablaOTconsMonto(totCostoEmp, "Costo total imputado")}
         .then(()=>window.toast(activando?"Fichaje habilitado para este día":"Fichaje deshabilitado","success"))
         .catch(()=>window.toast("Error al guardar","error"));
     };
-    const genNovedadesHtml = () => {
+    const genNovedadesHtml = (incluirValores=false) => {
             const nDias=selN.novDias||{};
             const nNotas=selN.novNotas||{};
             const TIPO_META={incapacidad:{icon:"🏥",label:"Incapacidad EG"},vacaciones:{icon:"🏖️",label:"Vacaciones"},licencia:{icon:"📋",label:"Licencia remunerada"},licNoRem:{icon:"⚠️",label:"Licencia no remunerada"},ausencia:{icon:"❌",label:"Ausencia injustificada"}};
@@ -1548,6 +1549,24 @@ ${sinNovTxt}
 <tr><td class="cpt">Base de cotización (IBC)</td><td class="num"><span class="big">${calc.diasVinc}</span><span class="den">/30</span></td><td class="rule">${_notaIBC}</td></tr>
 </tbody></table>
 </tbody></table>
+${incluirValores?`<h2>Estimación de la nómina</h2>
+<div style="font-size:7.5pt;color:#888;margin:-2px 0 6px">Valores estimados del mes con corte a la fecha · sujetos a ajuste según novedades y soportes definitivos.</div>
+<table><thead><tr><th>Concepto</th><th style="text-align:right">Devengado</th><th style="text-align:right">Deducción</th></tr></thead><tbody>
+<tr><td>Salario (${calc.dias} d)</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.salProp)}</td><td style="text-align:right">—</td></tr>
+${calc.aux>0?`<tr><td>Auxilio de transporte (${calc.diasComm} d)</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.aux)}</td><td style="text-align:right">—</td></tr>`:""}
+${calc.bono>0?`<tr><td>Bono de asistencia (${calc.diasAsist} d)</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.bono)}</td><td style="text-align:right">—</td></tr>`:""}
+${(calc.totHex+calc.recFest)>0?`<tr><td>Horas extra y recargos</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.totHex+calc.recFest)}</td><td style="text-align:right">—</td></tr>`:""}
+<tr><td>Salud (EPS) 4%</td><td style="text-align:right">—</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.epsE)}</td></tr>
+<tr><td>Pensión 4%</td><td style="text-align:right">—</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.penE)}</td></tr>
+${calc.rteF>0?`<tr><td>Retención en la fuente</td><td style="text-align:right">—</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.rteF)}</td></tr>`:""}
+${calc.otrasDed>0?`<tr><td>Otras deducciones</td><td style="text-align:right">—</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.otrasDed)}</td></tr>`:""}
+<tr style="font-weight:700;border-top:1.5px solid #111"><td>Totales</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.dev)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.totD)}</td></tr>
+</tbody></table>
+<table><tbody>
+<tr><td>Neto del mes</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.neto)}</td></tr>
+${isQ?`<tr><td>Anticipo Q1 (pagado el 15 · se descuenta)</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.q1)}</td></tr>
+<tr style="font-weight:700;border-top:1.5px solid #111"><td>Q2 a pagar (fin de mes)</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.q2)}</td></tr>`:`<tr style="font-weight:700;border-top:1.5px solid #111"><td>Neto a pagar</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.neto)}</td></tr>`}
+</tbody></table>`:""}
 <div class="foot">Documento generado por Habitaris Suite — ${fileName} · ${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</div>
 </div>
 <div class="np">
@@ -2698,7 +2717,7 @@ ${body}
 
               // Reportes de la empresa / interempresa
               const empresa=[];
-              empresa.push({icon:"📋",label:"Informe de novedades (contador)",desc:`Festivos y novedades del mes — sin valores económicos`,gen:genNovedadesHtml});
+              empresa.push({icon:"📋",label:"Informe de novedades (contador)",desc:incluirValoresNov?`Festivos, novedades y estimación de nómina (con valores)`:`Festivos y novedades del mes — sin valores económicos`,gen:()=>genNovedadesHtml(incluirValoresNov),toggle:{on:incluirValoresNov,set:setIncluirValoresNov,label:"Incluir valores estimados"}});
               if(esPrimaMes) empresa.push({icon:"📑",label:`Liquidación provisional de prima — contadores (${semLbl} sem.)`,desc:`Cálculo estimado del semestre para validación del contador · Art. 306 CST`,gen:async()=>buildPrimaHtml({selN,prima:await calcPrimaSemestre(selN,anio,mes),anio}).html});
               empresa.push({icon:"📊",label:"Informe Mensual Completo",desc:`Cierre post-pago: salario, Q1, Q2, PILA, provisiones y reparto por centro`,gen:genImputaciónesHtml});
               // Nota de Reembolso Q1 retirada: el reparto por centro ya está en el Informe Mensual Completo.
@@ -2717,7 +2736,14 @@ ${body}
                     <div style={{fontSize:13,fontWeight:700,color:T.ink}}>{d.label}</div>
                     <div style={{fontSize:10,color:T.inkLight,marginTop:1}}>{d.desc}</div>
                   </div>
-                  <div style={{display:"flex",gap:6}}>
+                  <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                    {d.toggle&&(
+                      <div onClick={e=>{e.stopPropagation();d.toggle.set(!d.toggle.on);}}
+                        style={{display:"flex",alignItems:"center",gap:6,fontSize:10,color:T.inkMid,cursor:"pointer",userSelect:"none",marginRight:4}}>
+                        <div style={{width:15,height:15,borderRadius:3,border:`1.5px solid ${d.toggle.on?T.ink:T.inkXLight}`,background:d.toggle.on?T.ink:"#fff",display:"flex",alignItems:"center",justifyContent:"center",color:"#fff",fontSize:9,fontWeight:700,lineHeight:1}}>{d.toggle.on?"✓":""}</div>
+                        {d.toggle.label}
+                      </div>
+                    )}
                     <div style={{fontSize:11,fontWeight:600,color:T.ink,background:T.accent,borderRadius:4,padding:"6px 14px"}}>👁 Ver</div>
                   </div>
                 </div>
