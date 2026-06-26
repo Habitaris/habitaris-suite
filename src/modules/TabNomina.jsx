@@ -2622,8 +2622,8 @@ ${body}
 
               // Reportes de la empresa / interempresa
               const empresa=[];
-              if(esPrimaMes) empresa.push({icon:"📑",label:`Liquidación provisional de prima — contadores (${semLbl} sem.)`,desc:`Cálculo estimado del semestre para validación del contador · Art. 306 CST`,gen:async()=>buildPrimaHtml({selN,prima:await calcPrimaSemestre(selN,anio,mes),anio}).html});
               empresa.push({icon:"📋",label:"Informe de novedades (contador)",desc:`Festivos y novedades del mes — sin valores económicos`,gen:genNovedadesHtml});
+              if(esPrimaMes) empresa.push({icon:"📑",label:`Liquidación provisional de prima — contadores (${semLbl} sem.)`,desc:`Cálculo estimado del semestre para validación del contador · Art. 306 CST`,gen:async()=>buildPrimaHtml({selN,prima:await calcPrimaSemestre(selN,anio,mes),anio}).html});
               empresa.push({icon:"📊",label:"Informe Mensual Completo",desc:`Cierre post-pago: salario, Q1, Q2, PILA, provisiones y reparto por centro`,gen:genImputaciónesHtml});
               if(!isMensual&&q1Listo) empresa.push({icon:"💸",label:"Nota de Reembolso Q1 (interempresa)",desc:`Reparto anticipo Q1 por centro · enviar al centro destinatario`,gen:genNotaReembolsoQ1Html});
 
