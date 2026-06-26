@@ -1678,25 +1678,9 @@ ${tablaHtml}
             const fmtCurr = v => new Intl.NumberFormat(getTenantDefaultsSync().locale,{style:"currency",currency:"COP",maximumFractionDigits:0}).format(v||0);
             // Prima de servicios del semestre: total + reparto por centro (solo jun/dic).
             // El desglose mes a mes NO va aquí (está en el informe de liquidación provisional de prima).
+            // La prima se reparte por centro mas abajo (tras calcular otsMes), con el
+            // MISMO criterio que el sueldo. Aqui solo se declara el bloque.
             let primaSemBlock = "";
-            if (mes === 5 || mes === 11) {
-              const ps = await calcPrimaSemestre(selN, anio, mes);
-              const rep = selN.primaReparto || {};
-              const cEmp = (centros||[]).filter(c => (c.empleados||[]).includes(selN.empId) || (c.calendarios||[]).some(cal=>(cal.empleados||[]).includes(selN.empId)));
-              const repRows = cEmp.map(c=>({codigo:c.codigo, nombre:c.nombre||"", dias:Number(rep[c.id]||0)})).filter(x=>x.dias>0);
-              const totDiasRep = repRows.reduce((s,x)=>s+x.dias,0);
-              const repartoTabla = repRows.length ? `<h3 style="font-size:8pt;margin:6px 0 3px;color:#666">Reparto de la prima por centro de trabajo (días ene–jun)</h3>
-<table style="margin-bottom:6px"><thead><tr><th>CT</th><th>Centro / Proyecto</th><th style="text-align:right">Días</th><th style="text-align:right">%</th><th style="text-align:right">Prima</th></tr></thead><tbody>
-${repRows.map(x=>{const pct=totDiasRep>0?x.dias/totDiasRep*100:0;return `<tr class="imp"><td><b>${x.codigo}</b></td><td>${x.nombre}</td><td style="text-align:right"><b>${x.dias}</b></td><td style="text-align:right">${pct.toFixed(1)}%</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima*pct/100)}</b></td></tr>`;}).join("")}
-<tr style="border-top:1.5px solid #111;font-weight:700"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right"><b>${totDiasRep}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima)}</b></td></tr>
-</tbody></table>` : `<div style="font-size:7.5pt;color:#999;border:1px solid #ddd;border-left:3px solid #111;padding:6px 8px;margin:4px 0">Indica los días del semestre (ene–jun) por centro en el liquidador (tarjeta "Prima · días por centro") para ver el reparto.</div>`;
-              primaSemBlock = `<h2>5b. 🎁 PRIMA DE SERVICIOS DEL SEMESTRE</h2>
-<div class="kv"><div class="l">Base (salario ${fmtCurr(ps.sal)} + aux. transporte ${fmtCurr(ps.aux)})</div><div class="v">${fmtCurr(ps.base)}</div></div>
-<div class="kv"><div class="l">Días computados en el semestre (base 360)</div><div class="v">${ps.diasTotal} d</div></div>
-<div class="kv bigtot"><div class="l">PRIMA A PAGAR (base × ${ps.diasTotal} ÷ 360)</div><div class="v">${fmtCurr(ps.prima)}</div></div>
-${repartoTabla}
-<div style="font-size:7pt;color:#999;margin:4px 0 8px">El desglose mes a mes de la prima está en el informe de liquidación provisional de prima (Art. 306 CST).</div>`;
-            }
             const iDias = selN.impDias || {};
             const nDias = selN.novDias || {};
             const esQuincenal = (selN.modalidadPago || "quincenal") === "quincenal";
@@ -1880,6 +1864,22 @@ ${repartoTabla}
               h += `</tbody></table>`;
               return h;
             };
+
+            // === PRIMA DE SERVICIOS: reparto por centro con el MISMO criterio que el sueldo ===
+            // Usa otsMes (la imputación del mes, idéntica al reparto del sueldo) para repartir
+            // la prima del semestre. Sin entrada manual.
+            if (mes === 5 || mes === 11) {
+              const ps = await calcPrimaSemestre(selN, anio, mes);
+              const repartoPrima = otsMes.length
+                ? `<h3 style="font-size:8pt;margin:6px 0 3px;color:#666">Reparto de la prima por centro (mismo criterio que el sueldo)</h3>${tablaOTs(otsMes, ps.prima, "Prima")}`
+                : "";
+              primaSemBlock = `<h2>5b. 🎁 PRIMA DE SERVICIOS DEL SEMESTRE</h2>
+<div class="kv"><div class="l">Base (salario ${fmtCurr(ps.sal)} + aux. transporte ${fmtCurr(ps.aux)})</div><div class="v">${fmtCurr(ps.base)}</div></div>
+<div class="kv"><div class="l">Días computados en el semestre (base 360)</div><div class="v">${ps.diasTotal} d</div></div>
+<div class="kv bigtot"><div class="l">PRIMA A PAGAR (base × ${ps.diasTotal} ÷ 360)</div><div class="v">${fmtCurr(ps.prima)}</div></div>
+${repartoPrima}
+<div style="font-size:7pt;color:#999;margin:4px 0 8px">El desglose mes a mes de la prima está en el informe de liquidación provisional de prima (Art. 306 CST).</div>`;
+            }
 
             // Listas para el bloque 0: festivos del mes, novedades del mes
             const festListInforme = festivosMes.map(h => {
@@ -2530,16 +2530,6 @@ ${body}
                   Sal: {selN.dias}d · Asist: {(selN.dias||30)-(selN.festMes||0)}d · Fest: {selN.festMes||0}d
                 </div>
               </Card>
-              {(mes===5||mes===11)&&(()=>{
-                const cEmp=(centros||[]).filter(c=>(c.empleados||[]).includes(selN.empId)||(c.calendarios||[]).some(cal=>(cal.empleados||[]).includes(selN.empId)));
-                if(!cEmp.length)return null;
-                return <Card accent={T.ink}><STit>Prima · días por centro</STit>
-                  {cEmp.map(c=>(
-                    <Inp key={c.id} label={`${c.codigo} (ene–jun)`} type="number" value={(selN.primaReparto||{})[c.id]||0} onChange={v=>u({primaReparto:{...(selN.primaReparto||{}),[c.id]:Number(v)||0}})} suf="días" small disabled={!ed}/>
-                  ))}
-                  <div style={{fontSize:9,color:T.inkLight,marginTop:4}}>Días en cada centro de enero a junio. De aquí salen el % y el valor de la prima por centro en el Informe Mensual Completo.</div>
-                </Card>;
-              })()}
               <Card accent={T.purple}><STit>Horas extra</STit>
                 <Inp label="HE diurna (×1.25)" type="number" value={selN.hexD||0} onChange={v=>u({hexD:v})} suf="h" small disabled={!ed}/>
                 <Inp label="HE nocturna (×1.75)" type="number" value={selN.hexN||0} onChange={v=>u({hexN:v})} suf="h" small disabled={!ed}/>
