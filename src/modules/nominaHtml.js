@@ -158,6 +158,11 @@ export function buildPrimaHtml({ selN, prima, anio }) {
     return `<tr><td><b>${MESES[m.mes]}</b></td><td class="c">${dv}</td><td class="c">${nov.length?nov.join(", "):"—"}</td><td class="c"><b>${m.diasPrima}</b></td><td class="c">${m.diasAux}</td></tr>`;
   }).join("");
 
+  const totIncap = (prima.meses||[]).reduce((s,x)=>s+(x.incap||0),0);
+  const totLicRem = (prima.meses||[]).reduce((s,x)=>s+(x.licRem||0),0);
+  const totAus = (prima.meses||[]).reduce((s,x)=>s+(x.ausencias||0),0);
+  const totLicNoRem = (prima.meses||[]).reduce((s,x)=>s+(x.licNoRem||0),0);
+
   const bodyHtml = `<h1>Liquidación provisional de prima de servicios</h1>
   <div class="sub">${semLabel} · ${anio} · Art. 306 del Código Sustantivo del Trabajo</div>
   <div class="forwho">Documento de cálculo estimado para revisión y validación del área contable.</div>
@@ -182,14 +187,20 @@ export function buildPrimaHtml({ selN, prima, anio }) {
       <tr class="ttot"><td>TOTAL</td><td class="c"></td><td class="c"></td><td class="c">${prima.diasTotal}</td><td class="c">${prima.diasAux}</td></tr>
     </tbody>
   </table>
+  <div class="mini" style="margin-top:7px;line-height:1.6">
+    <b>Cómo se cuentan los días</b><br/>
+    · <b>Días de salario</b> = días de vinculación − ausencias (${totAus}) − licencias no remuneradas (${totLicNoRem}) = <b>${prima.diasTotal}</b><br/>
+    · <b>Días de auxilio</b> = días de salario − incapacidades (${totIncap}) − licencias remuneradas (${totLicRem}) = ${prima.diasTotal} − ${totIncap+totLicRem} = <b>${prima.diasAux}</b><br/>
+    El auxilio de transporte no se causa durante incapacidad ni licencia remunerada (no hay desplazamiento), aunque esos días sí cuentan para el salario base.
+  </div>
 
   <h2>Cálculo de la prima</h2>
   <table>
-    <thead><tr><th>Concepto</th><th class="c">Valor mensual</th><th class="c">Días</th><th class="r">Prima</th></tr></thead>
+    <thead><tr><th>Concepto</th><th class="c">Valor mensual</th><th class="c">Días</th><th class="c">Fórmula</th><th class="r">Prima</th></tr></thead>
     <tbody>
-      <tr><td>Salario</td><td class="c">${fmt(prima.sal)}</td><td class="c">${prima.diasTotal}</td><td class="r">${fmt(prima.primaSal)}</td></tr>
-      ${prima.aux>0?`<tr><td>Auxilio de transporte</td><td class="c">${fmt(prima.aux)}</td><td class="c">${prima.diasAux}</td><td class="r">${fmt(prima.primaAux)}</td></tr>`:""}
-      <tr class="ttot"><td>TOTAL PRIMA</td><td class="c"></td><td class="c"></td><td class="r">${fmt(prima.prima)}</td></tr>
+      <tr><td>Salario</td><td class="c">${fmt(prima.sal)}</td><td class="c">${prima.diasTotal}</td><td class="c">${fmt(prima.sal)} × ${prima.diasTotal} ÷ 360</td><td class="r">${fmt(prima.primaSal)}</td></tr>
+      ${prima.aux>0?`<tr><td>Auxilio de transporte</td><td class="c">${fmt(prima.aux)}</td><td class="c">${prima.diasAux}</td><td class="c">${fmt(prima.aux)} × ${prima.diasAux} ÷ 360</td><td class="r">${fmt(prima.primaAux)}</td></tr>`:""}
+      <tr class="ttot"><td>TOTAL PRIMA</td><td class="c"></td><td class="c"></td><td class="c"></td><td class="r">${fmt(prima.prima)}</td></tr>
     </tbody>
   </table>
 
