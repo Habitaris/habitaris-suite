@@ -2608,39 +2608,54 @@ ${body}
           <Card accent={T.ink}>
             <STit>📊 Reportes y documentos</STit>
             <div style={{fontSize:11,color:T.inkLight,marginBottom:14}}>{selN.nombre} — {MESES[mes]} {anio}</div>
-            {[
-              ...(selN.modalidadPago!=="mensual"?[
-                {icon:"📋",label:"Justificante de anticipo",desc:`Anticipo ${fmt(calc.q1)} · 15 de ${MESES[mes]}`,action:"anticipo"},
-                ...((selN.estado==="q1_pagado"||selN.estado==="pagada"||selN.estado==="liquidada")?[
-                  {icon:"💸",label:"Nota de Reembolso Q1 (interempresa)",desc:`Reparto anticipo Q1 por centro · enviar al centro destinatario`,gen:genNotaReembolsoQ1Html},
-                ]:[]),
-              ]:[]),
-              {icon:"📄",label:"Nómina",desc:`Devengado ${fmt(calc.dev)} · Deducciones ${fmt(calc.totD)} · Neto ${fmt(calc.neto)}`,action:"nomina"},
-              {icon:"📋",label:"Informe de novedades (contador)",desc:`Festivos y novedades del mes (incapacidades, vacaciones, licencias, ausencias) — sin valores económicos`,gen:genNovedadesHtml},
-              {icon:"📊",label:"Informe Mensual Completo",desc:`Cierre post-pago: salario, Q1, Q2, PILA, provisiones y reparto por centro (todo en uno)`,gen:genImputaciónesHtml},
-              ...((mes===5||mes===11)?[
-                {icon:"📑",label:`Liquidación prima — contadores (${mes===5?"1.º":"2.º"} sem.)`,desc:`Cálculo estimado del semestre para validación del contador · base (salario + aux. transporte) × días ÷ 360 · Art. 306 CST`,gen:async()=>buildPrimaHtml({selN,prima:await calcPrimaSemestre(selN,anio,mes),anio}).html},
-                {icon:"🎁",label:`Justificante de prima — trabajadora (${mes===5?"1.º":"2.º"} sem.)`,desc:`Comprobante del pago de la prima para la trabajadora (recibí conforme)`,gen:async()=>buildPrimaJustificanteHtml({selN,prima:await calcPrimaSemestre(selN,anio,mes),anio,refBancaria:(soportesPago[selN.empId+":prima"]||{}).ref}).html},
-              ]:[]),
-            ].map((d,i)=>(
-              <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
-                onClick={async()=>{
-                  const r = d.gen ? d.gen() : buildNominaHtml({ selN, calc, anio, mes, tipo:d.action, refBancaria:selN.refPago||null }).html;
-                  const html = (r && typeof r.then === "function") ? await r : r;
-                  if (html) openReport(html);
-                }}
-                onMouseEnter={e=>e.currentTarget.style.borderColor=T.ink}
-                onMouseLeave={e=>e.currentTarget.style.borderColor=T.border}>
-                <div style={{fontSize:22,width:36,textAlign:"center"}}>{d.icon}</div>
-                <div style={{flex:1}}>
-                  <div style={{fontSize:13,fontWeight:700,color:T.ink}}>{d.label}</div>
-                  <div style={{fontSize:10,color:T.inkLight,marginTop:1}}>{d.desc}</div>
+            {(()=>{
+              const isMensual = selN.modalidadPago==="mensual";
+              const esPrimaMes = (mes===5||mes===11);
+              const q1Listo = (selN.estado==="q1_pagado"||selN.estado==="pagada"||selN.estado==="liquidada");
+              const semLbl = mes===5?"1.º":"2.º";
+
+              // Reportes del trabajador — ordenados por flujo de pago: anticipo Q1 → prima → Q2/nómina
+              const trabajador=[];
+              if(!isMensual) trabajador.push({icon:"📋",label:"Justificante de anticipo Q1",desc:`Anticipo ${fmt(calc.q1)} · 15 de ${MESES[mes]}`,action:"anticipo"});
+              if(esPrimaMes) trabajador.push({icon:"🎁",label:`Justificante de prima (${semLbl} sem.)`,desc:`Comprobante del pago de la prima para la trabajadora (recibí conforme)`,gen:async()=>buildPrimaJustificanteHtml({selN,prima:await calcPrimaSemestre(selN,anio,mes),anio,refBancaria:(soportesPago[selN.empId+":prima"]||{}).ref}).html});
+              trabajador.push({icon:"📄",label:isMensual?"Nómina mensual":"Nómina · Q2",desc:`Devengado ${fmt(calc.dev)} · Deducciones ${fmt(calc.totD)} · Neto ${fmt(calc.neto)}`,action:"nomina"});
+
+              // Reportes de la empresa / interempresa
+              const empresa=[];
+              if(esPrimaMes) empresa.push({icon:"📑",label:`Liquidación provisional de prima — contadores (${semLbl} sem.)`,desc:`Cálculo estimado del semestre para validación del contador · Art. 306 CST`,gen:async()=>buildPrimaHtml({selN,prima:await calcPrimaSemestre(selN,anio,mes),anio}).html});
+              empresa.push({icon:"📋",label:"Informe de novedades (contador)",desc:`Festivos y novedades del mes — sin valores económicos`,gen:genNovedadesHtml});
+              empresa.push({icon:"📊",label:"Informe Mensual Completo",desc:`Cierre post-pago: salario, Q1, Q2, PILA, provisiones y reparto por centro`,gen:genImputaciónesHtml});
+              if(!isMensual&&q1Listo) empresa.push({icon:"💸",label:"Nota de Reembolso Q1 (interempresa)",desc:`Reparto anticipo Q1 por centro · enviar al centro destinatario`,gen:genNotaReembolsoQ1Html});
+
+              const Row=(d,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
+                  onClick={async()=>{
+                    const r = d.gen ? d.gen() : buildNominaHtml({ selN, calc, anio, mes, tipo:d.action, refBancaria:selN.refPago||null }).html;
+                    const html = (r && typeof r.then === "function") ? await r : r;
+                    if (html) openReport(html);
+                  }}
+                  onMouseEnter={e=>e.currentTarget.style.borderColor=T.ink}
+                  onMouseLeave={e=>e.currentTarget.style.borderColor=T.border}>
+                  <div style={{fontSize:22,width:36,textAlign:"center"}}>{d.icon}</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:13,fontWeight:700,color:T.ink}}>{d.label}</div>
+                    <div style={{fontSize:10,color:T.inkLight,marginTop:1}}>{d.desc}</div>
+                  </div>
+                  <div style={{display:"flex",gap:6}}>
+                    <div style={{fontSize:11,fontWeight:600,color:T.ink,background:T.accent,borderRadius:4,padding:"6px 14px"}}>👁 Ver</div>
+                  </div>
                 </div>
-                <div style={{display:"flex",gap:6}}>
-                  <div style={{fontSize:11,fontWeight:600,color:T.ink,background:T.accent,borderRadius:4,padding:"6px 14px"}}>👁 Ver</div>
+              );
+              const SecTitle=(t)=>(<div style={{fontSize:11,fontWeight:700,color:T.inkLight,textTransform:"uppercase",letterSpacing:"0.05em",margin:"2px 0 10px"}}>{t}</div>);
+              return (<>
+                {SecTitle("Reportes del trabajador")}
+                {trabajador.map(Row)}
+                <div style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${T.border}`}}>
+                  {SecTitle("Reportes de la empresa / interempresa")}
+                  {empresa.map(Row)}
                 </div>
-              </div>
-            ))}
+              </>);
+            })()}
             {(()=>{
               const tipos=[{k:"anticipo",lbl:"Justificante de pago — Anticipo Q1"},{k:"nomina",lbl:"Justificante de pago — Nómina/Q2"},{k:"prima",lbl:"Justificante de pago — Prima de servicios"}];
               const items=tipos.map(t=>({...t,sop:soportesPago[selN.empId+":"+t.k]})).filter(t=>t.sop&&t.sop.data);
