@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { HAB_LOGO } from "./habLogo.js";
 import {  getTenantUrlsSync, getTenantIdentitySync, getLegalConstantsSync, getActiveCompanyLegalDataSync } from "../core/configHelpers.js";
 import { downloadPDF } from "./pdfUtil.js";
-import { buildNominaHtml, buildPrimaHtml } from "./nominaHtml.js";
+import { buildNominaHtml, buildPrimaHtml, buildPrimaJustificanteHtml } from "./nominaHtml.js";
 import { BannerPagos } from "./BannerPagos.jsx";
 import { condicionVigente } from "./condicionesHelper.js";
 import DashboardTrabajadorAnio from "./DashboardTrabajadorAnio.jsx";
@@ -689,7 +689,7 @@ td{padding:4px 8px;border-bottom:1px solid #ddd}.r{text-align:right;font-family:
 .foot{font-size:6pt;color:#999;text-align:center;margin-top:14px;clear:both}
 .fullpage{display:flex;flex-direction:column;min-height:1123px}
 .fullpage .cierre{margin-top:auto;clear:both}
-.cierre p{margin-bottom:26px}
+.cierre p{margin-bottom:55px}
 .np{text-align:center;margin:16px auto;max-width:794px}
 .btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
 .btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
@@ -2170,14 +2170,18 @@ ${body}
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8,flexWrap:"wrap"}}>
           <Btn onClick={()=>{setVista("lista");setSubTab("nomina");}}>← Volver</Btn>
           <div style={{flex:1,minWidth:240}}>
-            <div style={{fontSize:16,fontWeight:700,lineHeight:1.2}}>{selN.nombre}</div>
-            <div style={{fontSize:11,color:T.inkLight,marginTop:2}}>{selN.cargo} · {selN.cc} · {MESES[mes]} {anio} · <span style={{fontWeight:600,color:selN.modalidadPago==="mensual"?T.ink:T.blue}}>{selN.modalidadPago==="mensual"?"Pago mensual":"Pago quincenal"}</span></div>
+            <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+              <div style={{fontSize:16,fontWeight:700,lineHeight:1.2}}>{selN.nombre}</div>
+              <span style={{fontSize:12,fontWeight:700,color:T.green,background:T.greenBg,border:`1px solid ${T.green}`,borderRadius:6,padding:"2px 10px"}}>{MESES[mes]} {anio}</span>
+            </div>
+            <div style={{fontSize:11,color:T.inkLight,marginTop:2}}>{selN.cargo} · {selN.cc} · <span style={{fontWeight:600,color:selN.modalidadPago==="mensual"?T.ink:T.blue}}>{selN.modalidadPago==="mensual"?"Pago mensual":"Pago quincenal"}</span></div>
           </div>
           <EstadoPills n={selN}/>
           <Btn pri small onClick={guardar} disabled={guard}>{guard?"…":"💾 Guardar"}</Btn>
           {isQ&&selN.estado==="borrador"&&<Btn small disabled={periodoQ1.count > 0} onClick={()=>{if(periodoQ1.count > 0){alert("⚠️ Quedan "+periodoQ1.count+" día(s) pendientes en la primera quincena (1-15). Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"q1",ref:sugerirRef("q1"),soporte:null});}}>💵 Pagar Q1 (anticipo)</Btn>}
           {isQ&&selN.estado==="q1_pagado"&&<Btn pri small disabled={periodoQ2.count > 0} onClick={()=>{if(periodoQ2.count > 0){alert("⚠️ Quedan "+periodoQ2.count+" día(s) pendientes en la segunda quincena. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:sugerirRef("nomina"),soporte:null});}}>💵 Pagar Q2 (liquidar)</Btn>}
           {!isQ&&selN.estado==="borrador"&&<Btn pri small disabled={periodoMes.count > 0} onClick={()=>{if(periodoMes.count > 0){alert("⚠️ Quedan "+periodoMes.count+" día(s) pendientes en el mes. Imputa una OT o registra novedad antes de liquidar.");return;}setPagoForm({tipo:"nomina",ref:sugerirRef("nomina"),soporte:null});}}>💵 Pagar nómina</Btn>}
+          {(mes===5||mes===11)&&!(soportesPago[selN.empId+":prima"]&&soportesPago[selN.empId+":prima"].data)&&<Btn pri small onClick={async()=>{const ps=await calcPrimaSemestre(selN,anio,mes);setPagoForm({tipo:"prima",ref:sugerirRef("prima"),soporte:null,monto:ps.prima});}}>🎁 Pagar prima</Btn>}
           {(selN.estado==="q1_pagado"||selN.estado==="liquidada"||selN.estado==="pagada")&&selN.refPago&&<span style={{fontSize:9,color:T.inkLight,padding:"4px 8px",background:T.accent,borderRadius:4,display:"inline-flex",alignItems:"center",gap:6}}>Ref: {selN.refPago}<button type="button" title="Copiar referencia" onClick={()=>{navigator.clipboard.writeText(selN.refPago).then(()=>window.toast("Referencia copiada","success")).catch(()=>window.toast("No se pudo copiar","error"));}} style={{border:"none",background:"none",cursor:"pointer",fontSize:11,padding:0,lineHeight:1}}>📋</button></span>}
           <Btn small onClick={()=>{(()=>{const u=getTenantUrlsSync();const id=getTenantIdentitySync();window.open("https://wa.me/?text="+encodeURIComponent(id.displayName+"\n\n👤 Portal del empleado:\n"+u.portalEmpleado+"\n\nIngresa tu cédula y PIN (últimos 4 dígitos de tu cédula)"),"_blank");})();}}>💬 Link empleados</Btn>
         </div>
@@ -2615,7 +2619,8 @@ ${body}
               {icon:"📋",label:"Informe de novedades (contador)",desc:`Festivos y novedades del mes (incapacidades, vacaciones, licencias, ausencias) — sin valores económicos`,gen:genNovedadesHtml},
               {icon:"📊",label:"Informe Mensual Completo",desc:`Cierre post-pago: salario, Q1, Q2, PILA, provisiones y reparto por centro (todo en uno)`,gen:genImputaciónesHtml},
               ...((mes===5||mes===11)?[
-                {icon:"🎁",label:`Prima de servicios (${mes===5?"1.º":"2.º"} semestre)`,desc:`Liquidación del semestre · base (salario + aux. transporte) × días ÷ 360 · Art. 306 CST`,gen:async()=>buildPrimaHtml({selN,prima:await calcPrimaSemestre(selN,anio,mes),anio}).html},
+                {icon:"📑",label:`Liquidación prima — contadores (${mes===5?"1.º":"2.º"} sem.)`,desc:`Cálculo estimado del semestre para validación del contador · base (salario + aux. transporte) × días ÷ 360 · Art. 306 CST`,gen:async()=>buildPrimaHtml({selN,prima:await calcPrimaSemestre(selN,anio,mes),anio}).html},
+                {icon:"🎁",label:`Justificante de prima — trabajadora (${mes===5?"1.º":"2.º"} sem.)`,desc:`Comprobante del pago de la prima para la trabajadora (recibí conforme)`,gen:async()=>buildPrimaJustificanteHtml({selN,prima:await calcPrimaSemestre(selN,anio,mes),anio,refBancaria:(soportesPago[selN.empId+":prima"]||{}).ref}).html},
               ]:[]),
             ].map((d,i)=>(
               <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
@@ -2636,22 +2641,6 @@ ${body}
                 </div>
               </div>
             ))}
-            {/* Pago de la prima de servicios (jun/dic): subir comprobante, igual que la nómina */}
-            {(mes===5||mes===11)&&(()=>{
-              const primaPagada=!!(soportesPago[selN.empId+":prima"]&&soportesPago[selN.empId+":prima"].data);
-              return (
-                <div style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:primaPagada?"#F0FDF4":"#FFFBEB",border:`1px solid ${primaPagada?"#BBF7D0":"#F4D85E"}`,borderRadius:8,marginBottom:8}}>
-                  <div style={{fontSize:22,width:36,textAlign:"center"}}>🎁</div>
-                  <div style={{flex:1}}>
-                    <div style={{fontSize:13,fontWeight:700,color:T.ink}}>Pago de la prima de servicios</div>
-                    <div style={{fontSize:10,color:T.inkLight,marginTop:1}}>{primaPagada?"Prima pagada · el comprobante aparece abajo":"Registra el pago y adjunta el comprobante de la transferencia"}</div>
-                  </div>
-                  {primaPagada
-                    ? <div style={{fontSize:11,fontWeight:700,color:T.green,padding:"6px 14px"}}>✓ Pagada</div>
-                    : <button onClick={async()=>{const ps=await calcPrimaSemestre(selN,anio,mes);setPagoForm({tipo:"prima",ref:sugerirRef("prima"),soporte:null,monto:ps.prima});}} style={{fontSize:11,fontWeight:600,color:"#fff",background:T.ink,border:"none",borderRadius:4,padding:"6px 14px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>🎁 Pagar prima</button>}
-                </div>
-              );
-            })()}
             {(()=>{
               const tipos=[{k:"anticipo",lbl:"Justificante de pago — Anticipo Q1"},{k:"nomina",lbl:"Justificante de pago — Nómina/Q2"},{k:"prima",lbl:"Justificante de pago — Prima de servicios"}];
               const items=tipos.map(t=>({...t,sop:soportesPago[selN.empId+":"+t.k]})).filter(t=>t.sop&&t.sop.data);

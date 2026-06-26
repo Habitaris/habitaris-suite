@@ -185,3 +185,31 @@ export function buildPrimaHtml({ selN, prima, anio }) {
 
   return { fileName, html };
 }
+
+// Justificante de pago de la PRIMA para la trabajadora (estilo del justificante de anticipo/nómina:
+// A5, cabecera estándar, total pagado y firma "recibí conforme"). Documento real para la empleada,
+// distinto del informe estimado para contadores (buildPrimaHtml).
+export function buildPrimaJustificanteHtml({ selN, prima, anio, refBancaria }) {
+  const sem = prima.semestre;
+  const semLabel = sem === 1 ? "1.º semestre (enero–junio)" : "2.º semestre (julio–diciembre)";
+  const fechaPago = sem === 1 ? `30 de junio de ${anio}` : `20 de diciembre de ${anio}`;
+  const a2 = String(anio).slice(-2);
+  const ape = (selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
+  const fileName = `JUST-PRIMA-S${sem}${a2}-${ape}`;
+  const leg = getActiveCompanyLegalDataSync();
+  const loc = getTenantDefaultsSync().locale;
+
+  const bodyHtml = `<h1>Justificante de pago — Prima de servicios</h1>
+  <div class="sub">${semLabel} · ${anio}</div>
+  <div class="info"><div><span>Nombre: </span><b>${selN.nombre}</b></div><div><span>Documento: </span><b>${selN.cc}</b></div><div><span>Cargo: </span>${selN.cargo}</div><div><span>Contrato: </span>${selN.tipoContrato||"fijo"}</div><div><span>Período: </span><b>${semLabel}</b></div><div><span>Fecha de pago: </span><b>${fechaPago}</b></div></div>
+  <table><tbody><tr class="liq"><td>Prima de servicios pagada</td><td class="r"></td><td class="r">${fmt(prima.prima)}</td></tr></tbody></table>
+  ${refBancaria?`<div style="font-size:8pt;color:#166534;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:3px;padding:6px 10px;margin:8px 0">Pagado con referencia: <b>${refBancaria}</b></div>`:""}
+  <div style="font-size:7pt;color:#999;margin:10px 0">Art. 306 CST. Prima de servicios proporcional al tiempo laborado en el semestre.</div>
+  <div class="sig"><div><div class="line"></div><div class="name">${leg.legalName||""}</div><div class="role">Administración de personal</div></div><div><div class="line"></div><div class="name">${selN.nombre}</div><div class="role">Recibí conforme</div></div></div>`;
+
+  const css = `@page{size:A5 portrait;margin:8mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#e8e8e8;padding:20px 0}#content{background:#fff;width:560px;margin:0 auto;padding:40px 50px;font-size:8.5pt;color:#333;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,.1)}.hdr{padding-bottom:12px;margin-bottom:16px;border-bottom:1px solid #ddd;overflow:hidden}.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:7.5pt;color:#999;padding-top:12px}.hdr img{height:46px}h1{font-size:10pt;font-weight:600;text-align:center;margin:10px 0 4px;letter-spacing:.3px;clear:both}.sub{text-align:center;font-size:7.5pt;color:#999;margin-bottom:14px}.info{margin-bottom:14px;font-size:8pt;overflow:hidden;border:1px solid #eee;border-radius:3px;padding:8px 12px}.info div{float:left;width:50%;padding:2px 0;color:#555}.info span{color:#999}.info b{color:#333}table{width:100%;border-collapse:collapse;font-size:8pt;clear:both;margin-bottom:4px}td{padding:4px 8px;border-bottom:1px solid #f2f2f2;color:#444}.r{text-align:right;font-family:'SF Mono',Menlo,monospace;font-size:8pt}.liq td{border-top:2px solid #333;border-bottom:none;font-weight:700;color:#111;padding:8px;font-size:9pt}.sig{margin-top:48px;overflow:hidden;padding:0 20px}.sig>div{float:left;width:44%;text-align:center}.sig>div:last-child{float:right}.sig .line{border-top:1px solid #999;margin-bottom:6px}.sig .name{font-size:8pt;font-weight:600;color:#333}.sig .role{font-size:7pt;color:#999;margin-top:1px}.foot{font-size:6pt;color:#bbb;text-align:center;margin-top:20px;clear:both;letter-spacing:.3px}.np{text-align:center;margin:16px auto;max-width:560px}.btn{background:#333;color:#fff;border:none;padding:8px 20px;border-radius:3px;cursor:pointer;font-size:10pt;font-weight:500;margin:0 4px;font-family:inherit}@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:8mm 10mm;box-shadow:none}}`;
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title><script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script><style>${css}</style></head><body><div id="content"><div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="${leg.legalName||"Habitaris"}"/></div><div class="r"><div style="font-weight:600;color:#111">${leg.legalName||""}</div><div>NIT: ${leg.taxId||""}</div></div></div>${bodyHtml}<div class="foot">Habitaris Suite · ${new Date().toLocaleDateString(loc)} · ${fileName}</div></div><div class="np"><button class="btn" onclick="(function(){var el=document.getElementById('content');document.querySelector('.np').style.display='none';el.style.boxShadow='none';html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#fff'}).then(function(c){var img=c.toDataURL('image/jpeg',0.98);var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:[148,210]});var w=148,h=(c.height*w)/c.width,pageH=210;if(h<=pageH){pdf.addImage(img,'JPEG',0,0,w,h);}else{var yOff=0;while(yOff<h){pdf.addImage(img,'JPEG',0,-yOff,w,h);yOff+=pageH;if(yOff<h)pdf.addPage([148,210],'portrait');}}pdf.save('${fileName}.pdf');el.style.boxShadow='0 1px 4px rgba(0,0,0,.1)';document.querySelector('.np').style.display='';})})()">📥 Descargar PDF en A5</button></div></body></html>`;
+
+  return { fileName, html };
+}
