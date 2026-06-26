@@ -1873,9 +1873,9 @@ ${tablaHtml}
               const ps = await calcPrimaSemestre(selN, anio, mes);
               const semMeses = mes <= 5 ? [0,1,2,3,4,5] : [6,7,8,9,10,11];
               const holsAnio = getHolidays(anio);
-              const NOV_NEG = new Set(["ausencia", "licNoRem"]);
+              const NOV_NEG = new Set(["ausencia", "licNoRem"]);  // no remuneradas: restan del total
               const accP = {};
-              const bumpP = (cid, tipo, d) => { if (!accP[cid]) accP[cid] = {trab:0, fest:0, nov:0, total:0}; accP[cid][tipo] += d; accP[cid].total += d; };
+              const bumpP = (cid, tipo, signo) => { if (!accP[cid]) accP[cid] = {trab:0, fest:0, nov:0, aus:0, total:0}; accP[cid][tipo] += 1; accP[cid].total += signo; };
               for (const mm of semMeses) {
                 let arr;
                 if (mm === mes) { arr = [selN]; }
@@ -1887,26 +1887,26 @@ ${tablaHtml}
                 const festM = holsAnio.filter(h => h.date.getMonth() === mm);
                 const vis = new Set();
                 const cDe = (k) => { const im = impM[k]; return (im && im !== "__conflicto__") ? im : centroBaseParaFecha(k); };
-                Object.entries(novM).forEach(([k, t]) => { if (t === "normal") return; const c = cDe(k); if (!c) return; bumpP(c, "nov", NOV_NEG.has(t) ? -1 : 1); vis.add(k); });
+                Object.entries(novM).forEach(([k, t]) => { if (t === "normal") return; const c = cDe(k); if (!c) return; if (NOV_NEG.has(t)) bumpP(c, "aus", -1); else bumpP(c, "nov", 1); vis.add(k); });
                 festM.forEach(h => { const k = fechaAStr(h.date); if (vis.has(k)) return; const c = cDe(k); if (c) { bumpP(c, "fest", 1); vis.add(k); } });
                 Object.entries(impM).forEach(([k, c]) => { if (!c || c === "__conflicto__") return; if (vis.has(k)) return; bumpP(c, "trab", 1); vis.add(k); });
               }
               const totPD = Object.values(accP).reduce((a, b) => a + b.total, 0);
               const primaRows = Object.entries(accP).map(([cid, info]) => {
                 const c = centros.find(x => x.id === cid);
-                return { codigo: c ? c.codigo : cid, nombre: c ? c.nombre : "", trab: info.trab, fest: info.fest, nov: info.nov, dias: info.total, pct: totPD > 0 ? info.total / totPD * 100 : 0 };
+                return { codigo: c ? c.codigo : cid, nombre: c ? c.nombre : "", trab: info.trab, fest: info.fest, nov: info.nov, aus: info.aus, dias: info.total, pct: totPD > 0 ? info.total / totPD * 100 : 0 };
               }).sort((a, b) => (a.codigo || "").localeCompare(b.codigo || ""));
-              const tTr = primaRows.reduce((s,o)=>s+o.trab,0), tFe = primaRows.reduce((s,o)=>s+o.fest,0), tNo = primaRows.reduce((s,o)=>s+o.nov,0);
-              const repartoPrima = primaRows.length ? `<table style="margin-bottom:6px"><thead><tr><th>CT</th><th>Centro / Proyecto</th><th style="text-align:right">Trab.</th><th style="text-align:right">Fest.</th><th style="text-align:right">Nov.</th><th style="text-align:right">Días</th><th style="text-align:right">%</th><th style="text-align:right">Prima</th></tr></thead><tbody>
-${primaRows.map(o => `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right">${o.fest||""}</td><td style="text-align:right">${o.nov||""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima * o.pct / 100)}</b></td></tr>`).join("")}
-<tr style="border-top:1.5px solid #111;font-weight:700"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${tTr}</td><td style="text-align:right">${tFe||""}</td><td style="text-align:right">${tNo||""}</td><td style="text-align:right"><b>${totPD}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima)}</b></td></tr>
+              const tTr = primaRows.reduce((s,o)=>s+o.trab,0), tFe = primaRows.reduce((s,o)=>s+o.fest,0), tNo = primaRows.reduce((s,o)=>s+o.nov,0), tAu = primaRows.reduce((s,o)=>s+o.aus,0);
+              const repartoPrima = primaRows.length ? `<table style="margin-bottom:6px"><thead><tr><th>CT</th><th>Centro / Proyecto</th><th style="text-align:right">Trab.</th><th style="text-align:right">Fest.</th><th style="text-align:right" title="Novedades remuneradas: licencia, vacaciones, incapacidad">Nov.</th><th style="text-align:right" title="No remuneradas: ausencia, lic. no rem. (restan)">Aus.</th><th style="text-align:right">Días</th><th style="text-align:right">%</th><th style="text-align:right">Prima</th></tr></thead><tbody>
+${primaRows.map(o => `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right">${o.fest||""}</td><td style="text-align:right">${o.nov||""}</td><td style="text-align:right">${o.aus?("−"+o.aus):""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima * o.pct / 100)}</b></td></tr>`).join("")}
+<tr style="border-top:1.5px solid #111;font-weight:700"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${tTr}</td><td style="text-align:right">${tFe||""}</td><td style="text-align:right">${tNo||""}</td><td style="text-align:right">${tAu?("−"+tAu):""}</td><td style="text-align:right"><b>${totPD}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima)}</b></td></tr>
 </tbody></table>` : "";
               primaSemBlock = `<h2>5b. 🎁 PRIMA DE SERVICIOS DEL SEMESTRE</h2>
 <div class="kv"><div class="l">Base (salario ${fmtCurr(ps.sal)} + aux. transporte ${fmtCurr(ps.aux)})</div><div class="v">${fmtCurr(ps.base)}</div></div>
 <div class="kv"><div class="l">Días computados en el semestre (base 360)</div><div class="v">${ps.diasTotal} d</div></div>
 <div class="kv bigtot"><div class="l">PRIMA A PAGAR (base × ${ps.diasTotal} ÷ 360)</div><div class="v">${fmtCurr(ps.prima)}</div></div>
 ${repartoPrima}
-<div style="font-size:7pt;color:#999;margin:4px 0 8px">Reparto por la imputación de cada centro durante el semestre (novedades no remuneradas en negativo). El desglose mes a mes está en el informe de liquidación provisional de prima (Art. 306 CST).</div>`;
+<div style="font-size:7pt;color:#999;margin:4px 0 8px">Días = Trab. + Fest. + Nov. − Aus. (las novedades no remuneradas restan). Imputación del semestre por centro. El desglose mes a mes está en el informe de liquidación provisional de prima (Art. 306 CST).</div>`;
             }
 
             // Listas para el bloque 0: festivos del mes, novedades del mes
@@ -2086,11 +2086,6 @@ ${tablaOTs(otsMes, (dev - totDed) + (totDed + totSegSocial), "Caja imputada")}
 <h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del COSTO TOTAL por CT</h3>
 ${tablaOTs(otsMes, totalCostoEmpresa, "Costo total imputado")}
 
-<div class="sig">
-<div>Elaborado por<br><span style="color:#999">RRHH</span></div>
-<div>Revisado por<br><span style="color:#999">Contabilidad</span></div>
-<div>Aprobado por<br><span style="color:#999">Dirección</span></div>
-</div>
 <div class="foot">Habitaris Suite &middot; ${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})} &middot; ${fileName}</div>
 </div>
 <div class="np">
