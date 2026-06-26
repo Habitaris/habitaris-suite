@@ -154,10 +154,8 @@ export function buildPrimaHtml({ selN, prima, anio }) {
     if(m.vac>0) nov.push(`${m.vac} vacaciones`);
     if(m.licNoRem>0) nov.push(`${m.licNoRem} lic. no rem.`);
     if(m.ausencias>0) nov.push(`${m.ausencias} ausencia${m.ausencias>1?"s":""}`);
-    const restan = (m.ausencias||0) + (m.licNoRem||0);
-    const resta = restan>0 ? `Sí (${restan})` : (nov.length ? "No" : "—");
     const dv = m.diasVinc<30 ? `${m.diasVinc} <span style="color:#999;font-size:7.5pt">(desde ingreso)</span>` : `${m.diasVinc}`;
-    return `<tr><td><b>${MESES[m.mes]}</b></td><td class="c">${dv}</td><td class="c">${nov.length?nov.join(", "):"—"}</td><td class="c">${resta}</td><td class="c"><b>${m.diasPrima}</b></td></tr>`;
+    return `<tr><td><b>${MESES[m.mes]}</b></td><td class="c">${dv}</td><td class="c">${nov.length?nov.join(", "):"—"}</td><td class="c"><b>${m.diasPrima}</b></td><td class="c">${m.diasAux}</td></tr>`;
   }).join("");
 
   const bodyHtml = `<h1>Liquidación provisional de prima de servicios</h1>
@@ -179,14 +177,24 @@ export function buildPrimaHtml({ selN, prima, anio }) {
   <h2>Días computados por mes</h2>
   <div class="mini">Los días se cuentan por la vinculación al contrato (todos los días causados), con independencia del centro de trabajo.</div>
   <table>
-    <thead><tr><th>Mes</th><th class="c">Días de vinculación</th><th class="c">Novedad</th><th class="c">¿Resta?</th><th class="c">Días prima</th></tr></thead>
+    <thead><tr><th>Mes</th><th class="c">Días vinc.</th><th class="c">Novedad</th><th class="c">Días salario</th><th class="c">Días aux.</th></tr></thead>
     <tbody>${filas}
-      <tr class="ttot"><td>TOTAL</td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c">${prima.diasTotal}</td></tr>
+      <tr class="ttot"><td>TOTAL</td><td class="c"></td><td class="c"></td><td class="c">${prima.diasTotal}</td><td class="c">${prima.diasAux}</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Cálculo de la prima</h2>
+  <table>
+    <thead><tr><th>Concepto</th><th class="c">Valor mensual</th><th class="c">Días</th><th class="r">Prima</th></tr></thead>
+    <tbody>
+      <tr><td>Salario</td><td class="c">${fmt(prima.sal)}</td><td class="c">${prima.diasTotal}</td><td class="r">${fmt(prima.primaSal)}</td></tr>
+      ${prima.aux>0?`<tr><td>Auxilio de transporte</td><td class="c">${fmt(prima.aux)}</td><td class="c">${prima.diasAux}</td><td class="r">${fmt(prima.primaAux)}</td></tr>`:""}
+      <tr class="ttot"><td>TOTAL PRIMA</td><td class="c"></td><td class="c"></td><td class="r">${fmt(prima.prima)}</td></tr>
     </tbody>
   </table>
 
   <div class="estbox">
-    <div><div class="estlabel">VALOR ESTIMADO DE LA PRIMA</div><div class="estform">Base × ${prima.diasTotal} ÷ 360</div></div>
+    <div><div class="estlabel">VALOR ESTIMADO DE LA PRIMA</div><div class="estform">Salario y auxilio, cada uno por sus días ÷ 360</div></div>
     <div class="estv">${fmt(prima.prima)}</div>
   </div>
   <div class="estnote"><b>Nota:</b> cálculo estimado generado por Habitaris Suite. Pendiente de confirmación y validación por el contador con base en la información remitida. No constituye liquidación definitiva.</div>
@@ -195,8 +203,9 @@ export function buildPrimaHtml({ selN, prima, anio }) {
   <ul class="crit">
     <li>Prima de servicios (Art. 306 CST): equivale a un mes de salario por año trabajado, proporcional al tiempo laborado en el semestre.</li>
     <li>Los días se computan por la <b>vinculación al contrato</b>; no se limitan a los días imputados a un centro de trabajo. El centro de coste es solo para el reparto interno y no afecta la base.</li>
-    <li>Las <b>licencias remuneradas</b>, <b>incapacidades</b> y <b>vacaciones</b> no reducen los días de la prima.</li>
-    <li>Las <b>ausencias injustificadas</b> y las <b>licencias no remuneradas</b> sí reducen los días computados.</li>
+    <li>El <b>salario base</b> computa todos los días causados; las <b>vacaciones</b>, <b>incapacidades</b> y <b>licencias remuneradas</b> no lo reducen.</li>
+    <li>El <b>auxilio de transporte</b> solo se causa en los días con desplazamiento: las <b>incapacidades</b> y <b>licencias remuneradas</b> no generan auxilio y se descuentan de sus días.</li>
+    <li>Las <b>ausencias injustificadas</b> y las <b>licencias no remuneradas</b> reducen tanto el salario como el auxilio.</li>
   </ul>`;
 
   const css = `@page{size:A4 portrait;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',Helvetica,Arial,sans-serif;background:#e5e5e5;padding:20px 0}#content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9.5pt;color:#111;line-height:1.45;box-shadow:0 0 8px rgba(0,0,0,.15)}.hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:14px;overflow:hidden}.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8.5pt;color:#666;padding-top:6px}.hdr img{height:40px}h1{font-size:15pt;margin:16px 0 3px;text-align:center;letter-spacing:.4px}.sub{text-align:center;font-size:8.5pt;color:#666;margin-bottom:8px}.forwho{text-align:center;font-size:8pt;color:#555;font-weight:600;margin-bottom:16px}.cols{display:flex;gap:16px;margin-bottom:10px}.col{flex:1;border:1px solid #eee;border-radius:4px;padding:9px 13px;font-size:9pt;color:#555}.ct{font-size:7pt;font-weight:700;color:#111;letter-spacing:.5px;margin-bottom:4px}.col b{color:#111}.contrato{font-size:8.5pt;color:#555;margin-bottom:6px}.contrato b{color:#111}h2{font-size:10.5pt;color:#111;font-weight:700;margin:18px 0 8px;border-bottom:1px solid #ccc;padding-bottom:3px}.kv{display:flex;justify-content:space-between;padding:5px 8px;font-size:9.5pt;border-bottom:1px solid #f2f2f2;color:#555}.kv .v{font-family:'DM Mono','SF Mono',Menlo,monospace;color:#111}.kv.tot{border-top:1.5px solid #111;border-bottom:none;font-weight:700;color:#111}.kv.tot .v{font-weight:700}.mini{font-size:7.5pt;color:#999;margin:4px 0 6px}table{width:100%;border-collapse:collapse;margin:6px 0;font-size:9pt}th{padding:6px 8px;text-align:left;font-weight:700;font-size:7.5pt;color:#666;text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid #111}td{padding:6px 8px;border-bottom:1px solid #f0f0f0;color:#333}.c{text-align:center}th.c{text-align:center}.ttot td{border-top:1.5px solid #111;border-bottom:none;font-weight:700;color:#111}.estbox{display:flex;justify-content:space-between;align-items:center;border:1.5px solid #111;padding:14px 20px;border-radius:5px;margin-top:14px}.estlabel{font-size:11pt;font-weight:700;color:#111}.estform{font-size:8pt;color:#666;margin-top:2px}.estv{font-size:22pt;font-weight:700;color:#111;font-family:'DM Mono','SF Mono',Menlo,monospace}.estnote{font-size:8pt;color:#444;border:1px solid #ddd;border-left:3px solid #111;border-radius:4px;padding:8px 12px;margin-top:8px;line-height:1.5}.crit{margin:4px 0 0 16px;font-size:8.5pt;color:#555;line-height:1.6}.crit li{margin-bottom:3px}.crit b{color:#111}.foot{font-size:7pt;color:#999;text-align:center;margin-top:18px}.np{text-align:center;margin:16px auto;max-width:794px}.btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}@page{size:A4 portrait;margin:0}table,tr,thead{page-break-inside:avoid;break-inside:avoid}h1,h2{page-break-after:avoid;break-after:avoid}.kv,.estbox,.cols,.estnote{page-break-inside:avoid;break-inside:avoid}@media print{html,body{background:#fff;margin:0;padding:0;width:210mm}.np{display:none}#content{width:210mm;max-width:none;margin:0;padding:14mm 14mm;box-shadow:none;box-sizing:border-box}}`;

@@ -143,11 +143,18 @@ async function calcPrimaSemestre(emp, anio, mesActual){
         vac=vals.filter(v=>v==="vacaciones").length; }
     }
     const diasPrima=Math.max(0,diasVinc-ausencias-licNoRem);
-    meses.push({mes:m,diasVinc,ausencias,licNoRem,incap,licRem,vac,diasPrima});
+    // El salario base de la prima cuenta todos los días causados (incl. incapacidad y licencia
+    // remunerada). El AUXILIO DE TRANSPORTE, en cambio, no se causa durante incapacidad ni
+    // licencia remunerada (no hay desplazamiento), por eso lleva su propio conteo de días.
+    const diasAux=Math.max(0,diasPrima-incap-licRem);
+    meses.push({mes:m,diasVinc,ausencias,licNoRem,incap,licRem,vac,diasPrima,diasAux});
   }
   const diasTotal=meses.reduce((s,x)=>s+x.diasPrima,0);
-  const prima=Math.round(base*diasTotal/360);
-  return {semestre:semStart===0?1:2, base, sal, aux, aplA, meses, diasTotal, prima};
+  const diasAuxTot=meses.reduce((s,x)=>s+x.diasAux,0);
+  const primaSal=sal*diasTotal/360;
+  const primaAux=aux*diasAuxTot/360;
+  const prima=Math.round(primaSal+primaAux);
+  return {semestre:semStart===0?1:2, base, sal, aux, aplA, meses, diasTotal, diasAux:diasAuxTot, primaSal:Math.round(primaSal), primaAux:Math.round(primaAux), prima};
 }
 // Condiciones laborales con fecha de vigencia (ARL, salario, etc.) del empleado.
 async function loadCond(empId){try{const r=await fetch("/api/hiring?kv=rrhh:condiciones:"+empId+"&flat=1");const d=await r.json();return Array.isArray(d.data)?d.data:[];}catch(_){return[];}}
