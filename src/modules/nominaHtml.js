@@ -13,6 +13,15 @@ import {  getTenantDefaultsSync, getActiveCompanyLegalDataSync } from "../core/c
 const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const fmt = n => n == null || isNaN(n) ? "$0" : "$" + Math.round(n).toLocaleString(getTenantDefaultsSync().locale);
 
+// Enmascara el número de cuenta: asteriscos salvo los 3 últimos dígitos (p.ej. ********901).
+function maskCuenta(c) {
+  const s = String(c || "").trim();
+  if (!s) return "—";
+  const d = s.replace(/\D/g, "");
+  if (d.length <= 3) return s;
+  return "*".repeat(d.length - 3) + d.slice(-3);
+}
+
 // Firma del empleador en los justificantes de pago: línea + "Administración de personal".
 // (El representante legal solo firma las cartas de liquidación/preaviso, no los documentos de pago.)
 function firmaEmpleadorHtml() {
@@ -87,7 +96,7 @@ export function buildNominaHtml({ selN, calc, anio, mes, tipo, refBancaria }) {
     <div style="font-size:7pt;color:#999;margin:4px 0 0">Días laborados: ${diasLab} · Festivos: ${festivos} · Novedades: ${novEntries.length}</div>`;
 
     bodyHtml = `<h1>Nómina</h1>
-    <div class="cols"><div class="col"><div class="ct">EMPLEADOR</div><b>${getActiveCompanyLegalDataSync().legalName||""}</b><br/>NIT ${getActiveCompanyLegalDataSync().taxId||""}</div><div class="col"><div class="ct">TRABAJADOR(A)</div><b>${selN.nombre}</b><br/>C.C. ${selN.cc} · ${selN.cargo}<br/>${selN.banco||"—"}${selN.tipoCuenta?" · "+selN.tipoCuenta:""}${selN.cuenta?" · "+selN.cuenta:""}</div></div>
+    <div class="cols"><div class="col"><div class="ct">EMPLEADOR</div><b>${getActiveCompanyLegalDataSync().legalName||""}</b><br/>NIT ${getActiveCompanyLegalDataSync().taxId||""}</div><div class="col"><div class="ct">TRABAJADOR(A)</div><b>${selN.nombre}</b><br/>C.C. ${selN.cc} · ${selN.cargo}<br/>${selN.banco||"—"}${selN.tipoCuenta?" · "+selN.tipoCuenta:""}${selN.cuenta?" · "+maskCuenta(selN.cuenta):""}</div></div>
     <div class="contrato"><b>Contrato:</b> ${selN.tipoContrato} · ${isQuinc?"Quincenal":"Mensual"} · Ingreso ${selN.fechaIngreso} · Antigüedad ${antigTxt}. <b>Período:</b> 01 al ${new Date(anio,mes+1,0).getDate()} ${MESES[mes]} ${anio} · ${calc.dias}/30 días.</div>
     <table><thead><tr><th>Concepto</th><th class="r">Devengado</th><th class="r">Deducción</th></tr></thead><tbody>
     ${allItems.map(r=>"<tr><td>"+r.c+"</td><td class='r'>"+(r.d>0?fmt(r.d):"—")+"</td><td class='r'>"+(r.dd>0?fmt(r.dd):"—")+"</td></tr>").join("")}
@@ -211,7 +220,7 @@ export function buildPrimaJustificanteHtml({ selN, prima, anio, refBancaria }) {
 
   const bodyHtml = `<h1>Justificante de pago — Prima de servicios</h1>
   <div class="sub">${semLabel} · ${anio}</div>
-  <div class="cols"><div class="col"><div class="ct">EMPLEADOR</div><b>${leg.legalName||""}</b><br/>NIT ${leg.taxId||""}</div><div class="col"><div class="ct">TRABAJADOR(A)</div><b>${selN.nombre}</b><br/>C.C. ${selN.cc} · ${selN.cargo}<br/>${selN.banco||"—"}${selN.tipoCuenta?" · "+selN.tipoCuenta:""}${selN.cuenta?" · "+selN.cuenta:""}</div></div>
+  <div class="cols"><div class="col"><div class="ct">EMPLEADOR</div><b>${leg.legalName||""}</b><br/>NIT ${leg.taxId||""}</div><div class="col"><div class="ct">TRABAJADOR(A)</div><b>${selN.nombre}</b><br/>C.C. ${selN.cc} · ${selN.cargo}<br/>${selN.banco||"—"}${selN.tipoCuenta?" · "+selN.tipoCuenta:""}${selN.cuenta?" · "+maskCuenta(selN.cuenta):""}</div></div>
   <div class="contrato"><b>Período:</b> ${semLabel} · <b>Pago:</b> ${fechaPago}.</div>
   <table><tbody><tr class="liq"><td>Prima de servicios pagada</td><td class="r"></td><td class="r">${fmt(prima.prima)}</td></tr></tbody></table>
   ${refBancaria?`<div style="font-size:8pt;color:#444;border:1px solid #ddd;border-left:3px solid #111;border-radius:3px;padding:6px 10px;margin:8px 0">Pagado con referencia: <b>${refBancaria}</b></div>`:""}
