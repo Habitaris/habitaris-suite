@@ -13,6 +13,17 @@ import {  getTenantDefaultsSync, getActiveCompanyLegalDataSync } from "../core/c
 const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const fmt = n => n == null || isNaN(n) ? "$0" : "$" + Math.round(n).toLocaleString(getTenantDefaultsSync().locale);
 
+// Firma del empleador para los justificantes: datos impresos del representante legal
+// (sin línea de firma manuscrita). Si no hay representante en la BD, cae al formato anterior.
+function firmaEmpleadorHtml() {
+  const leg = getActiveCompanyLegalDataSync();
+  const rep = leg.legalRep;
+  if (rep && rep.name) {
+    return `<div class="name">${rep.name}</div><div class="role">${rep.cargo||"Representante legal"}${rep.document_number?` · ${rep.document_type||"CC"} ${rep.document_number}`:""}</div><div class="role">${leg.legalName||""} · NIT ${leg.taxId||""}</div>`;
+  }
+  return `<div class="line"></div><div class="name">${leg.legalName||""}</div><div class="role">Administración de personal</div>`;
+}
+
 
 // Genera { fileName, html } para una nómina o justificante de anticipo.
 // tipo: "anticipo" | "nomina"
@@ -53,7 +64,7 @@ export function buildNominaHtml({ selN, calc, anio, mes, tipo, refBancaria }) {
     <tr class="liq"><td>Líquido a percibir</td><td class="r"></td><td class="r">${fmt(calc.q1)}</td></tr>
     </tbody></table>
     <div style="font-size:7pt;color:#bbb;margin:12px 0">Ref interna: ${refInterna}${refBancaria?` · Pagado con ref: ${refBancaria}`:""} · Este importe será descontado en la nómina del período</div>
-    <div class="sig"><div><div class="line"></div><div class="name">${getActiveCompanyLegalDataSync().legalName}</div><div class="role">Administración de personal</div></div><div><div class="line"></div><div class="name">${selN.nombre}</div><div class="role">Recibí conforme</div></div></div>`;
+    <div class="sig"><div>${firmaEmpleadorHtml()}</div><div><div class="line"></div><div class="name">${selN.nombre}</div><div class="role">Recibí conforme</div></div></div>`;
   } else {
     const allItems = [...items];
     if (isQuinc) allItems.push({ c:"Anticipo de nómina (15/"+MESES[mes].slice(0,3)+")", d:0, dd:calc.q1 });
@@ -97,7 +108,7 @@ export function buildNominaHtml({ selN, calc, anio, mes, tipo, refBancaria }) {
     </tbody></table>
 
     <div style="font-size:7pt;color:#bbb;margin:12px 0">Ref interna: ${refInterna}${refBancaria?` · Pagado con ref: ${refBancaria}`:""}</div>
-    <div class="sig"><div><div class="line"></div><div class="name">${getActiveCompanyLegalDataSync().legalName}</div><div class="role">Administración de personal</div></div><div><div class="line"></div><div class="name">${selN.nombre}</div><div class="role">Recibí conforme</div></div></div>`;
+    <div class="sig"><div>${firmaEmpleadorHtml()}</div><div><div class="line"></div><div class="name">${selN.nombre}</div><div class="role">Recibí conforme</div></div></div>`;
   }
 
   // Paper format: A5 for anticipo (cuartilla), A4 for nómina
@@ -136,7 +147,7 @@ export function buildPrimaHtml({ selN, prima, anio }) {
     if(m.licNoRem>0) nov.push(`${m.licNoRem} lic. no rem.`);
     if(m.ausencias>0) nov.push(`${m.ausencias} ausencia${m.ausencias>1?"s":""}`);
     const restan = (m.ausencias||0) + (m.licNoRem||0);
-    const resta = restan>0 ? `Sí (−${restan})` : (nov.length ? "No" : "—");
+    const resta = restan>0 ? `Sí (${restan})` : (nov.length ? "No" : "—");
     const dv = m.diasVinc<30 ? `${m.diasVinc} <span style="color:#999;font-size:7.5pt">(desde ingreso)</span>` : `${m.diasVinc}`;
     return `<tr><td><b>${MESES[m.mes]}</b></td><td class="c">${dv}</td><td class="c">${nov.length?nov.join(", "):"—"}</td><td class="c">${resta}</td><td class="c"><b>${m.diasPrima}</b></td></tr>`;
   }).join("");
@@ -206,7 +217,7 @@ export function buildPrimaJustificanteHtml({ selN, prima, anio, refBancaria }) {
   <table><tbody><tr class="liq"><td>Prima de servicios pagada</td><td class="r"></td><td class="r">${fmt(prima.prima)}</td></tr></tbody></table>
   ${refBancaria?`<div style="font-size:8pt;color:#444;border:1px solid #ddd;border-left:3px solid #111;border-radius:3px;padding:6px 10px;margin:8px 0">Pagado con referencia: <b>${refBancaria}</b></div>`:""}
   <div style="font-size:7pt;color:#999;margin:10px 0">Art. 306 CST. Prima de servicios proporcional al tiempo laborado en el semestre.</div>
-  <div class="sig"><div><div class="line"></div><div class="name">${leg.legalName||""}</div><div class="role">Administración de personal</div></div><div><div class="line"></div><div class="name">${selN.nombre}</div><div class="role">Recibí conforme</div></div></div>`;
+  <div class="sig"><div>${firmaEmpleadorHtml()}</div><div><div class="line"></div><div class="name">${selN.nombre}</div><div class="role">Recibí conforme</div></div></div>`;
 
   const css = `@page{size:A5 portrait;margin:8mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans','Helvetica Neue',Helvetica,Arial,sans-serif;background:#e8e8e8;padding:20px 0}#content{background:#fff;width:560px;margin:0 auto;padding:40px 50px;font-size:8.5pt;color:#333;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,.1)}.hdr{padding-bottom:12px;margin-bottom:16px;border-bottom:1px solid #ddd;overflow:hidden}.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:7.5pt;color:#999;padding-top:12px}.hdr img{height:46px}h1{font-size:10pt;font-weight:600;text-align:center;margin:10px 0 4px;letter-spacing:.3px;clear:both}.sub{text-align:center;font-size:7.5pt;color:#999;margin-bottom:14px}.info{margin-bottom:14px;font-size:8pt;overflow:hidden;border:1px solid #eee;border-radius:3px;padding:8px 12px}.info div{float:left;width:50%;padding:2px 0;color:#555}.info span{color:#999}.info b{color:#333}table{width:100%;border-collapse:collapse;font-size:8pt;clear:both;margin-bottom:4px}td{padding:4px 8px;border-bottom:1px solid #f2f2f2;color:#444}.r{text-align:right;font-family:'DM Mono','SF Mono',Menlo,monospace;font-size:8pt}.liq td{border-top:2px solid #333;border-bottom:none;font-weight:700;color:#111;padding:8px;font-size:9pt}.sig{margin-top:48px;overflow:hidden;padding:0 20px}.sig>div{float:left;width:44%;text-align:center}.sig>div:last-child{float:right}.sig .line{border-top:1px solid #999;margin-bottom:6px}.sig .name{font-size:8pt;font-weight:600;color:#333}.sig .role{font-size:7pt;color:#999;margin-top:1px}.foot{font-size:6pt;color:#bbb;text-align:center;margin-top:20px;clear:both;letter-spacing:.3px}.np{text-align:center;margin:16px auto;max-width:560px}.btn{background:#333;color:#fff;border:none;padding:8px 20px;border-radius:3px;cursor:pointer;font-size:10pt;font-weight:500;margin:0 4px;font-family:inherit}@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:8mm 10mm;box-shadow:none}}`;
 
