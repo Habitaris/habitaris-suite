@@ -1020,10 +1020,11 @@ export function TabNomina(){
   },[]);
 
   const selN=useMemo(()=>noms.find(n=>n.id===sel),[noms,sel]);
-  // Emite el período (mes/año) para que RRHH lo muestre fijo a la derecha del título "Liquidador Nómina"
+  // Emite el período (mes/año) y si está cerrado, para que RRHH lo muestre fijo y con color de estado
   useEffect(()=>{
-    try{ window.dispatchEvent(new CustomEvent("hab:nomina:periodo",{detail:{label:`${MESES[mes]} ${anio}`}})); }catch(e){}
-  },[mes,anio]);
+    const cerrado = !!(selN && (selN.estado==="pagada"||selN.estado==="liquidada"));
+    try{ window.dispatchEvent(new CustomEvent("hab:nomina:periodo",{detail:{label:`${MESES[mes]} ${anio}`,cerrado}})); }catch(e){}
+  },[mes,anio,selN]);
   useEffect(()=>()=>{ try{ window.dispatchEvent(new CustomEvent("hab:nomina:periodo",{detail:null})); }catch(e){} },[]);
   const calc=useMemo(()=>selN?calcN({...selN,horasMes:calcHorasMesEmp(selN.empId,anio,mes,centros)}):null,[selN,anio,mes,centros]);
   const upd=(id,f)=>setNoms(p=>p.map(n=>n.id===id?{...n,...f}:n));
@@ -1433,6 +1434,9 @@ ${tablaOTconsMonto(totCostoEmp, "Costo total imputado")}
             const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);
             const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
             const fileName=`NOV-${mAbr}${a2}-${ape}-${selN.cc||""}`;
+            const _fdN=(d)=>d?new Date(d+"T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale,{day:"2-digit",month:"2-digit",year:"numeric"}):null;
+            const _contratoLbl=`${selN.tipoContrato||"término fijo"}${_fdN(selN.fechaIngreso)?` · ${_fdN(selN.fechaIngreso)}${_fdN(selN.fechaFinContrato)?` a ${_fdN(selN.fechaFinContrato)}`:""}`:""}`;
+            const _leg=getActiveCompanyLegalDataSync();
             const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
@@ -1452,6 +1456,7 @@ table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:8.5pt;clea
 th{text-align:left;padding:4px 6px;font-size:7pt;font-weight:700;text-transform:uppercase;border-bottom:2px solid #111}
 td{padding:3px 6px;border-bottom:1px solid #ddd}
 .fest{background:#f9f9f9}.nov{background:#f4f4f4}
+.cols{display:flex;gap:16px;margin-bottom:10px}.col{flex:1;border:1px solid #eee;border-radius:4px;padding:9px 13px;font-size:9pt;color:#555}.ct{font-size:7pt;font-weight:700;color:#111;letter-spacing:.5px;margin-bottom:4px}.col b{color:#111}.contrato{font-size:8.5pt;color:#555;margin-bottom:8px}.contrato b{color:#111}
 .dias{margin-bottom:12px}.dias td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:middle}
 .dias .cpt{font-weight:700;color:#111;font-size:9pt;width:34%}
 .dias .num{font-family:'SF Mono',Menlo,monospace;text-align:right;white-space:nowrap;width:16%}
@@ -1477,16 +1482,11 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">${getActiveCompanyLegalDataSync().legalName}</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
 <h1>REPORTE DE NOVEDADES DE NÓMINA</h1>
 <div class="sub">${MESES[mes]} ${anio} · Ref: ${fileName}</div>
-<div class="info">
-<div><span>Empleado: </span><b>${selN.nombre}</b></div>
-<div><span>Documento: </span><b>${selN.cc}</b></div>
-<div><span>Cargo: </span><b>${selN.cargo}</b></div>
-<div><span>Contrato: </span><b>${selN.tipoContrato||"fijo"}</b></div>
-<div><span>EPS: </span><b>${selN.eps||"—"}</b></div>
-<div><span>Pensión: </span><b>${selN.pen||"—"}</b></div>
-<div><span>Banco: </span><b>${selN.banco||"—"}</b></div>
-<div><span>Cuenta: </span><b>${selN.cuenta||"—"}</b></div>
+<div class="cols">
+<div class="col"><div class="ct">EMPLEADOR</div><b>${_leg.legalName||""}</b><br/>NIT ${_leg.taxId||""}</div>
+<div class="col"><div class="ct">TRABAJADORA</div><b>${selN.nombre||""}</b><br/>C.C. ${selN.cc||""}<br/>${selN.cargo||""}<br/>EPS: ${selN.eps||"—"} · Pensión: ${selN.pen||"—"}</div>
 </div>
+<div class="contrato"><b>Contrato:</b> ${_contratoLbl}.</div>
 <h2>Festivos del mes</h2>
 <table><thead><tr><th>Fecha</th><th>Motivo</th></tr></thead><tbody>
 ${festList.length>0?festList.map(f=>`<tr class="fest"><td>${f.fecha}</td><td>${f.name}</td></tr>`).join(""):`<tr><td colspan="2" style="color:#999;text-align:center">Sin festivos</td></tr>`}
