@@ -81,7 +81,7 @@ const NOV_TIPOS = [
 // Paleta de 8 colores que se asigna deterministamente a cada OT por su id (hash mod 8).
 // Así dos OTs distintas se ven con colores distintos en el calendario sin necesidad
 // de almacenar un color por OT en BD (las OTs vienen de Centros de Trabajo).
-const OT_COLORS = ["#DDD6FE","#FED7AA","#A7F3D0","#FBCFE8","#BFDBFE","#FDE68A","#C7D2FE","#FCA5A5"];
+const OT_COLORS = ["#DDD6FE","#FED7AA","#A7F3D0","#FBCFE8","#BFDBFE","#99F6E4","#C7D2FE","#FCA5A5"];
 function colorForOT(otId){
   let h = 0;
   const s = String(otId || "");
@@ -2487,7 +2487,7 @@ ${body}
                         {isSun&&!hol&&<div style={{fontSize:6,color:"#ccc",lineHeight:1,marginTop:1}}>—</div>}
                         {novInfo&&<div style={{fontSize:7,lineHeight:1,marginTop:1}}>{novInfo.icon}</div>}
                         {isConflicto&&<div style={{fontSize:8,lineHeight:1,marginTop:1,color:"#dc2626",fontWeight:700}}>⚠️</div>}
-                        {impColor&&<div style={{position:"absolute",bottom:0,left:0,right:0,height:3,background:impColor,borderRadius:"0 0 4px 4px"}}/>}
+                        {impColor&&<div style={{position:"absolute",bottom:0,left:0,right:0,height:5,background:impColor,borderRadius:"0 0 4px 4px"}}/>}
                         {isConflicto&&<div style={{position:"absolute",bottom:0,left:0,right:0,height:3,background:"repeating-linear-gradient(45deg,#dc2626,#dc2626 3px,#FCA5A5 3px,#FCA5A5 6px)",borderRadius:"0 0 4px 4px"}}/>}
                       </div>;
                     })}
