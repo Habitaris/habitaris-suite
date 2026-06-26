@@ -170,12 +170,6 @@ function useAllData() {
     if (proyRetrasados.length > 0) alertas.push({ mod:"proyectos", sev:"alta", icon:"📅", msg:`${proyRetrasados.length} proyecto${proyRetrasados.length>1?"s":""} con retraso: ${proyRetrasados.map(p=>p.nombre).join(", ")}`, color:T.red });
     if (hitosPendientes > 0) alertas.push({ mod:"proyectos", sev:"baja", icon:"🏁", msg:`${hitosPendientes} hito${hitosPendientes>1?"s":""} pendiente${hitosPendientes>1?"s":""}`, color:T.blue });
 
-    // ─── RRHH: prima de servicios (jun/dic) ───
-    const _mesHoy = new Date().getMonth();
-    if (_mesHoy === 5 || _mesHoy === 11) {
-      alertas.push({ mod:"rrhh", sev:"media", icon:"🎁", msg:`Pago de prima de servicios este mes — fecha límite ${_mesHoy === 5 ? "30 de junio" : "20 de diciembre"}`, color:T.amber });
-    }
-
     return {
       admin: { saldoCajas, tarjetaPend:tarjetaPend.length, viaticosPend:viaticosPend.length, flujoMes, cxcVigente, cxcVencida, cxpVigente, cxpVencida },
       compras: { total:ocs.length, pendientes:ocsPend.length, totalCompras, recepciones:recep.length, evals:evals.length },

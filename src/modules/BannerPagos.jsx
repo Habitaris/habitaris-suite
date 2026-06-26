@@ -68,6 +68,18 @@ export function BannerPagos({ noms: nomsProp, compact = false }) {
       .catch(() => setNomsFetched([]));
   }, [nomsProp]);
 
+  const [soportes, setSoportes] = useState({});
+  useEffect(() => {
+    const hoy = new Date();
+    const mes = hoy.getMonth();
+    if (mes !== 5 && mes !== 11) return; // prima solo jun/dic
+    const anio = hoy.getFullYear();
+    fetch(`/api/hiring?kv=soporte_pago&anio=${anio}&mes=${mes}`)
+      .then(r => r.json())
+      .then(d => setSoportes(d.ok && d.data && !Array.isArray(d.data) ? d.data : {}))
+      .catch(() => setSoportes({}));
+  }, []);
+
   const alertas = useMemo(() => {
     if (!noms) return null;
     const today = new Date(); today.setHours(0,0,0,0);
@@ -92,8 +104,17 @@ export function BannerPagos({ noms: nomsProp, compact = false }) {
       const alt = alertaPago(fechaFin, today);
       if (alt) a.push({tipo:"Fin de mes", fecha:fechaFin, pendientes:pendFin, altQ2:pendQ2.length, altMensual:pendMensual.length, alt});
     }
+    // Prima de servicios (jun/dic): fecha límite 30-jun / 20-dic (o último hábil anterior)
+    if (mes === 5 || mes === 11) {
+      const fechaPrima = ultimoDiaHabil(mes === 5 ? new Date(anio, 5, 30) : new Date(anio, 11, 20), holidays);
+      const pendPrima = noms.filter(n => !(soportes[n.empId + ":prima"] && soportes[n.empId + ":prima"].data));
+      if (pendPrima.length > 0) {
+        const alt = alertaPago(fechaPrima, today);
+        if (alt) a.push({tipo:"Prima", fecha:fechaPrima, pendientes:pendPrima, alt});
+      }
+    }
     return a;
-  }, [noms]);
+  }, [noms, soportes]);
 
   if (!alertas || alertas.length === 0) return null;
 
@@ -111,11 +132,13 @@ export function BannerPagos({ noms: nomsProp, compact = false }) {
         const icono = a.alt.nivel === "rojo" ? "🚨" : a.alt.nivel === "amarillo" ? "⚠️" : "🔔";
         const titulo = a.tipo === "Q1"
           ? `Anticipo Q1 quincenal · ${a.alt.msg}`
-          : a.altQ2 && a.altMensual
-            ? `Nómina de fin de mes · ${a.alt.msg}`
-            : a.altMensual
-              ? `Nómina mensual · ${a.alt.msg}`
-              : `Q2 quincenal · ${a.alt.msg}`;
+          : a.tipo === "Prima"
+            ? `Prima de servicios · ${a.alt.msg}`
+            : a.altQ2 && a.altMensual
+              ? `Nómina de fin de mes · ${a.alt.msg}`
+              : a.altMensual
+                ? `Nómina mensual · ${a.alt.msg}`
+                : `Q2 quincenal · ${a.alt.msg}`;
         const nombresPend = a.pendientes.map(p => {
           const partes = (p.nombre || "").split(" ");
           return partes.length >= 3 ? partes.slice(-2).join(" ") : p.nombre;
@@ -123,7 +146,8 @@ export function BannerPagos({ noms: nomsProp, compact = false }) {
         const fechaLbl = lblFecha(a.fecha, today);
         const today2 = new Date(today);
         const finMesDia = new Date(today2.getFullYear(), today2.getMonth()+1, 0).getDate();
-        const esDiaAjustado = a.fecha.getDate() !== (a.tipo === "Q1" ? 15 : finMesDia);
+        const diaBase = a.tipo === "Q1" ? 15 : a.tipo === "Prima" ? (today2.getMonth()===5?30:20) : finMesDia;
+        const esDiaAjustado = a.fecha.getDate() !== diaBase;
 
         return (
           <div key={i} style={{background:c.bg, border:`1px solid ${c.border}`, borderRadius:6, padding:"12px 16px", display:"flex", alignItems:"center", gap:14}}>
