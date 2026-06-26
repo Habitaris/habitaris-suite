@@ -119,36 +119,69 @@ export function buildNominaHtml({ selN, calc, anio, mes, tipo, refBancaria }) {
 // ──────────────────────────────────────────────────────────────
 export function buildPrimaHtml({ selN, prima, anio }) {
   const sem = prima.semestre;
-  const semLabel = sem === 1 ? "1.º semestre (enero–junio)" : "2.º semestre (julio–diciembre)";
-  const fechaPago = sem === 1 ? `30 de junio de ${anio}` : `20 de diciembre de ${anio}`;
+  const semLabel = sem === 1 ? "Primer semestre (enero–junio)" : "Segundo semestre (julio–diciembre)";
   const a2 = String(anio).slice(-2);
   const ape = (selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
-  const fileName = `PRIMA-S${sem}${a2}-${ape}`;
+  const fileName = `PRIMA-ESTIMADO-S${sem}${a2}-${ape}`;
+  const leg = getActiveCompanyLegalDataSync();
+  const loc = getTenantDefaultsSync().locale;
+  const fd = s => { if(!s) return ""; const p=String(s).split("-"); return p.length===3?`${p[2]}/${p[1]}/${p[0]}`:s; };
 
-  const bodyHtml = `<h1>Justificante de prima de servicios</h1>
-  <div class="sub">${semLabel} · ${anio}</div>
-  <div class="info"><div><span>Nombre: </span><b>${selN.nombre}</b></div><div><span>Documento: </span><b>${selN.cc}</b></div><div><span>Cargo: </span>${selN.cargo}</div><div><span>Contrato: </span>${selN.tipoContrato||"fijo"}</div><div><span>Período liquidado: </span><b>${semLabel}</b></div><div><span>Fecha de pago: </span><b>${fechaPago}</b></div></div>
+  const filas = (prima.meses||[]).filter(m=>m.diasVinc>0).map(m=>{
+    const nov=[];
+    if(m.licRem>0) nov.push(`${m.licRem} licencia${m.licRem>1?"s":""} rem.`);
+    if(m.incap>0) nov.push(`${m.incap} incapacidad${m.incap>1?"es":""}`);
+    if(m.vac>0) nov.push(`${m.vac} vacaciones`);
+    if(m.licNoRem>0) nov.push(`${m.licNoRem} lic. no rem.`);
+    if(m.ausencias>0) nov.push(`${m.ausencias} ausencia${m.ausencias>1?"s":""}`);
+    const restan = (m.ausencias||0) + (m.licNoRem||0);
+    const resta = restan>0 ? `Sí (−${restan})` : (nov.length ? "No" : "—");
+    const dv = m.diasVinc<30 ? `${m.diasVinc} <span style="color:#999;font-size:7.5pt">(desde ingreso)</span>` : `${m.diasVinc}`;
+    return `<tr><td><b>${MESES[m.mes]}</b></td><td class="c">${dv}</td><td class="c">${nov.length?nov.join(", "):"—"}</td><td class="c">${resta}</td><td class="c"><b>${m.diasPrima}</b></td></tr>`;
+  }).join("");
+
+  const bodyHtml = `<h1>Liquidación de prima de servicios</h1>
+  <div class="sub">${semLabel} · ${anio} · Art. 306 del Código Sustantivo del Trabajo</div>
+  <div class="forwho">Documento de cálculo estimado para revisión y validación del área contable.</div>
+
+  <div class="cols">
+    <div class="col"><div class="ct">EMPLEADOR</div><b>${leg.legalName||""}</b><br/>NIT ${leg.taxId||""}</div>
+    <div class="col"><div class="ct">TRABAJADORA</div><b>${selN.nombre||""}</b><br/>C.C. ${selN.cc||""}<br/>${selN.cargo||""}</div>
+  </div>
+  <div class="contrato"><b>Contrato:</b> ${selN.tipoContrato||"término fijo"} · ${fd(selN.fechaIngreso)}${selN.fechaFinContrato?` a ${fd(selN.fechaFinContrato)}`:""}. Prima causada desde la fecha de ingreso.</div>
+
+  <h2>Base de cálculo</h2>
+  <div class="kv"><div class="l">Salario mensual (SMLMV ${anio})</div><div class="v">${fmt(prima.sal)}</div></div>
+  <div class="kv"><div class="l">Auxilio de transporte</div><div class="v">${fmt(prima.aux)}</div></div>
+  <div class="kv tot"><div class="l">Base de la prima (salario + auxilio)</div><div class="v">${fmt(prima.base)}</div></div>
+  <div class="mini">El bono complementario es un pago no salarial (Art. 128 CST) y no se incluye en la base.</div>
+
+  <h2>Días computados por mes</h2>
+  <div class="mini">Los días se cuentan por la vinculación al contrato (todos los días causados), con independencia del centro de trabajo.</div>
   <table>
-    <thead><tr><th>Mes</th><th style="text-align:right">Días de vinculación</th><th style="text-align:right">Días prima</th></tr></thead>
-    <tbody>
-      ${(prima.meses||[]).filter(m=>m.diasVinc>0).map(m=>{
-        const obs=[]; if(m.ausencias>0)obs.push(`−${m.ausencias} ausencia`); if(m.licNoRem>0)obs.push(`−${m.licNoRem} lic. no rem.`);
-        return `<tr><td>${MESES[m.mes]}${obs.length?` <span style="color:#999;font-size:7.5pt">(${obs.join(", ")})</span>`:""}</td><td class="r">${m.diasVinc}</td><td class="r">${m.diasPrima}</td></tr>`;
-      }).join("")}
-      <tr class="tot"><td>Total días computados (base 360)</td><td class="r"></td><td class="r">${prima.diasTotal} d</td></tr>
+    <thead><tr><th>Mes</th><th class="c">Días de vinculación</th><th class="c">Novedad</th><th class="c">¿Resta?</th><th class="c">Días prima</th></tr></thead>
+    <tbody>${filas}
+      <tr class="ttot"><td>TOTAL</td><td class="c"></td><td class="c"></td><td class="c"></td><td class="c">${prima.diasTotal}</td></tr>
     </tbody>
   </table>
-  <div style="display:flex;justify-content:space-between;padding:6px 8px;font-size:8pt;color:#555;border-bottom:1px solid #f2f2f2">
-    <span>Base de cálculo (salario ${fmt(prima.sal)} + aux. transporte ${fmt(prima.aux)})</span>
-    <b style="font-family:'SF Mono',Menlo,monospace;color:#333">${fmt(prima.base)}</b>
+
+  <div class="estbox">
+    <div><div class="estlabel">VALOR ESTIMADO DE LA PRIMA</div><div class="estform">Base × ${prima.diasTotal} ÷ 360</div></div>
+    <div class="estv">${fmt(prima.prima)}</div>
   </div>
-  <table><tbody><tr class="liq"><td>Prima de servicios a pagar &nbsp;<span style="font-weight:400;color:#888;font-size:7.5pt">(base × ${prima.diasTotal} ÷ 360)</span></td><td class="r"></td><td class="r">${fmt(prima.prima)}</td></tr></tbody></table>
-  <div style="font-size:7pt;color:#999;margin:10px 0">Art. 306 CST. Los días se computan por la vinculación al contrato (todos los días causados desde el ingreso). Incapacidades, vacaciones y licencias remuneradas computan como tiempo de servicio; ausencias injustificadas y licencias no remuneradas no computan.</div>
-  <div class="sig"><div><div class="line"></div><div class="name">${getActiveCompanyLegalDataSync().legalName}</div><div class="role">Administración de personal</div></div><div><div class="line"></div><div class="name">${selN.nombre}</div><div class="role">Recibí conforme</div></div></div>`;
+  <div class="estnote"><b>Nota:</b> cálculo estimado generado por Habitaris Suite. Pendiente de confirmación y validación por el contador con base en la información remitida. No constituye liquidación definitiva.</div>
 
-  const css = `@page{size:A5 portrait;margin:8mm}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;background:#e8e8e8;padding:20px 0}#content{background:#fff;width:560px;margin:0 auto;padding:40px 50px;font-size:8.5pt;color:#333;line-height:1.5;box-shadow:0 1px 4px rgba(0,0,0,.1)}.hdr{padding-bottom:12px;margin-bottom:16px;border-bottom:1px solid #ddd;overflow:hidden}.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:7.5pt;color:#999;padding-top:12px}.hdr img{height:46px}h1{font-size:10pt;font-weight:600;text-align:center;margin:10px 0 4px;letter-spacing:.3px;clear:both}.sub{text-align:center;font-size:7.5pt;color:#999;margin-bottom:14px}.info{margin-bottom:14px;font-size:8pt;overflow:hidden;border:1px solid #eee;border-radius:3px;padding:8px 12px}.info div{float:left;width:50%;padding:2px 0;color:#555}.info span{color:#999}.info b{color:#333}table{width:100%;border-collapse:collapse;font-size:8pt;clear:both;margin-bottom:4px}th{padding:5px 8px;text-align:left;font-size:6.5pt;font-weight:600;color:#999;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid #ddd}td{padding:4px 8px;border-bottom:1px solid #f2f2f2;color:#444}.r{text-align:right;font-family:'SF Mono',Menlo,monospace;font-size:8pt}.tot td{border-top:1px solid #333;border-bottom:none;font-weight:600;color:#333;padding:6px 8px}.liq td{border-top:2px solid #333;border-bottom:none;font-weight:700;color:#111;padding:8px;font-size:9pt}.sig{margin-top:48px;overflow:hidden;padding:0 20px}.sig>div{float:left;width:44%;text-align:center}.sig>div:last-child{float:right}.sig .line{border-top:1px solid #999;margin-bottom:6px}.sig .name{font-size:8pt;font-weight:600;color:#333}.sig .role{font-size:7pt;color:#999;margin-top:1px}.foot{font-size:6pt;color:#bbb;text-align:center;margin-top:20px;clear:both;letter-spacing:.3px}.np{text-align:center;margin:16px auto;max-width:560px}.btn{background:#333;color:#fff;border:none;padding:8px 20px;border-radius:3px;cursor:pointer;font-size:10pt;font-weight:500;margin:0 4px;font-family:inherit}@media print{body{background:#fff;padding:0}.np{display:none}#content{width:100%;margin:0;padding:8mm 10mm;box-shadow:none}}`;
+  <h2>Criterio de cálculo</h2>
+  <ul class="crit">
+    <li>Prima de servicios (Art. 306 CST): equivale a un mes de salario por año trabajado, proporcional al tiempo laborado en el semestre.</li>
+    <li>Los días se computan por la <b>vinculación al contrato</b>; no se limitan a los días imputados a un centro de trabajo. El centro de coste es solo para el reparto interno y no afecta la base.</li>
+    <li>Las <b>licencias remuneradas</b>, <b>incapacidades</b> y <b>vacaciones</b> no reducen los días de la prima.</li>
+    <li>Las <b>ausencias injustificadas</b> y las <b>licencias no remuneradas</b> sí reducen los días computados.</li>
+  </ul>`;
 
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title><script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script><style>${css}</style></head><body><div id="content"><div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">${getActiveCompanyLegalDataSync().legalName}</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>${bodyHtml}<div class="foot">Habitaris Suite · ${new Date().toLocaleDateString(getTenantDefaultsSync().locale)} · ${fileName}</div></div><div class="np"><div id="np-info" style="font-size:9pt;color:#888;margin-bottom:10px">Tamaño: A5 · 148mm × 210mm</div><button class="btn" onclick="(function(){var el=document.getElementById('content');var info=document.getElementById('np-info');el.style.boxShadow='none';document.querySelector('.np').style.display='none';html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#fff'}).then(function(c){var img=c.toDataURL('image/jpeg',0.98);var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:[148,210]});var w=148,h=(c.height*w)/c.width,pageH=210;if(h<=pageH){pdf.addImage(img,'JPEG',0,0,w,h);}else{var yOff=0;while(yOff<h){pdf.addImage(img,'JPEG',0,-yOff,w,h);yOff+=pageH;if(yOff<h)pdf.addPage([148,210],'portrait');}}pdf.save('${fileName}.pdf');el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display='';info.innerHTML='✅ PDF descargado (A5)';info.style.color='#166534';info.style.background='#F0FDF4';info.style.padding='6px 10px';info.style.borderRadius='4px';})})()">📥 Descargar PDF en A5</button></div></body></html>`;
+  const css = `@page{size:A4 portrait;margin:0}*{margin:0;padding:0;box-sizing:border-box}body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;padding:20px 0}#content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9.5pt;color:#111;line-height:1.45;box-shadow:0 0 8px rgba(0,0,0,.15)}.hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:14px;overflow:hidden}.hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8.5pt;color:#666;padding-top:6px}.hdr img{height:40px}h1{font-size:15pt;margin:16px 0 3px;text-align:center;letter-spacing:.4px}.sub{text-align:center;font-size:8.5pt;color:#666;margin-bottom:8px}.forwho{text-align:center;font-size:8pt;color:#1E6B42;font-weight:600;margin-bottom:16px}.cols{display:flex;gap:16px;margin-bottom:10px}.col{flex:1;border:1px solid #eee;border-radius:4px;padding:9px 13px;font-size:9pt;color:#555}.ct{font-size:7pt;font-weight:700;color:#1E6B42;letter-spacing:.5px;margin-bottom:4px}.col b{color:#111}.contrato{font-size:8.5pt;color:#555;margin-bottom:6px}.contrato b{color:#111}h2{font-size:10.5pt;background:#111;color:#fff;padding:5px 12px;margin:16px 0 8px;border-radius:3px}.kv{display:flex;justify-content:space-between;padding:5px 8px;font-size:9.5pt;border-bottom:1px solid #f2f2f2;color:#555}.kv .v{font-family:'SF Mono',Menlo,monospace;color:#111}.kv.tot{border-top:1.5px solid #111;border-bottom:none;font-weight:700;color:#111}.kv.tot .v{font-weight:700}.mini{font-size:7.5pt;color:#999;margin:4px 0 6px}table{width:100%;border-collapse:collapse;margin:6px 0;font-size:9pt}th{background:#F5F4F1;padding:6px 8px;text-align:left;font-weight:700;font-size:7.5pt;color:#666;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid #ddd}td{padding:6px 8px;border-bottom:1px solid #f0f0f0;color:#333}.c{text-align:center}th.c{text-align:center}.ttot td{border-top:1.5px solid #111;border-bottom:none;font-weight:700;color:#111;background:#FAFAF7}.estbox{display:flex;justify-content:space-between;align-items:center;border:1.5px solid #111;background:#FAFAF7;padding:14px 20px;border-radius:5px;margin-top:14px}.estlabel{font-size:11pt;font-weight:700;color:#111}.estform{font-size:8pt;color:#666;margin-top:2px}.estv{font-size:22pt;font-weight:700;color:#1E6B42;font-family:'SF Mono',Menlo,monospace}.estnote{font-size:8pt;color:#92400E;background:#FEF9E7;border:1px solid #F4D85E;border-radius:4px;padding:8px 12px;margin-top:8px;line-height:1.5}.crit{margin:4px 0 0 16px;font-size:8.5pt;color:#555;line-height:1.6}.crit li{margin-bottom:3px}.crit b{color:#111}.foot{font-size:7pt;color:#999;text-align:center;margin-top:18px}.np{text-align:center;margin:16px auto;max-width:794px}.btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}@page{size:A4 portrait;margin:0}table,tr,thead{page-break-inside:avoid;break-inside:avoid}h1,h2{page-break-after:avoid;break-after:avoid}.kv,.estbox,.cols,.estnote{page-break-inside:avoid;break-inside:avoid}@media print{html,body{background:#fff;margin:0;padding:0;width:210mm}.np{display:none}#content{width:210mm;max-width:none;margin:0;padding:14mm 14mm;box-shadow:none;box-sizing:border-box}}`;
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title><script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script><script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script><style>${css}</style></head><body><div id="content"><div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="${leg.legalName||"Habitaris"}"/></div><div class="r"><div style="font-weight:600;color:#111">${leg.legalName||""}</div><div>NIT: ${leg.taxId||""}</div></div></div>${bodyHtml}<div class="foot">Habitaris Suite · Documento estimado para validación contable · ${new Date().toLocaleDateString(loc)} · ${fileName}</div></div><div class="np"><div id="np-info" style="font-size:9pt;color:#888;margin-bottom:10px">Tamaño: A4 · 210mm × 297mm</div><button class="btn" onclick="(function(){var el=document.getElementById('content');var info=document.getElementById('np-info');el.style.boxShadow='none';document.querySelector('.np').style.display='none';html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#fff'}).then(function(c){var img=c.toDataURL('image/jpeg',0.98);var pdf=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});var w=210,h=(c.height*w)/c.width,pageH=297;if(h<=pageH){pdf.addImage(img,'JPEG',0,0,w,h);}else{var yOff=0;while(yOff<h){pdf.addImage(img,'JPEG',0,-yOff,w,h);yOff+=pageH;if(yOff<h)pdf.addPage('a4','portrait');}}pdf.save('${fileName}.pdf');el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display='';info.innerHTML='✅ PDF descargado (A4)';info.style.color='#166534';info.style.background='#F0FDF4';info.style.padding='6px 10px';info.style.borderRadius='4px';})})()">📥 Descargar PDF en A4</button></div></body></html>`;
 
   return { fileName, html };
 }

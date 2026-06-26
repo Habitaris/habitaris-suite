@@ -131,16 +131,19 @@ async function calcPrimaSemestre(emp, anio, mesActual){
     if(ff){ if(ff.getFullYear()<anio||(ff.getFullYear()===anio&&ff.getMonth()<m)) diasVinc=0;
             else if(ff.getFullYear()===anio&&ff.getMonth()===m) diasVinc=Math.min(diasVinc,Math.min(30,ff.getDate())); }
     diasVinc=Math.max(0,diasVinc);
-    let ausencias=0, licNoRem=0;
+    let ausencias=0, licNoRem=0, incap=0, licRem=0, vac=0;
     if(diasVinc>0){
       const arr=await loadN(anio,m);
       const rec=(arr||[]).find(n=>n.empId===emp.empId);
-      if(rec){ const nd=rec.novDias||{};
-        ausencias=Object.values(nd).filter(v=>v==="ausencia").length;
-        licNoRem=Object.values(nd).filter(v=>v==="licNoRem").length; }
+      if(rec){ const vals=Object.values(rec.novDias||{});
+        ausencias=vals.filter(v=>v==="ausencia").length;
+        licNoRem=vals.filter(v=>v==="licNoRem").length;
+        incap=vals.filter(v=>v==="incapacidad").length;
+        licRem=vals.filter(v=>v==="licencia").length;
+        vac=vals.filter(v=>v==="vacaciones").length; }
     }
     const diasPrima=Math.max(0,diasVinc-ausencias-licNoRem);
-    meses.push({mes:m,diasVinc,ausencias,licNoRem,diasPrima});
+    meses.push({mes:m,diasVinc,ausencias,licNoRem,incap,licRem,vac,diasPrima});
   }
   const diasTotal=meses.reduce((s,x)=>s+x.diasPrima,0);
   const prima=Math.round(base*diasTotal/360);
