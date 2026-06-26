@@ -1020,11 +1020,11 @@ export function TabNomina(){
   },[]);
 
   const selN=useMemo(()=>noms.find(n=>n.id===sel),[noms,sel]);
-  // Emite el período (mes/año) y si está cerrado, para que RRHH lo muestre fijo y con color de estado
+  // Emite el período (mes/año) y si está cerrado (todas las nóminas del mes pagadas/liquidadas)
   useEffect(()=>{
-    const cerrado = !!(selN && (selN.estado==="pagada"||selN.estado==="liquidada"));
+    const cerrado = noms.length>0 && noms.every(n=>n.estado==="pagada"||n.estado==="liquidada");
     try{ window.dispatchEvent(new CustomEvent("hab:nomina:periodo",{detail:{label:`${MESES[mes]} ${anio}`,cerrado}})); }catch(e){}
-  },[mes,anio,selN]);
+  },[mes,anio,noms]);
   useEffect(()=>()=>{ try{ window.dispatchEvent(new CustomEvent("hab:nomina:periodo",{detail:null})); }catch(e){} },[]);
   const calc=useMemo(()=>selN?calcN({...selN,horasMes:calcHorasMesEmp(selN.empId,anio,mes,centros)}):null,[selN,anio,mes,centros]);
   const upd=(id,f)=>setNoms(p=>p.map(n=>n.id===id?{...n,...f}:n));
@@ -1455,7 +1455,6 @@ h2{font-size:9.5pt;margin:10px 0 4px;border-bottom:1px solid #ccc;padding-bottom
 table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:8.5pt;clear:both}
 th{text-align:left;padding:4px 6px;font-size:7pt;font-weight:700;text-transform:uppercase;border-bottom:2px solid #111}
 td{padding:3px 6px;border-bottom:1px solid #ddd}
-.fest{background:#f9f9f9}.nov{background:#f4f4f4}
 .cols{display:flex;gap:16px;margin-bottom:10px}.col{flex:1;border:1px solid #eee;border-radius:4px;padding:9px 13px;font-size:9pt;color:#555}.ct{font-size:7pt;font-weight:700;color:#111;letter-spacing:.5px;margin-bottom:4px}.col b{color:#111}.contrato{font-size:8.5pt;color:#555;margin-bottom:8px}.contrato b{color:#111}
 .dias{margin-bottom:12px}.dias td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:middle}
 .dias .cpt{font-weight:700;color:#111;font-size:9pt;width:34%}
@@ -1504,12 +1503,7 @@ ${sinNovTxt}
 <tr><td class="cpt">Base de cotización (IBC)</td><td class="num"><span class="big">${calc.diasVinc}</span><span class="den">/30</span></td><td class="rule">Días de vinculación del mes. Piso de 1 SMLMV en mes completo, aunque haya ausencias.</td></tr>
 </tbody></table>
 </tbody></table>
-<div class="sig">
-<div>Elaborado por<br><span style="color:#999">RRHH Habitaris</span></div>
-<div>Revisado por<br><span style="color:#999">Contador</span></div>
-<div>Aprobado por<br><span style="color:#999">Gerencia</span></div>
-</div>
-<div class="foot">Habitaris Suite · ${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})} · ${fileName}</div>
+<div class="foot">Documento generado por Habitaris Suite — ${fileName} · ${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</div>
 </div>
 <div class="np">
 <button class="btn" onclick="(function(){var el=document.getElementById('content');var hdrEl=el.querySelector('.hdr');var sigEl=el.querySelector('.sig');el.style.boxShadow='none';document.querySelector('.np').style.display='none';var st=document.createElement('div');st.style.cssText='text-align:center;padding:10px;font-family:monospace;color:#999';st.textContent='Generando PDF...';document.body.appendChild(st);var pbList=el.querySelectorAll('.page-break');var elRect=el.getBoundingClientRect();var hdrRect=hdrEl.getBoundingClientRect();var hdrEnd=hdrRect.bottom-elRect.top+8;var sigStart=sigEl?(sigEl.getBoundingClientRect().top-elRect.top-8):el.scrollHeight;var breakPoints=[hdrEnd];pbList.forEach(function(pb){var r=pb.getBoundingClientRect();breakPoints.push(r.top-elRect.top)});breakPoints.push(sigStart);html2canvas(el,{scale:2,useCORS:true,width:el.scrollWidth,windowWidth:el.scrollWidth,backgroundColor:'#fff'}).then(function(canvas){var iW=canvas.width,iH=canvas.height,pW=210;var scaleY=iH/el.scrollHeight;var J=jspdf.jsPDF;var pdf=new J({orientation:'portrait',unit:'mm',format:'a4'});var hdrHpx=Math.floor(hdrEnd*scaleY);var hc=document.createElement('canvas');hc.width=iW;hc.height=hdrHpx;var hctx=hc.getContext('2d');hctx.fillStyle='#fff';hctx.fillRect(0,0,iW,hdrHpx);hctx.drawImage(canvas,0,0,iW,hdrHpx,0,0,iW,hdrHpx);var hdrImg=hc.toDataURL('image/jpeg',0.92);var hdrHmm=hdrHpx*pW/iW;var sigImg=null,sigHmm=0;if(sigEl){var sigSpx=Math.floor((sigEl.getBoundingClientRect().top-elRect.top)*scaleY);var sigEpx=Math.floor(el.scrollHeight*scaleY);var sigHpx=sigEpx-sigSpx;if(sigHpx>0){var sc=document.createElement('canvas');sc.width=iW;sc.height=sigHpx;var sctx=sc.getContext('2d');sctx.fillStyle='#fff';sctx.fillRect(0,0,iW,sigHpx);sctx.drawImage(canvas,0,sigSpx,iW,sigHpx,0,0,iW,sigHpx);sigImg=sc.toDataURL('image/jpeg',0.92);sigHmm=sigHpx*pW/iW}}var totalPages=breakPoints.length-1;for(var i=0;i<totalPages;i++){var startPx=Math.floor(breakPoints[i]*scaleY);var endPx=Math.floor(breakPoints[i+1]*scaleY);var sliceH=endPx-startPx;if(sliceH<=0)continue;var pc=document.createElement('canvas');pc.width=iW;pc.height=sliceH;var ctx=pc.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,iW,sliceH);ctx.drawImage(canvas,0,startPx,iW,sliceH,0,0,iW,sliceH);var sImg=pc.toDataURL('image/jpeg',0.92);var sHmm=sliceH*pW/iW;if(i>0)pdf.addPage();pdf.addImage(hdrImg,'JPEG',0,0,pW,hdrHmm);var contentY=hdrHmm;var isLast=(i===totalPages-1);var reservaFirmas=(isLast&&sigImg)?(sigHmm+30):0;var availH=297-hdrHmm-12-reservaFirmas;if(sHmm>availH){var ratio=availH/sHmm;var scaledW=pW*ratio;var marginX=(pW-scaledW)/2;pdf.addImage(sImg,'JPEG',marginX,contentY,scaledW,availH)}else{pdf.addImage(sImg,'JPEG',0,contentY,pW,sHmm)}if(isLast&&sigImg){pdf.addImage(sigImg,'JPEG',0,297-sigHmm-10,pW,sigHmm)}pdf.setFontSize(8);pdf.setTextColor(120);pdf.text('Página '+(i+1)+' de '+totalPages,pW/2,291,{align:'center'})}pdf.save('${fileName}.pdf');st.textContent='PDF descargado ✅';el.style.boxShadow='0 0 8px rgba(0,0,0,.15)';document.querySelector('.np').style.display='';}).catch(function(e){st.textContent='Error: '+e.message;document.querySelector('.np').style.display=''})})()">📥 Descargar PDF</button>

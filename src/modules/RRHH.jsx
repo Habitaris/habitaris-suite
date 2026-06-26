@@ -5418,7 +5418,7 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                     {tab==="nomina" && nominaPeriodo && (
                       <div style={{ textAlign:"right", flexShrink:0 }}>
                         <div style={{ fontSize:9, fontWeight:700, color:T.inkLight, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:3 }}>Período</div>
-                        <div style={{ display:"inline-block", fontSize:14, fontWeight:700, fontFamily:"'DM Mono',monospace", padding:"3px 12px", borderRadius:8, whiteSpace:"nowrap",
+                        <div style={{ display:"inline-block", fontSize:14, fontWeight:700, fontFamily:"'DM Sans',sans-serif", padding:"3px 12px", borderRadius:8, whiteSpace:"nowrap",
                           ...(nominaPeriodo.cerrado
                             ? { background:"#EAF5EE", color:"#1E6B42", border:"1px solid #1E6B42" }
                             : { background:"#FEF9E7", color:"#92400E", border:"1px solid #E8C24A" }) }}>
