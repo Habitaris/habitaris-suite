@@ -464,7 +464,7 @@ function NovedadesPanel({selN, anio, mes, MESES, novHist, setNovHist, novYear, s
   if(years.indexOf(hoy.getFullYear())===-1) years.unshift(hoy.getFullYear());
 
   const tipoIcon = {vacaciones:"🏖️",licencia_remunerada:"📋",licencia_no_remunerada:"⚠️",permiso:"🕐",incapacidad:"🏥",ausencia:"❌"};
-  const estadoBadge = (e)=>e==="aprobada"?`<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;background:#E8F4EE;color:#1E6B42">aprobada</span>`:e==="rechazada"?`<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;background:#FEF2F2;color:#dc2626">rechazada</span>`:`<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;background:#FFFBEB;color:#D97706">pendiente</span>`;
+  const estadoBadge = (e)=>{const map={aprobada:{bg:"#E8F4EE",c:"#1E6B42",t:"aprobada"},rechazada:{bg:"#FEF2F2",c:"#dc2626",t:"rechazada"},registrada:{bg:"#F5F4F1",c:"#888",t:"registrada"},pendiente:{bg:"#FFFBEB",c:"#D97706",t:"pendiente"}};const s=map[e]||map.pendiente;return `<span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;background:${s.bg};color:${s.c}">${s.t}</span>`;};
 
   if(loading) return <div style={{textAlign:"center",padding:40}}><div style={{width:20,height:20,border:`3px solid ${T.border}`,borderTopColor:T.ink,borderRadius:"50%",animation:"spin 1s linear infinite",margin:"0 auto"}}/></div>;
 
@@ -694,8 +694,8 @@ th{padding:5px 8px;text-align:left;font-size:7pt;font-weight:700;text-transform:
 td{padding:4px 8px;border-bottom:1px solid #ddd}.r{text-align:right;font-family:monospace}
 .tot td{border-top:2px solid #111;font-weight:700;font-size:10pt;padding:6px 8px}
 .checks{margin:14px 0;font-size:10pt;line-height:2}
-.sig{margin-top:36px;overflow:hidden}.sig div{float:left;width:48%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:6px}.sig div:last-child{float:right}
-.sig div.ebox{border:1px solid #bbb;border-radius:6px;padding:12px 14px 10px;background:none;margin-top:-16px}
+.sig{margin-top:30px;display:flex;align-items:center;justify-content:space-between;gap:24px}.sig>div{width:47%;text-align:center;font-size:8pt}.sig>div:not(.ebox){border-top:1px solid #111;padding-top:6px}
+.sig div.ebox{border:1px solid #bbb;border-radius:6px;padding:12px 14px;background:none}
 .foot{font-size:6pt;color:#999;text-align:center;margin-top:14px;clear:both}
 .fullpage{display:flex;flex-direction:column;min-height:1123px}
 .fullpage .cierre{margin-top:auto;clear:both}
