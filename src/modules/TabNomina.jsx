@@ -513,14 +513,14 @@ function NovedadesPanel({selN, anio, mes, MESES, novHist, setNovHist, novYear, s
               const _apeNov = (selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
               const fileNameNov = `NOVEDADES-${_mAbrNov}${_a2Nov}-${_apeNov}-${(selN.cc||"").replace(/\D/g,"")}`;
               const legalNov = getActiveCompanyLegalDataSync();
-              const html = `<!doctype html><html><head><meta charset="utf-8">
+              const html = `<!doctype html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+body{font-family:'DM Sans',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
 .np{position:sticky;top:0;text-align:center;padding:10px;background:#e5e5e5;z-index:10}
-.np .btn,.np .btn2{font-size:12px;font-weight:600;border-radius:5px;padding:8px 16px;cursor:pointer;font-family:Helvetica,Arial,sans-serif;margin:0 4px}
+.np .btn,.np .btn2{font-size:12px;font-weight:600;border-radius:5px;padding:8px 16px;cursor:pointer;font-family:'DM Sans',Helvetica,Arial,sans-serif;margin:0 4px}
 .np .btn{background:#111;color:#fff;border:1px solid #111}
 .np .btn2{background:#fff;color:#111;border:1px solid #bbb}
 #content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.35;box-shadow:0 0 8px rgba(0,0,0,.15)}
@@ -667,12 +667,12 @@ function LiqFinalPanel({selN, calc, fmt, MESES, mes, anio, HAB_LOGO}) {
   const tipoInfo = TIPOS_TERM.find(t=>t.id===tipo);
 
   const openPreview = (title, bodyHtml, fileName, fullPage) => {
-    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
+    const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;padding:20px 0}
+body{font-family:'DM Sans',Helvetica,Arial,sans-serif;background:#e5e5e5;padding:20px 0}
 #content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.45;box-shadow:0 0 8px rgba(0,0,0,.15)}
 .hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:14px;overflow:hidden}
 .hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
@@ -1207,12 +1207,12 @@ export function TabNomina(){
       return h;
     };
 
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+body{font-family:'DM Sans',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
 #content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.35;box-shadow:0 0 8px rgba(0,0,0,.15)}
 .hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
 .hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
@@ -1437,12 +1437,12 @@ ${tablaOTconsMonto(totCostoEmp, "Costo total imputado")}
             const _fdN=(d)=>d?new Date(d+"T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale,{day:"2-digit",month:"2-digit",year:"numeric"}):null;
             const _contratoLbl=`${selN.tipoContrato||"término fijo"}${_fdN(selN.fechaIngreso)?` · ${_fdN(selN.fechaIngreso)}${_fdN(selN.fechaFinContrato)?` a ${_fdN(selN.fechaFinContrato)}`:""}`:""}`;
             const _leg=getActiveCompanyLegalDataSync();
-            const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
+            const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+body{font-family:'DM Sans',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
 #content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.35;box-shadow:0 0 8px rgba(0,0,0,.15)}
 .hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
 .hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
@@ -1458,11 +1458,11 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 .cols{display:flex;gap:16px;margin-bottom:10px}.col{flex:1;border:1px solid #eee;border-radius:4px;padding:9px 13px;font-size:9pt;color:#555}.ct{font-size:7pt;font-weight:700;color:#111;letter-spacing:.5px;margin-bottom:4px}.col b{color:#111}.contrato{font-size:8.5pt;color:#555;margin-bottom:8px}.contrato b{color:#111}
 .dias{margin-bottom:12px}.dias td{padding:8px 10px;border-bottom:1px solid #eee;vertical-align:middle}
 .dias .cpt{font-weight:700;color:#111;font-size:9pt;width:34%}
-.dias .num{font-family:'SF Mono',Menlo,monospace;text-align:right;white-space:nowrap;width:16%}
+.dias .num{font-family:'DM Mono','SF Mono',Menlo,monospace;text-align:right;white-space:nowrap;width:16%}
 .dias .num .big{font-size:15pt;font-weight:800;color:#111}.dias .num .den{font-size:8pt;color:#bbb;font-weight:600}
 .dias .rule{font-size:7.5pt;color:#888;line-height:1.35}
 .efx td{padding:6px 8px;vertical-align:middle;border-bottom:1px solid #eee}.efx th{text-align:center}.efx th:first-child{text-align:left}
-.efx .tp{font-weight:600;color:#111}.efx .dd{text-align:center;font-family:'SF Mono',Menlo,monospace;color:#666}
+.efx .tp{font-weight:600;color:#111}.efx .dd{text-align:center;font-family:'DM Mono','SF Mono',Menlo,monospace;color:#666}
 .pill{display:inline-block;padding:2px 9px;border-radius:10px;font-size:6.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap}
 .pill.ok{color:#15803D;background:#ECFDF3}.pill.no{color:#B42318;background:#FEF3F2}.pill.neu{color:#475467;background:#F2F4F7}
 .summary{margin:8px 0;overflow:hidden}
@@ -1603,12 +1603,12 @@ ${sinNovTxt}
       });
       tablaHtml += `<tr style="background:#111;color:#fff"><td colspan="5"><b>TOTAL</b></td><td style="text-align:right"><b>${totDiasQ1}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(anticipoQ1)}</b></td></tr></tbody></table>`;
 
-      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+body{font-family:'DM Sans',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
 #content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9.5pt;color:#111;line-height:1.4;box-shadow:0 0 8px rgba(0,0,0,.15)}
 .hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px;overflow:hidden}
 .hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8.5pt;color:#666;padding-top:6px}
@@ -1900,12 +1900,12 @@ ${filasPS}
             const cntLicNoRem = Object.values(nDias).filter(v => v === "licNoRem").length;
             const cntAus = Object.values(nDias).filter(v => v === "ausencia").length;
 
-            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
+            const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+body{font-family:'DM Sans',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
 #content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.35;box-shadow:0 0 8px rgba(0,0,0,.15)}
 .hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
 .hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
@@ -2125,12 +2125,12 @@ ${tablaOTs(otsMes, totalCostoEmpresa, "Costo total imputado")}
               });
               body+='<div style="margin-top:12px;font-size:7.5pt;color:#555;font-style:italic;padding:8px;background:#FAFAF7;border-left:3px solid #111;">Fórmula A (proporcional a días imputados): el coste mensual de cada empleado (devengado + auxilios + cargas empresariales) se reparte entre las OTs según los días imputados. Domingos, festivos y novedades quedan absorbidos proporcionalmente.</div>';
             }
-            const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
+            const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+body{font-family:'DM Sans',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
 #content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.35;box-shadow:0 0 8px rgba(0,0,0,.15)}
 .hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
 .hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
