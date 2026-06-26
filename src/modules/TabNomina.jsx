@@ -417,8 +417,13 @@ function AsistenciaPanel({selN, MESES, mes, anio}) {
 /* ── NOVEDADES PANEL (sub-tab dentro del liquidador) ── */
 function NovedadesPanel({selN, anio, mes, MESES, novHist, setNovHist, novYear, setNovYear, fmt}) {
   const [loading, setLoading] = useState(true);
-  // Por defecto muestra el mes que se está liquidando; el usuario puede cambiar a otro mes o "Todo el año".
-  const [filtroMes, setFiltroMes] = useState(String(mes));
+  // Por defecto muestra el mes que se está liquidando; el usuario puede elegir un RANGO de meses
+  // (desde→hasta) para ver y descargar el informe de varios meses, p.ej. enero→junio.
+  const [filtroDesde, setFiltroDesde] = useState(mes);
+  const [filtroHasta, setFiltroHasta] = useState(mes);
+  const mDesde = Math.min(filtroDesde, filtroHasta);
+  const mHasta = Math.max(filtroDesde, filtroHasta);
+  const rangoLbl = mDesde === mHasta ? `${MESES[mDesde]} ${novYear}` : `${MESES[mDesde]}–${MESES[mHasta]} ${novYear}`;
 
   useEffect(()=>{
     setLoading(true);
@@ -448,7 +453,7 @@ function NovedadesPanel({selN, anio, mes, MESES, novHist, setNovHist, novYear, s
     const d = novDate(n);
     if(isNaN(d)) return false;
     if(d.getFullYear()!==novYear) return false;
-    if(filtroMes!=="all" && d.getMonth()!==parseInt(filtroMes)) return false;
+    if(d.getMonth() < mDesde || d.getMonth() > mHasta) return false;
     return true;
   }).sort((a,b)=>novDate(b)-novDate(a));
 
@@ -496,19 +501,22 @@ function NovedadesPanel({selN, anio, mes, MESES, novHist, setNovHist, novYear, s
             <select value={novYear} onChange={e=>setNovYear(parseInt(e.target.value))} style={{padding:"4px 8px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>
               {years.map(y=><option key={y} value={y}>{y}</option>)}
             </select>
-            <select value={filtroMes} onChange={e=>setFiltroMes(e.target.value)} style={{padding:"4px 8px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>
-              <option value="all">Todo el año</option>
+            <select value={filtroDesde} onChange={e=>setFiltroDesde(parseInt(e.target.value))} title="Desde" style={{padding:"4px 8px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>
+              {MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}
+            </select>
+            <span style={{alignSelf:"center",fontSize:11,color:T.inkLight}}>→</span>
+            <select value={filtroHasta} onChange={e=>setFiltroHasta(parseInt(e.target.value))} title="Hasta" style={{padding:"4px 8px",border:`1px solid ${T.border}`,borderRadius:4,fontSize:11,fontFamily:"'DM Sans',sans-serif"}}>
               {MESES.map((m,i)=><option key={i} value={i}>{m}</option>)}
             </select>
             <button type="button" disabled={filtered.length===0} onClick={()=>{
-              const periodoLbl = filtroMes==="all" ? `Año ${novYear}` : `${MESES[parseInt(filtroMes)]} ${novYear}`;
+              const periodoLbl = rangoLbl;
               const filas = filtered.map(n=>{
                 const f=novDate(n);
                 const dias = (()=>{ if(!n.fecha_inicio) return 1; const fi=new Date(n.fecha_inicio+"T12:00:00"), ff=n.fecha_fin?new Date(n.fecha_fin+"T12:00:00"):fi; return Math.max(1,Math.floor((ff-fi)/86400000)+1); })();
                 return `<tr><td>${f.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short",year:"numeric"})}</td><td>${tipoIcon[n.tipo]||"📋"} ${n.tipo}</td><td style="font-family:monospace;font-size:7.5pt">${n.fecha_inicio||""}${n.fecha_fin&&n.fecha_fin!==n.fecha_inicio?" → "+n.fecha_fin:""}</td><td style="text-align:center">${dias}</td><td>${n.motivo||"—"}</td><td>${n.estado||""}</td></tr>`;
               }).join("");
               const totalDias = filtered.reduce((s,n)=>{ if(!n.fecha_inicio) return s+1; const fi=new Date(n.fecha_inicio+"T12:00:00"), ff=n.fecha_fin?new Date(n.fecha_fin+"T12:00:00"):fi; return s+Math.max(1,Math.floor((ff-fi)/86400000)+1); },0);
-              const _mAbrNov = filtroMes==="all"?"ANUAL":MESES[parseInt(filtroMes)].substring(0,3).toUpperCase();
+              const _mAbrNov = mDesde===mHasta ? MESES[mDesde].substring(0,3).toUpperCase() : MESES[mDesde].substring(0,3).toUpperCase()+"-"+MESES[mHasta].substring(0,3).toUpperCase();
               const _a2Nov = String(novYear).slice(-2);
               const _apeNov = (selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
               const fileNameNov = `NOVEDADES-${_mAbrNov}${_a2Nov}-${_apeNov}-${(selN.cc||"").replace(/\D/g,"")}`;
@@ -559,7 +567,7 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
         {filtered.length===0 ? (
           <div style={{textAlign:"center",padding:24,color:T.inkLight}}>
             <div style={{fontSize:24,marginBottom:6}}>📭</div>
-            <div style={{fontSize:12}}>Sin novedades en {novYear}{filtroMes!=="all"?" · "+MESES[parseInt(filtroMes)]:""}</div>
+            <div style={{fontSize:12}}>Sin novedades en {rangoLbl}</div>
           </div>
         ) : (
           <table style={{width:"100%",fontSize:11,borderCollapse:"collapse"}}>
@@ -586,7 +594,7 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 
         <div style={{display:"flex",gap:8,marginTop:12}}>
           <div style={{fontSize:9,color:T.inkLight,flex:1}}>
-            {filtered.length} novedad(es) en {novYear}{filtroMes!=="all"?" · "+MESES[parseInt(filtroMes)]:""}
+            {filtered.length} novedad(es) · {rangoLbl}
           </div>
         </div>
       </Card>
@@ -1898,8 +1906,8 @@ ${tablaHtml}
               }).sort((a, b) => (a.codigo || "").localeCompare(b.codigo || ""));
               const tTr = primaRows.reduce((s,o)=>s+o.trab,0), tFe = primaRows.reduce((s,o)=>s+o.fest,0), tNo = primaRows.reduce((s,o)=>s+o.nov,0), tAu = primaRows.reduce((s,o)=>s+o.aus,0);
               const repartoPrima = primaRows.length ? `<table style="margin-bottom:6px"><thead><tr><th>CT</th><th>Centro / Proyecto</th><th style="text-align:right">Trab.</th><th style="text-align:right">Fest.</th><th style="text-align:right" title="Novedades remuneradas: licencia, vacaciones, incapacidad">Nov.</th><th style="text-align:right" title="No remuneradas: ausencia, lic. no rem. (restan)">Aus.</th><th style="text-align:right">Días</th><th style="text-align:right">%</th><th style="text-align:right">Prima</th></tr></thead><tbody>
-${primaRows.map(o => `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right">${o.fest||""}</td><td style="text-align:right">${o.nov||""}</td><td style="text-align:right">${o.aus?("−"+o.aus):""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima * o.pct / 100)}</b></td></tr>`).join("")}
-<tr style="border-top:1.5px solid #111;font-weight:700"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${tTr}</td><td style="text-align:right">${tFe||""}</td><td style="text-align:right">${tNo||""}</td><td style="text-align:right">${tAu?("−"+tAu):""}</td><td style="text-align:right"><b>${totPD}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima)}</b></td></tr>
+${primaRows.map(o => `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right">${o.fest||""}</td><td style="text-align:right">${o.nov||""}</td><td style="text-align:right">${o.aus||""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima * o.pct / 100)}</b></td></tr>`).join("")}
+<tr style="border-top:1.5px solid #111;font-weight:700"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${tTr}</td><td style="text-align:right">${tFe||""}</td><td style="text-align:right">${tNo||""}</td><td style="text-align:right">${tAu||""}</td><td style="text-align:right"><b>${totPD}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima)}</b></td></tr>
 </tbody></table>` : "";
               primaSemBlock = `<h2>5b. 🎁 PRIMA DE SERVICIOS DEL SEMESTRE</h2>
 <div class="kv"><div class="l">Base (salario ${fmtCurr(ps.sal)} + aux. transporte ${fmtCurr(ps.aux)})</div><div class="v">${fmtCurr(ps.base)}</div></div>
