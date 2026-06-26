@@ -1866,15 +1866,16 @@ ${tablaHtml}
             };
 
             // === PRIMA DE SERVICIOS: reparto por la imputación de TODO el semestre ===
-            // Suma los días por centro de cada mes del semestre (ene–jun o jul–dic) con el
-            // MISMO criterio que el sueldo: festivos y novedades cuentan en su centro
-            // (imputación manual si existe, si no el centro base por calendario). El % por
-            // centro reparte la prima del semestre.
+            // Por centro: días trabajados + festivos + novedades. Las novedades NO
+            // remuneradas (ausencia, lic. no rem.) restan; el resto (incapacidad,
+            // vacaciones, licencia rem.) suman. El % reparte la prima del semestre.
             if (mes === 5 || mes === 11) {
               const ps = await calcPrimaSemestre(selN, anio, mes);
               const semMeses = mes <= 5 ? [0,1,2,3,4,5] : [6,7,8,9,10,11];
               const holsAnio = getHolidays(anio);
-              const accPrima = {};
+              const NOV_NEG = new Set(["ausencia", "licNoRem"]);
+              const accP = {};
+              const bumpP = (cid, tipo, d) => { if (!accP[cid]) accP[cid] = {trab:0, fest:0, nov:0, total:0}; accP[cid][tipo] += d; accP[cid].total += d; };
               for (const mm of semMeses) {
                 let arr;
                 if (mm === mes) { arr = [selN]; }
@@ -1886,27 +1887,26 @@ ${tablaHtml}
                 const festM = holsAnio.filter(h => h.date.getMonth() === mm);
                 const vis = new Set();
                 const cDe = (k) => { const im = impM[k]; return (im && im !== "__conflicto__") ? im : centroBaseParaFecha(k); };
-                const addC = (c) => { if (c) accPrima[c] = (accPrima[c] || 0) + 1; };
-                Object.entries(novM).forEach(([k, t]) => { if (t === "normal") return; const c = cDe(k); if (c) { addC(c); vis.add(k); } });
-                festM.forEach(h => { const k = fechaAStr(h.date); if (vis.has(k)) return; const c = cDe(k); if (c) { addC(c); vis.add(k); } });
-                Object.entries(impM).forEach(([k, c]) => { if (!c || c === "__conflicto__") return; if (vis.has(k)) return; addC(c); vis.add(k); });
+                Object.entries(novM).forEach(([k, t]) => { if (t === "normal") return; const c = cDe(k); if (!c) return; bumpP(c, "nov", NOV_NEG.has(t) ? -1 : 1); vis.add(k); });
+                festM.forEach(h => { const k = fechaAStr(h.date); if (vis.has(k)) return; const c = cDe(k); if (c) { bumpP(c, "fest", 1); vis.add(k); } });
+                Object.entries(impM).forEach(([k, c]) => { if (!c || c === "__conflicto__") return; if (vis.has(k)) return; bumpP(c, "trab", 1); vis.add(k); });
               }
-              const totPD = Object.values(accPrima).reduce((a, b) => a + b, 0);
-              const primaRows = Object.entries(accPrima).map(([cid, d]) => {
+              const totPD = Object.values(accP).reduce((a, b) => a + b.total, 0);
+              const primaRows = Object.entries(accP).map(([cid, info]) => {
                 const c = centros.find(x => x.id === cid);
-                return { codigo: c ? c.codigo : cid, nombre: c ? c.nombre : "", dias: d, pct: totPD > 0 ? d / totPD * 100 : 0 };
+                return { codigo: c ? c.codigo : cid, nombre: c ? c.nombre : "", trab: info.trab, fest: info.fest, nov: info.nov, dias: info.total, pct: totPD > 0 ? info.total / totPD * 100 : 0 };
               }).sort((a, b) => (a.codigo || "").localeCompare(b.codigo || ""));
-              const repartoPrima = primaRows.length ? `<h3 style="font-size:8pt;margin:6px 0 3px;color:#666">Reparto de la prima por centro (imputación del semestre, mismo criterio que el sueldo)</h3>
-<table style="margin-bottom:6px"><thead><tr><th>CT</th><th>Centro / Proyecto</th><th style="text-align:right">Días</th><th style="text-align:right">%</th><th style="text-align:right">Prima</th></tr></thead><tbody>
-${primaRows.map(x => `<tr class="imp"><td><b>${x.codigo}</b></td><td>${x.nombre}</td><td style="text-align:right"><b>${x.dias}</b></td><td style="text-align:right">${fmtPct(x.pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima * x.pct / 100)}</b></td></tr>`).join("")}
-<tr style="border-top:1.5px solid #111;font-weight:700"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right"><b>${totPD}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima)}</b></td></tr>
+              const tTr = primaRows.reduce((s,o)=>s+o.trab,0), tFe = primaRows.reduce((s,o)=>s+o.fest,0), tNo = primaRows.reduce((s,o)=>s+o.nov,0);
+              const repartoPrima = primaRows.length ? `<table style="margin-bottom:6px"><thead><tr><th>CT</th><th>Centro / Proyecto</th><th style="text-align:right">Trab.</th><th style="text-align:right">Fest.</th><th style="text-align:right">Nov.</th><th style="text-align:right">Días</th><th style="text-align:right">%</th><th style="text-align:right">Prima</th></tr></thead><tbody>
+${primaRows.map(o => `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right">${o.fest||""}</td><td style="text-align:right">${o.nov||""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima * o.pct / 100)}</b></td></tr>`).join("")}
+<tr style="border-top:1.5px solid #111;font-weight:700"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${tTr}</td><td style="text-align:right">${tFe||""}</td><td style="text-align:right">${tNo||""}</td><td style="text-align:right"><b>${totPD}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima)}</b></td></tr>
 </tbody></table>` : "";
               primaSemBlock = `<h2>5b. 🎁 PRIMA DE SERVICIOS DEL SEMESTRE</h2>
 <div class="kv"><div class="l">Base (salario ${fmtCurr(ps.sal)} + aux. transporte ${fmtCurr(ps.aux)})</div><div class="v">${fmtCurr(ps.base)}</div></div>
 <div class="kv"><div class="l">Días computados en el semestre (base 360)</div><div class="v">${ps.diasTotal} d</div></div>
 <div class="kv bigtot"><div class="l">PRIMA A PAGAR (base × ${ps.diasTotal} ÷ 360)</div><div class="v">${fmtCurr(ps.prima)}</div></div>
 ${repartoPrima}
-<div style="font-size:7pt;color:#999;margin:4px 0 8px">Reparto según la imputación de cada centro durante el semestre. El desglose mes a mes está en el informe de liquidación provisional de prima (Art. 306 CST).</div>`;
+<div style="font-size:7pt;color:#999;margin:4px 0 8px">Reparto por la imputación de cada centro durante el semestre (novedades no remuneradas en negativo). El desglose mes a mes está en el informe de liquidación provisional de prima (Art. 306 CST).</div>`;
             }
 
             // Listas para el bloque 0: festivos del mes, novedades del mes
