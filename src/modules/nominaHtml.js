@@ -13,6 +13,12 @@ import {  getTenantDefaultsSync, getActiveCompanyLegalDataSync } from "../core/c
 const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 const fmt = n => n == null || isNaN(n) ? "$0" : "$" + Math.round(n).toLocaleString(getTenantDefaultsSync().locale);
 
+// Enmascara un número de cuenta/teléfono dejando visibles solo los últimos 3 dígitos.
+// Ej: "3212319523" -> "*******523". Para documentos de pago (anticipo/nómina/prima).
+const maskCuenta = c => { const s = String(c||"").replace(/\s+/g,""); return s.length<=3 ? s : "*".repeat(s.length-3)+s.slice(-3); };
+// Línea de medio de pago: "DaviPlata · *******523" (o solo el banco si no hay número).
+const medioPago = n => `${n.banco||"—"}${n.cuenta?` · ${maskCuenta(n.cuenta)}`:""}`;
+
 // Genera { fileName, html } para una nómina o justificante de anticipo.
 // tipo: "anticipo" | "nomina"
 export function buildNominaHtml({ selN, calc, anio, mes, tipo, refBancaria }) {
@@ -78,7 +84,7 @@ export function buildNominaHtml({ selN, calc, anio, mes, tipo, refBancaria }) {
     <div style="font-size:7pt;color:#999;margin:4px 0 0">Días laborados: ${diasLab} · Festivos: ${festivos} · Novedades: ${novEntries.length}</div>`;
 
     bodyHtml = `<h1>Nómina</h1>
-    <div class="info"><div><span>Nombre: </span><b>${selN.nombre}</b></div><div><span>Documento: </span><b>${selN.cc}</b></div><div><span>Cargo: </span>${selN.cargo}</div><div><span>Contrato: </span>${selN.tipoContrato}</div><div><span>Período: </span><b>01 al ${new Date(anio,mes+1,0).getDate()} ${MESES[mes]} ${anio}</b></div><div><span>Días: </span><b>${calc.dias}/30</b></div><div><span>Ingreso: </span>${selN.fechaIngreso}</div><div><span>Antigüedad: </span><b>${antigTxt}</b></div><div><span>Banco: </span>${selN.banco||"—"}</div><div><span>Modalidad de pago: </span>${isQuinc?"Quincenal":"Mensual"}</div></div>
+    <div class="info"><div><span>Nombre: </span><b>${selN.nombre}</b></div><div><span>Documento: </span><b>${selN.cc}</b></div><div><span>Cargo: </span>${selN.cargo}</div><div><span>Contrato: </span>${selN.tipoContrato}</div><div><span>Período: </span><b>01 al ${new Date(anio,mes+1,0).getDate()} ${MESES[mes]} ${anio}</b></div><div><span>Días: </span><b>${calc.dias}/30</b></div><div><span>Ingreso: </span>${selN.fechaIngreso}</div><div><span>Antigüedad: </span><b>${antigTxt}</b></div><div><span>Medio de pago: </span>${medioPago(selN)}</div><div><span>Modalidad de pago: </span>${isQuinc?"Quincenal":"Mensual"}</div></div>
     <table><thead><tr><th>Concepto</th><th class="r">Devengado</th><th class="r">Deducción</th></tr></thead><tbody>
     ${allItems.map(r=>"<tr><td>"+r.c+"</td><td class='r'>"+(r.d>0?fmt(r.d):"—")+"</td><td class='r'>"+(r.dd>0?fmt(r.dd):"—")+"</td></tr>").join("")}
     <tr class="tot"><td>Total devengado / Total deducido</td><td class="r">${fmt(calc.dev)}</td><td class="r">${fmt(totalDed)}</td></tr>
@@ -201,7 +207,7 @@ export function buildPrimaJustificanteHtml({ selN, prima, anio, refBancaria }) {
 
   const bodyHtml = `<h1>Justificante de pago — Prima de servicios</h1>
   <div class="sub">${semLabel} · ${anio}</div>
-  <div class="info"><div><span>Nombre: </span><b>${selN.nombre}</b></div><div><span>Documento: </span><b>${selN.cc}</b></div><div><span>Cargo: </span>${selN.cargo}</div><div><span>Contrato: </span>${selN.tipoContrato||"fijo"}</div><div><span>Período: </span><b>${semLabel}</b></div><div><span>Fecha de pago: </span><b>${fechaPago}</b></div></div>
+  <div class="info"><div><span>Nombre: </span><b>${selN.nombre}</b></div><div><span>Documento: </span><b>${selN.cc}</b></div><div><span>Cargo: </span>${selN.cargo}</div><div><span>Contrato: </span>${selN.tipoContrato||"fijo"}</div><div><span>Período: </span><b>${semLabel}</b></div><div><span>Fecha de pago: </span><b>${fechaPago}</b></div><div><span>Medio de pago: </span><b>${medioPago(selN)}</b></div></div>
   <table><tbody><tr class="liq"><td>Prima de servicios pagada</td><td class="r"></td><td class="r">${fmt(prima.prima)}</td></tr></tbody></table>
   ${refBancaria?`<div style="font-size:8pt;color:#444;border:1px solid #ddd;border-left:3px solid #111;border-radius:3px;padding:6px 10px;margin:8px 0">Pagado con referencia: <b>${refBancaria}</b></div>`:""}
   <div style="font-size:7pt;color:#999;margin:10px 0">Art. 306 CST. Prima de servicios proporcional al tiempo laborado en el semestre.</div>
