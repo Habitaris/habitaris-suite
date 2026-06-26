@@ -5326,6 +5326,13 @@ const TABS = [
 
 export default function HabitarisRRHH({ pais = "CO" }) {
   const [tab, setTab] = useState("dashboard");
+  // Período de nómina (mes/año) emitido por TabNomina para mostrarlo fijo en el encabezado del módulo
+  const [nominaPeriodo, setNominaPeriodo] = useState(null);
+  useEffect(()=>{
+    const h=(e)=>setNominaPeriodo(e.detail?e.detail.label:null);
+    window.addEventListener("hab:nomina:periodo",h);
+    return ()=>window.removeEventListener("hab:nomina:periodo",h);
+  },[]);
   const currentUser = { pais }; // placeholder hasta que exista auth
   const [cargos,    saveCargos]    = useStore(NS.cargos,    []);
   const [jornada,   saveJornada]   = useStore(NS.jornada,   DEF_JORNADA);
@@ -5403,9 +5410,17 @@ export default function HabitarisRRHH({ pais = "CO" }) {
           {/* Contenido principal */}
           <div style={{ flex:1, overflowY:"auto", paddingBottom:40 }}>
                 <div style={{ padding:"24px 28px", maxWidth:1100 }}>
-                  <div style={{ marginBottom:18 }}>
-                    <h2 style={{ fontSize:19, fontWeight:700, color:T.ink, letterSpacing:-.2 }}>{TABS.find(t=>t.id===tab&&!t.sep)?.lbl||""}</h2>
-                    <p style={{ fontSize:11, color:T.inkLight, marginTop:2 }}>{TABS.find(t=>t.id===tab&&!t.sep)?.desc||""}</p>
+                  <div style={{ marginBottom:18, display:"flex", alignItems:"flex-start", justifyContent:"space-between", gap:16 }}>
+                    <div>
+                      <h2 style={{ fontSize:19, fontWeight:700, color:T.ink, letterSpacing:-.2 }}>{TABS.find(t=>t.id===tab&&!t.sep)?.lbl||""}</h2>
+                      <p style={{ fontSize:11, color:T.inkLight, marginTop:2 }}>{TABS.find(t=>t.id===tab&&!t.sep)?.desc||""}</p>
+                    </div>
+                    {tab==="nomina" && nominaPeriodo && (
+                      <div style={{ textAlign:"right", flexShrink:0 }}>
+                        <div style={{ fontSize:9, fontWeight:700, color:T.inkLight, textTransform:"uppercase", letterSpacing:"0.08em" }}>Período</div>
+                        <div style={{ fontSize:15, fontWeight:700, color:T.ink, fontFamily:"'DM Mono',monospace", marginTop:2, whiteSpace:"nowrap" }}>{nominaPeriodo}</div>
+                      </div>
+                    )}
                   </div>
 
                   {tab==="portal" && (

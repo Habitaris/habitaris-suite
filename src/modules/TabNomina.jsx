@@ -1020,6 +1020,11 @@ export function TabNomina(){
   },[]);
 
   const selN=useMemo(()=>noms.find(n=>n.id===sel),[noms,sel]);
+  // Emite el período (mes/año) para que RRHH lo muestre fijo a la derecha del título "Liquidador Nómina"
+  useEffect(()=>{
+    try{ window.dispatchEvent(new CustomEvent("hab:nomina:periodo",{detail:{label:`${MESES[mes]} ${anio}`}})); }catch(e){}
+  },[mes,anio]);
+  useEffect(()=>()=>{ try{ window.dispatchEvent(new CustomEvent("hab:nomina:periodo",{detail:null})); }catch(e){} },[]);
   const calc=useMemo(()=>selN?calcN({...selN,horasMes:calcHorasMesEmp(selN.empId,anio,mes,centros)}):null,[selN,anio,mes,centros]);
   const upd=(id,f)=>setNoms(p=>p.map(n=>n.id===id?{...n,...f}:n));
   const guardar=async()=>{setGuard(true);await saveN(anio,mes,noms);setGuard(false);};
@@ -2170,10 +2175,7 @@ ${body}
         <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:8,flexWrap:"wrap"}}>
           <Btn onClick={()=>{setVista("lista");setSubTab("nomina");}}>← Volver</Btn>
           <div style={{flex:1,minWidth:240}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
-              <div style={{fontSize:16,fontWeight:700,lineHeight:1.2}}>{selN.nombre}</div>
-              <span style={{fontSize:12,fontWeight:700,color:T.green,background:T.greenBg,border:`1px solid ${T.green}`,borderRadius:6,padding:"2px 10px"}}>{MESES[mes]} {anio}</span>
-            </div>
+            <div style={{fontSize:16,fontWeight:700,lineHeight:1.2}}>{selN.nombre}</div>
             <div style={{fontSize:11,color:T.inkLight,marginTop:2}}>{selN.cargo} · {selN.cc} · <span style={{fontWeight:600,color:selN.modalidadPago==="mensual"?T.ink:T.blue}}>{selN.modalidadPago==="mensual"?"Pago mensual":"Pago quincenal"}</span></div>
           </div>
           <EstadoPills n={selN}/>
