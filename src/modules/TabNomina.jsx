@@ -2285,11 +2285,11 @@ ${body}
               })()}
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10,gap:8,flexWrap:"wrap"}}>
                 <STit>📅 Calendario {MESES[mes]} {anio}</STit>
-                {esPagada && !modoEditarImp && (
+                {!modoEditarImp && (
                   <button
                     type="button"
                     onClick={()=>{
-                      if(!confirm("Vas a entrar en MODO EDICION DE IMPUTACIONES.\n\nSolo deberias cambiar a que OT corresponde cada dia trabajado. NO modifiques novedades ni horas extras ni nada mas - el mes ya esta pagado.\n\nLos cambios en imputaciones son informativos (afectan al informe de Costos por OT, no a la nomina pagada).\n\n¿Continuar?")) return;
+                      if(esPagada && !confirm("Vas a entrar en MODO EDICION DE IMPUTACIONES.\n\nSolo deberias cambiar a que OT corresponde cada dia trabajado. NO modifiques novedades ni horas extras ni nada mas - el mes ya esta pagado.\n\nLos cambios en imputaciones son informativos (afectan al informe de Costos por OT, no a la nomina pagada).\n\n¿Continuar?")) return;
                       setModoEditarImp(true);
                     }}
                     style={{padding:"4px 10px",fontSize:10,fontWeight:600,border:"1px solid #1E6B42",borderRadius:4,background:"#E8F4EE",color:"#1E6B42",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}
@@ -2384,7 +2384,7 @@ ${body}
               </div>
               {modoEditarImp && (
                 <div style={{padding:"8px 12px",marginBottom:8,background:"#FEF3C7",border:"1px solid #F59E0B",borderRadius:4,fontSize:11,color:"#92400E"}}>
-                  ⚠️ <strong>MODO EDICION DE IMPUTACIONES ACTIVO</strong> — el mes esta pagado. Solo cambia la OT de los días trabajados (las imputaciones son informativas, no afectan el pago). NO modifiques novedades, horas extras u otros valores.
+                  ⚠️ <strong>MODO EDICION DE IMPUTACIONES ACTIVO</strong> — {esPagada?"el mes ya esta pagado. Solo cambia la OT de los días trabajados (las imputaciones son informativas, no afectan el pago). NO modifiques novedades, horas extras u otros valores.":"asigna cada día trabajado a su centro/OT haciendo click en el día del calendario."}
                 </div>
               )}
               <div style={{display:"flex",gap:6,marginBottom:8,alignItems:"center",padding:"6px 10px",background:"#F9F8F4",borderRadius:4,border:`1px dashed ${T.border}`}}>
