@@ -670,6 +670,7 @@ export function getActiveCompanyLegalDataSync() {
     divisa:    company.divisa     || "COP",
     domicilio: company.domicilio_legal || {},
     phone:     company.phone      || "",
+    legalRep:  company.legal_representative || null,
   };
 }
 
