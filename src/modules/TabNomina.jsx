@@ -701,7 +701,7 @@ th{padding:5px 8px;text-align:left;font-size:7pt;font-weight:700;text-transform:
 td{padding:4px 8px;border-bottom:1px solid #ddd}.r{text-align:right;font-family:monospace}
 .tot td{border-top:2px solid #111;font-weight:700;font-size:10pt;padding:6px 8px}
 .checks{margin:14px 0;font-size:10pt;line-height:2}
-.sig{margin-top:30px;display:flex;align-items:center;justify-content:space-between;gap:24px}.sig>div{width:47%;text-align:center;font-size:8pt}.sig>div:not(.ebox){border-top:1px solid #111;padding-top:6px}
+.sig{margin-top:30px;display:flex;align-items:center;justify-content:space-between;gap:24px}.sig>div{width:47%;text-align:center;font-size:8pt}.sig>div:not(.ebox){border-top:1px solid #111;padding-top:6px;position:relative;top:22px}
 .sig div.ebox{border:1px solid #bbb;border-radius:6px;padding:12px 14px;background:none}
 .foot{font-size:6pt;color:#999;text-align:center;margin-top:14px;clear:both}
 .fullpage{display:flex;flex-direction:column;min-height:1123px}
@@ -1947,11 +1947,11 @@ ${primaRows.map(o => `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}
 <tr style="border-top:1.5px solid #111;font-weight:700"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${tTr}</td><td style="text-align:right">${tFe||""}</td><td style="text-align:right">${tNo||""}</td><td style="text-align:right">${tAu||""}</td><td style="text-align:right"><b>${totPD}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima)}</b></td></tr>
 </tbody></table>` : "";
               primaSemBlock = `<h2>5b. 🎁 PRIMA DE SERVICIOS DEL SEMESTRE</h2>
-<div class="kv"><div class="l">Base (salario ${fmtCurr(ps.sal)} + aux. transporte ${fmtCurr(ps.aux)})</div><div class="v">${fmtCurr(ps.base)}</div></div>
-<div class="kv"><div class="l">Días computados en el semestre (base 360)</div><div class="v">${ps.diasTotal} d</div></div>
-<div class="kv bigtot"><div class="l">PRIMA A PAGAR (base × ${ps.diasTotal} ÷ 360)</div><div class="v">${fmtCurr(ps.prima)}</div></div>
+<div class="kv"><div class="l">Salario ${fmtCurr(ps.sal)} × ${ps.diasTotal} días ÷ 360</div><div class="v">${fmtCurr(ps.primaSal)}</div></div>
+${ps.aux>0?`<div class="kv"><div class="l">Auxilio transporte ${fmtCurr(ps.aux)} × ${ps.diasAux} días ÷ 360</div><div class="v">${fmtCurr(ps.primaAux)}</div></div>`:""}
+<div class="kv bigtot"><div class="l">PRIMA A PAGAR (salario y auxilio, cada uno por sus días)</div><div class="v">${fmtCurr(ps.prima)}</div></div>
 ${repartoPrima}
-<div style="font-size:7pt;color:#999;margin:4px 0 8px">Días = Trab. + Fest. + Nov. − Aus. (las novedades no remuneradas restan). Imputación del semestre por centro. El desglose mes a mes está en el informe de liquidación provisional de prima (Art. 306 CST).</div>`;
+<div style="font-size:7pt;color:#999;margin:4px 0 8px">El reparto por centro reparte la prima según los <b>días efectivamente imputados</b> a cada centro en el semestre (días de calendario laborados); por eso su total puede diferir de los días de causación de la prima (que usan la convención de mes de 30 días). El % es lo que distribuye el valor. El desglose mes a mes está en el informe de liquidación provisional de prima (Art. 306 CST).</div>`;
             }
 
             // Listas para el bloque 0: festivos del mes, novedades del mes
