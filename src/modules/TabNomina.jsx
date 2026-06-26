@@ -1744,30 +1744,36 @@ ${repartoTabla}
                 out[otId][tipo]++;
                 out[otId].total++;
               };
-              // 1) Imputaciónes manuales = días trabajados
-              Object.entries(iDias).forEach(([k, otId]) => {
-                if (!otId || otId === "__conflicto__") return;
+              // Centro de un día: la imputación manual prevalece; si no, el centro base por calendario
+              const centroDe = (k) => {
+                const im = iDias[k];
+                if (im && im !== "__conflicto__") return im;
+                return centroBaseParaFecha(k);
+              };
+              // 1) Novedades — precedencia (no son días trabajados aunque estén imputados)
+              Object.entries(nDias).forEach(([k, tipoNov]) => {
+                if (tipoNov === "normal") return;
                 const dia = parseInt(k.split("-")[2], 10);
                 if (!incluyeDia(dia)) return;
-                bump(otId, "trab");
-                vistos.add(k);
+                const cId = centroDe(k);
+                if (cId) { bump(cId, "nov"); vistos.add(k); }
               });
-              // 2) Festivos del periodo - centro base
+              // 2) Festivos — precedencia sobre trabajado
               (festivosMes || []).forEach(h => {
                 const k = fechaAStr(h.date);
                 if (vistos.has(k)) return;
                 if (!incluyeDia(h.date.getDate())) return;
-                const cId = centroBaseParaFecha(k);
+                const cId = centroDe(k);
                 if (cId) { bump(cId, "fest"); vistos.add(k); }
               });
-              // 3) Novedades - centro base
-              Object.entries(nDias).forEach(([k, tipoNov]) => {
+              // 3) Imputaciónes manuales restantes = días trabajados
+              Object.entries(iDias).forEach(([k, otId]) => {
+                if (!otId || otId === "__conflicto__") return;
                 if (vistos.has(k)) return;
-                if (tipoNov === "normal") return;
                 const dia = parseInt(k.split("-")[2], 10);
                 if (!incluyeDia(dia)) return;
-                const cId = centroBaseParaFecha(k);
-                if (cId) { bump(cId, "nov"); vistos.add(k); }
+                bump(otId, "trab");
+                vistos.add(k);
               });
               return out;
             };
