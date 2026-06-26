@@ -1387,12 +1387,26 @@ ${tablaOTconsMonto(totCostoEmp, "Costo total imputado")}
     const genNovedadesHtml = () => {
             const nDias=selN.novDias||{};
             const nNotas=selN.novNotas||{};
-            // Agrupado por tipo: { tipoId: { dias, fechas:[], notas:[] } } a partir del calendario del mes.
-            const novGrp={};
-            Object.entries(nDias).sort().forEach(([k,v])=>{const d=new Date(k+"T12:00:00");if(!novGrp[v])novGrp[v]={dias:0,fechas:[],notas:[]};novGrp[v].dias++;novGrp[v].fechas.push(d.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short"}));const _n=(nNotas[k]||"").trim();if(_n&&!novGrp[v].notas.includes(_n))novGrp[v].notas.push(_n);});
-            // Tabla fija: TODOS los tipos del sistema (los que están en 0 quedan atenuados).
-            const NTIPOS_FIJOS=[{id:"incapacidad",icon:"🏥",label:"Incapacidad EG"},{id:"vacaciones",icon:"🏖️",label:"Vacaciones"},{id:"licencia",icon:"📋",label:"Licencia remunerada"},{id:"licNoRem",icon:"⚠️",label:"Licencia no remunerada"},{id:"ausencia",icon:"❌",label:"Ausencia injustificada"}];
-            const novGrpRows=NTIPOS_FIJOS.map(t=>{const g=novGrp[t.id];const dd=g?g.dias:0;const fechas=g?g.fechas.join(" · "):"—";const notaTxt=(g&&g.notas.length)?`<div style="font-style:italic;color:#999;margin-top:1px">${g.notas.join(" · ")}</div>`:"";const dim=dd===0?' style="opacity:.4"':'';return `<tr class="nov"${dim}><td>${t.icon} ${t.label}</td><td class="dd">${dd}</td><td style="font-size:7.5pt;color:#777">${fechas}${notaTxt}</td></tr>`;}).join("");
+            const TIPO_META={incapacidad:{icon:"🏥",label:"Incapacidad EG"},vacaciones:{icon:"🏖️",label:"Vacaciones"},licencia:{icon:"📋",label:"Licencia remunerada"},licNoRem:{icon:"⚠️",label:"Licencia no remunerada"},ausencia:{icon:"❌",label:"Ausencia injustificada"}};
+            // Ocurrencias: una fila por novedad. Agrupa días contiguos del mismo tipo y misma nota en un rango;
+            // si la nota cambia o no son contiguos, fila aparte. Así caben 1, 2, 3+ días con su nota propia.
+            const _dk=Object.keys(nDias).sort();
+            const ocurrencias=[]; let _cur=null;
+            for(const k of _dk){
+              const _t=nDias[k], _n=(nNotas[k]||"").trim(), _d=new Date(k+"T12:00:00");
+              if(_cur && _cur.tipo===_t && _cur.nota===_n && (_d-_cur.last)===86400000){ _cur.fin=_d; _cur.dias++; _cur.last=_d; }
+              else { if(_cur) ocurrencias.push(_cur); _cur={tipo:_t,nota:_n,ini:_d,fin:_d,last:_d,dias:1}; }
+            }
+            if(_cur) ocurrencias.push(_cur);
+            const _ff=d=>d.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"short"});
+            const novGrpRows=ocurrencias.map(o=>{
+              const m=TIPO_META[o.tipo]||{icon:"•",label:o.tipo};
+              const fechas=o.dias===1?_ff(o.ini):`${_ff(o.ini)} – ${_ff(o.fin)}`;
+              return `<tr><td class="tp">${m.icon} ${m.label}</td><td style="white-space:nowrap">${fechas}</td><td class="dd">${o.dias}</td><td style="font-size:8pt;color:#555">${o.nota||"—"}</td></tr>`;
+            }).join("");
+            const _tiposCon=new Set(ocurrencias.map(o=>o.tipo));
+            const _sinNov=Object.entries(TIPO_META).filter(([id])=>!_tiposCon.has(id)).map(([,m])=>m.label);
+            const sinNovTxt=_sinNov.length?`<div style="font-size:7.5pt;color:#aaa;margin:2px 0 4px">Sin novedades este mes: ${_sinNov.join(" · ")}.</div>`:"";
             const festList=festivosMes.map(h=>({fecha:h.date.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"}),name:h.name}));
             const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);
             const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
@@ -1456,9 +1470,10 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 ${festList.length>0?festList.map(f=>`<tr class="fest"><td>${f.fecha}</td><td>${f.name}</td></tr>`).join(""):`<tr><td colspan="2" style="color:#999;text-align:center">Sin festivos</td></tr>`}
 </tbody></table>
 <h2>Novedades del mes</h2>
-<table class="efx"><thead><tr><th>Tipo</th><th>Días</th><th style="text-align:left">Fechas</th></tr></thead><tbody>
-${novGrpRows}
+<table class="efx"><thead><tr><th>Tipo</th><th style="text-align:left">Fechas</th><th>Días</th><th style="text-align:left">Nota</th></tr></thead><tbody>
+${novGrpRows||`<tr><td colspan="4" style="color:#aaa;font-style:italic;text-align:center;padding:8px">Sin novedades registradas en el mes</td></tr>`}
 </tbody></table>
+${sinNovTxt}
 <h2>Días por concepto</h2>
 <table class="dias"><tbody>
 <tr><td class="cpt">Salario</td><td class="num"><span class="big">${calc.dias}</span><span class="den">/30</span></td><td class="rule">Días pagados. Restan ausencias injustificadas y licencias no remuneradas; la licencia remunerada no resta.</td></tr>
