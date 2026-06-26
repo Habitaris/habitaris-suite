@@ -5422,7 +5422,7 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                           ...(nominaPeriodo.cerrado
                             ? { background:"#EAF5EE", color:"#1E6B42", border:"1px solid #1E6B42" }
                             : { background:"#FEF9E7", color:"#92400E", border:"1px solid #E8C24A" }) }}>
-                          {nominaPeriodo.label} · {nominaPeriodo.cerrado?"cerrado":"sin cerrar"}
+                          {nominaPeriodo.label} · {nominaPeriodo.cerrado?"liquidado":"en curso"}
                         </div>
                       </div>
                     )}
