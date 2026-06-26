@@ -902,7 +902,18 @@ export function TabNomina(){
     const festCount=hols.filter(h=>h.date.getMonth()===mes&&h.date.getDay()!==0).length;
     Promise.all([fetchEmps(),loadN(anio,mes),loadN(mes===0?anio-1:anio,mes===0?11:mes-1),loadEmpMaestro()]).then(async ([emps,saved,prevSaved,maestro])=>{
       const ex=saved||[];
-      const lista=emps.map(e=>{const f=ex.find(n=>n.empId===e.id);if(f){if(f.festMes===undefined)f.festMes=festCount;if(!f.fechaFinContrato)f.fechaFinContrato=e.fecha_fin_contrato||"";if(!f.duracionMeses)f.duracionMeses=e.duracion_meses||0;if(!f.fechaIngreso)f.fechaIngreso=e.fecha_inicio||"";if(!f.tipoContrato)f.tipoContrato=e.tipo_contrato||"";if(!f.banco)f.banco=((maestro||[]).find(x=>x.empId===e.id)?.banco)||((prevSaved||[]).find(x=>x.empId===e.id)?.banco)||e.candidato_banco||"";if(!f.cuenta)f.cuenta=((maestro||[]).find(x=>x.empId===e.id)?.cuenta)||((prevSaved||[]).find(x=>x.empId===e.id)?.cuenta)||e.candidato_numero_cuenta||"";if(!f.tipoCuenta)f.tipoCuenta=((maestro||[]).find(x=>x.empId===e.id)?.tipoCuenta)||((prevSaved||[]).find(x=>x.empId===e.id)?.tipoCuenta)||e.candidato_tipo_cuenta||"";if(!f.modalidadPago){f.modalidadPago=e.modalidad_pago||"quincenal";if(f.modalidadPago==="mensual"&&f.q1Pct>0)f.q1Pct=0;}return f;}
+      // Solo empleados con contrato activo en este mes: la nómina no abre antes del ingreso
+      // ni después del fin de contrato. Si ya hay nómina guardada para el mes, se respeta.
+      const _iniMes=new Date(anio,mes,1,12), _finMes=new Date(anio,mes+1,0,12);
+      const empsAct=emps.filter(e=>{
+        if(ex.find(n=>n.empId===e.id)) return true;
+        const _fi=e.fecha_inicio?new Date(e.fecha_inicio+"T12:00:00"):null;
+        const _ff=e.fecha_fin_contrato?new Date(e.fecha_fin_contrato+"T12:00:00"):null;
+        if(_fi&&_fi>_finMes) return false;
+        if(_ff&&_ff<_iniMes) return false;
+        return true;
+      });
+      const lista=empsAct.map(e=>{const f=ex.find(n=>n.empId===e.id);if(f){if(f.festMes===undefined)f.festMes=festCount;if(!f.fechaFinContrato)f.fechaFinContrato=e.fecha_fin_contrato||"";if(!f.duracionMeses)f.duracionMeses=e.duracion_meses||0;if(!f.fechaIngreso)f.fechaIngreso=e.fecha_inicio||"";if(!f.tipoContrato)f.tipoContrato=e.tipo_contrato||"";if(!f.banco)f.banco=((maestro||[]).find(x=>x.empId===e.id)?.banco)||((prevSaved||[]).find(x=>x.empId===e.id)?.banco)||e.candidato_banco||"";if(!f.cuenta)f.cuenta=((maestro||[]).find(x=>x.empId===e.id)?.cuenta)||((prevSaved||[]).find(x=>x.empId===e.id)?.cuenta)||e.candidato_numero_cuenta||"";if(!f.tipoCuenta)f.tipoCuenta=((maestro||[]).find(x=>x.empId===e.id)?.tipoCuenta)||((prevSaved||[]).find(x=>x.empId===e.id)?.tipoCuenta)||e.candidato_tipo_cuenta||"";if(!f.modalidadPago){f.modalidadPago=e.modalidad_pago||"quincenal";if(f.modalidadPago==="mensual"&&f.q1Pct>0)f.q1Pct=0;}return f;}
         return{id:uid(),empId:e.id,nombre:e.candidato_nombre||"",cc:e.candidato_cc||"",cargo:e.cargo||"",sal:e.salario_base||SMLMV,bono:e.bono_no_salarial||0,bonoConcepto:e.bono_concepto||"",bonoPrest:e.bono_es_salarial||false,dias:30,festMes:festCount,reg:e.regimen_salud||"contributivo",arl:e.arl_nivel||0,ex114:true,q1Pct:(e.modalidad_pago||"quincenal")==="mensual"?0:0.5,modalidadPago:e.modalidad_pago||"quincenal",hexD:0,hexN:0,hexDD:0,hexDN:0,festLab:0,diasIncap:0,diasLicRem:0,diasLicNoRem:0,diasVac:0,diasAusencia:0,novNotas:{},otrosIng:0,otrasDed:0,nov:"",estado:"borrador",eps:e.candidato_eps||"",pen:e.candidato_pension||"",banco:e.candidato_banco||"",cuenta:e.candidato_numero_cuenta||"",tipoCuenta:e.candidato_tipo_cuenta||"",fechaIngreso:e.fecha_inicio||"",tipoContrato:e.tipo_contrato||"Término fijo",duracionMeses:e.duracion_meses||0,fechaFinContrato:e.fecha_fin_contrato||"",auxT:e.auxilio_transporte||AUX_TR,netoRef:e.salario_neto||0,anio,mes};});
       // Condiciones con fecha de vigencia (ARL, salario, etc.): para meses NO pagados,
       // los valores salen de la condición vigente en ese mes, no del valor crudo de la ficha.
@@ -1030,8 +1041,9 @@ export function TabNomina(){
   const selN=useMemo(()=>noms.find(n=>n.id===sel),[noms,sel]);
   // Emite el período (mes/año) y si está cerrado (todas las nóminas del mes pagadas/liquidadas)
   useEffect(()=>{
+    const bloqueado = noms.length===0;
     const cerrado = noms.length>0 && noms.every(n=>n.estado==="pagada"||n.estado==="liquidada");
-    try{ window.dispatchEvent(new CustomEvent("hab:nomina:periodo",{detail:{label:`${MESES[mes]} ${anio}`,cerrado}})); }catch(e){}
+    try{ window.dispatchEvent(new CustomEvent("hab:nomina:periodo",{detail:{label:`${MESES[mes]} ${anio}`,cerrado,bloqueado}})); }catch(e){}
   },[mes,anio,noms]);
   useEffect(()=>()=>{ try{ window.dispatchEvent(new CustomEvent("hab:nomina:periodo",{detail:null})); }catch(e){} },[]);
   const calc=useMemo(()=>selN?calcN({...selN,horasMes:calcHorasMesEmp(selN.empId,anio,mes,centros)}):null,[selN,anio,mes,centros]);
@@ -1439,6 +1451,15 @@ ${tablaOTconsMonto(totCostoEmp, "Costo total imputado")}
             const _sinNov=Object.entries(TIPO_META).filter(([id])=>!_tiposCon.has(id)).map(([,m])=>m.label);
             const sinNovTxt=_sinNov.length?`<div style="font-size:7.5pt;color:#aaa;margin:2px 0 4px">Sin novedades este mes: ${_sinNov.join(" · ")}.</div>`:"";
             const festList=festivosMes.map(h=>({fecha:h.date.toLocaleDateString(getTenantDefaultsSync().locale,{weekday:"short",day:"numeric",month:"short"}),name:h.name}));
+            // Notas de "Días por concepto": en vez de explicar la regla, lista las novedades
+            // (y festivos) que efectivamente restan a cada número.
+            const _nc=(t)=>Object.values(nDias).filter(v=>v===t).length;
+            const _AUS={n:_nc("ausencia"),s:"ausencia",p:"ausencias"}, _LNR={n:_nc("licNoRem"),s:"lic. no rem.",p:"lic. no rem."}, _LR={n:_nc("licencia"),s:"licencia rem.",p:"licencias rem."}, _INC={n:_nc("incapacidad"),s:"incapacidad",p:"incapacidades"}, _VAC={n:_nc("vacaciones"),s:"día de vac.",p:"días de vac."}, _FEST={n:festivosMes.filter(h=>h.date.getDay()!==0).length,s:"festivo",p:"festivos"};
+            const _notaC=(items)=>{const p=items.filter(x=>x.n>0).map(x=>`${x.n} ${x.n===1?x.s:x.p}`);return p.length?p.join(" · "):"Sin descuentos";};
+            const _notaSalario=_notaC([_AUS,_LNR]);
+            const _notaAux=_notaC([_AUS,_LNR,_LR,_INC,_VAC]);
+            const _notaBono=_notaC([_FEST,_AUS,_LNR,_LR,_INC,_VAC]);
+            const _notaIBC=(calc.diasVinc>=30)?"Mes completo":"Vinculación parcial del mes";
             const mAbr=MESES[mes].substring(0,3).toUpperCase();const a2=String(anio).slice(-2);
             const ape=(selN.nombre||"").split(" ").slice(-2).join("-").toUpperCase();
             const fileName=`NOV-${mAbr}${a2}-${ape}-${selN.cc||""}`;
@@ -1505,10 +1526,10 @@ ${novGrpRows||`<tr><td colspan="4" style="color:#aaa;font-style:italic;text-alig
 ${sinNovTxt}
 <h2>Días por concepto</h2>
 <table class="dias"><tbody>
-<tr><td class="cpt">Salario</td><td class="num"><span class="big">${calc.dias}</span><span class="den">/30</span></td><td class="rule">Días pagados. Restan ausencias injustificadas y licencias no remuneradas; la licencia remunerada no resta.</td></tr>
-<tr><td class="cpt">Auxilio de transporte</td><td class="num"><span class="big">${calc.diasComm}</span><span class="den">/30</span></td><td class="rule">Restan las licencias remuneradas; los festivos sí cuentan (Concepto 219821/2020).</td></tr>
-<tr><td class="cpt">Bono de asistencia</td><td class="num"><span class="big">${calc.diasAsist}</span><span class="den">/30</span></td><td class="rule">Restan festivos, novedades y licencias remuneradas.</td></tr>
-<tr><td class="cpt">Base de cotización (IBC)</td><td class="num"><span class="big">${calc.diasVinc}</span><span class="den">/30</span></td><td class="rule">Días de vinculación del mes. Piso de 1 SMLMV en mes completo, aunque haya ausencias.</td></tr>
+<tr><td class="cpt">Salario</td><td class="num"><span class="big">${calc.dias}</span><span class="den">/30</span></td><td class="rule">${_notaSalario}</td></tr>
+<tr><td class="cpt">Auxilio de transporte</td><td class="num"><span class="big">${calc.diasComm}</span><span class="den">/30</span></td><td class="rule">${_notaAux}</td></tr>
+<tr><td class="cpt">Bono de asistencia</td><td class="num"><span class="big">${calc.diasAsist}</span><span class="den">/30</span></td><td class="rule">${_notaBono}</td></tr>
+<tr><td class="cpt">Base de cotización (IBC)</td><td class="num"><span class="big">${calc.diasVinc}</span><span class="den">/30</span></td><td class="rule">${_notaIBC}</td></tr>
 </tbody></table>
 </tbody></table>
 <div class="foot">Documento generado por Habitaris Suite — ${fileName} · ${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</div>

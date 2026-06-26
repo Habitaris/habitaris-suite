@@ -5419,10 +5419,12 @@ export default function HabitarisRRHH({ pais = "CO" }) {
                       <div style={{ textAlign:"right", flexShrink:0 }}>
                         <div style={{ fontSize:9, fontWeight:700, color:T.inkLight, textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:3 }}>Período</div>
                         <div style={{ display:"inline-block", fontSize:14, fontWeight:700, fontFamily:"'DM Sans',sans-serif", padding:"3px 12px", borderRadius:8, whiteSpace:"nowrap",
-                          ...(nominaPeriodo.cerrado
+                          ...(nominaPeriodo.bloqueado
+                            ? { background:"#F5F4F1", color:"#9A9A9A", border:"1px solid #D8D6D1" }
+                            : nominaPeriodo.cerrado
                             ? { background:"#EAF5EE", color:"#1E6B42", border:"1px solid #1E6B42" }
                             : { background:"#FEF9E7", color:"#92400E", border:"1px solid #E8C24A" }) }}>
-                          {nominaPeriodo.label} · {nominaPeriodo.cerrado?"liquidado":"en curso"}
+                          {nominaPeriodo.label} · {nominaPeriodo.bloqueado?"bloqueado":nominaPeriodo.cerrado?"liquidado":"en curso"}
                         </div>
                       </div>
                     )}
