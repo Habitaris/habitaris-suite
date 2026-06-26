@@ -1336,6 +1336,7 @@ ${tablaOTconsMonto(totCostoEmp, "Costo total imputado")}
       const aa=String(anio).slice(-2);
       // Apellidos = últimas 2 palabras del nombre, en mayúsculas, unidas por guion
       const apellidos=(selN.nombre||"").trim().split(/\s+/).slice(-2).join("-").toUpperCase();
+      if(tipoForm==="prima") return `PRIMA ${mesAbr}${aa} - ${apellidos}`;
       const sufijo=tipoForm==="q1"?"ANT":(isQ?"Q2":"");
       return `NOM ${mesAbr}${aa}${sufijo?" "+sufijo:""} - ${apellidos}`;
     };
@@ -2168,9 +2169,9 @@ ${body}
         {/* Payment form */}
         {pagoForm&&(
           <div style={{background:T.surface,border:`2px solid ${T.ink}`,borderRadius:8,padding:16,marginBottom:14}}>
-            <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{pagoForm.tipo==="q1"?"💵 Confirmar pago anticipo Q1":"💵 Confirmar pago de nómina"}</div>
+            <div style={{fontSize:13,fontWeight:700,marginBottom:10}}>{pagoForm.tipo==="q1"?"💵 Confirmar pago anticipo Q1":pagoForm.tipo==="prima"?"🎁 Confirmar pago de prima":"💵 Confirmar pago de nómina"}</div>
             <div style={{fontSize:11,color:T.inkLight,marginBottom:12}}>
-              {pagoForm.tipo==="q1"?`Anticipo: ${fmt(calc.q1)} · ${selN.nombre}`:`Neto: ${fmt(isQ?calc.q2:calc.neto)} · ${selN.nombre}`}
+              {pagoForm.tipo==="q1"?`Anticipo: ${fmt(calc.q1)} · ${selN.nombre}`:pagoForm.tipo==="prima"?`Prima de servicios: ${fmt(pagoForm.monto||0)} · ${selN.nombre}`:`Neto: ${fmt(isQ?calc.q2:calc.neto)} · ${selN.nombre}`}
             </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:12}}>
               <div>
@@ -2190,6 +2191,15 @@ ${body}
             <div style={{display:"flex",gap:8}}>
               <button onClick={()=>{
                 if(!pagoForm.ref.trim()){window.toast("Ingresa la referencia bancaria","warning");return;}
+                if(pagoForm.tipo==="prima"){
+                  if(!pagoForm.soporte){window.toast("Adjunta el comprobante de la prima","warning");return;}
+                  const nuevoSoporte={...soportesPago,[selN.empId+":prima"]:{ref:pagoForm.ref,archivo:pagoForm.soporte.name,data:pagoForm.soporte.data}};
+                  setSoportesPago(nuevoSoporte);
+                  fetch("/api/hiring?kv=soporte_pago&anio="+anio+"&mes="+mes,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({data:nuevoSoporte})})
+                    .then(()=>{setPagoForm(null);window.toast("✓ Prima pagada · Ref: "+pagoForm.ref,"success",5000);})
+                    .catch(()=>window.toast("Error al guardar el comprobante","error"));
+                  return;
+                }
                 const liq=pagoForm.tipo==="q1"?calc.q1:(isQ?calc.q2:calc.neto);
                 const tipo=pagoForm.tipo==="q1"?"anticipo":"nomina";
                 const nuevoEstado=pagoForm.tipo==="q1"?"q1_pagado":"pagada";
@@ -2610,9 +2620,24 @@ ${body}
                 </div>
               </div>
             ))}
-            {/* Justificantes de pago subidos (soportes de transferencia) */}
+            {/* Pago de la prima de servicios (jun/dic): subir comprobante, igual que la nómina */}
+            {(mes===5||mes===11)&&(()=>{
+              const primaPagada=!!(soportesPago[selN.empId+":prima"]&&soportesPago[selN.empId+":prima"].data);
+              return (
+                <div style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:primaPagada?"#F0FDF4":"#FFFBEB",border:`1px solid ${primaPagada?"#BBF7D0":"#F4D85E"}`,borderRadius:8,marginBottom:8}}>
+                  <div style={{fontSize:22,width:36,textAlign:"center"}}>🎁</div>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:13,fontWeight:700,color:T.ink}}>Pago de la prima de servicios</div>
+                    <div style={{fontSize:10,color:T.inkLight,marginTop:1}}>{primaPagada?"Prima pagada · el comprobante aparece abajo":"Registra el pago y adjunta el comprobante de la transferencia"}</div>
+                  </div>
+                  {primaPagada
+                    ? <div style={{fontSize:11,fontWeight:700,color:T.green,padding:"6px 14px"}}>✓ Pagada</div>
+                    : <button onClick={async()=>{const ps=await calcPrimaSemestre(selN,anio,mes);setPagoForm({tipo:"prima",ref:sugerirRef("prima"),soporte:null,monto:ps.prima});}} style={{fontSize:11,fontWeight:600,color:"#fff",background:T.ink,border:"none",borderRadius:4,padding:"6px 14px",cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>🎁 Pagar prima</button>}
+                </div>
+              );
+            })()}
             {(()=>{
-              const tipos=[{k:"anticipo",lbl:"Justificante de pago — Anticipo Q1"},{k:"nomina",lbl:"Justificante de pago — Nómina/Q2"}];
+              const tipos=[{k:"anticipo",lbl:"Justificante de pago — Anticipo Q1"},{k:"nomina",lbl:"Justificante de pago — Nómina/Q2"},{k:"prima",lbl:"Justificante de pago — Prima de servicios"}];
               const items=tipos.map(t=>({...t,sop:soportesPago[selN.empId+":"+t.k]})).filter(t=>t.sop&&t.sop.data);
               if(items.length===0) return null;
               return (
