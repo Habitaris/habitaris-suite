@@ -666,7 +666,7 @@ function LiqFinalPanel({selN, calc, fmt, MESES, mes, anio, HAB_LOGO}) {
   const liq = calcLiqFinal(selN, tipo, fechaSalida);
   const tipoInfo = TIPOS_TERM.find(t=>t.id===tipo);
 
-  const openPreview = (title, bodyHtml, fileName) => {
+  const openPreview = (title, bodyHtml, fileName, fullPage) => {
     const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fileName}</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
@@ -687,12 +687,15 @@ td{padding:4px 8px;border-bottom:1px solid #ddd}.r{text-align:right;font-family:
 .checks{margin:14px 0;font-size:10pt;line-height:2}
 .sig{margin-top:36px;overflow:hidden}.sig div{float:left;width:48%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:6px}.sig div:last-child{float:right}
 .foot{font-size:6pt;color:#999;text-align:center;margin-top:14px;clear:both}
+.fullpage{display:flex;flex-direction:column;min-height:1123px}
+.fullpage .cierre{margin-top:auto;clear:both}
+.cierre p{margin-bottom:26px}
 .np{text-align:center;margin:16px auto;max-width:794px}
 .btn{background:#111;color:#fff;border:none;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;font-weight:600;margin:0 4px}
 .btn2{background:#fff;color:#111;border:1px solid #111;padding:10px 24px;border-radius:4px;cursor:pointer;font-size:11pt;margin:0 4px}
 @page{size:A4 portrait;margin:0}table,tr,thead{page-break-inside:avoid;break-inside:avoid}h1,h2,h3{page-break-after:avoid;break-after:avoid}.kv,.kv.bigtot,.info,.notebox,.sig{page-break-inside:avoid;break-inside:avoid}.page-break{page-break-before:always;break-before:page}@media print{html,body{background:#fff;margin:0;padding:0;width:210mm}.np{display:none}#content{width:210mm;max-width:none;margin:0;padding:14mm 14mm;box-shadow:none;box-sizing:border-box}}
 </style></head><body>
-<div id="content">
+<div id="content" class="${fullPage?"fullpage":""}">
 <div class="hdr"><div class="l"><img src="${HAB_LOGO}" alt="Habitaris"/></div><div class="r"><div style="font-weight:600;color:#111">${getActiveCompanyLegalDataSync().legalName}</div><div>NIT: ${getActiveCompanyLegalDataSync().taxId}</div></div></div>
 ${bodyHtml}
 </div>
@@ -769,7 +772,7 @@ ${bodyHtml}
                 if(d.id==="preaviso"){
                   const venc = selN.fechaFinContrato ? new Date(selN.fechaFinContrato+"T12:00:00").toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"}) : liq.ff.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"});
                   const ini = liq.fi.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"});
-                  body=`<h1>PREAVISO DE NO RENOVACIÓN DE CONTRATO</h1><div class="sub" style="text-align:center;font-size:8.5pt;color:#888;margin-bottom:16px">Contrato a término fijo · Art. 46 CST</div><div class="body"><p>Bogotá D.C., ${hoy}</p><br/><p>Señor(a)<br/><b>${selN.nombre}</b><br/>C.C. ${(selN.cc||"").replace(/\D/g,"")}<br/>Cargo: ${selN.cargo}</p><div style="margin:14px 0;padding:10px 14px;background:#FAFAF7;border-left:3px solid #111;font-size:9.5pt"><b>Referencia:</b> No prórroga del contrato de trabajo a término fijo suscrito el ${ini}.</div><p>Por medio de la presente le comunicamos, con una antelación no inferior a treinta (30) días, la decisión de <b>${getActiveCompanyLegalDataSync().legalName}</b> de <b>no renovar ni prorrogar</b> su contrato de trabajo a término fijo, el cual terminará en su fecha de vencimiento pactada, esto es, el <b>${venc}</b> (Art. 46 CST).</p><br/><p>Por tratarse de una terminación legal por vencimiento del plazo pactado, no hay lugar a indemnización. La liquidación definitiva de sus prestaciones sociales le será entregada a la terminación del contrato.</p><br/><p>Agradecemos su aporte durante el tiempo de vinculación. Atentamente,</p></div><div class="sig"><div>Empleador<br/><b>${getActiveCompanyLegalDataSync().legalName}</b><br/>NIT: ${getActiveCompanyLegalDataSync().taxId}</div><div>Recibido — Trabajador<br/><b>${selN.nombre}</b></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
+                  body=`<h1>PREAVISO DE NO RENOVACIÓN DE CONTRATO</h1><div class="sub" style="text-align:center;font-size:8.5pt;color:#888;margin-bottom:16px">Contrato a término fijo · Art. 46 CST</div><div class="body"><p>Bogotá D.C., ${hoy}</p><br/><p>Señor(a)<br/><b>${selN.nombre}</b><br/>C.C. ${(selN.cc||"").replace(/\D/g,"")}<br/>Cargo: ${selN.cargo}</p><div style="margin:14px 0;padding:10px 14px;background:#FAFAF7;border-left:3px solid #111;font-size:9.5pt"><b>Referencia:</b> No prórroga del contrato de trabajo a término fijo suscrito el ${ini}.</div><p>Por medio de la presente le comunicamos, con una antelación no inferior a treinta (30) días, la decisión de <b>${getActiveCompanyLegalDataSync().legalName}</b> de <b>no renovar ni prorrogar</b> su contrato de trabajo a término fijo, el cual terminará en su fecha de vencimiento pactada, esto es, el <b>${venc}</b> (Art. 46 CST).</p><br/><p>Por tratarse de una terminación legal por vencimiento del plazo pactado, no hay lugar a indemnización. La liquidación definitiva de sus prestaciones sociales le será entregada a la terminación del contrato.</p><br/><p>Agradecemos su aporte durante el tiempo de vinculación.</p></div><div class="cierre"><p>Atentamente,</p><div class="sig"><div>Empleador<br/><b>${getActiveCompanyLegalDataSync().legalName}</b><br/>NIT: ${getActiveCompanyLegalDataSync().taxId}</div><div>Recibido — Trabajador<br/><b>${selN.nombre}</b></div></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
                 } else if(d.id==="carta"){
                   body=`<h1>CARTA DE TERMINACIÓN Y LIQUIDACIÓN</h1><div class="body"><p>Bogotá D.C., ${hoy}</p><br/><p>Señor(a) <b>${selN.nombre}</b><br/>C.C. ${(selN.cc||"").replace(/\D/g,"")}</p><br/><p>Comunicamos la terminación de su contrato <b>${motivo}</b>, efectiva el <b>${liq.ff.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</b>.</p><br/><p>Cargo: <b>${selN.cargo}</b> · Ingreso: <b>${liq.fi.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</b> · ${liq.diasTot} días trabajados.</p></div><table><thead><tr><th>Concepto</th><th class="r">Valor</th><th>Base legal</th></tr></thead><tbody>${liq.items.map(i=>"<tr><td>"+i.c+"</td><td class='r'>"+fmt(i.v)+"</td><td style='font-size:8pt;color:#666'>"+i.n+"</td></tr>").join("")}<tr class="tot"><td>TOTAL A PAGAR</td><td class="r">${fmt(liq.total)}</td><td></td></tr></tbody></table><div class="sig"><div>Empleador<br/><b>${getActiveCompanyLegalDataSync().legalName}</b></div><div>Trabajador<br/><b>${selN.nombre}</b></div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
                 } else if(d.id==="paz"){
@@ -781,7 +784,7 @@ ${bodyHtml}
                 } else {
                   body=`<h1>CERTIFICACIÓN LABORAL</h1><div class="body"><p>El suscrito representante legal de <b>${getActiveCompanyLegalDataSync().legalName}</b>, NIT ${getActiveCompanyLegalDataSync().taxId}, certifica que:</p><br/><p><b>${selN.nombre}</b>, C.C. No. <b>${(selN.cc||"").replace(/\D/g,"")}</b>, ${selN.fechaIngreso?"laboró":"labora"} en esta empresa desde el <b>${liq.fi.toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</b>, desempeñando el cargo de <b>${selN.cargo}</b>.</p><br/><p>Se expide a solicitud del interesado en Bogotá D.C., ${hoy}.</p></div><div class="sig"><div><br/><b>Representante Legal</b><br/>${getActiveCompanyLegalDataSync().legalName}</div></div><div class="foot">Habitaris Suite · ${hoy}</div>`;
                 }
-                openPreview(d.lbl, body, fn);
+                openPreview(d.lbl, body, fn, d.id==="preaviso");
               }} style={{width:"100%",padding:"7px 10px",fontSize:11,fontWeight:600,border:`1px solid ${d.color}`,borderRadius:6,background:d.bg,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",color:d.color,marginBottom:4,textAlign:"left"}}>
                 {d.icon} {d.lbl}
               </button>
