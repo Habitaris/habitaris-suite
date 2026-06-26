@@ -1738,37 +1738,55 @@ ${repartoTabla}
             // Devuelve {otId: {trab, fest, nov, total}} para que la tabla muestre el desglose
             const diasPorOTExtendido = (incluyeDia) => {
               const out = {};
-              const vistos = new Set();
+              const clasificado = new Set();
               const bump = (otId, tipo) => {
-                if (!out[otId]) out[otId] = {trab:0, fest:0, nov:0, total:0};
+                if (!out[otId]) out[otId] = {trab:0, fest:0, nov:0, desc:0, total:0};
                 out[otId][tipo]++;
                 out[otId].total++;
               };
-              // 1) Imputaciónes manuales = días trabajados
-              Object.entries(iDias).forEach(([k, otId]) => {
-                if (!otId || otId === "__conflicto__") return;
-                const dia = parseInt(k.split("-")[2], 10);
-                if (!incluyeDia(dia)) return;
-                bump(otId, "trab");
-                vistos.add(k);
-              });
-              // 2) Festivos del periodo - centro base
-              (festivosMes || []).forEach(h => {
-                const k = fechaAStr(h.date);
-                if (vistos.has(k)) return;
-                if (!incluyeDia(h.date.getDate())) return;
-                const cId = centroBaseParaFecha(k);
-                if (cId) { bump(cId, "fest"); vistos.add(k); }
-              });
-              // 3) Novedades - centro base
+              // Centro de una fecha: imputación manual si la hay; si no, el centro base del calendario.
+              const centroDe = (k) => {
+                const im = iDias[k];
+                if (im && im !== "__conflicto__") return im;
+                return centroBaseParaFecha(k);
+              };
+              // 1) Novedades — PRECEDENCIA: un día de novedad NO es día trabajado, aunque esté imputado.
               Object.entries(nDias).forEach(([k, tipoNov]) => {
-                if (vistos.has(k)) return;
                 if (tipoNov === "normal") return;
                 const dia = parseInt(k.split("-")[2], 10);
                 if (!incluyeDia(dia)) return;
-                const cId = centroBaseParaFecha(k);
-                if (cId) { bump(cId, "nov"); vistos.add(k); }
+                const cId = centroDe(k);
+                if (cId) { bump(cId, "nov"); clasificado.add(k); }
               });
+              // 2) Festivos — PRECEDENCIA sobre trabajado (aunque el día esté imputado manualmente).
+              (festivosMes || []).forEach(h => {
+                const k = fechaAStr(h.date);
+                if (clasificado.has(k)) return;
+                if (!incluyeDia(h.date.getDate())) return;
+                const cId = centroDe(k);
+                if (cId) { bump(cId, "fest"); clasificado.add(k); }
+              });
+              // 3) Imputaciones manuales restantes = días trabajados.
+              Object.entries(iDias).forEach(([k, otId]) => {
+                if (!otId || otId === "__conflicto__") return;
+                if (clasificado.has(k)) return;
+                const dia = parseInt(k.split("-")[2], 10);
+                if (!incluyeDia(dia)) return;
+                bump(otId, "trab"); clasificado.add(k);
+              });
+              // 4) Resto de días (domingos/descanso) — para que la suma cuadre con los días del mes.
+              //    Se asignan al centro del día trabajado más reciente (la "semana" de ese centro).
+              const ult = new Date(anio, mes+1, 0).getDate();
+              let ultimoCentro = null;
+              for (let dia = 1; dia <= ult; dia++) {
+                const k = fechaAStr(new Date(anio, mes, dia));
+                const im = iDias[k];
+                if (im && im !== "__conflicto__") ultimoCentro = im;
+                if (!incluyeDia(dia)) continue;
+                if (clasificado.has(k)) continue;
+                const cId = centroBaseParaFecha(k) || ultimoCentro || Object.keys(out)[0];
+                if (cId) { bump(cId, "desc"); clasificado.add(k); }
+              }
               return out;
             };
 
@@ -1789,7 +1807,7 @@ ${repartoTabla}
                   id: otId,
                   codigo: c ? c.codigo : otId,
                   nombre: c ? c.nombre : "(OT no encontrada)",
-                  trab: info.trab, fest: info.fest, nov: info.nov,
+                  trab: info.trab, fest: info.fest, nov: info.nov, desc: info.desc||0,
                   dias: info.total,
                   pct: total > 0 ? (info.total / total) * 100 : 0
                 };
@@ -1862,15 +1880,16 @@ ${repartoTabla}
               if (ots.length === 0) {
                 return `<div style="padding:8px;background:#FAFAF7;border:1px solid #eee;border-radius:4px;font-size:8pt;color:#999;font-style:italic;text-align:center;margin-bottom:6px">Sin imputaciones en este periodo</div>`;
               }
-              let h = `<table><thead><tr><th>CT</th><th>Centro / Proyecto</th><th style="text-align:right" title="Días trabajados (imputaciones manuales)">Trab.</th><th style="text-align:right" title="Festivos asignados al centro base">Fest.</th><th style="text-align:right" title="Novedades (incap/vac/lic) al centro base">Nov.</th><th style="text-align:right">Dias</th><th style="text-align:right">%</th><th style="text-align:right">${labelTotal}</th></tr></thead><tbody>`;
+              let h = `<table><thead><tr><th>CT</th><th>Centro / Proyecto</th><th style="text-align:right" title="Días trabajados (imputaciones manuales)">Trab.</th><th style="text-align:right" title="Festivos asignados al centro base">Fest.</th><th style="text-align:right" title="Novedades (incap/vac/lic) al centro base">Nov.</th><th style="text-align:right" title="Descanso (domingos) asignado al centro de la semana">Desc.</th><th style="text-align:right">Dias</th><th style="text-align:right">%</th><th style="text-align:right">${labelTotal}</th></tr></thead><tbody>`;
               ots.forEach(o => {
                 const monto = montoTotal * (o.pct / 100);
-                h += `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right;color:#111">${o.fest||""}</td><td style="text-align:right;color:#111">${o.nov||""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(monto)}</b></td></tr>`;
+                h += `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right;color:#111">${o.fest||""}</td><td style="text-align:right;color:#111">${o.nov||""}</td><td style="text-align:right;color:#111">${o.desc||""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(monto)}</b></td></tr>`;
               });
               const tT = ots.reduce((s,o)=>s+o.trab,0);
               const tF = ots.reduce((s,o)=>s+o.fest,0);
               const tN = ots.reduce((s,o)=>s+o.nov,0);
-              h += `<tr style="border-top:1.5px solid #111;font-weight:700"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${tT}</td><td style="text-align:right">${tF||""}</td><td style="text-align:right">${tN||""}</td><td style="text-align:right"><b>${ots.reduce((s,o)=>s+o.dias,0)}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(montoTotal)}</b></td></tr>`;
+              const tD = ots.reduce((s,o)=>s+(o.desc||0),0);
+              h += `<tr style="border-top:1.5px solid #111;font-weight:700"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${tT}</td><td style="text-align:right">${tF||""}</td><td style="text-align:right">${tN||""}</td><td style="text-align:right">${tD||""}</td><td style="text-align:right"><b>${ots.reduce((s,o)=>s+o.dias,0)}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(montoTotal)}</b></td></tr>`;
               h += `</tbody></table>`;
               return h;
             };
@@ -1977,9 +1996,9 @@ ${novListInforme.map(n => `<tr><td>${n.fechaTxt}</td><td>${n.tipo}</td><td style
 ` : ""}
 
 <h3 style="font-size:9pt;margin:6px 0 3px">📍 Imputación total del mes por centro</h3>
-<table style="margin-bottom:6px"><thead><tr><th>Centro</th><th>Nombre</th><th style="text-align:right">Trab.</th><th style="text-align:right">Fest.</th><th style="text-align:right">Nov.</th><th style="text-align:right">Total días</th><th style="text-align:right">%</th></tr></thead><tbody>
-${otsMes.map(o => `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right;color:#111">${o.fest||""}</td><td style="text-align:right;color:#111">${o.nov||""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td></tr>`).join("")}
-<tr style="border-top:1.5px solid #111;font-weight:700"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${otsMes.reduce((s,o)=>s+o.trab,0)}</td><td style="text-align:right">${otsMes.reduce((s,o)=>s+o.fest,0)||""}</td><td style="text-align:right">${otsMes.reduce((s,o)=>s+o.nov,0)||""}</td><td style="text-align:right"><b>${otsMes.reduce((s,o)=>s+o.dias,0)}</b></td><td style="text-align:right"><b>100%</b></td></tr>
+<table style="margin-bottom:6px"><thead><tr><th>Centro</th><th>Nombre</th><th style="text-align:right">Trab.</th><th style="text-align:right">Fest.</th><th style="text-align:right">Nov.</th><th style="text-align:right">Desc.</th><th style="text-align:right">Total días</th><th style="text-align:right">%</th></tr></thead><tbody>
+${otsMes.map(o => `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right;color:#111">${o.fest||""}</td><td style="text-align:right;color:#111">${o.nov||""}</td><td style="text-align:right;color:#111">${o.desc||""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td></tr>`).join("")}
+<tr style="border-top:1.5px solid #111;font-weight:700"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${otsMes.reduce((s,o)=>s+o.trab,0)}</td><td style="text-align:right">${otsMes.reduce((s,o)=>s+o.fest,0)||""}</td><td style="text-align:right">${otsMes.reduce((s,o)=>s+o.nov,0)||""}</td><td style="text-align:right">${otsMes.reduce((s,o)=>s+(o.desc||0),0)||""}</td><td style="text-align:right"><b>${otsMes.reduce((s,o)=>s+o.dias,0)}</b></td><td style="text-align:right"><b>100%</b></td></tr>
 </tbody></table>
 
 <h2>2. SALARIO NETO — lo que se paga al trabajador</h2>
