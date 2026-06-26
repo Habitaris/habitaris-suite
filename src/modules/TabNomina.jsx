@@ -1675,6 +1675,7 @@ ${tablaHtml}
 
     const genImputaciónesHtml = async () => {
             const calc = calcN(selN);
+            const fmtCurr = v => new Intl.NumberFormat(getTenantDefaultsSync().locale,{style:"currency",currency:"COP",maximumFractionDigits:0}).format(v||0);
             // Prima de servicios del semestre: desglose mes a mes (solo en meses de pago jun/dic).
             let primaSemBlock = "";
             if (mes === 5 || mes === 11) {
@@ -1683,17 +1684,16 @@ ${tablaHtml}
                 const obs=[]; if(m.ausencias>0)obs.push(`−${m.ausencias} ausencia`); if(m.licNoRem>0)obs.push(`−${m.licNoRem} lic. no rem.`);
                 return `<div class="kv"><div class="l">${MESES[m.mes]} · ${m.diasVinc} días de vinculación → ${m.diasPrima} computados${obs.length?` (${obs.join(", ")})`:""}</div><div class="v">${m.diasPrima} d</div></div>`;
               }).join("");
-              primaSemBlock = `<h2 style="background:#1E40AF">5b. 🎁 PRIMA DE SERVICIOS DEL SEMESTRE</h2>
+              primaSemBlock = `<h2>5b. 🎁 PRIMA DE SERVICIOS DEL SEMESTRE</h2>
 <div class="kv"><div class="l">Base (salario ${fmtCurr(ps.sal)} + aux. transporte ${fmtCurr(ps.aux)})</div><div class="v">${fmtCurr(ps.base)}</div></div>
 ${filasPS}
 <div class="kv"><div class="l">Total días computados (base 360)</div><div class="v">${ps.diasTotal} d</div></div>
-<div class="kv bigtot" style="background:#1E40AF"><div class="l">PRIMA A PAGAR (base × ${ps.diasTotal} ÷ 360)</div><div class="v">${fmtCurr(ps.prima)}</div></div>
+<div class="kv bigtot"><div class="l">PRIMA A PAGAR (base × ${ps.diasTotal} ÷ 360)</div><div class="v">${fmtCurr(ps.prima)}</div></div>
 <div style="font-size:7pt;color:#999;margin:4px 0 8px">Art. 306 CST. Incapacidades, vacaciones y licencias remuneradas computan como tiempo de servicio; las ausencias injustificadas y licencias no remuneradas no computan.</div>`;
             }
             const iDias = selN.impDias || {};
             const nDias = selN.novDias || {};
             const esQuincenal = (selN.modalidadPago || "quincenal") === "quincenal";
-            const fmtCurr = v => new Intl.NumberFormat(getTenantDefaultsSync().locale,{style:"currency",currency:"COP",maximumFractionDigits:0}).format(v||0);
             const fmtPct = v => (v||0).toFixed(1) + "%";
 
             // Lógica B (acordada con David, 31/05/2026): festivos y dias de novedad
@@ -1859,12 +1859,12 @@ ${filasPS}
               let h = `<table><thead><tr><th>CT</th><th>Centro / Proyecto</th><th style="text-align:right" title="Días trabajados (imputaciones manuales)">Trab.</th><th style="text-align:right" title="Festivos asignados al centro base">Fest.</th><th style="text-align:right" title="Novedades (incap/vac/lic) al centro base">Nov.</th><th style="text-align:right">Dias</th><th style="text-align:right">%</th><th style="text-align:right">${labelTotal}</th></tr></thead><tbody>`;
               ots.forEach(o => {
                 const monto = montoTotal * (o.pct / 100);
-                h += `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right;color:#92400E">${o.fest||""}</td><td style="text-align:right;color:#B91C1C">${o.nov||""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(monto)}</b></td></tr>`;
+                h += `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right;color:#111">${o.fest||""}</td><td style="text-align:right;color:#111">${o.nov||""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(monto)}</b></td></tr>`;
               });
               const tT = ots.reduce((s,o)=>s+o.trab,0);
               const tF = ots.reduce((s,o)=>s+o.fest,0);
               const tN = ots.reduce((s,o)=>s+o.nov,0);
-              h += `<tr style="background:#111;color:#fff"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${tT}</td><td style="text-align:right">${tF||""}</td><td style="text-align:right">${tN||""}</td><td style="text-align:right"><b>${ots.reduce((s,o)=>s+o.dias,0)}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(montoTotal)}</b></td></tr>`;
+              h += `<tr style="border-top:1.5px solid #111;font-weight:700"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${tT}</td><td style="text-align:right">${tF||""}</td><td style="text-align:right">${tN||""}</td><td style="text-align:right"><b>${ots.reduce((s,o)=>s+o.dias,0)}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(montoTotal)}</b></td></tr>`;
               h += `</tbody></table>`;
               return h;
             };
@@ -1911,7 +1911,7 @@ body{font-family:'DM Sans',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:
 .hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
 .hdr img{height:36px}
 h1{font-size:12pt;text-align:center;margin:4px 0 2px;clear:both}
-h2{font-size:9.5pt;margin:14px 0 4px;padding:6px 8px;background:#111;color:#fff;border-radius:3px;clear:both}
+h2{font-size:9.5pt;margin:16px 0 6px;padding-bottom:3px;color:#111;font-weight:700;border-bottom:1px solid #ccc;clear:both}
 h3{font-size:8.5pt;margin:8px 0 4px;color:#666;text-transform:uppercase;letter-spacing:.5px;clear:both}
 .sub{font-size:8pt;color:#666;text-align:center;margin-bottom:10px}
 .info{margin-bottom:10px;font-size:8.5pt;overflow:hidden}.info div{float:left;width:50%;padding:1px 0}
@@ -1919,13 +1919,13 @@ h3{font-size:8.5pt;margin:8px 0 4px;color:#666;text-transform:uppercase;letter-s
 table{width:100%;border-collapse:collapse;margin-bottom:8px;font-size:8.5pt;clear:both}
 th{text-align:left;padding:4px 6px;font-size:7pt;font-weight:700;text-transform:uppercase;border-bottom:2px solid #111}
 td{padding:3px 6px;border-bottom:1px solid #ddd}
-.imp{background:#f4f4f4}
+.imp{background:#fff}
 .kv{display:flex;justify-content:space-between;padding:3px 8px;font-size:8.5pt;border-bottom:1px dotted #ddd}
 .kv .l{color:#444}.kv .v{font-family:monospace;color:#111;font-weight:600}
-.kv.subtot{background:#e8f4ee;border-bottom:1px solid #1E6B42;font-weight:700;color:#1E6B42}
-.kv.bigtot{background:#111;color:#fff;font-weight:700;font-size:9.5pt;padding:6px 8px;margin-top:4px;border-radius:3px}
-.kv.bigtot .l{color:#fff}.kv.bigtot .v{color:#fff;font-size:10pt}
-.notebox{padding:8px 10px;background:#FEF3C7;border:1px solid #F59E0B;border-radius:4px;font-size:7.5pt;color:#92400E;margin:8px 0}
+.kv.subtot{border-top:1px solid #111;border-bottom:1px solid #111;font-weight:700;color:#111}
+.kv.bigtot{font-weight:700;font-size:9.5pt;padding:6px 8px;margin-top:4px;border-top:1.5px solid #111}
+.kv.bigtot .l{color:#111}.kv.bigtot .v{color:#111;font-size:10pt}
+.notebox{padding:8px 10px;border:1px solid #ddd;border-left:3px solid #111;border-radius:4px;font-size:7.5pt;color:#444;margin:8px 0}
 .sig{margin-top:20px;overflow:hidden}.sig div{float:left;width:30%;margin-right:5%;text-align:center;font-size:8pt;border-top:1px solid #111;padding-top:5px}
 .sig div:last-child{margin-right:0}
 .foot{font-size:6.5pt;color:#999;text-align:center;margin-top:10px;clear:both}
@@ -1951,9 +1951,9 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 
 <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">
 <div style="padding:6px 8px;background:#FAFAF7;border:1px solid #eee;border-radius:4px"><div style="font-size:6.5pt;color:#999;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Trabajados</div><div style="font-size:13pt;font-weight:700;color:#111">${calc.dias||0}</div></div>
-<div style="padding:6px 8px;background:#FFFBEB;border:1px solid #F4D85E;border-radius:4px"><div style="font-size:6.5pt;color:#92400E;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Festivos</div><div style="font-size:13pt;font-weight:700;color:#92400E">${festivosMes.length}</div></div>
-<div style="padding:6px 8px;background:#FEE2E2;border:1px solid #FCA5A5;border-radius:4px"><div style="font-size:6.5pt;color:#B91C1C;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Novedades</div><div style="font-size:13pt;font-weight:700;color:#B91C1C">${novListInforme.length}</div></div>
-<div style="padding:6px 8px;background:#EFF6FF;border:1px solid #93C5FD;border-radius:4px"><div style="font-size:6.5pt;color:#1D4ED8;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Asistidos</div><div style="font-size:13pt;font-weight:700;color:#1D4ED8">${calc.diasAsist||0}</div></div>
+<div style="padding:6px 8px;background:#fff;border:1px solid #ddd;border-radius:4px"><div style="font-size:6.5pt;color:#111;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Festivos</div><div style="font-size:13pt;font-weight:700;color:#111">${festivosMes.length}</div></div>
+<div style="padding:6px 8px;background:#fff;border:1px solid #ddd;border-radius:4px"><div style="font-size:6.5pt;color:#111;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Novedades</div><div style="font-size:13pt;font-weight:700;color:#111">${novListInforme.length}</div></div>
+<div style="padding:6px 8px;background:#fff;border:1px solid #ddd;border-radius:4px"><div style="font-size:6.5pt;color:#111;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Asistidos</div><div style="font-size:13pt;font-weight:700;color:#111">${calc.diasAsist||0}</div></div>
 </div>
 
 ${festListInforme.length > 0 ? `
@@ -1972,8 +1972,8 @@ ${novListInforme.map(n => `<tr><td>${n.fechaTxt}</td><td>${n.tipo}</td><td style
 
 <h3 style="font-size:9pt;margin:6px 0 3px">📍 Imputación total del mes por centro</h3>
 <table style="margin-bottom:6px"><thead><tr><th>Centro</th><th>Nombre</th><th style="text-align:right">Trab.</th><th style="text-align:right">Fest.</th><th style="text-align:right">Nov.</th><th style="text-align:right">Total días</th><th style="text-align:right">%</th></tr></thead><tbody>
-${otsMes.map(o => `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right;color:#92400E">${o.fest||""}</td><td style="text-align:right;color:#B91C1C">${o.nov||""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td></tr>`).join("")}
-<tr style="background:#111;color:#fff"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${otsMes.reduce((s,o)=>s+o.trab,0)}</td><td style="text-align:right">${otsMes.reduce((s,o)=>s+o.fest,0)||""}</td><td style="text-align:right">${otsMes.reduce((s,o)=>s+o.nov,0)||""}</td><td style="text-align:right"><b>${otsMes.reduce((s,o)=>s+o.dias,0)}</b></td><td style="text-align:right"><b>100%</b></td></tr>
+${otsMes.map(o => `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}</td><td style="text-align:right;color:#444">${o.trab}</td><td style="text-align:right;color:#111">${o.fest||""}</td><td style="text-align:right;color:#111">${o.nov||""}</td><td style="text-align:right"><b>${o.dias}</b></td><td style="text-align:right">${fmtPct(o.pct)}</td></tr>`).join("")}
+<tr style="border-top:1.5px solid #111;font-weight:700"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${otsMes.reduce((s,o)=>s+o.trab,0)}</td><td style="text-align:right">${otsMes.reduce((s,o)=>s+o.fest,0)||""}</td><td style="text-align:right">${otsMes.reduce((s,o)=>s+o.nov,0)||""}</td><td style="text-align:right"><b>${otsMes.reduce((s,o)=>s+o.dias,0)}</b></td><td style="text-align:right"><b>100%</b></td></tr>
 </tbody></table>
 
 <h2>2. SALARIO NETO — lo que se paga al trabajador</h2>
@@ -2032,17 +2032,17 @@ ${tablaOTs(otsMes, totDed + totSegSocial, "PILA imputado")}
 ${tablaOTs(otsMes, totPrestaciones, "Provisión imputada")}
 ${primaSemBlock}
 
-<h2 style="background:#7F1D1D">6. 💵 GASTO TOTAL DE CAJA DEL MES</h2>
+<h2>6. 💵 GASTO TOTAL DE CAJA DEL MES</h2>
 <div class="kv"><div class="l">Neto al trabajador (sale del banco al empleado)</div><div class="v">${fmtCurr(dev - totDed)}</div></div>
 <div class="kv"><div class="l">PILA empresa (sale del banco al sistema, mes siguiente)</div><div class="v">${fmtCurr(totDed + totSegSocial)}</div></div>
-<div class="kv bigtot" style="background:#7F1D1D"><div class="l">TOTAL CAJA DEL MES</div><div class="v">${fmtCurr((dev - totDed) + (totDed + totSegSocial))}</div></div>
+<div class="kv bigtot"><div class="l">TOTAL CAJA DEL MES</div><div class="v">${fmtCurr((dev - totDed) + (totDed + totSegSocial))}</div></div>
 <h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto de la CAJA TOTAL por CT</h3>
 ${tablaOTs(otsMes, (dev - totDed) + (totDed + totSegSocial), "Caja imputada")}
 
-<h2 style="background:#78350F">7. 🏷️ COSTO TOTAL CON PROVISIÓNES</h2>
+<h2>7. 🏷️ COSTO TOTAL CON PROVISIÓNES</h2>
 <div class="kv"><div class="l">💵 Caja del mes</div><div class="v">${fmtCurr((dev - totDed) + (totDed + totSegSocial))}</div></div>
 <div class="kv"><div class="l">📊 Provisiones del mes</div><div class="v">${fmtCurr(totPrestaciones)}</div></div>
-<div class="kv bigtot" style="background:#78350F"><div class="l">COSTO TOTAL EMPRESA</div><div class="v">${fmtCurr(totalCostoEmpresa)}</div></div>
+<div class="kv bigtot"><div class="l">COSTO TOTAL EMPRESA</div><div class="v">${fmtCurr(totalCostoEmpresa)}</div></div>
 <h3 style="font-size:8pt;margin-top:8px;color:#666">Reparto del COSTO TOTAL por CT</h3>
 ${tablaOTs(otsMes, totalCostoEmpresa, "Costo total imputado")}
 
@@ -2621,7 +2621,7 @@ ${body}
               empresa.push({icon:"📋",label:"Informe de novedades (contador)",desc:`Festivos y novedades del mes — sin valores económicos`,gen:genNovedadesHtml});
               if(esPrimaMes) empresa.push({icon:"📑",label:`Liquidación provisional de prima — contadores (${semLbl} sem.)`,desc:`Cálculo estimado del semestre para validación del contador · Art. 306 CST`,gen:async()=>buildPrimaHtml({selN,prima:await calcPrimaSemestre(selN,anio,mes),anio}).html});
               empresa.push({icon:"📊",label:"Informe Mensual Completo",desc:`Cierre post-pago: salario, Q1, Q2, PILA, provisiones y reparto por centro`,gen:genImputaciónesHtml});
-              if(!isMensual&&q1Listo) empresa.push({icon:"💸",label:"Nota de Reembolso Q1 (interempresa)",desc:`Reparto anticipo Q1 por centro · enviar al centro destinatario`,gen:genNotaReembolsoQ1Html});
+              // Nota de Reembolso Q1 retirada: el reparto por centro ya está en el Informe Mensual Completo.
 
               const Row=(d,i)=>(
                 <div key={i} style={{display:"flex",alignItems:"center",gap:14,padding:"14px 16px",background:"#FAFAF8",border:`1px solid ${T.border}`,borderRadius:8,marginBottom:8,cursor:"pointer",transition:"all .15s"}}
