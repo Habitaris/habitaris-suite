@@ -1950,9 +1950,7 @@ ${primaRows.map(o => `<tr class="imp"><td><b>${o.codigo}</b></td><td>${o.nombre}
 <tr style="border-top:1.5px solid #111;font-weight:700"><td colspan="2"><b>TOTAL</b></td><td style="text-align:right">${tTr}</td><td style="text-align:right">${tFe||""}</td><td style="text-align:right">${tNo||""}</td><td style="text-align:right">${tAu||""}</td><td style="text-align:right"><b>${totPD}</b></td><td style="text-align:right"><b>100%</b></td><td style="text-align:right;font-family:monospace"><b>${fmtCurr(ps.prima)}</b></td></tr>
 </tbody></table>` : "";
               primaSemBlock = `<h2>5b. 🎁 PRIMA DE SERVICIOS DEL SEMESTRE</h2>
-<div class="kv"><div class="l">Salario ${fmtCurr(ps.sal)} × ${ps.diasTotal} días ÷ 360</div><div class="v">${fmtCurr(ps.primaSal)}</div></div>
-${ps.aux>0?`<div class="kv"><div class="l">Auxilio transporte ${fmtCurr(ps.aux)} × ${ps.diasAux} días ÷ 360</div><div class="v">${fmtCurr(ps.primaAux)}</div></div>`:""}
-<div class="kv bigtot"><div class="l">PRIMA A PAGAR (salario y auxilio, cada uno por sus días)</div><div class="v">${fmtCurr(ps.prima)}</div></div>
+<div class="kv bigtot"><div class="l">PRIMA DEL SEMESTRE</div><div class="v">${fmtCurr(ps.prima)}</div></div>
 ${repartoPrima}
 <div style="font-size:7pt;color:#999;margin:4px 0 8px">El reparto por centro reparte la prima según los <b>días efectivamente imputados</b> a cada centro en el semestre (días de calendario laborados); por eso su total puede diferir de los días de causación de la prima (que usan la convención de mes de 30 días). El % es lo que distribuye el valor. El desglose mes a mes está en el informe de liquidación provisional de prima (Art. 306 CST).</div>`;
             }
