@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { HAB_LOGO } from "./habLogo.js";
 import {  getTenantUrlsSync, getTenantIdentitySync, getLegalConstantsSync, getActiveCompanyLegalDataSync } from "../core/configHelpers.js";
 import { downloadPDF } from "./pdfUtil.js";
-import { buildNominaHtml, buildPrimaHtml, buildPrimaJustificanteHtml } from "./nominaHtml.js";
+import { buildNominaHtml, buildPrimaHtml, buildPrimaJustificanteHtml, nominaEstimacionHtml } from "./nominaHtml.js";
 import { BannerPagos } from "./BannerPagos.jsx";
 import { condicionVigente } from "./condicionesHelper.js";
 import DashboardTrabajadorAnio from "./DashboardTrabajadorAnio.jsx";
@@ -534,7 +534,7 @@ function NovedadesPanel({selN, anio, mes, MESES, novHist, setNovHist, novYear, s
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'DM Sans',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+body{font-family:'DM Sans','Helvetica Neue',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
 .np{position:sticky;top:0;text-align:center;padding:10px;background:#e5e5e5;z-index:10}
 .np .btn,.np .btn2{font-size:12px;font-weight:600;border-radius:5px;padding:8px 16px;cursor:pointer;font-family:'DM Sans',Helvetica,Arial,sans-serif;margin:0 4px}
 .np .btn{background:#111;color:#fff;border:1px solid #111}
@@ -871,6 +871,7 @@ export function TabNomina(){
   const[subTab,setSubTab]=useState("nomina");
   const[pagoForm,setPagoForm]=useState(null); // null=hidden, {tipo:"q1"|"nomina", ref:"", soporte:null}
   const[incluirValoresNov,setIncluirValoresNov]=useState(false); // informe novedades contador: incluir estimación de nómina
+  const[incluirValoresPrima,setIncluirValoresPrima]=useState(false); // informe prima contador: incluir estimación de nómina
   const holidays=useMemo(()=>getHolidays(anio),[anio]);
   const festivosMes=holidays.filter(h=>h.date.getMonth()===mes);
   const [novDias,setNovDias]=useState({});  // {dayKey: novType}
@@ -1249,7 +1250,7 @@ export function TabNomina(){
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'DM Sans',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+body{font-family:'DM Sans','Helvetica Neue',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
 #content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.35;box-shadow:0 0 8px rgba(0,0,0,.15)}
 .hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
 .hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
@@ -1488,7 +1489,7 @@ ${tablaOTconsMonto(totCostoEmp, "Costo total imputado")}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'DM Sans',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+body{font-family:'DM Sans','Helvetica Neue',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
 #content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.35;box-shadow:0 0 8px rgba(0,0,0,.15)}
 .hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
 .hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
@@ -1529,7 +1530,7 @@ td{padding:3px 6px;border-bottom:1px solid #ddd}
 <div class="sub">${MESES[mes]} ${anio} · Ref: ${fileName}</div>
 <div class="cols">
 <div class="col"><div class="ct">EMPLEADOR</div><b>${_leg.legalName||""}</b><br/>NIT ${_leg.taxId||""}</div>
-<div class="col"><div class="ct">TRABAJADORA</div><b>${selN.nombre||""}</b><br/>C.C. ${selN.cc||""}<br/>${selN.cargo||""}</div>
+<div class="col"><div class="ct">TRABAJADORA</div><b>${selN.nombre||""}</b><br/>${selN.cc||""}<br/>${selN.cargo||""}</div>
 </div>
 <div class="contrato"><b>Contrato:</b> ${_contratoLbl}.</div>
 <h2>Festivos del mes</h2>
@@ -1549,24 +1550,7 @@ ${sinNovTxt}
 <tr><td class="cpt">Base de cotización (IBC)</td><td class="num"><span class="big">${calc.diasVinc}</span><span class="den">/30</span></td><td class="rule">${_notaIBC}</td></tr>
 </tbody></table>
 </tbody></table>
-${incluirValores?`<h2>Estimación de la nómina</h2>
-<div style="font-size:7.5pt;color:#888;margin:-2px 0 6px">Valores estimados del mes con corte a la fecha · sujetos a ajuste según novedades y soportes definitivos.</div>
-<table><thead><tr><th>Concepto</th><th style="text-align:right">Devengado</th><th style="text-align:right">Deducción</th></tr></thead><tbody>
-<tr><td>Salario (${calc.dias} d)</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.salProp)}</td><td style="text-align:right">—</td></tr>
-${calc.aux>0?`<tr><td>Auxilio de transporte (${calc.diasComm} d)</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.aux)}</td><td style="text-align:right">—</td></tr>`:""}
-${calc.bono>0?`<tr><td>Bono de asistencia (${calc.diasAsist} d)</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.bono)}</td><td style="text-align:right">—</td></tr>`:""}
-${(calc.totHex+calc.recFest)>0?`<tr><td>Horas extra y recargos</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.totHex+calc.recFest)}</td><td style="text-align:right">—</td></tr>`:""}
-<tr><td>Salud (EPS) 4%</td><td style="text-align:right">—</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.epsE)}</td></tr>
-<tr><td>Pensión 4%</td><td style="text-align:right">—</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.penE)}</td></tr>
-${calc.rteF>0?`<tr><td>Retención en la fuente</td><td style="text-align:right">—</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.rteF)}</td></tr>`:""}
-${calc.otrasDed>0?`<tr><td>Otras deducciones</td><td style="text-align:right">—</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.otrasDed)}</td></tr>`:""}
-<tr style="font-weight:700;border-top:1.5px solid #111"><td>Totales</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.dev)}</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.totD)}</td></tr>
-</tbody></table>
-<table><tbody>
-<tr><td>Neto del mes</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.neto)}</td></tr>
-${isQ?`<tr><td>Anticipo Q1 (pagado el 15 · se descuenta)</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.q1)}</td></tr>
-<tr style="font-weight:700;border-top:1.5px solid #111"><td>Q2 a pagar (fin de mes)</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.q2)}</td></tr>`:`<tr style="font-weight:700;border-top:1.5px solid #111"><td>Neto a pagar</td><td style="text-align:right;font-family:'DM Mono',monospace">${fmt(calc.neto)}</td></tr>`}
-</tbody></table>`:""}
+${incluirValores?nominaEstimacionHtml(calc, isQ, fmt):""}
 <div class="foot">Documento generado por Habitaris Suite — ${fileName} · ${new Date().toLocaleDateString(getTenantDefaultsSync().locale,{day:"numeric",month:"long",year:"numeric"})}</div>
 </div>
 <div class="np">
@@ -1672,7 +1656,7 @@ ${isQ?`<tr><td>Anticipo Q1 (pagado el 15 · se descuenta)</td><td style="text-al
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'DM Sans',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+body{font-family:'DM Sans','Helvetica Neue',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
 #content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9.5pt;color:#111;line-height:1.4;box-shadow:0 0 8px rgba(0,0,0,.15)}
 .hdr{border-bottom:2px solid #111;padding-bottom:8px;margin-bottom:12px;overflow:hidden}
 .hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8.5pt;color:#666;padding-top:6px}
@@ -2009,7 +1993,7 @@ ${repartoPrima}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'DM Sans',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+body{font-family:'DM Sans','Helvetica Neue',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
 #content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.35;box-shadow:0 0 8px rgba(0,0,0,.15)}
 .hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
 .hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
@@ -2229,7 +2213,7 @@ ${tablaOTs(otsMes, totalCostoEmpresa, "Costo total imputado")}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'DM Sans',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
+body{font-family:'DM Sans','Helvetica Neue',Helvetica,Arial,sans-serif;background:#e5e5e5;margin:0;padding:20px 0}
 #content{background:#fff;width:794px;margin:0 auto;padding:35px 45px;font-size:9pt;color:#111;line-height:1.35;box-shadow:0 0 8px rgba(0,0,0,.15)}
 .hdr{border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:10px;overflow:hidden}
 .hdr .l{float:left}.hdr .r{float:right;text-align:right;font-size:8pt;color:#666;padding-top:6px}
@@ -2718,7 +2702,7 @@ ${body}
               // Reportes de la empresa / interempresa
               const empresa=[];
               empresa.push({icon:"📋",label:"Informe de novedades (contador)",desc:incluirValoresNov?`Festivos, novedades y estimación de nómina (con valores)`:`Festivos y novedades del mes — sin valores económicos`,gen:()=>genNovedadesHtml(incluirValoresNov),toggle:{on:incluirValoresNov,set:setIncluirValoresNov,label:"Incluir valores estimados"}});
-              if(esPrimaMes) empresa.push({icon:"📑",label:`Liquidación provisional de prima — contadores (${semLbl} sem.)`,desc:`Cálculo estimado del semestre para validación del contador · Art. 306 CST`,gen:async()=>buildPrimaHtml({selN,prima:await calcPrimaSemestre(selN,anio,mes),anio}).html});
+              if(esPrimaMes) empresa.push({icon:"📑",label:`Liquidación provisional de prima — contadores (${semLbl} sem.)`,desc:incluirValoresPrima?`Cálculo del semestre + estimación de nómina (con valores)`:`Cálculo estimado del semestre para validación del contador · Art. 306 CST`,gen:async()=>buildPrimaHtml({selN,prima:await calcPrimaSemestre(selN,anio,mes),anio,calc,incluirValores:incluirValoresPrima}).html,toggle:{on:incluirValoresPrima,set:setIncluirValoresPrima,label:"Incluir valores estimados"}});
               empresa.push({icon:"📊",label:"Informe Mensual Completo",desc:`Cierre post-pago: salario, Q1, Q2, PILA, provisiones y reparto por centro`,gen:genImputaciónesHtml});
               // Nota de Reembolso Q1 retirada: el reparto por centro ya está en el Informe Mensual Completo.
 
